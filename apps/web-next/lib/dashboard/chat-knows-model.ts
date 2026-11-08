@@ -15,6 +15,8 @@ const NAMED_TITLES = 2;
 
 export type ChatHeadFacts = {
   active: boolean;
+  /** Our code has been seen on the storefront at least once. Unknown counts as installed. */
+  installed?: boolean;
   domain: string | null;
   /** The last 7 days' finished chats: the assistant's, and those it handed on. */
   solved7: number | null;
@@ -58,7 +60,11 @@ export function buildChatHead(facts: ChatHeadFacts, copy: ChatKnowsCopy): ChatHe
     subtitle = finished > 0 ? copy.answeredShare(Math.round(((facts.solved7 ?? 0) / finished) * 100), finished) : copy.noChatsYet;
   }
   return {
-    badge: facts.active ? { live: true, label: domain ? copy.liveOn(domain) : copy.live } : { live: false, label: copy.hidden },
+    badge: !facts.active
+      ? { live: false, label: copy.hidden }
+      : facts.installed === false
+        ? { live: false, label: copy.notInstalled }
+        : { live: true, label: domain ? copy.liveOn(domain) : copy.live },
     subtitle,
     storeUrl: domain ? `https://${domain}` : null,
   };

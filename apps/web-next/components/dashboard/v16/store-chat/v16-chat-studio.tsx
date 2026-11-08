@@ -478,6 +478,139 @@ export function V16ChatStudio({
     maximumFractionDigits: 0,
   }).format(rules.bigOrder.amountMinor / 100);
 
+  /* A store whose code was never seen starts here: installing is the next
+     step, so it comes before every chat setting. Shopify app stores keep
+     their usual order (the app installs the chat). */
+  const installFirst = !shopify && seen === null;
+  const installSection = (
+    <section id="install" aria-labelledby={`${id}-install`} className={classes.card}>
+            <h2 id={`${id}-install`} className={classes.h2}>
+              {copy.installation}
+            </h2>
+            <div className={classes.block}>
+              <p className={classes.muted}>{seen === null ? copy.neverChecked : copy.lastCheck(copy.ago(seen))}</p>
+              <div className={classes.buttons}>
+                {shopify && meta.domain && (
+                  <Button
+                    component="a"
+                    href={appEmbedActivationUrl(meta.domain, 'messenger')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="default"
+                    radius="pill"
+                    rightSection={<GcIcon name="ext" size={14} />}
+                  >
+                    {copy.openThemeEditor}
+                  </Button>
+                )}
+                {meta.domain && (
+                  <Button component="a" href={`https://${meta.domain}`} target="_blank" rel="noopener noreferrer" variant="default" radius="pill">
+                    {copy.testNow}
+                  </Button>
+                )}
+              </div>
+              {(shopify || !actions.paste) && <p className={classes.muted}>
+                {copy.notShopify}{' '}
+                <Button
+                  variant="subtle"
+                  size="compact-sm"
+                  className={classes.inlineButton}
+                  onClick={() => {
+                    void navigator.clipboard
+                      ?.writeText(buildCanonicalInstallSnippet(meta.embedKey))
+                      .then(() => {
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      })
+                      .catch(() => {});
+                  }}
+                >
+                  {copied ? copy.copied : copy.copyScript}
+                </Button>
+              </p>}
+            </div>
+            {!shopify && actions.paste && (
+              <PasteInstall
+                siteId={siteId}
+                locale={locale}
+                copy={pasteInstallCopy(locale)}
+                ago={copy.ago}
+                actions={actions.paste}
+                initialPlatform={meta.wooConnection ? 'woocommerce' : null}
+                woocommerce={
+                  <>
+                    <WoocommerceGuide
+                      locale={locale}
+                      siteId={siteId}
+                      connection={meta.wooConnection}
+                      createPairingCode={actions.createWooPairingCodeAction}
+                      copy={copy.woocommerce}
+                      copyLabels={copy.domains}
+                    />
+                    {actions.listDomainsAction && actions.addDomainAction && actions.checkDomainAction && actions.removeDomainAction && (
+                      <StorefrontDomains
+                        siteId={siteId}
+                        copy={copy.domains}
+                        actions={{
+                          listDomainsAction: actions.listDomainsAction,
+                          addDomainAction: actions.addDomainAction,
+                          checkDomainAction: actions.checkDomainAction,
+                          removeDomainAction: actions.removeDomainAction,
+                        }}
+                      />
+                    )}
+                  </>
+                }
+              />
+            )}
+            {!shopify && !actions.paste && (
+              <WoocommerceGuide
+                locale={locale}
+                siteId={siteId}
+                connection={meta.wooConnection}
+                createPairingCode={actions.createWooPairingCodeAction}
+                copy={copy.woocommerce}
+                copyLabels={copy.domains}
+              />
+            )}
+            {!shopify &&
+              !actions.paste &&
+              actions.listDomainsAction &&
+              actions.addDomainAction &&
+              actions.checkDomainAction &&
+              actions.removeDomainAction && (
+                <StorefrontDomains
+                  siteId={siteId}
+                  copy={copy.domains}
+                  actions={{
+                    listDomainsAction: actions.listDomainsAction,
+                    addDomainAction: actions.addDomainAction,
+                    checkDomainAction: actions.checkDomainAction,
+                    removeDomainAction: actions.removeDomainAction,
+                  }}
+                />
+              )}
+            <div className={classes.row}>
+              <h3 className={classes.h3}>{copy.publishedVersion(version)}</h3>
+              {meta.canRevert && (
+                <Button variant="default" radius="pill" loading={busy === 'revert'} onClick={() => setConfirm('revert')}>
+                  {copy.revert}
+                </Button>
+              )}
+            </div>
+            {meta.canDisconnect && actions.disconnectSiteAction && (
+              <div className={classes.row}>
+                <div className={classes.rowText}>
+                  <Button variant="subtle" color="danger" className={classes.inlineButton} loading={busy === 'disconnect'} onClick={() => setConfirm('disconnect')}>
+                    {copy.disconnect.label}
+                  </Button>
+                  <p className={classes.muted}>{copy.disconnect.body}</p>
+                </div>
+              </div>
+            )}
+          </section>
+  );
+
   return (
     <div ref={studioRef} tabIndex={-1} className={classes.studio}>
       <div className={classes.liveRow}>
@@ -576,6 +709,7 @@ export function V16ChatStudio({
 
       <div className={classes.layout}>
         <div className={classes.form}>
+          {installFirst && installSection}
           <Section id={`${id}-where`} copy={copy.whereItAppears}>
             <ChoiceRow
               label={copy.chatBubble.label}
@@ -816,132 +950,7 @@ export function V16ChatStudio({
             </div>
           </section>
 
-          <section aria-labelledby={`${id}-install`} className={classes.card}>
-            <h2 id={`${id}-install`} className={classes.h2}>
-              {copy.installation}
-            </h2>
-            <div className={classes.block}>
-              <p className={classes.muted}>{seen === null ? copy.neverChecked : copy.lastCheck(copy.ago(seen))}</p>
-              <div className={classes.buttons}>
-                {shopify && meta.domain && (
-                  <Button
-                    component="a"
-                    href={appEmbedActivationUrl(meta.domain, 'messenger')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variant="default"
-                    radius="pill"
-                    rightSection={<GcIcon name="ext" size={14} />}
-                  >
-                    {copy.openThemeEditor}
-                  </Button>
-                )}
-                {meta.domain && (
-                  <Button component="a" href={`https://${meta.domain}`} target="_blank" rel="noopener noreferrer" variant="default" radius="pill">
-                    {copy.testNow}
-                  </Button>
-                )}
-              </div>
-              {(shopify || !actions.paste) && <p className={classes.muted}>
-                {copy.notShopify}{' '}
-                <Button
-                  variant="subtle"
-                  size="compact-sm"
-                  className={classes.inlineButton}
-                  onClick={() => {
-                    void navigator.clipboard
-                      ?.writeText(buildCanonicalInstallSnippet(meta.embedKey))
-                      .then(() => {
-                        setCopied(true);
-                        setTimeout(() => setCopied(false), 2000);
-                      })
-                      .catch(() => {});
-                  }}
-                >
-                  {copied ? copy.copied : copy.copyScript}
-                </Button>
-              </p>}
-            </div>
-            {!shopify && actions.paste && (
-              <PasteInstall
-                siteId={siteId}
-                locale={locale}
-                copy={pasteInstallCopy(locale)}
-                ago={copy.ago}
-                actions={actions.paste}
-                initialPlatform={meta.wooConnection ? 'woocommerce' : null}
-                woocommerce={
-                  <>
-                    <WoocommerceGuide
-                      locale={locale}
-                      siteId={siteId}
-                      connection={meta.wooConnection}
-                      createPairingCode={actions.createWooPairingCodeAction}
-                      copy={copy.woocommerce}
-                      copyLabels={copy.domains}
-                    />
-                    {actions.listDomainsAction && actions.addDomainAction && actions.checkDomainAction && actions.removeDomainAction && (
-                      <StorefrontDomains
-                        siteId={siteId}
-                        copy={copy.domains}
-                        actions={{
-                          listDomainsAction: actions.listDomainsAction,
-                          addDomainAction: actions.addDomainAction,
-                          checkDomainAction: actions.checkDomainAction,
-                          removeDomainAction: actions.removeDomainAction,
-                        }}
-                      />
-                    )}
-                  </>
-                }
-              />
-            )}
-            {!shopify && !actions.paste && (
-              <WoocommerceGuide
-                locale={locale}
-                siteId={siteId}
-                connection={meta.wooConnection}
-                createPairingCode={actions.createWooPairingCodeAction}
-                copy={copy.woocommerce}
-                copyLabels={copy.domains}
-              />
-            )}
-            {!shopify &&
-              !actions.paste &&
-              actions.listDomainsAction &&
-              actions.addDomainAction &&
-              actions.checkDomainAction &&
-              actions.removeDomainAction && (
-                <StorefrontDomains
-                  siteId={siteId}
-                  copy={copy.domains}
-                  actions={{
-                    listDomainsAction: actions.listDomainsAction,
-                    addDomainAction: actions.addDomainAction,
-                    checkDomainAction: actions.checkDomainAction,
-                    removeDomainAction: actions.removeDomainAction,
-                  }}
-                />
-              )}
-            <div className={classes.row}>
-              <h3 className={classes.h3}>{copy.publishedVersion(version)}</h3>
-              {meta.canRevert && (
-                <Button variant="default" radius="pill" loading={busy === 'revert'} onClick={() => setConfirm('revert')}>
-                  {copy.revert}
-                </Button>
-              )}
-            </div>
-            {meta.canDisconnect && actions.disconnectSiteAction && (
-              <div className={classes.row}>
-                <div className={classes.rowText}>
-                  <Button variant="subtle" color="danger" className={classes.inlineButton} loading={busy === 'disconnect'} onClick={() => setConfirm('disconnect')}>
-                    {copy.disconnect.label}
-                  </Button>
-                  <p className={classes.muted}>{copy.disconnect.body}</p>
-                </div>
-              </div>
-            )}
-          </section>
+          {!installFirst && installSection}
 
           <section aria-labelledby={`${id}-more`} className={classes.card}>
             <div className={classes.row}>

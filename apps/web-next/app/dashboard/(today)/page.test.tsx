@@ -75,14 +75,14 @@ describe('DashboardOverviewPage, v16 Today', () => {
   });
 
   it.each([
-    ['en', 'Connect your first store', 'Set up Store Chat on your website'],
-    ['ar', 'اربط متجرك الأول', 'فعّل دردشة المتجر على موقعك'],
+    ['en', 'Connect your first store', 'Install with a code'],
+    ['ar', 'اربط متجرك الأول', 'ثبّت بكود'],
   ] as const)('tells a new account with no store how to connect one, in %s, without reading any facts', async (locale, title, chat) => {
     vi.mocked(getRequestLocale).mockResolvedValue(locale);
     vi.mocked(getActiveStore).mockResolvedValueOnce({ shopDomain: null, siteId: null });
     renderWithMantine(await DashboardOverviewPage());
     expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: chat })).toHaveAttribute('href', '/dashboard/store-chat');
+    expect(screen.getByRole('link', { name: chat })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
     expect(getTodayFacts).not.toHaveBeenCalled();
     expect(storeFlags).not.toHaveBeenCalled();
   });

@@ -149,8 +149,8 @@ describe('DashboardTryOnPage, the store it opens on', () => {
   });
 
   it.each([
-    ['en', 'Try-On needs a connected store'],
-    ['ar', 'التجربة الافتراضية تحتاج إلى متجر مرتبط'],
+    ['en', 'Connect your store to turn on Try-On'],
+    ['ar', 'اربط متجرك لتشغيل التجربة الافتراضية'],
   ] as const)('tells an account with no store to connect a Shopify store, in %s, and never reads shop data', async (locale, title) => {
     cookieLocale = locale;
     vi.mocked(listManagedTryOnShops).mockResolvedValue([]);
@@ -166,7 +166,7 @@ describe('DashboardTryOnPage, the store it opens on', () => {
     vi.mocked(listMessengerSitesReadOnly).mockResolvedValue([{ id: SITE_ID, name: 'Kids', domain: 'kids.example', role: 'owner' }] as never);
     storeCookie = `site:${SITE_ID}`;
     await renderPage();
-    expect(heading('Try-On needs a connected store')).toBeInTheDocument();
+    expect(heading('Connect your store to turn on Try-On')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Switch to second' })).toHaveAttribute('href', '/dashboard/try-on?shop=second.myshopify.com');
     expect(screen.getByRole('button', { name: getTryOnDashboardCopy('en').connectAnotherStore })).toBeInTheDocument();
     expect(getTryOnResultsFacts).not.toHaveBeenCalled();
@@ -176,14 +176,14 @@ describe('DashboardTryOnPage, the store it opens on', () => {
   it('draws the same state for Set up', async () => {
     vi.mocked(listManagedTryOnShops).mockResolvedValue([]);
     render(await DashboardTryOnSetupPage({ searchParams: Promise.resolve({}) }));
-    expect(heading('Try-On needs a connected store')).toBeInTheDocument();
+    expect(heading('Connect your store to turn on Try-On')).toBeInTheDocument();
     expect(getTryOnSettingsForEdit).not.toHaveBeenCalled();
   });
 
   it('survives a failed shop list as no shops, since the layout shows the retry', async () => {
     vi.mocked(listManagedTryOnShops).mockRejectedValue(new Error('db down'));
     await renderPage();
-    expect(heading('Try-On needs a connected store')).toBeInTheDocument();
+    expect(heading('Connect your store to turn on Try-On')).toBeInTheDocument();
   });
 });
 
@@ -203,7 +203,7 @@ describe('DashboardTryOnPage for a paired WooCommerce store', () => {
   it('reads Results under the site tenant instead of asking to connect a store', async () => {
     await renderPage();
     expect(getTryOnResultsFacts).toHaveBeenLastCalledWith({ shop: KEY, period: 30 });
-    expect(screen.queryByRole('heading', { name: 'Try-On needs a connected store' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Connect your store to turn on Try-On' })).not.toBeInTheDocument();
   });
 
   it('draws Set up with the WordPress editors, never the Shopify theme editor or app', async () => {
@@ -224,8 +224,8 @@ describe('DashboardTryOnPage for a paired WooCommerce store', () => {
   it('asks to connect a store when the site has no active connection', async () => {
     woo.active = new Set();
     await renderPage();
-    expect(screen.getByRole('heading', { name: 'Try-On needs a connected store' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Connect a WooCommerce store' })).toHaveAttribute('href', '/dashboard/store-chat');
+    expect(screen.getByRole('heading', { name: 'Connect your store to turn on Try-On' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Connect a WooCommerce store' })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
     expect(getTryOnResultsFacts).not.toHaveBeenCalled();
   });
 });

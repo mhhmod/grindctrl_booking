@@ -21,7 +21,7 @@ describe.each(['en', 'ar'] as const)('the dashboard states in %s', (locale) => {
     render(<V16NoStore locale={locale} />);
     expect(screen.getByRole('heading', { name: copy.noStore.title })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: connect.connectStore })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: copy.noStore.setUpChat })).toHaveAttribute('href', '/dashboard/store-chat');
+    expect(screen.getByRole('link', { name: copy.noStore.setUpChat })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
   });
 
   it('V16StoreLookupFailed announces the failure and retries by reading the stores again', () => {
@@ -52,7 +52,7 @@ describe.each(['en', 'ar'] as const)('the dashboard states in %s', (locale) => {
     render(<V16NeedsStore locale={locale} feature="tryOn" shops={[]} />);
     expect(screen.queryByRole('link', { name: /kids/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: connect.connectStore })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: copy.needsStore.wooAction })).toHaveAttribute('href', '/dashboard/store-chat');
+    expect(screen.getByRole('link', { name: copy.needsStore.wooAction })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
   });
 
   it('V16StoreTaken points at the linking code in Try-On, and V16BackToSetUp at Set up', () => {
@@ -80,7 +80,7 @@ describe('states copy', () => {
     expect(ar.map(([key]) => key)).toEqual(en.map(([key]) => key));
     for (const [key, value] of ar) {
       expect(value.trim(), key).not.toBe('');
-      expect(value.replace(/X|Shopify|WooCommerce|GRINDCTRL|Store Chat/g, '').match(/[A-Za-z]{3,}/), `${key} still English`).toBeNull();
+      expect(value.replace(/X|Shopify|WooCommerce|EasyOrders|GRINDCTRL|Store Chat/g, '').match(/[A-Za-z]{3,}/), `${key} still English`).toBeNull();
     }
   });
 });
