@@ -15,7 +15,9 @@ vi.mock('./db', () => ({
       let op: 'select' | 'insert' | 'update' | 'delete' = 'select';
       let payload: Row = {};
       const filters: Array<[string, unknown]> = [];
-      const matching = () => table.rows.filter((row) => filters.every(([col, val]) => row[col] === val));
+      const include: Array<[string, unknown[]]> = [];
+      const matching = () => table.rows.filter((row) => filters.every(([col, val]) => row[col] === val)
+        && include.every(([col, values]) => values.includes(row[col])));
       const run = () => {
         if (op === 'insert') {
           const row = { id: `dom-${table.rows.length + 1}`, verified_at: null, last_checked_at: null, created_at: String(table.rows.length), ...payload };
@@ -33,6 +35,7 @@ vi.mock('./db', () => ({
         update: (values: Row) => ((op = 'update'), (payload = values), builder),
         delete: () => ((op = 'delete'), builder),
         eq: (col: string, val: unknown) => (filters.push([col, val]), builder),
+        in: (col: string, values: unknown[]) => (include.push([col, values]), builder),
         order: () => builder,
         single: async () => {
           const rows = run();
@@ -184,5 +187,10 @@ describe('site domains', () => {
     const added = await addSiteDomain('site-a', 'shop.example.com');
     await removeSiteDomain('site-a', added.id);
     expect(table.rows).toEqual([]);
+  });
+
+  it('keeps the legacy DNS flow from claiming a paste-trusted host', async () => {
+    table.rows.push({ id: 'paste-1', widget_site_id: 'site-b', pattern: 'taken.example.com', verification_status: 'trusted', verification_method: 'paste_trusted' });
+    await expect(addSiteDomain('site-a', 'taken.example.com')).rejects.toEqual(new DomainError('taken'));
   });
 });

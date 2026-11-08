@@ -65,6 +65,11 @@ const nextConfig: NextConfig = {
         headers: baseline,
       },
       {
+        // Hosted engine/adapters ship together; stable URLs must revalidate.
+        source: '/widget/v1/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }],
+      },
+      {
         /* The marketing pages' images are served as files, not through the
            image optimizer, so let browsers keep them for a day and reuse
            them for a week while they check for a new copy. */

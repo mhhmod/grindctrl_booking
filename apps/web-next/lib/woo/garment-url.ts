@@ -6,6 +6,7 @@ export { isNonPublicAddress } from './public-address';
 import { promises as dns } from 'node:dns';
 import https from 'node:https';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
+import { getPasteConnection, isPasteTrusted, pasteTrustedHosts } from '@/lib/paste/store';
 
 /* Garment images for WooCommerce stores are merchant-controlled URLs, so
    they are an SSRF surface. A URL is accepted only when it is https, on the
@@ -84,6 +85,16 @@ export async function assertSafeGarmentUrl(
 /** The hosts a site has proven by DNS. Throws when the read fails, so a
  *  database error denies the fetch instead of widening it. */
 export async function verifiedSiteHosts(siteId: string): Promise<string[]> {
+  const paste = await getPasteConnection(siteId);
+  if (paste) {
+    // Pending, displaced or held by the Shopify app: no garment hosts.
+    if (!isPasteTrusted(paste)) throw new Error('paste_disconnected');
+    // Includes the signed shop host, so a store that only uses its
+    // .myshopify.com address still has a garment host.
+    const hosts = await pasteTrustedHosts(paste);
+    if (!hosts.length) return [];
+    return [...hosts, ...(paste.platform === 'shopify' ? ['cdn.shopify.com'] : [])];
+  }
   const { data, error } = await getMessengerServiceClient()
     .from('widget_domains')
     .select('domain, pattern')

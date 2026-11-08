@@ -5,6 +5,8 @@ import { resolveShopifyApp, type ShopifyAppCredentials } from '@/lib/shopify/app
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
 import type { StorefrontContextClaims, VerifiedTryOnSession } from './storefront-context';
+import { getPasteConnection, isPasteTrusted } from '@/lib/paste/store';
+import { pasteCapabilitySecret, PASTE_APP_CLIENT_ID } from '@/lib/paste/signing';
 
 /** Separate trust domains: a core demo token cannot become a billable shop
  * capability; an app secret cannot mint a platform-neutral public demo. */
@@ -97,6 +99,8 @@ export async function resolveAnyTryOnSessionKey(
   if (sync) return sync;
   const siteId = unverifiedSiteId(token);
   if (!siteId) return null;
+  const paste = await resolvePasteKey(siteId, verify);
+  if (paste) return paste;
   const key = await wooTryOnKeyForSite(siteId);
   if (!key) return null;
   const value = verify(key.app.secret);
@@ -113,9 +117,27 @@ export async function resolveAnyStorefrontContextKey(
   if (shopify) return shopify;
   const siteId = unverifiedSiteId(token);
   if (!siteId) return null;
+  const paste = await resolvePasteKey(siteId, verify);
+  if (paste) return paste;
   const key = await wooTryOnKeyForSite(siteId);
   if (!key) return null;
   const value = verify(key.app.secret);
   if (!value || value.platform !== 'woocommerce' || value.shop !== `site:${siteId}`) return null;
   return { app: key.app, value };
+}
+
+async function resolvePasteKey<T extends StorefrontContextClaims | VerifiedTryOnSession>(
+  siteId: string, verify: (secret: string) => T | null,
+) {
+  try {
+    const secret = pasteCapabilitySecret(siteId);
+    if (!secret) return null;
+    const value = verify(secret);
+    // Verify the HMAC before reading a connection; Woo tokens never add a
+    // database dependency on the new optional paste migration.
+    if (!value || value.shop !== `site:${siteId}` || !value.platform?.startsWith('paste-')) return null;
+    const connection = await getPasteConnection(siteId);
+    if (!isPasteTrusted(connection) || value.platform !== `paste-${connection.platform}`) return null;
+    return { app: { clientId: PASTE_APP_CLIENT_ID, secret }, value };
+  } catch { return null; }
 }

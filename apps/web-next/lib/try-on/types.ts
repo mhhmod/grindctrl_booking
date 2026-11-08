@@ -37,6 +37,8 @@ export interface TryOnSession {
 export interface TryOnAttempt {
   attemptId: string;
   expiresAt: string;
+  /** Render inside our /embed/try-on iframe before a paid website look. */
+  turnstile?: { siteKey: string | null; action: 'paste_tryon'; cData: string };
 }
 
 /**
@@ -68,6 +70,7 @@ export interface TryOnGenerateRequest {
   photoData?: string;
   /** Explicitly opts into the demo placeholder photo path. */
   useMockPhoto?: boolean;
+  turnstileToken?: string;
 }
 
 /** Individual job record */
@@ -113,7 +116,11 @@ export interface TryOnJobApiResponse {
     | 'TRYON_RESULT_SCHEMA_NOT_READY'
     | 'TRYON_RESULT_PERSISTENCE_FAILED'
     /** The store's owner used today's test looks (N5). */
-    | 'test_looks_cap';
+    | 'test_looks_cap'
+    | 'turnstile_not_configured'
+    | 'turnstile_required'
+    | 'turnstile_failed'
+    | 'turnstile_unavailable';
   jobId?: string;
   status?: TryOnJobStatus;
   /** While queued or processing, when the look reports it (N38). */

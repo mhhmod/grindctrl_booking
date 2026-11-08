@@ -15,11 +15,20 @@ const SHARED_SUFFIXES = new Set([
 ]);
 const SECOND_LEVELS = new Set(['co', 'com', 'net', 'org', 'gov', 'edu', 'ac', 'or', 'ne', 'sch']);
 
-/** The registrable domain a free plan is counted against, or null. */
+/** The registrable domain a free plan is counted against, or null. Refuses
+ *  hosts a merchant may not type as their own (myshopify, our own), so a
+ *  WooCommerce domain row can never count against a Shopify shop. */
 export function apexDomain(input: string): string | null {
   const host = normalizeStorefrontDomain(input);
-  if (!host) return null;
+  return host ? registrableDomain(host) : null;
+}
+
+/** The same suffix rules for an already-normalized host whose trust was
+ *  established elsewhere, such as a paste connection's signed shop: a
+ *  `name.myshopify.com` shop is its own apex, `myshopify.com` is none. */
+export function registrableDomain(host: string): string | null {
   const labels = host.split('.');
+  if (labels.length < 2 || labels.some((label) => !label)) return null;
   const lastTwo = labels.slice(-2).join('.');
   if (SHARED_SUFFIXES.has(lastTwo)) return labels.length >= 3 ? labels.slice(-3).join('.') : null;
   const tld = labels[labels.length - 1];

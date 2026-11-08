@@ -25,7 +25,48 @@ beforeEach(() => {
   phone.store = createPhoneStore(memoryBackend());
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ ok: true, data: session }) }));
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); delete window.turnstile; });
+
+describe('paste Turnstile generation handoff', () => {
+  it.each([true, false])('includes a token only for the server-required website attempt: %s', async (website) => {
+    window.history.replaceState({}, '', '/embed/try-on');
+    let complete: (token: string) => void = () => {};
+    const renderChallenge = vi.fn<NonNullable<Window['turnstile']>['render']>((_element, options) => {
+      complete = options.callback;
+      return 'widget';
+    });
+    window.turnstile = { render: renderChallenge, execute: () => complete('attempt-token'), remove: () => {} };
+    const response = (body: unknown) => ({ ok: true, status: 200, headers: new Headers(), json: async () => body }) as Response;
+    vi.mocked(fetch).mockResolvedValue(response({ ok: true }))
+      .mockResolvedValueOnce(response({ ok: true, data: session }))
+      .mockResolvedValueOnce(response({ ok: true, data: { attemptId: 'attempt',
+        ...(website ? { turnstile: { siteKey: 'key', action: 'paste_tryon', cData: 'attempt-bound' } } : {}) } }))
+      .mockResolvedValueOnce(response({ ok: true, jobId: 'fresh', status: 'completed', productId: product.id, resultImageUrl: LOOK,
+        meta: { runtime: 'live', provider: 'test', costEstimate: null } }));
+    const { result } = renderHook(() => useTryOnFlow(props));
+    await waitFor(() => expect(result.current.sessionState).toBe('ready'));
+    act(() => result.current.selectPhoto(PHOTO));
+    await act(() => result.current.generate());
+    const sent = vi.mocked(fetch).mock.calls.find(([url]) => url === '/api/try-on/generate');
+    const body = JSON.parse(String(sent?.[1]?.body));
+    if (website) expect(body.turnstileToken).toBe('attempt-token');
+    else expect(body).not.toHaveProperty('turnstileToken');
+    expect(renderChallenge).toHaveBeenCalledTimes(website ? 1 : 0);
+  });
+
+  it('uses the existing generic error and sends no generate request when the site key is missing', async () => {
+    const response = (body: unknown) => ({ ok: true, status: 200, json: async () => body }) as Response;
+    vi.mocked(fetch).mockResolvedValueOnce(response({ ok: true, data: session }))
+      .mockResolvedValueOnce(response({ ok: true, data: { attemptId: 'attempt', turnstile: { siteKey: null, action: 'paste_tryon', cData: 'bound' } } }));
+    const { result } = renderHook(() => useTryOnFlow(props));
+    await waitFor(() => expect(result.current.sessionState).toBe('ready'));
+    act(() => result.current.selectPhoto(PHOTO));
+    await act(() => result.current.generate());
+    expect(result.current.step).toBe('error');
+    expect(result.current.error).toBe(props.t.genericError);
+    expect(vi.mocked(fetch).mock.calls.some(([url]) => url === '/api/try-on/generate')).toBe(false);
+  });
+});
 
 describe('device look restoration in the storefront flow', () => {
   it('saves finished bytes before exposing result actions and restores them on a later visit', async () => {

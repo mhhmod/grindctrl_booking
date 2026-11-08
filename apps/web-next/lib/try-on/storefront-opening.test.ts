@@ -36,6 +36,7 @@ async function boot(platform: Platform, locale = 'en', connection: object = {}) 
     : '<main><button type="button" class="gc-tryon-btn" data-product-id="42" data-product-type="simple">Try it on</button></main>';
   (window as unknown as Record<string, unknown>).grindctrlTryOn = { restUrl: '/wp-json/grindctrl/v1/', storeApi: '/wp-json/wc/store/v1/', locale };
   delete (window as unknown as Record<string, unknown>).__grindctrlTryOnWoo;
+  delete (window as unknown as Record<string, unknown>).GRINDCTRL_TRYON_ENGINE;
   vi.stubGlobal('fetch', vi.fn(async (input: string | URL) => {
     const url = String(input);
     if (url.includes('/config?')) return new Response(JSON.stringify({ features: ['v16_tryon'], tryOn: 'live' }));
@@ -48,6 +49,7 @@ async function boot(platform: Platform, locale = 'en', connection: object = {}) 
     }
     return new Response(JSON.stringify({ context: { expiresAt }, embedUrl: 'https://grindctrl.cloud/embed/try-on?product=woo-42&sheet=1#storefrontContext=signed&storefrontNonce=nonce' }));
   }));
+  if (platform === 'woo') window.eval(readFileSync(path.resolve(process.cwd(), 'public/widget/v1/tryon-engine.js'), 'utf8'));
   window.eval(assets[platform]);
   if (platform === 'shopify') await waitFor(() => expect(document.querySelector('.gc-tryon-root--pending')).toBeNull());
   return { button: document.querySelector<HTMLButtonElement>('.gc-tryon-btn')!, product: platform === 'shopify' ? 'tee' : 'woo-42' };

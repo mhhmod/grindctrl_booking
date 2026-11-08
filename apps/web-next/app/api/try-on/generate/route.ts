@@ -32,6 +32,10 @@ import type {
   TryOnJobApiResponse,
   TryOnPhotoSource,
 } from '@/lib/try-on/types';
+import { verifyPasteTurnstile } from '@/lib/paste/turnstile';
+import { loadPublicSite, originAllowed } from '@/lib/messenger/public-api';
+import { getMessengerServiceClient } from '@/lib/messenger/db';
+import { isSiteStorefrontPlatform } from '@/lib/try-on/storefront-context';
 
 const VALID_PHOTO_SOURCES: TryOnPhotoSource[] = ['upload', 'mock'];
 
@@ -114,6 +118,7 @@ export async function POST(request: NextRequest) {
       garmentUrl?: string;
       productName?: string;
       useMockPhoto?: boolean;
+      turnstileToken?: unknown;
     };
 
     const sessionId = body.sessionId ?? '';
@@ -303,7 +308,7 @@ export async function POST(request: NextRequest) {
     const garmentUrl = typeof body.garmentUrl === 'string' ? body.garmentUrl : undefined;
     // WooCommerce garments are checked in full (DNS, private ranges) when
     // fetched; here only that the URL is the one the context signed.
-    if (garmentUrl && sessionAuthorization.platform !== 'woocommerce' && !isAllowedGarmentUrl(garmentUrl)) {
+    if (garmentUrl && !isSiteStorefrontPlatform(sessionAuthorization.platform) && !isAllowedGarmentUrl(garmentUrl)) {
       const message = 'Garment image must come from the Shopify CDN.';
       return NextResponse.json(
         { ok: false, message, error: message } satisfies TryOnJobApiResponse,
@@ -329,6 +334,22 @@ export async function POST(request: NextRequest) {
         { ok: false, message, error: message } satisfies TryOnJobApiResponse,
         { status: 401 },
       );
+    }
+
+    if (authorization.platform?.startsWith('paste-')) {
+      // A domain removed during the ten-minute session revokes generation,
+      // even if its CDN image and the capability signature remain valid.
+      const siteId = authorization.shop?.slice('site:'.length);
+      const res = await getMessengerServiceClient().from('widget_sites').select('embed_key').eq('id', siteId!).maybeSingle();
+      const site = !res.error && res.data ? await loadPublicSite(res.data.embed_key as string) : null;
+      if (!site || site.status === 'disabled' || !authorization.origin || !originAllowed(site, authorization.origin, { trusted: true })) {
+        return NextResponse.json({ ok: false, error: 'origin_not_allowed' }, { status: 403 });
+      }
+      const challenge = await verifyPasteTurnstile({ token: body.turnstileToken, authorization, remoteIp: clientIp(request) });
+      if (!challenge.ok) return NextResponse.json({ ok: false, code: challenge.code, error: challenge.code }, {
+        status: challenge.code === 'turnstile_not_configured' || challenge.code === 'turnstile_unavailable' ? 503 : 403,
+        headers: { 'Cache-Control': 'no-store' },
+      });
     }
 
     // Storefront tenants and public-demo uploads use after()/202 by default.

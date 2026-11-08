@@ -9,6 +9,7 @@ import {
 } from '@/lib/messenger/public-api';
 import { recordEvent } from '@/lib/messenger/conversations';
 import { configFailurePayload } from '@/lib/messenger/config-failure';
+import { recordPasteSignal } from '@/lib/paste/store';
 
 /* POST /api/messenger/event
    Storefront telemetry. Strict name allowlist so this cannot become a
@@ -118,6 +119,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (!allowed) return NextResponse.json({ ok: false }, { status: 403 });
+
+    if (name === 'loader_initialized' && originTrusted && origin && site.status === 'active') {
+      await recordPasteSignal(site.id, origin);
+    }
 
     await recordEvent({
       siteId: site.id,

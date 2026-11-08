@@ -29,6 +29,8 @@ import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import type { WooSiteConnectionSummary } from '@/lib/woo/connection';
 import { pluginSupportsOrderLookup, WOO_ORDER_LOOKUP_MIN_PLUGIN_VERSION } from '@/lib/woo/plugin-version';
 import { StorefrontDomains } from './storefront-domains';
+import { PasteInstall, type PasteInstallActions } from './paste-install';
+import { pasteInstallCopy } from '@/lib/dashboard/paste-install-copy';
 import { WoocommerceGuide, type CreateWooPairingCode } from './woocommerce-guide';
 import classes from './v16-chat-studio.module.css';
 
@@ -47,6 +49,7 @@ export type ChatStudioActions = Pick<
 > & {
   discardDraft(siteId: string): Promise<ActionResult>;
   createWooPairingCodeAction: CreateWooPairingCode;
+  paste?: PasteInstallActions;
 } & Partial<DomainActions>;
 
 export type ChatStudioMeta = {
@@ -839,7 +842,7 @@ export function V16ChatStudio({
                   </Button>
                 )}
               </div>
-              <p className={classes.muted}>
+              {(shopify || !actions.paste) && <p className={classes.muted}>
                 {copy.notShopify}{' '}
                 <Button
                   variant="subtle"
@@ -857,9 +860,43 @@ export function V16ChatStudio({
                 >
                   {copied ? copy.copied : copy.copyScript}
                 </Button>
-              </p>
+              </p>}
             </div>
-            {!shopify && (
+            {!shopify && actions.paste && (
+              <PasteInstall
+                siteId={siteId}
+                locale={locale}
+                copy={pasteInstallCopy(locale)}
+                ago={copy.ago}
+                actions={actions.paste}
+                initialPlatform={meta.wooConnection ? 'woocommerce' : null}
+                woocommerce={
+                  <>
+                    <WoocommerceGuide
+                      locale={locale}
+                      siteId={siteId}
+                      connection={meta.wooConnection}
+                      createPairingCode={actions.createWooPairingCodeAction}
+                      copy={copy.woocommerce}
+                      copyLabels={copy.domains}
+                    />
+                    {actions.listDomainsAction && actions.addDomainAction && actions.checkDomainAction && actions.removeDomainAction && (
+                      <StorefrontDomains
+                        siteId={siteId}
+                        copy={copy.domains}
+                        actions={{
+                          listDomainsAction: actions.listDomainsAction,
+                          addDomainAction: actions.addDomainAction,
+                          checkDomainAction: actions.checkDomainAction,
+                          removeDomainAction: actions.removeDomainAction,
+                        }}
+                      />
+                    )}
+                  </>
+                }
+              />
+            )}
+            {!shopify && !actions.paste && (
               <WoocommerceGuide
                 locale={locale}
                 siteId={siteId}
@@ -870,6 +907,7 @@ export function V16ChatStudio({
               />
             )}
             {!shopify &&
+              !actions.paste &&
               actions.listDomainsAction &&
               actions.addDomainAction &&
               actions.checkDomainAction &&

@@ -1,0 +1,183 @@
+.root {
+  min-width: 0;
+}
+
+.platforms {
+  display: grid;
+  gap: var(--mantine-spacing-sm);
+  margin-top: var(--mantine-spacing-xs);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+}
+
+.platform {
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  min-height: 44px;
+}
+
+.platform[data-checked] {
+  border-color: var(--mantine-primary-color-filled);
+}
+
+.platformText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  block-size: 20px;
+  margin-block-end: 2px;
+}
+
+.steps {
+  display: grid;
+  gap: var(--mantine-spacing-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.step {
+  position: relative;
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  padding-inline-start: 2.25rem;
+  counter-increment: step;
+  min-width: 0;
+}
+
+.step::before {
+  content: counter(step);
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 0;
+  display: grid;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border-radius: 999px;
+  background: var(--mantine-color-default-hover);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+}
+
+.inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--mantine-spacing-sm);
+}
+
+.grow {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.domains {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.domain {
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  min-width: 0;
+}
+
+.domainName {
+  font-weight: 600;
+  font-size: var(--mantine-font-size-sm);
+  overflow-wrap: anywhere;
+}
+
+.dot {
+  display: inline-block;
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.proof {
+  padding-block-start: var(--mantine-spacing-xs);
+  border-block-start: 1px solid var(--mantine-color-default-border);
+}
+
+.code {
+  max-block-size: 14rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-size: 12px;
+  text-align: left;
+}
+
+.codeLine {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+
+.copy {
+  align-self: flex-start;
+  justify-self: start;
+}
+
+.pasteSteps {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-inline-start: 1.25rem;
+  list-style: decimal;
+}
+
+.pasteSteps li::marker {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+}
+
+.pulse {
+  inline-size: 10px;
+  block-size: 10px;
+  margin-block-start: 5px;
+  border-radius: 999px;
+  background: var(--mantine-color-dimmed);
+  flex: none;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% { opacity: 0.3; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse { animation: none; }
+}
+
+.help,
+.reset {
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+}
+
+.reset {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+
+.proofCheck {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+}

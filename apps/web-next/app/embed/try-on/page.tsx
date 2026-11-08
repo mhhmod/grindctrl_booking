@@ -58,6 +58,8 @@ export default async function EmbedTryOnPage({
     variant?: string;
     sheet?: string;
     variantTitle?: string;
+    selectedVariant?: string;
+    cart?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -129,6 +131,7 @@ export default async function EmbedTryOnPage({
             <TryOnSheet
               product={shopProduct}
               variantId={params.variant}
+              displayVariantId={params.selectedVariant}
               variantTitle={params.variantTitle?.trim().slice(0, 200) || undefined}
               shop={shop ?? undefined}
               lookSeconds={lookSeconds}
@@ -142,6 +145,7 @@ export default async function EmbedTryOnPage({
                 showWhatsapp: settings.showWhatsapp,
                 showAddToCart: settings.showAddToCart,
                 showTryAgain: settings.showTryAgain,
+                backToProduct: params.cart === 'unsupported',
                 disclaimerText: merchantCopy.disclaimerText,
               }}
             />
@@ -161,6 +165,7 @@ export default async function EmbedTryOnPage({
                 showWhatsapp: settings.showWhatsapp,
                 showAddToCart: settings.showAddToCart,
                 showTryAgain: settings.showTryAgain,
+                backToProduct: params.cart === 'unsupported',
                 disclaimerText: merchantCopy.disclaimerText,
               },
             }}

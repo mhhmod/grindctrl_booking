@@ -15,6 +15,7 @@ import { verifyPreviewTokenAnyApp } from '@/lib/launch/preview-token';
 import { resolveOrderProvider } from '@/lib/messenger/order-provider';
 import { normalizeTenantKey } from '@/lib/tenancy/tenant-key';
 import { isActiveTenant } from '@/lib/shopify/tokens';
+import { recordPasteSignal } from '@/lib/paste/store';
 
 /* GET /api/messenger/config?key=<embed_key>&origin=<page origin>
    Public, cacheable, fail-quiet: the loader keeps its last-known-good copy
@@ -69,6 +70,9 @@ export async function GET(request: NextRequest) {
     }
 
     const flagStore = flagStoreForSite(site);
+    // A typed/query origin is not an install signal. This path is reached
+    // only after the browser header passed this site's origin policy.
+    if (headerOrigin && site.status === 'active') await recordPasteSignal(site.id, headerOrigin);
     const features = await storeFlags(flagStore);
     const now = new Date();
     const payload = features.includes('v16_chat')

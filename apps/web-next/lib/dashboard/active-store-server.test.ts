@@ -1,13 +1,14 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ shops: vi.fn(), sites: vi.fn(), woo: vi.fn(), wooContext: vi.fn(), freePlan: vi.fn() }));
+const mocks = vi.hoisted(() => ({ shops: vi.fn(), sites: vi.fn(), woo: vi.fn(), wooContext: vi.fn(), freePlan: vi.fn(), paste: vi.fn() }));
 vi.mock('server-only', () => ({}));
 vi.mock('next/headers', () => ({ headers: vi.fn(), cookies: vi.fn() }));
 vi.mock('@clerk/nextjs/server', () => ({ auth: async () => ({ userId: 'user_nour' }) }));
 vi.mock('@/lib/shopify/shops', () => ({ listManagedTryOnShops: mocks.shops }));
 vi.mock('@/lib/woo/connection', () => ({ listActiveWooSiteIds: mocks.woo, getActiveWooSiteContext: mocks.wooContext }));
 vi.mock('@/lib/woo/free-plan', () => ({ ensureWooFreePlan: mocks.freePlan }));
+vi.mock('@/lib/paste/store', () => ({ listActivePasteSiteIds: mocks.paste }));
 vi.mock('@/lib/messenger/provisioning', () => ({ listMessengerSitesReadOnly: mocks.sites }));
 
 import { ensureActiveStorePlan, getActiveStoreRole, getActiveStoreTimeZone, listDashboardSites, storeLookupFailed } from './active-store-server';
@@ -22,6 +23,7 @@ beforeEach(() => {
   ]);
   mocks.sites.mockResolvedValue([{ id: SITE, name: 'Kids', domain: 'kids.example', role: 'admin' }]);
   mocks.woo.mockResolvedValue(new Set());
+  mocks.paste.mockResolvedValue(new Set());
 });
 
 /* Item 12: the nav follows the person's role on the active store. */
@@ -98,6 +100,13 @@ describe('WooCommerce stores', () => {
     mocks.freePlan.mockClear();
     await ensureActiveStorePlan({ shopDomain: 'mine.myshopify.com', siteId: null, tenantKey: 'mine.myshopify.com', platform: 'shopify' });
     await ensureActiveStorePlan({ shopDomain: null, siteId: SITE });
+    await ensureActiveStorePlan({ shopDomain: null, siteId: SITE, tenantKey: `site:${SITE}`, platform: 'paste' });
+    expect(mocks.freePlan).not.toHaveBeenCalled();
+  });
+
+  it('marks an opted-in paste tenant without granting a plan during the dashboard read', async () => {
+    mocks.paste.mockResolvedValue(new Set([SITE]));
+    expect(await listDashboardSites()).toEqual([expect.objectContaining({ id: SITE, paste: true, woo: false })]);
     expect(mocks.freePlan).not.toHaveBeenCalled();
   });
 });

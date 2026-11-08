@@ -13,6 +13,7 @@ export interface DomainPatternRow {
   pattern: string;
   verification_status: string;
   environment: string;
+  verification_method?: string;
 }
 
 export interface SiteSecuritySettings {
@@ -46,6 +47,10 @@ export function decideOrigin(input: {
   security: SiteSecuritySettings | null | undefined;
   /** The site's own connected store domain, when it has one. */
   siteDomain?: string | null;
+  /** An active Shopify paste connection's signed shop host. It is trusted
+   *  through the connection, never a widget_domains row, and is admitted
+   *  exactly like a trusted paste row: exact host, HTTPS, default port. */
+  pasteShopDomain?: string | null;
 }): OriginDecision {
   if (!input.origin) return { allowed: false, reason: 'unverified_origin' };
 
@@ -60,6 +65,18 @@ export function decideOrigin(input: {
   }
 
   const hostname = normalizeHost(url.hostname);
+  const pasteHost = hostname.replace(/\.$/, '').replace(/^www\./, '');
+  const pasteRows = input.patterns.filter((row) => row.verification_method?.startsWith('paste_')
+    && row.pattern.replace(/^www\./, '') === pasteHost);
+  // Exact-host revocations override legacy own-domain and wildcard grants.
+  if (pasteRows.some((row) => row.verification_status === 'disputed' || row.verification_method === 'paste_removed')) {
+    return { allowed: false, reason: 'unverified_origin' };
+  }
+  if (pasteRows.some((row) => row.verification_status === 'trusted')
+    || (input.pasteShopDomain && hostname.replace(/\.$/, '') === normalizeHost(input.pasteShopDomain))) {
+    return url.protocol === 'https:' && !url.port && !url.username && !url.password
+      ? { allowed: true } : { allowed: false, reason: 'disallowed_scheme' };
+  }
   const isLocal =
     hostname === 'localhost' ||
     hostname === '127.0.0.1' ||
