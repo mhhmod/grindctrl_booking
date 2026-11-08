@@ -15,10 +15,11 @@ export const dynamic = 'force-dynamic';
 
 /* GET /api/try-on/paste-config?key=<embedKey>&locale=en|ar&vid=<visitor>&preview=<token>
 
-   What pasted code on a product listing needs before it adds any "Try on"
-   pill: whether this visitor may see Try-On now (the site's launch answer,
-   then the store's preview/holdout audience, as the Shopify App Proxy
-   config does), the card pill switch, and the pill's label and styling.
+   What pasted code needs before it adds a product page button or any "Try
+   on" pill: whether this visitor may see Try-On now (the site's launch
+   answer, then the store's preview/holdout audience, as the Shopify App
+   Proxy config does), the card pill switch, and the button's and pill's
+   label and styling.
    Public and read-only, like /api/woo/tryon-config: the embed key ships in
    the page and selects only whose public styling is returned. It grants
    nothing; a look still needs a signed render through paste-context. */
@@ -75,6 +76,12 @@ export async function GET(request: NextRequest) {
       accentBg: config.accentBg,
       accentFg: config.accentFg,
       radiusPx: config.radiusPx,
+      // The product button's look, so pasted code shows it from the first paint.
+      // The same locale-resolved label paste-context returns in its settings.
+      buttonLabel: config.buttonLabel,
+      iconBgFrom: config.iconBgFrom,
+      iconBgTo: config.iconBgTo,
+      buttonIconPx: config.buttonIconPx,
     }, config.reason === 'unavailable' ? 'no-store' : 'private, max-age=60');
   } catch (error) {
     if (error instanceof RequestRateLimitError) {

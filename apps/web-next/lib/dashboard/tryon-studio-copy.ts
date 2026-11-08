@@ -20,6 +20,8 @@ export interface TryOnStudioCopy {
     pillBody: string;
     pillNeedsButton: string;
     pillUnavailable: string;
+    pillCodeOutdated: string;
+    pillGetCode: string;
   };
   subtitle: string;
   unsavedLabel: string;
@@ -105,6 +107,8 @@ const en: TryOnStudioCopy = {
     pillBody: 'A small Try on pill on each product card in your collections, search and home page.',
     pillNeedsButton: 'Turn Try-On on to show the pills.',
     pillUnavailable: 'The pill switch is almost ready. Try again soon.',
+    pillCodeOutdated: 'Your store still has the older code, so pills can’t show yet. Paste your updated code over the old one.',
+    pillGetCode: 'Get my updated code',
   },
   subtitle: 'Every change shows in the preview first. When you save, shoppers see it within a minute.',
   unsavedLabel: 'Unsaved changes',
@@ -194,6 +198,8 @@ const ar: TryOnStudioCopy = {
     pillBody: 'زر صغير للتجربة على كل بطاقة منتج في المجموعات والبحث والصفحة الرئيسية.',
     pillNeedsButton: 'فعّل التجربة الافتراضية لإظهار الأزرار.',
     pillUnavailable: 'مفتاح البطاقات أوشك على الجاهزية. حاول قريباً.',
+    pillCodeOutdated: 'متجرك ما زال يعمل بالكود القديم، لذا لن تظهر الأزرار بعد. الصق الكود المحدّث مكان القديم.',
+    pillGetCode: 'احصل على الكود المحدّث',
   },
   subtitle: 'يظهر كل تغيير في المعاينة أولاً. وعند الحفظ، يراه المتسوقون خلال دقيقة.',
   unsavedLabel: 'تغييرات غير محفوظة',

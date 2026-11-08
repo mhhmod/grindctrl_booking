@@ -565,7 +565,14 @@ function ButtonSwitch({
         <div className={classes.pillRow}>
           <div className={classes.switchText}>
             <span className={classes.pillLabel}>{copy.pill}</span>
-            <span className={classes.pillBody}>{on ? copy.pillBody : copy.pillNeedsButton}</span>
+            <span className={classes.pillBody}>
+              {!on ? copy.pillNeedsButton : pill && status.codeOutdated ? copy.pillCodeOutdated : copy.pillBody}
+            </span>
+            {on && pill && status.codeOutdated ? (
+              <Button component={Link} href="/dashboard/store-chat/setup#install" variant="subtle" size="compact-sm" className={classes.pillAction}>
+                {copy.pillGetCode}
+              </Button>
+            ) : null}
           </div>
           <Switch
             size="sm"

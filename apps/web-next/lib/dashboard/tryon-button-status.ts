@@ -23,6 +23,10 @@ export type TryOnButtonStatus = {
   tryOnState: TryOnState;
   /** null when on. */
   reason: TryOnLaunchReason | null;
+  /** A pasted Shopify install running older code than the snippet we hand
+   *  out now (lib/paste/status.ts pasteCodeOutdated); false when unknown,
+   *  and for the Shopify app, WooCommerce and website code. */
+  codeOutdated: boolean;
 };
 
 export function tryOnButtonStatus({
@@ -30,6 +34,7 @@ export function tryOnButtonStatus({
   showButton,
   entitlement,
   launchState,
+  codeOutdated = false,
 }: {
   installed: boolean;
   showButton: boolean;
@@ -37,15 +42,16 @@ export function tryOnButtonStatus({
   entitlement: Pick<ShopEntitlement, 'available' | 'status' | 'totalCreditsRemaining'> | null;
   /** The store's launch state; 'live' when preview mode is off for it. */
   launchState: LaunchState;
+  codeOutdated?: boolean;
 }): TryOnButtonStatus {
-  if (!installed) return { showButton, tryOnState: 'not_installed', reason: 'not_installed' };
-  if (!showButton) return { showButton, tryOnState: 'off', reason: 'paused' };
+  const state = (tryOnState: TryOnState, reason: TryOnLaunchReason | null): TryOnButtonStatus =>
+    ({ showButton, tryOnState, reason, codeOutdated });
+  if (!installed) return state('not_installed', 'not_installed');
+  if (!showButton) return state('off', 'paused');
   // Same order as the pasted-code install status: preview, then the plan.
-  if (launchState === 'setup' || launchState === 'preview') return { showButton, tryOnState: 'not_ready', reason: 'preview' };
-  if (!entitlement) return { showButton, tryOnState: 'not_ready', reason: 'unavailable' };
+  if (launchState === 'setup' || launchState === 'preview') return state('not_ready', 'preview');
+  if (!entitlement) return state('not_ready', 'unavailable');
   const launch = tryOnLaunchFromEntitlement(entitlement);
-  if (launch.tryOn === 'live') return { showButton, tryOnState: 'on', reason: null };
-  return launch.reason === 'not_installed'
-    ? { showButton, tryOnState: 'not_installed', reason: 'not_installed' }
-    : { showButton, tryOnState: 'not_ready', reason: launch.reason };
+  if (launch.tryOn === 'live') return state('on', null);
+  return launch.reason === 'not_installed' ? state('not_installed', 'not_installed') : state('not_ready', launch.reason);
 }

@@ -1,8 +1,8 @@
 /**
- * GRINDCTRL Try-On hosted engine v1.2.0.
+ * GRINDCTRL Try-On hosted engine v1.3.0.
  *
- * One storefront lifecycle for every platform: the button and its ready
- * badge, the "Try on" pills on product cards, prewarm on view (skipped on
+ * One storefront lifecycle for every platform: the button, its animated icon
+ * and ready badge, the "Try on" pills on product cards, prewarm on view (skipped on
  * Save-Data and 2g), the loading skeleton, the iframe sheet, origin-checked
  * postMessage, the 24 hour on-phone look hint and locale. Platform
  * specifics live in a thin adapter (tryon-woo.js, tryon-paste.js):
@@ -17,6 +17,7 @@
  *   findCards(rescan)              -> [{ host, productId, title }] cards to give a pill (injectCards adapters only);
  *                                     cardSettings carries the catalog label, sizes and colors
  *   lookKey(button), messageProductId(product), checkout(), locale, embedOrigin?, buttonLabel?, cardLabel?
+ *   buttonSettings?                -> the owner's button look, applied before an injected button is shown
  *
  * Platform data is display and cart data only; the signed context is the
  * authority for a look. Fails quiet: nothing here may break the store page.
@@ -24,7 +25,9 @@
 (function () {
   'use strict';
   if (window.GRINDCTRL_TRYON_ENGINE) return;
-  window.GRINDCTRL_TRYON_ENGINE = { version: '1.2.0', mount: function (adapter) {
+  // Per page, across mounts: every icon's clipPath needs its own id.
+  var iconCount = 0;
+  window.GRINDCTRL_TRYON_ENGINE = { version: '1.3.0', mount: function (adapter) {
   var BUTTON = '.gc-tryon-btn[data-product-id]';
   var PILL = '.gc-tryon-pill[data-product-id]';
   // Pills one page may hold; the observer stops once there are this many.
@@ -82,7 +85,10 @@
     if (!label) {
       label = document.createElement('span');
       label.className = 'gc-tryon-label';
-      while (btn.firstChild) label.appendChild(btn.firstChild);
+      // The icon stays first, outside the label.
+      Array.prototype.slice.call(btn.childNodes).forEach(function (node) {
+        if (!(node.classList && node.classList.contains('gc-tryon-ic'))) label.appendChild(node);
+      });
       btn.appendChild(label);
     }
     var original = '';
@@ -132,20 +138,53 @@
     };
   }
 
-  /* The owner's label and colors from the context settings, through the
-     same custom properties the WooCommerce plugin prints on its button. */
+  /* The owner's label, colors, corners and icon, through the same custom
+     properties the WooCommerce plugin prints on its button. Applied once:
+     before an injected button is shown when the adapter read them first
+     (no indicator yet), otherwise from the context settings. */
   function applySettings(button, settings, indicator) {
     if (!settings || button.dataset.gcStyled === '1') return;
     button.dataset.gcStyled = '1';
     var label = typeof settings.buttonLabel === 'string' ? settings.buttonLabel.trim() : '';
-    if (label && label.length <= 80) indicator.relabel(label);
-    var supports = window.CSS && typeof window.CSS.supports === 'function';
-    if (supports && typeof settings.accentBg === 'string' && window.CSS.supports('color', settings.accentBg)) button.style.setProperty('--gc-bg', settings.accentBg);
-    if (supports && typeof settings.accentFg === 'string' && window.CSS.supports('color', settings.accentFg)) button.style.setProperty('--gc-fg', settings.accentFg);
+    var labelNode = button.querySelector('.gc-tryon-label');
+    if (label && label.length <= 80) {
+      if (indicator) indicator.relabel(label);
+      else if (labelNode) labelNode.textContent = label;
+    }
+    function color(value) { return typeof value === 'string' && window.CSS && typeof window.CSS.supports === 'function' && window.CSS.supports('color', value); }
+    if (color(settings.accentBg)) button.style.setProperty('--gc-bg', settings.accentBg);
+    if (color(settings.accentFg)) button.style.setProperty('--gc-fg', settings.accentFg);
     var radius = Number(settings.radiusPx);
     // Same rule as lib/try-on/appearance.ts and the pill below: the owner's exact
     // corners, 999 = fully round. (A 0-48 range used to turn the round default into 10px.)
     if (Number.isFinite(radius) && radius >= 0) button.style.setProperty('--gc-radius', Math.min(Math.round(radius), 999) + 'px');
+    // The gradient is a pair, as in the Shopify app block.
+    if (color(settings.iconBgFrom) && color(settings.iconBgTo)) {
+      button.style.setProperty('--gc-ic-from', settings.iconBgFrom);
+      button.style.setProperty('--gc-ic-to', settings.iconBgTo);
+    }
+    // The dashboard's icon size range (18-40).
+    var icon = settings.buttonIconPx === null || settings.buttonIconPx === '' ? NaN : Number(settings.buttonIconPx);
+    if (Number.isFinite(icon)) button.style.setProperty('--gc-ic-size', Math.min(Math.max(Math.round(icon), 18), 40) + 'px');
+  }
+
+  /* The Shopify app block's animated icon (tryon.liquid): a scan beam down a
+     ghosted figure in a gradient badge, a pulsing ring and a sparkle.
+     Product page buttons only; card buttons and pills keep their own look. */
+  function addIcon(button) {
+    if (isPill(button) || button.classList.contains('gc-tryon-btn--card') || button.querySelector('.gc-tryon-ic')) return;
+    var clip;
+    do { clip = 'gc-tryon-ic-clip-' + (++iconCount); } while (document.getElementById(clip));
+    var figure = '<circle cx="12" cy="6.6" r="3.2"/><path d="M4.6 21c0-4.5 3.3-7.2 7.4-7.2s7.4 2.7 7.4 7.2Z"/>';
+    var icon = document.createElement('span');
+    icon.className = 'gc-tryon-ic';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" focusable="false">' +
+      '<defs><clipPath id="' + clip + '">' + figure + '</clipPath></defs>' +
+      '<g opacity="0.5">' + figure + '</g>' +
+      '<g clip-path="url(#' + clip + ')"><rect class="gc-ic-scan" x="2" y="1" width="20" height="2.4" rx="1.2"/></g>' +
+      '<path class="gc-ic-spark" d="m20 2.6.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5Z"/></svg>';
+    button.insertBefore(icon, button.firstChild);
   }
 
   var prewarmed = false;
@@ -181,6 +220,24 @@
       '.gc-tryon-btn--card{margin-block:.25rem;padding-block:.45rem;padding-inline:.9rem;font-size:.875rem}',
       '.gc-tryon-btn--preview{display:none}',
       '.gc-tryon-btn{flex-wrap:wrap}',
+      /* The icon: the Shopify app block's tryon.css, scoped to the button. */
+      '.gc-tryon-btn .gc-tryon-ic{position:relative;display:inline-flex;align-items:center;justify-content:center;',
+      'width:var(--gc-ic-size,28px)!important;height:var(--gc-ic-size,28px)!important;margin-inline-end:10px;flex:none;',
+      'border-radius:50%;padding:3px;box-sizing:border-box;',
+      'background:linear-gradient(120deg,var(--gc-ic-from,#ff9a3d),var(--gc-ic-to,#ffd76e),var(--gc-ic-from,#ff9a3d));',
+      'background-size:220% 220%;animation:gc-ic-pan 5s ease-in-out infinite;transition:transform .25s cubic-bezier(.22,1,.36,1)}',
+      '.gc-tryon-btn .gc-tryon-ic svg{width:100%!important;height:100%!important}',
+      '@keyframes gc-ic-pan{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}',
+      '.gc-tryon-btn .gc-ic-scan{animation:gc-scan 2.6s cubic-bezier(.4,0,.2,1) infinite}',
+      '.gc-tryon-btn .gc-ic-spark{animation:gc-spark 2.6s ease-out infinite;transform-origin:20.5px 4.9px}',
+      '.gc-tryon-btn .gc-tryon-ic::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--gc-ic-to,#ffd76e);',
+      'animation:gc-ring 2.6s ease-out infinite}',
+      '@keyframes gc-scan{0%{transform:translateY(0);opacity:0}12%{opacity:1}58%{transform:translateY(17px);opacity:1}72%,100%{transform:translateY(17px);opacity:0}}',
+      '@keyframes gc-ring{0%{transform:scale(1);opacity:.7}75%,100%{transform:scale(1.5);opacity:0}}',
+      '@keyframes gc-spark{0%,55%{opacity:0;transform:scale(.3)}66%{opacity:1;transform:scale(1.1)}74%{transform:scale(1)}88%,100%{opacity:0;transform:scale(.3)}}',
+      '.gc-tryon-btn:hover .gc-tryon-ic{transform:scale(1.1)}',
+      '@media (prefers-reduced-motion:reduce){.gc-tryon-btn .gc-tryon-ic,.gc-tryon-btn .gc-ic-scan,.gc-tryon-btn .gc-ic-spark{animation:none;opacity:1;transform:none}',
+      '.gc-tryon-btn .gc-tryon-ic::after{animation:none;opacity:0}.gc-tryon-btn:hover .gc-tryon-ic{transform:none}}',
       '.gc-tryon-ready{font-size:.75em;padding:.2em .5em;border:1px solid currentColor;border-radius:999px}',
       '.gc-tryon-ready[hidden],.gc-tryon-loading[hidden]{display:none}',
       '.gc-tryon-live{position:absolute;inline-size:1px;block-size:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}',
@@ -681,7 +738,13 @@
     injected.className = 'gc-tryon-btn';
     injected.dataset.productId = detected.id;
     injected.dataset.gcPaste = '1';
-    injected.textContent = adapter.buttonLabel;
+    var injectedLabel = document.createElement('span');
+    injectedLabel.className = 'gc-tryon-label';
+    injectedLabel.textContent = adapter.buttonLabel;
+    injected.appendChild(injectedLabel);
+    addIcon(injected);
+    // The owner's design from its first paint; the context settings later find it styled.
+    applySettings(injected, adapter.buttonSettings, null);
     placement.insertAdjacentElement('afterend', injected);
   }
   // An exhausted store stays hidden to shoppers. Only a preview token reveals
@@ -694,6 +757,8 @@
   }
   document.querySelectorAll(BUTTON).forEach(function (button) {
     if (!owns(button)) return;
+    // Buttons a plugin printed as text only (WooCommerce plugin 0.3.3 and older).
+    addIcon(button);
     indicatorFor(button);
     if (!button.classList.contains('gc-tryon-btn--preview')) {
       observeForPrewarm(button, function () { openTryOn(button, true); });

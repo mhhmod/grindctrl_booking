@@ -357,6 +357,59 @@ describe('tryon-woo.js', () => {
   });
 });
 
+describe('the Try-On icon on WooCommerce buttons', () => {
+  const pageButton = () => document.querySelector('form .gc-tryon-btn') as HTMLButtonElement;
+  const icons = (button: Element) => button.querySelectorAll('.gc-tryon-ic');
+  function remount() {
+    delete (window as unknown as Record<string, unknown>).__grindctrlTryOnWoo;
+    delete (window as unknown as Record<string, unknown>).GRINDCTRL_TRYON_ENGINE;
+    load();
+  }
+
+  it('gives a text-only product page button exactly one icon, before its label, and none to a card button', () => {
+    page('simple');
+    load();
+    expect(icons(pageButton())).toHaveLength(1);
+    expect([...pageButton().children].map((child) => child.className)).toEqual(['gc-tryon-ic', 'gc-tryon-label', 'gc-tryon-ready']);
+    expect(pageButton().querySelector('.gc-tryon-label')).toHaveTextContent('Try it on');
+    expect(pageButton().querySelector('.gc-tryon-ic')).toHaveAttribute('aria-hidden', 'true');
+    expect(icons(document.querySelector('.gc-tryon-btn--card')!)).toHaveLength(0);
+    remount();
+    expect(icons(pageButton())).toHaveLength(1);
+    expect(pageButton().querySelector('.gc-tryon-label .gc-tryon-ic')).toBeNull();
+  });
+
+  it('adds none to a button the plugin printed with its icon', () => {
+    page('simple');
+    pageButton().innerHTML = '<span class="gc-tryon-ic" aria-hidden="true"><svg></svg></span><span class="gc-tryon-label">Try it on</span>';
+    load();
+    expect(icons(pageButton())).toHaveLength(1);
+    expect([...pageButton().children].map((child) => child.className)).toEqual(['gc-tryon-ic', 'gc-tryon-label', 'gc-tryon-ready']);
+  });
+
+  it('gives every icon on the page its own clipPath id', () => {
+    page('simple');
+    document.body.insertAdjacentHTML('beforeend', '<p><button type="button" class="gc-tryon-btn" data-product-id="44" data-product-type="simple">Shortcode</button></p>');
+    load();
+    const clips = [...document.querySelectorAll('.gc-tryon-ic clipPath')].map((clip) => clip.id);
+    expect(clips).toHaveLength(2);
+    expect(new Set(clips).size).toBe(2);
+    document.querySelectorAll('.gc-tryon-ic').forEach((icon) => {
+      expect(icon.querySelector('[clip-path]')).toHaveAttribute('clip-path', `url(#${icon.querySelector('clipPath')!.id})`);
+    });
+  });
+
+  it('styles the icon only inside a Try-On button, with the reduced-motion fallback', () => {
+    page('simple');
+    load();
+    const css = document.getElementById('gc-tryon-woo-css')!.textContent!;
+    expect(css).toContain('.gc-tryon-btn .gc-tryon-ic{');
+    expect(css).toContain('margin-inline-end:10px');
+    expect(css).toMatch(/@media \(prefers-reduced-motion:reduce\)\{\.gc-tryon-btn \.gc-tryon-ic,[^}]*animation:none/);
+    expect(css).not.toMatch(/(^|\})\.gc-tryon-ic[{:]/);
+  });
+});
+
 describe('tryon-woo.js on the shared hosted engine', () => {
   function loadWithoutEngine() {
     (window as unknown as { grindctrlTryOn: unknown }).grindctrlTryOn = {
@@ -372,7 +425,7 @@ describe('tryon-woo.js on the shared hosted engine', () => {
   it('loads the versioned engine beside itself and mounts the Woo adapter once it arrives', async () => {
     page('simple');
     const engine = loadWithoutEngine();
-    expect(engine.src).toBe('https://grindctrl.cloud/widget/v1/tryon-engine.js?v=1.2.0');
+    expect(engine.src).toBe('https://grindctrl.cloud/widget/v1/tryon-engine.js?v=1.3.0');
     click('form .gc-tryon-btn');
     expect(calls).toHaveLength(0);
     (0, eval)(readFileSync(path.join(process.cwd(), 'public/widget/v1/tryon-engine.js'), 'utf8'));

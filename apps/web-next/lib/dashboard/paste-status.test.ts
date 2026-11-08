@@ -10,7 +10,7 @@ const PROVEN_AT = '2026-11-08T13:00:00.000Z';
 vi.mock('@/lib/try-on/entitlement', () => ({ getShopEntitlement: m.plan }));
 vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: m.launch }));
 vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: m.flags }));
-import { readPasteInstallStatus } from '@/lib/paste/status';
+import { readPasteCodeOutdated, readPasteInstallStatus } from '@/lib/paste/status';
 import { resolveActiveStore } from './active-store';
 const SITE = '11111111-1111-4111-8111-111111111111';
 const NOW = new Date('2026-11-08T15:00:00Z');
@@ -140,6 +140,27 @@ describe('paste read model and dashboard tenant', () => {
     m.connection.mockResolvedValue({ widget_site_id: SITE, status: 'disconnected', platform: 'shopify', shop_domain: 'merchant.myshopify.com',
       secret_version: 1, shop_proven_at: PROVEN_AT, app_installed: false });
     expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).toMatchObject({ codeVersion: null, codeOutdated: false });
+  });
+  it('reads the same outdated-code answer on its own for the Try-On page, false whenever it cannot tell', async () => {
+    const shop = { widget_site_id: SITE, status: 'active', platform: 'shopify', shop_domain: 'merchant.myshopify.com', secret_version: 1,
+      shop_proven_at: PROVEN_AT, app_installed: false };
+    m.connection.mockResolvedValue(shop);
+    m.code.mockResolvedValue({ version: 1, seenAt: NOW.toISOString() });
+    expect(await readPasteCodeOutdated(SITE)).toBe(true);
+    m.connection.mockResolvedValue({ ...shop, status: 'pending', shop_proven_at: null });
+    expect(await readPasteCodeOutdated(SITE)).toBe(true);
+    m.connection.mockResolvedValue({ ...shop, platform: 'website' });
+    expect(await readPasteCodeOutdated(SITE)).toBe(false);
+    m.connection.mockResolvedValue(shop);
+    m.code.mockResolvedValue({ version: 2, seenAt: NOW.toISOString() });
+    expect(await readPasteCodeOutdated(SITE)).toBe(false);
+    m.code.mockResolvedValue(null);
+    expect(await readPasteCodeOutdated(SITE)).toBe(false);
+    m.code.mockRejectedValue(new Error('unavailable'));
+    expect(await readPasteCodeOutdated(SITE)).toBe(false);
+    m.code.mockResolvedValue({ version: 1, seenAt: NOW.toISOString() });
+    m.connection.mockRejectedValue(new Error('unavailable'));
+    expect(await readPasteCodeOutdated(SITE)).toBe(false);
   });
   it('treats Turnstile as configured from the runtime site key', async () => {
     vi.stubEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY', '');

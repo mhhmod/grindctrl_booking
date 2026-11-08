@@ -152,7 +152,7 @@ describe('the storefront Try-On switch', () => {
 
   it('turns the button off for every platform and says what shoppers see', async () => {
     const setButton = vi.fn(async () => ({ ok: true as const }));
-    draw({ showButton: true, tryOnState: 'on', reason: null }, setButton);
+    draw({ showButton: true, tryOnState: 'on', reason: null, codeOutdated: false }, setButton);
     expect(screen.getByText(sw.state.on)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('switch', { name: sw.on }));
     await waitFor(() => expect(setButton).toHaveBeenCalledWith({ shop: 'site:s1', showButton: false }));
@@ -161,39 +161,48 @@ describe('the storefront Try-On switch', () => {
 
   it('puts the switch back and explains when saving fails', async () => {
     const setButton = vi.fn(async () => ({ ok: false as const, error: 'failed', reason: 'show_button_unavailable' }));
-    draw({ showButton: true, tryOnState: 'on', reason: null }, setButton as never);
+    draw({ showButton: true, tryOnState: 'on', reason: null, codeOutdated: false }, setButton as never);
     fireEvent.click(screen.getByRole('switch', { name: sw.on }));
     expect(await screen.findByRole('alert')).toHaveTextContent(sw.unavailable);
     expect(screen.getByRole('switch', { name: sw.on })).toBeChecked();
   });
 
   it('cannot be switched before the store is installed, and points to installing', () => {
-    draw({ showButton: true, tryOnState: 'not_installed', reason: null }, vi.fn());
+    draw({ showButton: true, tryOnState: 'not_installed', reason: null, codeOutdated: false }, vi.fn());
     expect(screen.getByText(sw.state.not_installed)).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: sw.on })).toBeDisabled();
     expect(screen.getByRole('link', { name: sw.install })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
   });
 
   it('names why an installed, switched-on button is not showing', () => {
-    draw({ showButton: true, tryOnState: 'not_ready', reason: 'out_of_looks' }, vi.fn());
+    draw({ showButton: true, tryOnState: 'not_ready', reason: 'out_of_looks', codeOutdated: false }, vi.fn());
     expect(screen.getByText(sw.reason.out_of_looks)).toBeInTheDocument();
   });
 });
 
 describe('the collection card pill switch', () => {
   const sw = getTryOnStudioCopy('en').storefrontSwitch;
+  it('tells a store on the older pasted code to update it before pills can show', () => {
+    renderWithMantine(
+      <V16TryOnStudio locale="en" shop="site:s1" settings={SETTINGS} saveSettings={vi.fn()}
+        buttonStatus={{ showButton: true, tryOnState: 'on', reason: null, codeOutdated: true }} setButton={vi.fn()} cardPill setCardPill={vi.fn()} />,
+    );
+    expect(screen.getByText(sw.pillCodeOutdated)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: sw.pillGetCode })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
+  });
+
   it('turns the pills off on their own, and needs Try-On on', async () => {
     const setCardPill = vi.fn(async () => ({ ok: true as const }));
     const { unmount } = renderWithMantine(
       <V16TryOnStudio locale="en" shop="site:s1" settings={SETTINGS} saveSettings={vi.fn()}
-        buttonStatus={{ showButton: true, tryOnState: 'on', reason: null }} setButton={vi.fn()} cardPill setCardPill={setCardPill} />,
+        buttonStatus={{ showButton: true, tryOnState: 'on', reason: null, codeOutdated: false }} setButton={vi.fn()} cardPill setCardPill={setCardPill} />,
     );
     fireEvent.click(screen.getByRole('switch', { name: sw.pill }));
     await waitFor(() => expect(setCardPill).toHaveBeenCalledWith({ shop: 'site:s1', showCardPill: false }));
     unmount();
     renderWithMantine(
       <V16TryOnStudio locale="en" shop="site:s1" settings={SETTINGS} saveSettings={vi.fn()}
-        buttonStatus={{ showButton: false, tryOnState: 'off', reason: 'paused' }} setButton={vi.fn()} cardPill setCardPill={setCardPill} />,
+        buttonStatus={{ showButton: false, tryOnState: 'off', reason: 'paused', codeOutdated: false }} setButton={vi.fn()} cardPill setCardPill={setCardPill} />,
     );
     expect(screen.getByRole('switch', { name: sw.pill })).toBeDisabled();
     expect(screen.getByText(sw.pillNeedsButton)).toBeInTheDocument();
