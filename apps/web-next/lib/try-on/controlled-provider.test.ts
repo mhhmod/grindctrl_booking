@@ -79,7 +79,7 @@ describe('noncharging provider harness preserves the live credit/job code path',
     expect(rpc).toHaveBeenNthCalledWith(1,'reserve_tryon_credit',expect.objectContaining({p_shop_domain:auth.shop,p_request_key:auth.requestKey}));
     expect(rpc).toHaveBeenNthCalledWith(2,'finalize_tryon_job',expect.objectContaining({p_job_id:result.jobId,p_status:'completed',p_cost_usd:0}));
     expect(externalFetch).toHaveBeenCalledTimes(1); // Synthetic garment only; no provider transport.
-    expect(externalFetch.mock.calls[0][0]).toBe(auth.canonicalGarmentUrl);
+    expect(externalFetch.mock.calls[0][0]).toBe(`${auth.canonicalGarmentUrl}?width=1536`); // Bounded Shopify CDN derivative.
     expect((await generateTryOn(auth,'upload',`data:image/png;base64,${SYNTHETIC_PNG}`,auth.canonicalGarmentUrl!)).jobId).toBe(result.jobId);
     expect(externalFetch).toHaveBeenCalledTimes(1); expect(upload).toHaveBeenCalledTimes(1);
     expect(rpc.mock.calls.filter(([name])=>name==='finalize_tryon_job')).toHaveLength(1);
