@@ -80,6 +80,19 @@ const nextConfig: NextConfig = {
         source: '/try-on/demo/:path+',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
       },
+      /* Signed-in and sign-in pages must never be framed by another site:
+         an attacker page could trick an owner into clicking "Disconnect",
+         "Remove member" or "Rotate secret" (clickjacking). Path-specific so
+         it never lands on /embed or /shopify, which must stay framable. */
+      ...['/dashboard', '/dashboard/:path*', '/onboarding', '/onboarding/:path*', '/claim', '/claim/:path*',
+        '/sign-in', '/sign-in/:path*', '/sign-up', '/sign-up/:path*',
+        '/connect/:path*'].map((source) => ({
+        source,
+        headers: [
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+        ],
+      })),
       {
         /* Embedded Shopify admin pages render inside the Shopify admin iframe. */
         source: '/shopify/:path*',
