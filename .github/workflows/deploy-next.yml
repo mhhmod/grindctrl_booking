@@ -26,19 +26,94 @@ concurrency:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    outputs:
+      verified: ${{ steps.tree.outputs.verified }}
+    steps:
+      - uses: actions/checkout@v4
+        continue-on-error: true
+      - name: Match the deployed tree to successful PR checks
+        id: tree
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          COMMIT: ${{ github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+        shell: bash
+        run: |
+          echo 'verified=false' >> "$GITHUB_OUTPUT"
+          if [[ "$EVENT_NAME" != push ]]; then
+            echo 'Manual deployments always run the full checks.'
+            exit 0
+          fi
+          # A failed lookup, missing/ambiguous artifact, or malformed response
+          # must leave the default false. Do not turn API errors into a match.
+          check_trees() {
+            local tree prs heads_json head runs ids_json id metadata count dir checked match=''
+            local -a heads ids lines
+            [[ $(git rev-parse HEAD) == "$COMMIT" ]] || return 1
+            tree=$(git rev-parse 'HEAD^{tree}') || return 1
+            [[ "$tree" =~ ^[0-9a-f]{40}$ ]] || return 1
+            prs=$(gh api --paginate --slurp "repos/$REPO/commits/$COMMIT/pulls?per_page=100") || return 1
+            heads_json=$(jq -ec '[.[][] | .head.sha] | if all(.[]; type == "string" and test("^[0-9a-f]{40}$")) then unique else error("invalid PR head") end' <<< "$prs") || return 1
+            mapfile -t heads < <(jq -r '.[]' <<< "$heads_json")
+            (( ${#heads[@]} > 0 )) || return 1
+            for head in "${heads[@]}"; do
+              runs=$(gh api --paginate --slurp "repos/$REPO/actions/workflows/next-release-check.yml/runs?head_sha=$head&status=success&event=pull_request&per_page=100") || return 1
+              ids_json=$(jq -ec --arg head "$head" '[.[] | .workflow_runs[] | if .head_sha == $head and .event == "pull_request" and .conclusion == "success" and (.id | type == "number") then .id else error("invalid run") end] | unique' <<< "$runs") || return 1
+              mapfile -t ids < <(jq -r '.[]' <<< "$ids_json")
+              # A head with no successful run cannot match; another head still may.
+              (( ${#ids[@]} > 0 )) || continue
+              for id in "${ids[@]}"; do
+                metadata=$(gh api --paginate --slurp "repos/$REPO/actions/runs/$id/artifacts?per_page=100") || return 1
+                count=$(jq -er '[.[] | .artifacts[] | select(.name == "verified-tree")] | if length == 1 and .[0].expired == false then 1 else 0 end' <<< "$metadata") || return 1
+                # Runs from before this artifact existed, or with an ambiguous one, cannot match.
+                [[ "$count" == 1 ]] || continue
+                dir=$(mktemp -d) || return 1
+                gh run download "$id" --repo "$REPO" --name verified-tree --dir "$dir" || return 1
+                [[ -f "$dir/verified-tree" && ! -L "$dir/verified-tree" ]] || return 1
+                [[ $(find "$dir" -type f | wc -l) -eq 1 ]] || return 1
+                mapfile -t lines < "$dir/verified-tree"
+                (( ${#lines[@]} == 1 )) || return 1
+                checked=${lines[0]}
+                [[ "$checked" =~ ^[0-9a-f]{40}$ ]] || return 1
+                if [[ "$checked" == "$tree" ]]; then
+                  match="$id"
+                fi
+              done
+            done
+            [[ -n "$match" ]] || return 1
+            echo "Verified tree $tree matched successful PR run $match."
+          }
+          if check_trees; then
+            echo 'verified=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'No unambiguous verified tree; running the full checks.'
+          fi
+
   release-checks:
+    needs: gate
+    if: needs.gate.outputs.verified != 'true'
     uses: ./.github/workflows/next-release-check.yml
     permissions:
       contents: read
 
   build-and-push:
-    needs: release-checks
+    needs: gate
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     outputs:
-      image: ghcr.io/${{ github.repository }}-web-next
+      image: ${{ steps.image.outputs.name }}
+      digest: ${{ steps.build.outputs.digest }}
     steps:
       - uses: actions/checkout@v4
 
@@ -66,9 +141,7 @@ jobs:
           context: .
           file: apps/web-next/Dockerfile
           push: true
-          tags: |
-            ${{ steps.image.outputs.name }}:latest
-            ${{ steps.image.outputs.name }}:${{ github.sha }}
+          tags: ${{ steps.image.outputs.name }}:${{ github.sha }}
           build-args: |
             SENTRY_RELEASE=${{ github.sha }}
             NEXT_PUBLIC_SENTRY_DSN=${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
@@ -90,8 +163,28 @@ jobs:
           vuln-type: os,library
           severity: CRITICAL,HIGH
 
+  promote:
+    needs: [gate, release-checks, build-and-push]
+    if: >-
+      ${{ always() && needs.gate.result == 'success' && (needs.release-checks.result == 'success' || (needs.release-checks.result == 'skipped' && needs.gate.outputs.verified == 'true')) && needs.build-and-push.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Promote the scanned digest without rebuilding
+        env:
+          IMAGE: ${{ needs.build-and-push.outputs.image }}
+          DIGEST: ${{ needs.build-and-push.outputs.digest }}
+        run: docker buildx imagetools create -t "$IMAGE:latest" "$IMAGE@$DIGEST"
+
   deploy:
-    needs: build-and-push
+    needs: promote
     runs-on: ubuntu-latest
     steps:
       # This key is restricted server-side (authorized_keys `command=`)
