@@ -1,0 +1,31 @@
+<!doctype html>
+<!-- Imitates: a landing-page builder product page that only prints Open
+     Graph product tags for social sharing, and sells through a "Buy now"
+     link styled as a button (no form, no role). -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="gc-fixture-path" content="/p/wool-cardigan">
+  <meta name="gc-fixture-expect" content="after">
+  <meta property="og:type" content="product">
+  <meta property="og:title" content="Wool cardigan">
+  <meta property="og:image" content="https://assets.pagekit.example/u/88/wool-cardigan.jpg">
+  <meta property="product:price:amount" content="120">
+  <meta property="product:price:currency" content="GBP">
+  <title>Wool cardigan</title>
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+</head>
+<body>
+  <div class="page">
+    <div class="block block-hero">
+      <div class="col"><img src="https://assets.pagekit.example/u/88/wool-cardigan.jpg" width="1000" height="1250" alt=""></div>
+      <div class="col">
+        <h1>Wool cardigan</h1>
+        <p class="lead">&pound;120</p>
+        <div class="cta" data-gc-expect="after"><a class="btn btn-buy" href="https://pay.example/checkout/88">Buy now</a></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

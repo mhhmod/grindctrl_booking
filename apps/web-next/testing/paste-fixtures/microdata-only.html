@@ -1,0 +1,38 @@
+<!doctype html>
+<!-- Imitates: an older CMS theme that marks the product with schema.org
+     microdata only (no JSON-LD, no product Open Graph tags): an itemscope
+     Product with a nested Offer, and an "Add to bag" button. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="gc-fixture-path" content="/catalog/item.php">
+  <meta name="gc-fixture-expect" content="after">
+  <meta property="og:type" content="website">
+  <title>Cotton overshirt</title>
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+</head>
+<body>
+  <div id="wrapper">
+    <div class="content">
+      <div class="product" itemscope itemtype="https://schema.org/Product">
+        <div class="product-images">
+          <img itemprop="image" src="https://media.northline.example/overshirt-sand.jpg" width="800" height="1000" alt="Cotton overshirt">
+        </div>
+        <div class="product-info">
+          <h1 itemprop="name">Cotton overshirt</h1>
+          <meta itemprop="sku" content="OS-311">
+          <div itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+            <meta itemprop="priceCurrency" content="EUR">
+            <span itemprop="price" content="64.00">&euro;64</span>
+          </div>
+          <div class="actions" data-gc-expect="after">
+            <span class="qty"><input type="number" value="1" aria-label="Quantity"></span>
+            <button type="button" class="btn">Add to bag</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

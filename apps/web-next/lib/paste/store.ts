@@ -4,6 +4,7 @@ import { normalizeStorefrontDomain, newVerificationToken, txtRecordFor, verifyDo
 import { apexDomain, registrableDomain } from '@/lib/woo/free-plan';
 import { PasteError, type PasteConnection, type PasteDomain, type PastePlatform, type PasteShopCheckOutcome, type PasteTrust } from './types';
 import type { StorefrontEvidence } from './storefront-scan';
+import { isDetectedPlatform, type DetectedPlatform } from './platform-detect';
 
 /** A connection's signed shop. Merchants cannot add it as a domain row;
  *  it is trusted through paste_site_connections.shop_domain instead. */
@@ -308,6 +309,62 @@ export async function recordPasteCodeVersion(siteId: string, version: number): P
 
 /** Test seam: forget which versions this instance stored. */
 export function resetRecordedPasteCodeVersions(): void { recordedCodeVersions.clear(); }
+
+export type PasteDomainPlatform = { domain: string; platform: DetectedPlatform | null; detectedAt: string | null };
+
+const PASTE_DOMAIN_METHODS = ['paste_trusted', 'paste_dns_txt', 'paste_disputed'];
+
+/** Match only these additive columns, like try-on/settings.ts. Other schema
+ *  errors are operational failures and must not masquerade as custom. */
+function platformColumnMissing(error: { code?: string | null; message?: string | null }): boolean {
+  return (error.code === '42703' || error.code === 'PGRST204')
+    && /\bplatform_detected(?:_at)?\b/.test(error.message ?? '');
+}
+
+/** The detected store platform of each trusted paste domain; `platform` is
+ *  null while unchecked. Null overall while 20261109_paste_platform_detected.sql
+ *  has not run: callers treat every domain as `custom`. Throws on any other
+ *  read failure, so garment checks fail closed. */
+export async function readPasteDomainPlatforms(siteId: string): Promise<PasteDomainPlatform[] | null> {
+  const result = await getMessengerServiceClient().from('widget_domains')
+    .select('domain, platform_detected, platform_detected_at')
+    .eq('widget_site_id', siteId).eq('verification_status', 'trusted').in('verification_method', PASTE_DOMAIN_METHODS);
+  if (result.error) {
+    if (platformColumnMissing(result.error)) return null;
+    throw new PasteError('unavailable');
+  }
+  const rows = (result.data ?? []) as Array<{ domain: string; platform_detected: string | null; platform_detected_at: string | null }>;
+  return rows.flatMap((row) => {
+    const domain = normalizePasteDomain(row.domain);
+    if (!domain) return [];
+    const platform = row.platform_detected == null ? null : isDetectedPlatform(row.platform_detected) ? row.platform_detected : 'custom';
+    return [{ domain, platform, detectedAt: row.platform_detected_at ?? null }];
+  });
+}
+
+/** The trusted paste domain a page host belongs to (the domain or its www alias). */
+export function pasteDomainOf<T extends { domain: string }>(rows: readonly T[], host: string): T | null {
+  const domain = normalizePasteDomain(host);
+  return (domain && rows.find((row) => row.domain === domain)) || null;
+}
+
+/** Stores what our server's own storefront fetch found. Never throws: a
+ *  missing column (before its migration) or a failed write leaves the
+ *  domain as it was, which reads as `custom`. */
+export async function recordPasteDomainPlatform(siteId: string, domain: string, platform: DetectedPlatform): Promise<boolean> {
+  try {
+    const { error } = await getMessengerServiceClient().from('widget_domains')
+      .update({ platform_detected: platform, platform_detected_at: new Date().toISOString() })
+      .eq('widget_site_id', siteId).eq('verification_status', 'trusted').in('verification_method', PASTE_DOMAIN_METHODS)
+      .in('domain', pasteDomainHosts(domain));
+    if (!error) return true;
+    if (!platformColumnMissing(error)) console.error('[paste] platform not recorded', { code: 'paste_platform_record', site: siteId });
+    return false;
+  } catch {
+    console.error('[paste] platform not recorded', { code: 'paste_platform_record', site: siteId });
+    return false;
+  }
+}
 
 /** Missing migration leaves existing Store Chat-only sites as they were. */
 export async function listActivePasteSiteIds(siteIds: readonly string[]): Promise<Set<string>> {

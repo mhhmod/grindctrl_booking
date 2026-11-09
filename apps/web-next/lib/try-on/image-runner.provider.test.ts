@@ -1,7 +1,9 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const siteGarment = vi.hoisted(() => ({ fetch: vi.fn() }));
-vi.mock('@/lib/woo/garment-url', () => ({ fetchSiteGarment: siteGarment.fetch }));
+vi.mock('@/lib/messenger/db', () => ({ getMessengerServiceClient: vi.fn() }));
+vi.mock('@/lib/woo/garment-url', async (original) => ({ ...await original<object>(), fetchSiteGarment: siteGarment.fetch }));
+import { UnsafeGarmentUrlError } from '@/lib/woo/garment-url';
 import { boundedShopifyGarmentUrl, IMAGE_PROVIDER_TIMEOUT_MS, isAllowedGarmentUrl, parsePhotoDataUrl, prepareGarmentImage, runImageGeneration } from './image-runner';
 import { createJobTimings } from './job-timings';
 
@@ -30,7 +32,7 @@ describe('WooCommerce garments', () => {
     fetchMock.mockResolvedValueOnce(Response.json({ data: [{ b64_json: PNG }], usage: { cost: 0.01 } }));
     const job = await runImageGeneration('session', 'woo-42', PHOTO, SITE, 'meta/muse-image', WOO_GARMENT);
     expect(job.status).toBe('completed');
-    expect(siteGarment.fetch).toHaveBeenCalledWith('123e4567-e89b-42d3-a456-426614174000', WOO_GARMENT);
+    expect(siteGarment.fetch).toHaveBeenCalledWith('123e4567-e89b-42d3-a456-426614174000', WOO_GARMENT, { pageOrigin: undefined });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(String(fetchMock.mock.calls[0][0])).toBe('https://openrouter.ai/api/v1/images');
   });
@@ -41,6 +43,24 @@ describe('WooCommerce garments', () => {
     const job = await runImageGeneration('session', 'woo-42', PHOTO, SITE, 'meta/muse-image', WOO_GARMENT);
     expect(job.status).toBe('failed');
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('passes the signed website origin into the same garment safety check', async () => {
+    siteGarment.fetch.mockResolvedValue({ mime: 'image/png', bytes: Buffer.from(PNG, 'base64') });
+    await prepareGarmentImage('dressa14', 'https://files.easy-orders.net/1.jpeg', SITE, undefined, 'https://shop.example.com');
+    expect(siteGarment.fetch).toHaveBeenLastCalledWith('123e4567-e89b-42d3-a456-426614174000',
+      'https://files.easy-orders.net/1.jpeg', { pageOrigin: 'https://shop.example.com' });
+  });
+
+  it('records a garment from a host the site does not trust under its own reason', async () => {
+    siteGarment.fetch.mockRejectedValue(new UnsafeGarmentUrlError('host_not_allowed'));
+    fetchMock.mockReset();
+    const job = await runImageGeneration('session', 'woo-42', PHOTO, SITE, 'meta/muse-image', WOO_GARMENT);
+    expect(job.status).toBe('failed');
+    expect(console.warn).toHaveBeenCalledWith('[try-on] provider_failure', expect.objectContaining({ reason: 'garment_host_untrusted' }));
+    siteGarment.fetch.mockRejectedValue(new UnsafeGarmentUrlError('private_address'));
+    await runImageGeneration('session', 'woo-42', PHOTO, SITE, 'meta/muse-image', WOO_GARMENT);
+    expect(console.warn).toHaveBeenLastCalledWith('[try-on] provider_failure', expect.objectContaining({ reason: 'garment_unsafe' }));
   });
 
   it('still applies the Shopify CDN allowlist to a Shopify shop', async () => {

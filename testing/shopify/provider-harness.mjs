@@ -18,9 +18,13 @@ export function reserveInvocation(file, c, kind) {
     state.used++; state.events.push(event);
     const temp = `${file}.pending`;
     writeFileSync(temp, JSON.stringify(state), { mode: 0o600 });
-    const fd = openSync(temp, 'r'); try { fsyncSync(fd); } finally { closeSync(fd); }
+    // Windows requires a writable handle for FlushFileBuffers (fsync).
+    const fd = openSync(temp, 'r+'); try { fsyncSync(fd); } finally { closeSync(fd); }
     renameSync(temp, file);
-    const dir = openSync(dirname(file), 'r'); try { fsyncSync(dir); } finally { closeSync(dir); }
+    // Windows cannot open/fsync directories; Linux preview durability is unchanged.
+    if (process.platform !== 'win32') {
+      const dir = openSync(dirname(file), 'r'); try { fsyncSync(dir); } finally { closeSync(dir); }
+    }
     return event.sequence;
   } finally { rmdirSync(lock); }
 }

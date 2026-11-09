@@ -1,0 +1,49 @@
+<!doctype html>
+<!-- Imitates: a client-rendered single-page store (React or Vue style,
+     written here in plain JS): links switch products with
+     history.pushState, back and forward re-render, and every render
+     replaces the whole product section and its JSON-LD in <body>. The app
+     script below is the page's own code; the test runs it. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="gc-fixture-path" content="/shop/linen-dress">
+  <meta name="gc-fixture-expect" content="after">
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+</head>
+<body>
+  <nav class="app-nav"><a href="/shop/linen-dress" data-route>Linen dress</a> <a href="/shop/silk-abaya" data-route>Silk abaya</a> <a href="/" data-route>Home</a></nav>
+  <div id="app"></div>
+  <script data-fixture-app>
+    (function () {
+      var products = {
+        'linen-dress': { sku: 'LD-1', name: 'Linen dress', image: 'https://cdn.spa-shop.example/linen-dress.jpg', price: '80.00' },
+        'silk-abaya': { sku: 'SA-2', name: 'Silk abaya', image: 'https://cdn.spa-shop.example/silk-abaya.jpg', price: '140.00' }
+      };
+      function slug() { return window.location.pathname.split('/').filter(Boolean).pop() || ''; }
+      function render() {
+        var product = products[slug()];
+        var app = document.getElementById('app');
+        if (!product) { app.innerHTML = '<section class="home"><h1>Welcome</h1></section>'; return; }
+        var data = { '@context': 'https://schema.org', '@type': 'Product', sku: product.sku, name: product.name, image: product.image,
+          offers: { '@type': 'Offer', price: product.price, priceCurrency: 'USD' } };
+        app.innerHTML = '<script type="application/ld+json">' + JSON.stringify(data) + '<\/script>' +
+          '<section class="product"><img src="' + product.image + '" width="800" height="1000" alt="">' +
+          '<h1>' + product.name + '</h1><p class="price">$' + product.price + '</p>' +
+          '<div class="actions" data-gc-expect="after"><button type="button" class="add-to-cart">Add to cart</button></div></section>';
+      }
+      document.addEventListener('click', function (event) {
+        var link = event.target.closest && event.target.closest('a[data-route]');
+        if (!link) return;
+        event.preventDefault();
+        window.history.pushState({}, '', link.getAttribute('href'));
+        render();
+      });
+      window.addEventListener('popstate', render);
+      window.__spaRender = render;
+      render();
+    })();
+  </script>
+</body>
+</html>

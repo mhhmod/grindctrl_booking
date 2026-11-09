@@ -63,7 +63,13 @@ export type StorefrontRequest = {
   url: URL; address: string; family: 4 | 6; method: 'GET' | 'POST';
   headers: Record<string, string>; body?: string; signal: AbortSignal;
 };
-export type StorefrontResponse = { status: number; location: string | null; contentType: string; setCookie: string[]; body: Buffer };
+export type StorefrontResponse = {
+  status: number; location: string | null; contentType: string; setCookie: string[]; body: Buffer;
+  /** Only FINGERPRINT_HEADERS, lowercased and capped. */
+  headers?: Record<string, string>;
+};
+/** Response headers a platform fingerprint may use (platform-detect.ts). */
+const FINGERPRINT_HEADERS = ['server', 'x-powered-by', 'powered-by', 'x-wix-request-id', 'x-shopid', 'x-shopify-stage'];
 /** Resolves with the response, or rejects (timeout, network, oversize). */
 export type StorefrontTransport = (request: StorefrontRequest) => Promise<StorefrontResponse>;
 export type StorefrontLookup = (hostname: string) => Promise<Array<{ address: string; family: number }>>;
@@ -114,6 +120,10 @@ export const pinnedStorefrontTransport: StorefrontTransport = (input) => new Pro
       status, location: header('location') ?? null,
       contentType: String(header('content-type') ?? '').split(';')[0].trim().toLowerCase(),
       setCookie: response.headers['set-cookie'] ?? [],
+      headers: Object.fromEntries(FINGERPRINT_HEADERS.flatMap((name) => {
+        const value = header(name);
+        return value ? [[name, String(value).slice(0, 256)]] : [];
+      })),
     };
     if (status >= 300 && status < 400) { response.resume(); resolve({ ...meta, body: Buffer.alloc(0) }); return; }
     if (Number(header('content-length')) > STOREFRONT_MAX_BODY_BYTES) { request.destroy(); reject(new StorefrontTooLargeError()); return; }
@@ -284,6 +294,52 @@ class CookieJar {
 }
 
 function twin(host: string): string { return host.startsWith('www.') ? host.slice(4) : `www.${host}`; }
+
+export type StorefrontPage = { url: string; html: string; headers: Record<string, string> };
+
+/** GETs a trusted website domain's home page for the platform fingerprint,
+ *  through the same pinned, capped transport as the shop scan. The URL is
+ *  built from the stored domain, never taken from a caller, and redirects
+ *  may only move between the domain and its www twin. No cookies or
+ *  credentials are sent. */
+export async function fetchStorefrontPage(domain: string, options: {
+  transport?: StorefrontTransport; lookup?: StorefrontLookup;
+} = {}): Promise<StorefrontPage | { failure: StorefrontFailure }> {
+  const transport = options.transport ?? pinnedStorefrontTransport;
+  const lookup = options.lookup ?? defaultLookup;
+  const signal = AbortSignal.timeout(STOREFRONT_TOTAL_TIMEOUT_MS);
+  const allowed = new Set([domain, twin(domain)]);
+  let url = new URL(`https://${domain}/`);
+  try {
+    if (!safeUrl(url)) throw new ScanStop('bad_redirect');
+    for (let redirects = 0; ; redirects++) {
+      const target = await resolvePublic(url.hostname, lookup);
+      let response: StorefrontResponse;
+      try {
+        response = await transport({ url, ...target, method: 'GET', signal,
+          headers: { 'user-agent': USER_AGENT, accept: 'text/html,application/xhtml+xml', 'accept-language': 'en' } });
+      } catch (error) {
+        throw new ScanStop(error instanceof StorefrontTooLargeError ? 'too_large' : signal.aborted
+          || (error instanceof Error && /timeout|abort/i.test(error.message + error.name)) ? 'timeout' : 'network');
+      }
+      if (response.status >= 300 && response.status < 400) {
+        if (redirects >= STOREFRONT_MAX_REDIRECTS) throw new ScanStop('too_many_redirects');
+        if (!response.location || response.location.length > 2048 || !URL.canParse(response.location, url)) throw new ScanStop('bad_redirect');
+        const next = new URL(response.location, url);
+        if (!safeUrl(next)) throw new ScanStop('bad_redirect');
+        if (!allowed.has(next.hostname)) throw new ScanStop('foreign_redirect');
+        url = next;
+        continue;
+      }
+      if (response.status !== 200) throw new ScanStop('status');
+      if (response.body.length > STOREFRONT_MAX_BODY_BYTES) throw new ScanStop('too_large');
+      if (response.contentType !== 'text/html') throw new ScanStop('not_html');
+      return { url: url.toString(), html: response.body.toString('utf8'), headers: response.headers ?? {} };
+    }
+  } catch (error) {
+    return { failure: error instanceof ScanStop ? error.failure : 'network' };
+  }
+}
 
 /** Fetches the pending shop's storefront and reports what it shows for
  *  this site. Never throws for storefront behavior; throws PasteError only

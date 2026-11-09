@@ -2,14 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { clientIp, publicApiRatelimit, proxyVisitorRatelimit, proxyShopMintRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
-import { getPasteConnection, pasteProofHosts, pasteTrust, pasteTrustedHosts, recordPasteCodeVersion, recordPasteSignal } from '@/lib/paste/store';
+import {
+  getPasteConnection, pasteDomainOf, pasteProofHosts, pasteTrust, pasteTrustedHosts, readPasteDomainPlatforms, recordPasteCodeVersion,
+  recordPasteSignal,
+} from '@/lib/paste/store';
+import { isAnyPlatformImageHost, platformImageHosts } from '@/lib/paste/platform-image-hosts';
+import { schedulePasteDomainPlatformCheck } from '@/lib/paste/platform-check';
 import { checkPasteShop } from '@/lib/paste/shop-proof';
 import { PasteError, type PasteContextResponse } from '@/lib/paste/types';
 import { pasteCapabilitySecret, verifyLiquidSignature, type LiquidClaims } from '@/lib/paste/signing';
 import { pasteTurnstileConfig } from '@/lib/paste/turnstile';
 import { siteTenantKey } from '@/lib/tenancy/tenant-key';
 import { isActiveTenant } from '@/lib/shopify/tokens';
-import { assertSafeGarmentUrl, UnsafeGarmentUrlError } from '@/lib/woo/garment-url';
+import { assertSafeGarmentUrl, checkGarmentUrl, garmentRefusalReason, UnsafeGarmentUrlError } from '@/lib/woo/garment-url';
 import { buildSiteTryOnConfig, siteConfigLocale } from '@/lib/woo/tryon-config';
 import { readSiteLaunch } from '@/lib/woo/tryon-site';
 import { createTryOnNonce, signStorefrontContext, normalizeVariantId } from '@/lib/try-on/storefront-context';
@@ -125,9 +130,28 @@ async function mint(request: NextRequest): Promise<Response> {
       preview: verifyPreviewTokenAnyApp(b.preview, tenant), visitorId: b.visitorId as string, now: new Date(),
     });
     if (!audience.show) return json({ error: audience.reason }, 409);
-    const garment = await assertSafeGarmentUrl(b.imageUrl, [
-      ...hosts, ...(connection.platform === 'shopify' ? ['cdn.shopify.com'] : []),
-    ]);
+    const siteHosts = [...hosts, ...(connection.platform === 'shopify' ? ['cdn.shopify.com'] : [])];
+    // Website pages may also use the image servers of the platform OUR
+    // server fingerprinted on this page's own domain. Read only when needed.
+    const platforms = connection.platform === 'website' && !checkGarmentUrl(b.imageUrl, siteHosts)
+      ? await readPasteDomainPlatforms(site.id) : null;
+    const pageDomain = platforms && pasteDomainOf(platforms, page.hostname);
+    let garment: Awaited<ReturnType<typeof assertSafeGarmentUrl>>;
+    try {
+      garment = await assertSafeGarmentUrl(b.imageUrl, { site: siteHosts, exact: platformImageHosts(pageDomain?.platform) });
+    } catch (error) {
+      if (!(error instanceof UnsafeGarmentUrlError)) throw error;
+      const reason = garmentRefusalReason(error);
+      const imageHost = URL.canParse(b.imageUrl) ? new URL(b.imageUrl).hostname.toLowerCase() : null;
+      console.warn('[paste] garment refused', { code: reason, site: site.id, host: imageHost, platform: pageDomain?.platform ?? null });
+      // A platform image server on a domain never fingerprinted (an install
+      // older than the check): look once, so the next look can pass.
+      if (reason === 'garment_host_untrusted' && pageDomain && pageDomain.platform === null && imageHost && isAnyPlatformImageHost(imageHost)) {
+        schedulePasteDomainPlatformCheck(site.id, pageDomain.domain);
+      }
+      // `error` stays garment_unsafe so every loader already hides only this product.
+      return json({ error: 'garment_unsafe', reason }, 422);
+    }
     const state = await readSiteLaunch(site.id);
     let { launch } = state;
     // A signed render/trusted request is a real signal too, useful when the
@@ -162,7 +186,6 @@ async function mint(request: NextRequest): Promise<Response> {
   } catch (error) {
     if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
     if (error instanceof SyntaxError) return json({ error: 'invalid_request' }, 400);
-    if (error instanceof UnsafeGarmentUrlError) return json({ error: 'garment_unsafe' }, 422);
     return json({ error: 'unavailable' }, 503);
   }
 }

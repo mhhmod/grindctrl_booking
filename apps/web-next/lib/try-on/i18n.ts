@@ -68,6 +68,10 @@ interface TryOnDict {
   genericError: string;
   /** The store has no looks left (or its plan lapsed) mid-session. */
   tryOnUnavailable: string;
+  /** The website store's quick bot check did not finish; retrying keeps the photo. */
+  challengeFailedTitle: string;
+  challengeFailedBody: string;
+  challengeRetry: string;
 
   photoLabel: string;
   uploadAria: string;
@@ -208,6 +212,9 @@ const en: TryOnDict = {
   tryAgain: 'Try again',
   genericError: 'Something went wrong.',
   tryOnUnavailable: 'Try it on isn’t available on this store right now.',
+  challengeFailedTitle: 'Quick check didn’t finish',
+  challengeFailedBody: 'We couldn’t confirm the request. Check your connection, then try again.',
+  challengeRetry: 'Try again',
 
   photoLabel: 'Your photo',
   uploadAria: 'Upload your photo',
@@ -355,6 +362,9 @@ const ar: TryOnDict = {
   tryAgain: 'حاول مرة أخرى',
   genericError: 'حدث خطأ ما.',
   tryOnUnavailable: 'التجربة غير متاحة في هذا المتجر الآن.',
+  challengeFailedTitle: 'لم يكتمل التحقق السريع',
+  challengeFailedBody: 'تعذّر تأكيد الطلب. تحقّق من اتصالك ثم حاول مرة أخرى.',
+  challengeRetry: 'حاول مرة أخرى',
 
   photoLabel: 'صورتك',
   uploadAria: 'ارفع صورتك',

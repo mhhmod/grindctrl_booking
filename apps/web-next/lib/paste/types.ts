@@ -136,5 +136,8 @@ export type PasteContextFailure = {
     /** A pending shop's render verified, but the storefront proof is not complete. */
     | 'shop_proof_pending' | 'shopify_app_installed'
     | 'preview' | 'holdout' | 'garment_unsafe' | 'out_of_looks' | 'paused' | 'not_installed' | 'plan_inactive';
+  /** With `garment_unsafe` only. `garment_host_untrusted`: the image is not
+   *  on the site's trusted domains nor its detected platform's image servers. */
+  reason?: 'garment_host_untrusted' | 'garment_unsafe';
 };
 export type PasteContextResult = PasteContextResponse | PasteContextFailure;

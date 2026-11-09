@@ -1,0 +1,38 @@
+<!doctype html>
+<!-- Imitates: a Webflow Ecommerce product template. w-commerce-* classes,
+     an add-to-cart form whose button is an <input type=submit>, product
+     data only in Open Graph tags an SEO setting added, and images on the
+     Webflow asset CDN. -->
+<html lang="en" data-wf-page="64a" data-wf-site="64b">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="gc-fixture-path" content="/product/canvas-tote">
+  <meta name="gc-fixture-expect" content="after">
+  <meta property="og:title" content="Canvas tote">
+  <meta property="og:image" content="https://cdn.prod.website-files.com/64b/64c_canvas-tote.jpg">
+  <meta property="og:type" content="product">
+  <meta property="product:price:amount" content="45.00">
+  <meta property="product:price:currency" content="USD">
+  <title>Canvas tote</title>
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+</head>
+<body class="body">
+  <div data-collapse="medium" role="banner" class="navbar w-nav"><div class="container w-container"><a href="/" class="brand w-nav-brand">Field Goods</a>
+    <div data-node-type="commerce-cart-wrapper" class="w-commerce-commercecartwrapper"><a href="#" class="w-commerce-commercecartopenlink">Cart</a></div></div></div>
+  <div class="section"><div class="container w-container"><div class="w-layout-grid product-grid">
+    <div class="product-image-wrap"><img src="https://cdn.prod.website-files.com/64b/64c_canvas-tote.jpg" width="1080" height="1350" alt="" class="product-image"></div>
+    <div class="product-details-wrap">
+      <h1 class="product-name">Canvas tote</h1>
+      <div class="product-price">$&nbsp;45.00&nbsp;USD</div>
+      <div class="w-commerce-commerceaddtocartform default-state">
+        <form data-node-type="commerce-add-to-cart-form" class="w-commerce-commerceaddtocartform" data-gc-expect="after">
+          <label for="quantity" class="field-label">Quantity</label>
+          <input type="number" pattern="^[0-9]+$" inputmode="numeric" id="quantity" name="commerce-add-to-cart-quantity-input" min="1" class="w-commerce-commerceaddtocartquantityinput quantity" value="1">
+          <input type="submit" data-node-type="commerce-add-to-cart-button" data-loading-text="Adding to cart..." value="Add to Cart" aria-busy="false" aria-haspopup="dialog" class="w-commerce-commerceaddtocartbutton add-button">
+        </form>
+      </div>
+    </div>
+  </div></div></div>
+</body>
+</html>
