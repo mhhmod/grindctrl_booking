@@ -23,7 +23,10 @@ import { parseModelTurn } from '@/lib/messenger/actions';
 import { ORDER_LOOKUP_LIFETIME_LIMIT } from '@/lib/messenger/orders';
 import { orderProviderFor, wooConnectionFor } from '@/lib/messenger/order-provider';
 import { boundCustomerId, resolveVerifiedCustomer } from '@/lib/messenger/verified-customer';
-import { orderLookupLimiter } from '@/lib/messenger/order-limits';
+import { spendOrderLookupBudget } from '@/lib/messenger/order-limits';
+import { networkKey } from '@/lib/http/network-key';
+import { claimAiTurnBudget } from '@/lib/messenger/ai-budget';
+import { notifyAiBudgetReached } from '@/lib/messenger/notify';
 import { ORDER_DENIED, ORDER_UNAVAILABLE } from '@/lib/messenger/order-copy';
 import { shouldAskForContact } from '@/lib/messenger/contact';
 import { escalateAndNotify, type Escalation } from '@/lib/messenger/escalate';
@@ -95,7 +98,7 @@ const sessionLimiter = redis
 
 export async function POST(request: NextRequest) {
   try {
-    await requireRateLimit(publicApiRatelimit, `ms:${clientIp(request) ?? 'unknown'}`);
+    await requireRateLimit(publicApiRatelimit, `ms:${networkKey(clientIp(request))}`);
   } catch (error) {
     if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
     throw error;
@@ -200,7 +203,10 @@ export async function POST(request: NextRequest) {
         reason,
         summary,
         notifySite,
-        team && !team.open ? { deferUntil: team.opensAtIso } : {},
+        {
+          ...(team && !team.open ? { deferUntil: team.opensAtIso } : {}),
+          visitor: { id: visitor!.id, network: networkKey(clientIp(request)) },
+        },
       );
     }
 
@@ -382,6 +388,52 @@ export async function POST(request: NextRequest) {
       .map((m) => ({ role: m.role === 'user' ? ('user' as const) : ('assistant' as const), content: m.content }));
     const askVerdict = handoffRulesOn || questionsOn;
 
+    /** The model is not answering this turn: the shopper's message is
+     *  already stored, so it goes to the team (when the store hands off)
+     *  with the same answer the panel shows for any unavailable assistant. */
+    async function answerByTeam(summary: string) {
+      const escalation = site!.config.ai.escalationEnabled && !waitingAfterHours
+        ? await escalate('assistant_unavailable', summary).catch(() => null)
+        : null;
+      if (escalation) {
+        const handed = await handedOff(escalation, locale).catch(() => null);
+        void recordEvent({ siteId: site!.id, conversationId: conversation!.id, eventName: 'handoff_triggered', payload: { reason: 'assistant_unavailable', alert: escalation.alert.status } }).catch(() => {});
+        return ok({
+          userMessage: toWire(userMessage),
+          reply: handed ? toWire(handed.line) : null,
+          saved: true,
+          assistant: 'unavailable',
+          handoffAvailable: site!.config.ai.escalationEnabled,
+          status: escalation.conversation.status,
+          alert: toPublicHandoffAlert(escalation.alert),
+          team,
+          askContact: await contactPrompt(true),
+        });
+      }
+      // A concurrent takeover may have won meanwhile.
+      const current = await getConversationForVisitor(conversation!.id, visitor!.id).catch(() => null);
+      return ok({
+        userMessage: toWire(userMessage),
+        reply: null,
+        saved: true,
+        assistant: 'unavailable',
+        handoffAvailable: site!.config.ai.escalationEnabled,
+        status: current?.status ?? conversation!.status,
+        alert: publicAlertFor(current ?? conversation!),
+        team,
+      });
+    }
+
+    // Counted before the model runs; past the store's or the service's
+    // daily ceiling, or with no answer from Redis, the team answers instead.
+    const budget = await claimAiTurnBudget(site.id);
+    if (budget !== 'allowed') {
+      void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'ai_budget_reached', payload: { scope: budget } }).catch(() => {});
+      if (budget === 'site_exhausted') await notifyAiBudgetReached(notifySite);
+      else console.error('[messenger] ai turn refused', { code: 'ai_budget', scope: budget });
+      return answerByTeam('The assistant reached its daily limit. The shopper needs a team response.');
+    }
+
     let result: Awaited<ReturnType<typeof generateAssistantReply>>;
     try {
       result = await generateAssistantReply({
@@ -391,8 +443,10 @@ export async function POST(request: NextRequest) {
           ai: site.config.ai,
           locale,
           knowledge,
+          // Only this request's fresh proof makes the shopper verified to the
+          // model; a saved identity alone does not (G09).
           identity:
-            verifiedCustomer || conversation.metadata.identity?.verified
+            verifiedCustomer
               ? {
                   name: identityName ?? conversation.metadata.identity?.name ?? null,
                   email: conversation.metadata.identity?.email ?? null,
@@ -414,36 +468,7 @@ export async function POST(request: NextRequest) {
       void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'ai_failed' }).catch(() => {});
       // The shopper's message is already stored. Only a recorded transition
       // can promise a handoff, but a failed handoff must not undo delivery.
-      const escalation = site.config.ai.escalationEnabled && !waitingAfterHours
-        ? await escalate('assistant_unavailable', 'The assistant could not reply. The shopper needs a team response.').catch(() => null)
-        : null;
-      if (escalation) {
-        const handed = await handedOff(escalation, locale).catch(() => null);
-        void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'handoff_triggered', payload: { reason: 'assistant_unavailable', alert: escalation.alert.status } }).catch(() => {});
-        return ok({
-          userMessage: toWire(userMessage),
-          reply: handed ? toWire(handed.line) : null,
-          saved: true,
-          assistant: 'unavailable',
-          handoffAvailable: site.config.ai.escalationEnabled,
-          status: escalation.conversation.status,
-          alert: toPublicHandoffAlert(escalation.alert),
-          team,
-          askContact: await contactPrompt(true),
-        });
-      }
-      // A concurrent takeover may have won while the model was running.
-      const current = await getConversationForVisitor(conversation.id, visitor.id).catch(() => null);
-      return ok({
-        userMessage: toWire(userMessage),
-        reply: null,
-        saved: true,
-        assistant: 'unavailable',
-        handoffAvailable: site.config.ai.escalationEnabled,
-        status: current?.status ?? conversation.status,
-        alert: publicAlertFor(current ?? conversation),
-        team,
-      });
+      return answerByTeam('The assistant could not reply. The shopper needs a team response.');
     }
 
     /* The model takes seconds; `ownsMic` above is a read from before it ran.
@@ -533,15 +558,15 @@ export async function POST(request: NextRequest) {
 
     if (turn.kind === 'action' && orderProvider) {
       const attempts = (conversation.metadata.order_lookup_attempts ?? 0) + 1;
-      let lookupAllowed = false;
-      try {
-        await requireRateLimit(orderLookupLimiter, `${site.id}:${clientIp(request) ?? 'unknown'}`);
-        lookupAllowed = true;
-      } catch (error) {
-        if (!(error instanceof RequestRateLimitError)) throw error;
-        // Keep order-denial copy identical: never disclose order existence
-        // or execute a lookup when its anti-enumeration gate is unavailable.
-      }
+      // The same per-address and per-order-number budgets as the lookup form.
+      // Keep order-denial copy identical: never disclose order existence or
+      // execute a lookup when its anti-enumeration gate is unavailable.
+      const lookupAllowed = (await spendOrderLookupBudget({
+        siteId: site.id,
+        network: networkKey(clientIp(request)),
+        // Already normalized by parseModelTurn, the same way the form's is.
+        orderNumber: turn.action.orderNumber,
+      })) === 'open';
 
       // Attempts are spent before the lookup runs, so a wrong guess costs
       // the same as a right one. Persisted regardless of the outcome.

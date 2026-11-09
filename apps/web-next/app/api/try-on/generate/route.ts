@@ -13,6 +13,7 @@ import {
 } from '@/lib/try-on/service';
 import { TryOnTestLooksCapError, TryOnUnavailableError } from '@/lib/try-on/entitlement';
 import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
+import { networkKey } from '@/lib/http/network-key';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { isAllowedGarmentUrl } from '@/lib/try-on/image-runner';
 import { validateProductId, validateSessionId } from '@/lib/try-on/validator';
@@ -32,7 +33,8 @@ import type {
   TryOnJobApiResponse,
   TryOnPhotoSource,
 } from '@/lib/try-on/types';
-import { verifyPasteTurnstile } from '@/lib/paste/turnstile';
+import { verifyDemoTurnstile, verifyPasteTurnstile } from '@/lib/paste/turnstile';
+import { claimDemoLook, demoLookChallengeRequired } from '@/lib/try-on/demo-allowance';
 import { claimPasteLook, PASTE_LOOK_WINDOW_SECONDS } from '@/lib/paste/look-allowance';
 import { getPasteConnection, pasteTryOnHosts } from '@/lib/paste/store';
 import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
@@ -69,6 +71,14 @@ function backgroundGeneration() {
     console.warn('[try-on] synchronous_fallback', { reason: 'after_unavailable' });
     return {};
   }
+}
+
+/* The page localizes this by its code; the English text is for API readers. */
+const DEMO_LIMIT_MESSAGE = 'You’ve reached today’s free demo looks. Install GRINDCTRL on your store to keep going.';
+
+function secondsUntilUtcMidnight(now = new Date()): number {
+  const midnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+  return Math.max(1, Math.ceil((midnight - now.getTime()) / 1000));
 }
 
 function toJobResponse(job: TryOnJob): TryOnJobApiResponse {
@@ -385,6 +395,31 @@ export async function POST(request: NextRequest) {
       }
       if (allowance === 'unavailable') {
         console.error('[try-on] paste look allowance unavailable', { code: 'paste_look_allowance', shop: authorization.shop });
+        const message = 'Unable to generate try-on preview right now. Please try again.';
+        return NextResponse.json({ ok: false, message, error: message } satisfies TryOnJobApiResponse, {
+          status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '30' },
+        });
+      }
+    }
+
+    if (demoLookChallengeRequired(authorization)) {
+      // Our own paid generation for an anonymous visitor: a person must ask
+      // for it, and the visitor's network and the whole demo have a daily
+      // ceiling. Checked in that order so a failed check spends nothing.
+      const challenge = await verifyDemoTurnstile({ token: body.turnstileToken, requestKey: authorization.requestKey, remoteIp: clientIp(request) });
+      if (!challenge.ok) return NextResponse.json({ ok: false, code: challenge.code, error: challenge.code }, {
+        status: challenge.code === 'turnstile_not_configured' || challenge.code === 'turnstile_unavailable' ? 503 : 403,
+        headers: { 'Cache-Control': 'no-store' },
+      });
+      const allowance = await claimDemoLook({ network: networkKey(clientIp(request)), requestKey: authorization.requestKey });
+      if (allowance === 'network_exhausted' || allowance === 'budget_exhausted') {
+        console.info('[try-on] demo look allowance reached', { code: 'demo_limit', scope: allowance });
+        return NextResponse.json({ ok: false, code: 'demo_limit', message: DEMO_LIMIT_MESSAGE, error: DEMO_LIMIT_MESSAGE } satisfies TryOnJobApiResponse, {
+          status: 429, headers: { 'Cache-Control': 'no-store', 'Retry-After': String(secondsUntilUtcMidnight()) },
+        });
+      }
+      if (allowance === 'unavailable') {
+        console.error('[try-on] demo look allowance unavailable', { code: 'demo_limit' });
         const message = 'Unable to generate try-on preview right now. Please try again.';
         return NextResponse.json({ ok: false, message, error: message } satisfies TryOnJobApiResponse, {
           status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '30' },

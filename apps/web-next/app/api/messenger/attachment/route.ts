@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
        inline because the note belongs in the transcript the shopper is
        looking at, not thirty seconds later. */
     let note: { id: string; role: string; content: string; createdAt: string; author: string } | null = null;
-    if (site.config.attachments.triageEnabled && (await triageBudgetRemaining(site.id))) {
+    if (site.config.attachments.triageEnabled && (await triageBudgetRemaining(site.id, conversation.id))) {
       try {
         const triage = await triageAttachment({ bytes: inspected.bytes, mime: inspected.mime });
         if (triage) {

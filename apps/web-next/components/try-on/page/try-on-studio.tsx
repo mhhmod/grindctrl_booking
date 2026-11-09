@@ -24,7 +24,7 @@ import { runPublicTryOn, type PublicTryOnFailure } from '@/lib/try-on/client';
 import { shopperFailureMessage } from '@/lib/try-on/shopper-errors';
 import { readPhotoAsDataUrl } from '@/lib/try-on/photo-file';
 import { recordTryOnOpen } from '@/lib/try-on/performance';
-import type { TryOnLocale } from '@/lib/try-on/i18n';
+import type { TryOnLocale, TryOnTranslator } from '@/lib/try-on/i18n';
 import { makingProgress } from '@/lib/try-on/making-progress';
 import type { TryOnStage } from '@/lib/try-on/types';
 import { CompareDialog, PiecePicker } from './studio-dialogs';
@@ -68,8 +68,10 @@ function focusLookCard(card: HTMLElement | null) {
   });
 }
 
-function failureText(failure: PublicTryOnFailure | null, locale: TryOnLocale): string | null {
+function failureText(failure: PublicTryOnFailure | null, locale: TryOnLocale, t: TryOnTranslator): string | null {
   if (!failure) return null;
+  if (failure.kind === 'demo_limit') return t.pageDemoLimit;
+  if (failure.kind === 'challenge') return t.challengeFailedBody;
   if (failure.kind === 'unavailable') return shopperFailureMessage('service_unavailable', locale);
   if (failure.kind === 'rate_limited') return shopperFailureMessage('busy', locale);
   return shopperFailureMessage(failure.kind, locale);
@@ -326,7 +328,8 @@ export function TryOnStudio({ typicalSeconds = null }: { typicalSeconds?: number
                   progress={waiting}
                   serverStage={progress.request === state.request ? progress.stage : null}
                   status={stepStatus(4, journey)}
-                  failureMessage={failureText(state.failure, locale)}
+                  failureMessage={failureText(state.failure, locale, t)}
+                  limitReached={state.failure?.kind === 'demo_limit'}
                   retryLocked={retryLocked}
                   onRetry={onCreate}
                   onUseSample={() => dispatch({ type: 'useSample' })}

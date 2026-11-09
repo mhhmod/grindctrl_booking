@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
+import { networkKey } from '@/lib/http/network-key';
 import { resolveShopperSession } from '@/lib/messenger/public-session';
 import { appendMessage, getConversationForVisitor, patchConversationMetadata, recordEvent } from '@/lib/messenger/conversations';
 import { shouldAskForContact } from '@/lib/messenger/contact';
@@ -22,7 +23,7 @@ const BODY_LIMIT_BYTES = 32 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
-    await requireRateLimit(publicApiRatelimit, `mh:${clientIp(request) ?? 'unknown'}`);
+    await requireRateLimit(publicApiRatelimit, `mh:${networkKey(clientIp(request))}`);
   } catch (error) {
     if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
     throw error;
@@ -74,7 +75,11 @@ export async function POST(request: NextRequest) {
         locale: 'en',
         notifications: site.config.notifications,
       },
-      team && !team.open ? { deferUntil: team.opensAtIso } : {},
+      {
+        ...(team && !team.open ? { deferUntil: team.opensAtIso } : {}),
+        // One shopper cannot flood the team's inbox with alert emails.
+        visitor: { id: visitor.id, network: networkKey(clientIp(request)) },
+      },
     );
     if (!escalation) {
       const current = await getConversationForVisitor(conversation.id, visitor.id);

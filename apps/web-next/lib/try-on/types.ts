@@ -37,8 +37,9 @@ export interface TryOnSession {
 export interface TryOnAttempt {
   attemptId: string;
   expiresAt: string;
-  /** Render inside our /embed/try-on iframe before a paid website look. */
-  turnstile?: { siteKey: string | null; action: 'paste_tryon'; cData: string };
+  /** Render before a paid look: inside our /embed/try-on iframe for a pasted
+   *  install (paste_tryon), on our own /try-on page for the demo (demo_tryon). */
+  turnstile?: { siteKey: string | null; action: 'paste_tryon' | 'demo_tryon'; cData: string };
 }
 
 /**
@@ -117,6 +118,8 @@ export interface TryOnJobApiResponse {
     | 'TRYON_RESULT_PERSISTENCE_FAILED'
     /** The store's owner used today's test looks (N5). */
     | 'test_looks_cap'
+    /** The public demo's daily looks for this network, or for everyone, are used. */
+    | 'demo_limit'
     | 'turnstile_not_configured'
     | 'turnstile_required'
     | 'turnstile_failed'

@@ -1,5 +1,5 @@
 /**
- * GRINDCTRL Support Messenger v1.1.0 — storefront loader.
+ * GRINDCTRL Support Messenger v1.2.0 — storefront loader.
  *
  * Design contract:
  * - Guest, never resident: one tiny script tag, one small launcher button in
@@ -69,7 +69,7 @@
     widgetLoads[name] = new Promise(function (resolve, reject) {
       var script = document.createElement('script');
       script.async = true;
-      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=1.4.0';
+      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=1.4.1';
       script.onload = resolve;
       script.onerror = function () { delete widgetLoads[name]; reject(new Error('widget_unavailable')); };
       document.head.appendChild(script);
@@ -548,10 +548,12 @@
     var params = '?key=' + encodeURIComponent(effectiveKey) +
       '&locale=' + encodeURIComponent(LOCALE_HINT || state.locale) +
       '&origin=' + encodeURIComponent(ORIGIN) +
-      '&anonId=' + encodeURIComponent(ensureAnonId());
-    // The token itself never goes in the address, where logs and referrers
-    // keep it. The panel is told one is coming, asks for it once it is
-    // listening, and waits for it before loading the conversation.
+      // The shopper's anonId comes over postMessage (sendSession), like the
+      // token: never in the address, where logs and referrers keep it.
+      '&session=1';
+    // The token itself never goes in the address either. The panel is told
+    // one is coming, asks for it once it is listening, and waits for it
+    // before loading the conversation.
     if (currentToken() || state.identityPending) params += '&identity=1';
     var frame = document.createElement('iframe');
     frame.src = APP_ORIGIN + '/embed/messenger' + params;
@@ -779,6 +781,7 @@
     var data = event.data;
     if (data && data.type === 'grindctrl-messenger:close') close();
     if (data && data.type === 'grindctrl-messenger:identity-request') {
+      sendSession();
       var token = currentToken();
       // While the proxy is still answering, identify() sends the token when
       // it lands; otherwise the panel learns there is none and stops waiting.
@@ -1097,6 +1100,12 @@
     var saved = storedToken();
     if (!saved || saved.c !== CUSTOMER_ID || saved.p !== PROXY_PATH || !(Date.now() - saved.at < TOKEN_FRESH_MS)) return null;
     return saved.t;
+  }
+
+  function sendSession() {
+    if (state.iframe && state.iframe.contentWindow) {
+      state.iframe.contentWindow.postMessage({ type: 'grindctrl-messenger:session', anonId: ensureAnonId() }, APP_ORIGIN);
+    }
   }
 
   function sendIdentity(token) {

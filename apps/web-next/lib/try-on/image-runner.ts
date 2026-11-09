@@ -13,6 +13,7 @@ import type { TryOnJob } from './types';
 import { getProduct } from './products';
 import { readProviderBody } from '@/lib/provider-http';
 import { decodeRasterDataUrl, TRYON_RESULT_MAX_BYTES } from './image-data';
+import { sanitizeShopperPhoto } from './photo-sanitize';
 import { toShopperFailureMessage } from './shopper-errors';
 import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
 import { fetchSiteGarment, garmentRefusalReason, UnsafeGarmentUrlError } from '@/lib/woo/garment-url';
@@ -158,7 +159,10 @@ export async function runImageGeneration(
     return fail('provider_not_configured', 503);
   }
 
-  if (!parsePhotoDataUrl(photoData)) {
+  // Decoded and re-encoded with no metadata (EXIF GPS included) before the
+  // provider sees it, on every path: lib/try-on/photo-sanitize.ts.
+  const providerPhoto = await sanitizeShopperPhoto(photoData);
+  if (!providerPhoto) {
     return fail('Photo must be a jpeg, png, or webp image.');
   }
 
@@ -194,7 +198,7 @@ export async function runImageGeneration(
         "realistic wrinkles, and correct fit for the person's build. " +
         'No beautification, no body reshaping, no background changes, no added props. Photorealistic, indistinguishable from a real photo.',
       input_references: [
-        { type: 'image_url', image_url: { url: photoData } },
+        { type: 'image_url', image_url: { url: providerPhoto } },
         { type: 'image_url', image_url: { url: garmentDataUrl } },
       ],
       n: 1,

@@ -8,12 +8,14 @@ import type { ConversationRecord } from './types';
 
 /* Whether this request proves the shopper is the customer the conversation is
    bound to. A saved identity binds a conversation but never extends a proof on
-   its own for WooCommerce (the plugin's token lives ten minutes), so a Woo
-   lookup needs a fresh token in the request. A token only confirms the
-   customer already bound to the conversation, or binds an anonymous one; a
-   token for someone else means the browser changed hands and is refused.
-   Shared by the chat turn and the order lookup route so the two cannot
-   drift. */
+   its own, on any platform: every customer-scoped lookup needs a fresh,
+   unexpired shopper token in the request (Shopify's App Proxy token, or the
+   WooCommerce plugin's ten-minute token), so a conversation id that leaks
+   or a shared device does not keep someone else's orders open. A token only
+   confirms the customer already bound to the conversation, or binds an
+   anonymous one; a token for someone else means the browser changed hands
+   and is refused. Shared by the chat turn and the order lookup route so the
+   two cannot drift. */
 
 export interface VerifiedCustomer {
   verified: boolean;
@@ -31,10 +33,8 @@ export async function resolveVerifiedCustomer(input: {
   const { site, conversation, shopperToken, anonymousId } = input;
   const identity = conversation.metadata.identity;
   let name = identity?.name ?? null;
-  let appClientId = identity?.app_client_id;
-  let verified = input.wooPaired
-    ? false
-    : Boolean(identity?.verified && appClientId && site.domain && (await isActiveShopifyInstallation(site.domain, appClientId)));
+  let appClientId: string | undefined;
+  let verified = false;
 
   if (shopperToken && isWooIdentityToken(shopperToken)) {
     const claims = input.wooPaired ? await verifyWooIdentityToken(shopperToken, { siteId: site.id, sid: anonymousId }) : null;

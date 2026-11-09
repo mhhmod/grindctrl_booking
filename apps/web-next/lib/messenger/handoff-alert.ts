@@ -32,6 +32,9 @@ export interface HandoffAlert {
   attempts: number;
   /** A deferred alert (after hours) is not sent before this time. */
   dueAt?: string | null;
+  /** Throttled for its visitor or network: it goes out in the site's next
+   *  digest, never as an email of its own. */
+  digest?: boolean;
 }
 
 /** What the shopper's panel is told. Reasons stay server-side: they describe
@@ -58,6 +61,7 @@ export function readHandoffAlert(metadata: Record<string, unknown> | null | unde
     at: alert.at,
     attempts: typeof alert.attempts === 'number' ? alert.attempts : 0,
     dueAt: typeof alert.dueAt === 'string' ? alert.dueAt : null,
+    ...(alert.digest === true ? { digest: true } : {}),
   };
 }
 

@@ -2,6 +2,8 @@ import 'server-only';
 
 import { patchConversationMetadata, requestHandoff } from './conversations';
 import { notifyHandoff, type NotifyHandoffInput } from './notify';
+import { handoffAlertNetworkRatelimit, handoffAlertVisitorRatelimit } from '@/lib/ratelimit';
+import { requireRateLimit, RequestRateLimitError } from '@/lib/request-rate-limit';
 import type { HandoffAlert } from './handoff-alert';
 import type { ConversationRecord } from './types';
 
@@ -20,6 +22,21 @@ export interface EscalateOptions {
    *  hours at all, so nobody will be alerted. */
   deferUntil?: string | null;
   waitMs?: number;
+  /** The shopper behind this handoff, for the per-visitor and per-network
+   *  alert caps. Past either (or when they cannot be checked), the handoff
+   *  still happens and its alert goes out in the site's digest. */
+  visitor?: { id: string; network: string };
+}
+
+async function visitorMayAlert(siteId: string, visitor: { id: string; network: string }): Promise<boolean> {
+  try {
+    await requireRateLimit(handoffAlertVisitorRatelimit, `${siteId}:${visitor.id}`);
+    await requireRateLimit(handoffAlertNetworkRatelimit, `${siteId}:${visitor.network}`);
+    return true;
+  } catch (error) {
+    if (error instanceof RequestRateLimitError) return false;
+    throw error;
+  }
 }
 
 function pendingAlert(attempts = 0): HandoffAlert {
@@ -51,6 +68,13 @@ export async function escalateAndNotify(
       attempts: 0,
       dueAt: options.deferUntil,
     };
+    await patchConversationMetadata(transitioned.id, { handoff_alert: alert }).catch(() => {});
+    return { conversation: transitioned, alert };
+  }
+
+  if (options.visitor && !(await visitorMayAlert(site.id, options.visitor))) {
+    // The retry worker sends it with the site's next digest.
+    const alert: HandoffAlert = { ...pendingAlert(), reason: 'throttled', digest: true };
     await patchConversationMetadata(transitioned.id, { handoff_alert: alert }).catch(() => {});
     return { conversation: transitioned, alert };
   }

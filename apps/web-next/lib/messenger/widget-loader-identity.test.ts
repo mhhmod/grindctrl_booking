@@ -183,6 +183,21 @@ describe('the signed-in shopper token (item 15)', () => {
     expect(identityCalls()).toHaveLength(1);
   });
 
+  it('keeps the anonId out of the panel address and hands it over on request', async () => {
+    identityAnswer = async () => new Response(JSON.stringify({ authenticated: false }), { status: 200 });
+    boot();
+    const frame = await openPanel();
+    expect(frame.src).toContain('session=1');
+    expect(frame.src).not.toContain('anonId');
+    const posted = askForIdentity(frame);
+    const sent = posted.mock.calls.find(([message]) => message.type === 'grindctrl-messenger:session');
+    expect(sent?.[1]).toBe(APP);
+    expect(sent?.[0].anonId).toMatch(/^[A-Za-z0-9_-]{8,64}$/);
+    // The same id the loader keeps for this shopper (and binds tokens to).
+    const kept = Object.keys(window.localStorage).filter((key) => key.endsWith('_anon')).map((key) => window.localStorage.getItem(key));
+    expect(kept).toContain(sent?.[0].anonId);
+  });
+
   it('lets a waiting panel go when the App Proxy gives no token', async () => {
     let answer!: (r: Response) => void;
     identityAnswer = () => new Promise<Response>((resolve) => (answer = resolve));
@@ -192,8 +207,8 @@ describe('the signed-in shopper token (item 15)', () => {
     const frame = await openPanel();
     expect(frame.src).toContain('identity=1');
     const posted = askForIdentity(frame);
-    // Still answering: the panel keeps waiting.
-    expect(posted).not.toHaveBeenCalled();
+    // Still answering: the panel gets its session id but keeps waiting for the token.
+    expect(posted.mock.calls.map(([message]) => message.type)).toEqual(['grindctrl-messenger:session']);
 
     answer(new Response(JSON.stringify({ authenticated: false }), { status: 200 }));
     await waitFor(() => expect(posted).toHaveBeenCalledWith({ type: 'grindctrl-messenger:identify', token: null }, APP));

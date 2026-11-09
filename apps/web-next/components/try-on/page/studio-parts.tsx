@@ -7,6 +7,7 @@
 
 import * as React from 'react';
 import Image, { getImageProps } from 'next/image';
+import Link from 'next/link';
 import { preload } from 'react-dom';
 import { ShopifyMark } from '@/components/brand-marks';
 import { SiteBadge } from '@/components/site/chip';
@@ -456,6 +457,7 @@ export function LookCard({
   serverStage = null,
   status,
   failureMessage,
+  limitReached = false,
   retryLocked,
   onRetry,
   onUseSample,
@@ -469,6 +471,8 @@ export function LookCard({
   serverStage?: TryOnStage | null;
   status: StepStatus;
   failureMessage: string | null;
+  /** Today's free demo looks are used: offer sign-up, not a retry. */
+  limitReached?: boolean;
   retryLocked: boolean;
   onRetry: () => void;
   onUseSample: () => void;
@@ -599,22 +603,39 @@ export function LookCard({
         {state.stage === 'failed' ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
             <Silhouette className="h-[90px] w-[62px] text-gc-inactive lg:h-[110px] lg:w-[76px]" />
-            <span className="flex items-center gap-2 text-base font-bold">
-              <AlertIcon size={18} />
-              {t.errorTitle}
-            </span>
-            <p role="alert" className="max-w-[320px] text-[13.5px] leading-normal text-muted-foreground">
-              {failureMessage}
-            </p>
-            <button
-              type="button"
-              onClick={onRetry}
-              disabled={retryLocked}
-              className="inline-flex h-12 items-center gap-2 rounded-full bg-foreground px-[22px] text-[14.5px] font-bold text-background disabled:opacity-45"
-            >
-              <SparkleIcon size={17} />
-              {t.tryAgain}
-            </button>
+            {limitReached ? (
+              <>
+                <p role="status" className="max-w-[320px] text-[14.5px] font-semibold leading-normal text-foreground">
+                  {failureMessage}
+                </p>
+                <Link
+                  href="/sign-up"
+                  onClick={() => trackClick('cta_clicked', { cta: 'sign_up', section: 'try_on_demo_limit' })}
+                  className="inline-flex h-12 items-center gap-2 rounded-full bg-foreground px-[22px] text-[14.5px] font-bold text-background"
+                >
+                  {t.pageDemoLimitCta}
+                </Link>
+              </>
+            ) : (
+              <>
+                <span className="flex items-center gap-2 text-base font-bold">
+                  <AlertIcon size={18} />
+                  {t.errorTitle}
+                </span>
+                <p role="alert" className="max-w-[320px] text-[13.5px] leading-normal text-muted-foreground">
+                  {failureMessage}
+                </p>
+                <button
+                  type="button"
+                  onClick={onRetry}
+                  disabled={retryLocked}
+                  className="inline-flex h-12 items-center gap-2 rounded-full bg-foreground px-[22px] text-[14.5px] font-bold text-background disabled:opacity-45"
+                >
+                  <SparkleIcon size={17} />
+                  {t.tryAgain}
+                </button>
+              </>
+            )}
             <div className="flex flex-wrap items-center justify-center gap-2">
               <button
                 type="button"

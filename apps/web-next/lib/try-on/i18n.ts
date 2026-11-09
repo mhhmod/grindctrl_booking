@@ -142,6 +142,9 @@ interface TryOnDict {
   pageStoreTitle: string;
   pageStoreBadge: string;
   pageOpenStore: string;
+  /** Today's free demo looks are used; shown with a sign-up link, never a code. */
+  pageDemoLimit: string;
+  pageDemoLimitCta: string;
   pagePickerNote: string;
   pageCompareTitle: string;
   pageErrType: string;
@@ -287,6 +290,8 @@ const en: TryOnDict = {
   pageStoreTitle: 'The same try-on, inside a real store.',
   pageStoreBadge: 'Try it on with AI on every product',
   pageOpenStore: 'Open the demo store',
+  pageDemoLimit: 'You’ve reached today’s free demo looks. Install GRINDCTRL on your store to keep going.',
+  pageDemoLimitCta: 'Create your account',
   pagePickerNote: 'Demo pieces with sample looks. Your photo stays as it is.',
   pageCompareTitle: 'Your looks side by side',
   pageErrType: 'Unsupported file type. Please upload a JPG, PNG or WebP image.',
@@ -436,6 +441,8 @@ const ar: TryOnDict = {
   pageStoreTitle: 'التجربة نفسها، داخل متجر حقيقي.',
   pageStoreBadge: 'زر جرّبها بالذكاء الاصطناعي على كل منتج',
   pageOpenStore: 'افتح المتجر التجريبي',
+  pageDemoLimit: 'وصلت لحد التجارب المجانية اليوم. ثبّت GRINDCTRL على متجرك لتكمل.',
+  pageDemoLimitCta: 'أنشئ حسابك',
   pagePickerNote: 'قطع تجريبية بإطلالات نموذجية. تبقى صورتك كما هي.',
   pageCompareTitle: 'إطلالاتك جنبًا إلى جنب',
   pageErrType: 'نوع الملف غير مدعوم. يرجى رفع صورة JPG أو PNG أو WebP.',

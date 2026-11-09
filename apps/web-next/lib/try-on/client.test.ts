@@ -156,6 +156,45 @@ describe('pollTryOnJob for a look made after the answer', () => {
   });
 });
 
+describe('public demo limits and check', () => {
+  const binding = { siteKey: 'site-key', action: 'demo_tryon', cData: 'bound' };
+  function stubDemo(generate: () => Response, turnstile?: NonNullable<Window['turnstile']>) {
+    window.history.replaceState({}, '', '/try-on');
+    if (turnstile) window.turnstile = turnstile;
+    const fetchMock = vi.fn(async (input: string, _init?: RequestInit) => {
+      const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
+      if (input.endsWith('/session')) return json({ ok: true, data: { sessionId: 'signed-session' } });
+      if (input.endsWith('/attempt')) return json({ ok: true, data: { attemptId: 'signed-attempt', turnstile: binding } });
+      return generate();
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return fetchMock;
+  }
+  const passing = (): NonNullable<Window['turnstile']> => {
+    let done: (token: string) => void = () => {};
+    return { render: (_el, options) => { done = options.callback; return 'w'; }, execute: () => done('fresh-token'), remove: vi.fn() };
+  };
+  afterEach(() => { delete window.turnstile; vi.unstubAllGlobals(); window.history.replaceState({}, '', '/'); });
+
+  it('sends the fresh check token and reports a reached demo limit as its own kind, not a retry wait', async () => {
+    const fetchMock = stubDemo(() => new Response(JSON.stringify({ ok: false, code: 'demo_limit', message: 'x' }), { status: 429, headers: { 'Retry-After': '3600' } }), passing());
+    await expect(runPublicTryOn({ productId: 'demo-shirt', photoDataUrl: 'data:image/jpeg;base64,cGhvdG8=' }))
+      .resolves.toEqual({ ok: false, failure: { kind: 'demo_limit' } });
+    const generate = fetchMock.mock.calls.find(([input]) => input.endsWith('/generate'))!;
+    expect(JSON.parse(String(generate[1]?.body))).toMatchObject({ turnstileToken: 'fresh-token' });
+  });
+  it('reports a refused or unfinished check as a challenge failure', async () => {
+    stubDemo(() => new Response(JSON.stringify({ ok: false, code: 'turnstile_failed' }), { status: 403 }), passing());
+    await expect(runPublicTryOn({ productId: 'demo-shirt', photoDataUrl: 'data:image/jpeg;base64,cGhvdG8=' }))
+      .resolves.toEqual({ ok: false, failure: { kind: 'challenge' } });
+    let fail = () => {};
+    const fetchMock = stubDemo(() => new Response('{}'), { render: (_el, options) => { fail = options['error-callback']; return 'w'; }, execute: () => fail(), remove: vi.fn() });
+    await expect(runPublicTryOn({ productId: 'demo-shirt', photoDataUrl: 'data:image/jpeg;base64,cGhvdG8=' }))
+      .resolves.toEqual({ ok: false, failure: { kind: 'challenge' } });
+    expect(fetchMock.mock.calls.some(([input]) => input.endsWith('/generate'))).toBe(false);
+  });
+});
+
 describe('public studio async generation', () => {
   afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
   it('forwards the accepted and polled real stages to the studio until the look exists', async () => {

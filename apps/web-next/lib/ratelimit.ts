@@ -30,6 +30,8 @@ const NO_LIMITERS = {
   pasteDomainCheckAuto: null,
   pasteDomainCheckOwner: null,
   pasteDomainCheckHost: null,
+  handoffAlertVisitor: null,
+  handoffAlertNetwork: null,
 } as const;
 
 function createRatelimiters(): {
@@ -46,6 +48,8 @@ function createRatelimiters(): {
   pasteDomainCheckAuto: Ratelimit | null;
   pasteDomainCheckOwner: Ratelimit | null;
   pasteDomainCheckHost: Ratelimit | null;
+  handoffAlertVisitor: Ratelimit | null;
+  handoffAlertNetwork: Ratelimit | null;
 } {
   /* Redis.fromEnv() only warns when vars are missing, producing a client
      that throws per-call. The strict guard rejects this unconfigured facade
@@ -163,6 +167,22 @@ function createRatelimiters(): {
         prefix: 'gc-ratelimit:paste-domain-check-host',
         analytics: false,
       }),
+      /* Handoff alert emails one shopper can cause (lib/messenger/escalate.ts),
+         per visitor and per network (IPv6 /64). Past either, the handoff
+         still reaches the team and its alert goes out in the site's digest
+         instead of an email of its own. */
+      handoffAlertVisitor: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(2, '3600 s'),
+        prefix: 'gc-ratelimit:handoff-alert-visitor',
+        analytics: false,
+      }),
+      handoffAlertNetwork: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(5, '3600 s'),
+        prefix: 'gc-ratelimit:handoff-alert-network',
+        analytics: false,
+      }),
     };
   } catch {
     console.error(
@@ -197,6 +217,8 @@ export const pastePlatformCheckRatelimit = limiterFacade(limiters.pastePlatformC
 export const pasteDomainCheckAutoRatelimit = limiterFacade(limiters.pasteDomainCheckAuto);
 export const pasteDomainCheckOwnerRatelimit = limiterFacade(limiters.pasteDomainCheckOwner);
 export const pasteDomainCheckHostRatelimit = limiterFacade(limiters.pasteDomainCheckHost);
+export const handoffAlertVisitorRatelimit = limiterFacade(limiters.handoffAlertVisitor);
+export const handoffAlertNetworkRatelimit = limiterFacade(limiters.handoffAlertNetwork);
 
 /* Identity of the requesting network for rate-limit keying. Prefers the
    RIGHTMOST x-forwarded-for entry: every proxy on the path appends to the

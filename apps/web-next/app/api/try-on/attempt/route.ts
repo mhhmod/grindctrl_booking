@@ -11,7 +11,8 @@ import {
 } from '@/lib/try-on/storefront-context';
 import { validateProductId } from '@/lib/try-on/validator';
 import type { TryOnApiResponse, TryOnAttempt } from '@/lib/try-on/types';
-import { pasteTurnstileBinding, pasteTurnstileConfig, pasteTurnstileRequired } from '@/lib/paste/turnstile';
+import { demoTurnstileConfig, pasteTurnstileBinding, pasteTurnstileConfig, pasteTurnstileRequired } from '@/lib/paste/turnstile';
+import { demoLookChallengeRequired } from '@/lib/try-on/demo-allowance';
 import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
 
 /** A session token (at most 4 KiB) plus product ids and nonces. */
@@ -106,6 +107,8 @@ export async function POST(request: NextRequest) {
           expiresAt: new Date(attempt.claims.exp * 1000).toISOString(),
           ...(pasteTurnstileRequired(attempt.claims) ? {
             turnstile: { ...pasteTurnstileConfig(), cData: pasteTurnstileBinding(attempt.claims) },
+          } : demoLookChallengeRequired(attempt.claims) ? {
+            turnstile: demoTurnstileConfig(attempt.claims.requestKey),
           } : {}),
         },
       } satisfies TryOnApiResponse<TryOnAttempt>,
