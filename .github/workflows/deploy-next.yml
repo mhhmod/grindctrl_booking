@@ -185,6 +185,9 @@ jobs:
 
   deploy:
     needs: promote
+    # Without this, a skipped release-checks (the verified fast path) skips
+    # deploy too: implicit success() looks at every upstream job.
+    if: ${{ always() && needs.promote.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       # This key is restricted server-side (authorized_keys `command=`)
