@@ -13,6 +13,7 @@ vi.mock('@upstash/redis', () => ({
 vi.mock('@upstash/ratelimit', () => {
   class MockRatelimit {
     static slidingWindow = slidingWindowMock;
+    static fixedWindow = vi.fn((requests: number, window: string) => ({ requests, window, fixed: true }));
     constructor(config: Record<string, unknown>) {
       constructorConfigs.push(config);
     }
