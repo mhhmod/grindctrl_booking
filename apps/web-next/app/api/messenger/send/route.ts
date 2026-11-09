@@ -20,9 +20,9 @@ import {
 } from '@/lib/messenger/conversations';
 import { parseModelTurn } from '@/lib/messenger/actions';
 import { ORDER_LOOKUP_LIFETIME_LIMIT } from '@/lib/messenger/orders';
-import { orderProviderFor, wooConnectionFor } from '@/lib/messenger/order-provider';
+import { resolveOrderProvider, wooConnectionFor } from '@/lib/messenger/order-provider';
 import { boundCustomerId, resolveVerifiedCustomer } from '@/lib/messenger/verified-customer';
-import { orderLookupLimiter } from '@/lib/messenger/order-limits';
+import { orderLookupLimiter, orderNumberLimiter } from '@/lib/messenger/order-limits';
 import { ORDER_DENIED, ORDER_UNAVAILABLE } from '@/lib/messenger/order-copy';
 import { shouldAskForContact } from '@/lib/messenger/contact';
 import { escalateAndNotify, type Escalation } from '@/lib/messenger/escalate';
@@ -235,7 +235,7 @@ export async function POST(request: NextRequest) {
        neither simply does not get the capability, and the model is never
        told it exists, so it cannot offer what we would refuse. */
     const wooConnection = await wooConnectionFor(site);
-    const orderProvider = site.config.orderLookup.enabled ? orderProviderFor(site, wooConnection) : null;
+    const orderProvider = site.config.orderLookup.enabled ? await resolveOrderProvider(site, wooConnection) : null;
     const orderLookupAvailable = Boolean(orderProvider);
 
     /* "Where should we reply?" is offered at most once per conversation, and
@@ -280,7 +280,7 @@ export async function POST(request: NextRequest) {
     });
     const identityName = proof.name;
     const verifiedAppClientId = proof.appClientId;
-    const verifiedCustomer = proof.verified;
+    const verifiedCustomer = proof.verified && orderProvider?.platform !== 'easyorders';
 
     // 1) Persist the shopper's turn first (idempotent).
     const { message: userMessage, replayed } = await appendMessage({
@@ -398,6 +398,7 @@ export async function POST(request: NextRequest) {
                 }
               : undefined,
           orderLookupEnabled: orderLookupAvailable,
+          orderLookupPhone: orderProvider?.platform === 'easyorders',
           franco: locale === 'ar' && isFrancoArabic(text),
           query: text,
           handoffRules: handoffRulesOn ? rules : null,
@@ -534,6 +535,9 @@ export async function POST(request: NextRequest) {
       let lookupAllowed = false;
       try {
         await requireRateLimit(orderLookupLimiter, `${site.id}:${clientIp(request) ?? 'unknown'}`);
+        if (turn.action.orderNumber && orderProvider.platform === 'easyorders') {
+          await requireRateLimit(orderNumberLimiter, `${site.id}:${turn.action.orderNumber}`);
+        }
         lookupAllowed = true;
       } catch (error) {
         if (!(error instanceof RequestRateLimitError)) throw error;
@@ -562,6 +566,7 @@ export async function POST(request: NextRequest) {
           : await orderProvider.lookupByEmailAndNumber({
               orderNumber: turn.action.orderNumber,
               email: turn.action.email,
+              ...(orderProvider.platform === 'easyorders' ? { phone: turn.action.phone } : {}),
               appClientId,
             });
 

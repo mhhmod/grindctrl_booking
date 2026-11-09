@@ -147,6 +147,8 @@ export interface PromptInput {
   /** Teaches the action line. Off means the model is never told the action
    *  exists, so it cannot ask for something the server would refuse. */
   orderLookupEnabled?: boolean;
+  /** EasyOrders accepts an Egyptian phone as guest proof as well as email. */
+  orderLookupPhone?: boolean;
   /** The shopper's message, which ranks the knowledge (item 11). */
   query?: string;
   /** The store's handoff rules, while n25_handoff_rules is on. */
@@ -179,15 +181,21 @@ function handoffRulesText(rules: HandoffRules): string {
    any field for who the shopper is. Identity is re-derived server-side from
    the conversation record and the proxy-signed token, so an invented
    customer id has nowhere to go. */
-function orderLookupInstructions(verified: boolean): string {
+function orderLookupInstructions(verified: boolean, phone = false): string {
   return [
     'ORDER LOOKUP:',
     'You can look up one order for this shopper. To do it, reply with ONLY this line',
     'and nothing else: no greeting, no explanation, no text before or after:',
     `${ACTION_SENTINEL}{"action":"lookup_order","order_number":"1234","email":"shopper@example.com"}`,
+    ...(phone ? [
+      `For this store you may instead use ${ACTION_SENTINEL}{"action":"lookup_order","order_number":"1234","phone":"01012345678"}.`,
+      '- Use the order number and the Egyptian phone used on the order, OR the order number and email. Never invent either proof.',
+    ] : []),
     verified
       ? '- This shopper is signed in, so order_number and email are both optional. Omit them to fetch their most recent order.'
-      : '- This shopper is NOT signed in. You must have BOTH an order number and the email used on the order before emitting the line. If you are missing either, ask for it in plain prose instead.',
+      : phone
+        ? '- This shopper is NOT signed in. Ask for an order number and the phone or email used on the order before emitting the line.'
+        : '- This shopper is NOT signed in. You must have BOTH an order number and the email used on the order before emitting the line. If you are missing either, ask for it in plain prose instead.',
     '- Use it only when the shopper is asking about a specific order they placed.',
     '- Emit it at most once per reply. Never invent an order number or an email.',
     '- Do not state or promise anything about the order before the lookup returns.',
@@ -234,7 +242,7 @@ export function buildSystemPrompt(input: PromptInput): string {
       .join('\n'),
   );
   if (input.orderLookupEnabled) {
-    parts.push(orderLookupInstructions(input.identity?.verifiedCustomer === true));
+    parts.push(orderLookupInstructions(input.identity?.verifiedCustomer === true, input.orderLookupPhone));
   }
   const knowledge = knowledgeBlock(input.knowledge, input.query ?? '', input.ai.escalationEnabled);
   if (knowledge) parts.push(knowledge);

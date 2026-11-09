@@ -38,6 +38,8 @@ const mocks = vi.hoisted(() => ({
   loadActiveWooConnection: vi.fn(),
   callWooPlugin: vi.fn(),
   verifyWooIdentityToken: vi.fn(),
+  easyConnection: vi.fn(),
+  easyLookup: vi.fn(),
 }));
 
 vi.hoisted(() => {
@@ -60,6 +62,11 @@ vi.mock('@/lib/ratelimit', () => ({
   publicApiRatelimit: mocks.publicApiRatelimit,
   clientIp: mocks.clientIp,
 }));
+vi.mock('@/lib/easyorders/store', () => ({ loadEasyOrdersConnection: mocks.easyConnection }));
+vi.mock('@/lib/easyorders/order-provider', () => ({ EasyOrdersOrderProvider: class {
+  platform = 'easyorders';
+  lookupByEmailAndNumber = mocks.easyLookup;
+} }));
 vi.mock('@/lib/messenger/public-api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/messenger/public-api')>();
   return {
@@ -222,6 +229,21 @@ function stubTurn(raw: string) {
 }
 
 describe('POST /api/messenger/send — order lookup action seam', () => {
+  it('executes EasyOrders phone proof through the same session and number gates', async () => {
+    mocks.loadPublicSite.mockResolvedValue({ ...ORDER_SITE, domain: 'merchant.easy-orders.net' });
+    mocks.loadActiveWooConnection.mockResolvedValue(null);
+    mocks.easyConnection.mockResolvedValue({ status: 'active', api_key: { ciphertext: 'secured' } });
+    mocks.orderLimit.mockResolvedValue({ success: true, reset: Date.now() + 60000 });
+    stubTurn(ACTION({ action: 'lookup_order', order_number: '1234', phone: '00201012345678' }));
+    mocks.easyLookup.mockResolvedValue({ ok: true, facts: { order_number: '1234', tracking: null } });
+    mocks.phraseOrderAnswer.mockResolvedValue('Your order is being prepared.');
+    const res = await POST(makeRequest(validBody));
+    expect(res.status).toBe(200);
+    expect(mocks.easyLookup).toHaveBeenCalledWith({ orderNumber: '1234', email: null, phone: '1012345678', appClientId: undefined });
+    expect(mocks.orderLimit).toHaveBeenCalledWith('site-1:1234');
+    expect(mocks.orderLimit).toHaveBeenCalledWith('site-1:203.0.113.5');
+    expect(mocks.generateAssistantReply.mock.calls[0][0].prompt).toContain('Egyptian phone');
+  });
   it('executes a lookup and answers from the facts, never from the raw payload', async () => {
     mocks.loadPublicSite.mockResolvedValue(ORDER_SITE);
     stubTurn(ACTION({ action: 'lookup_order', order_number: '1234', email: 'a@b.com' }));

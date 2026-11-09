@@ -63,6 +63,7 @@ export function boundCustomerId(
   conversation: Pick<ConversationRecord, 'metadata'>,
   platform: OrderProviderPlatform,
 ): string | null {
+  if (platform === 'easyorders') return null; // no documented signed shopper identity
   const identity = conversation.metadata.identity;
   return (platform === 'woocommerce' ? identity?.woo_customer_id : identity?.customer_id) ?? null;
 }

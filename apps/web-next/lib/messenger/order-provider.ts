@@ -15,6 +15,9 @@ import { parseWooOrderResponse, wooToOrderCard, wooToOrderFacts } from './woo-or
 import { loadActiveWooConnection, type ActiveWooConnection } from '@/lib/woo/active-connection';
 import { pluginSupportsOrderLookup } from '@/lib/woo/plugin-version';
 import { callWooPlugin, WOO_PLUGIN_ORDER_LOOKUP_PATH } from '@/lib/woo/plugin-client';
+import { loadEasyOrdersConnection } from '@/lib/easyorders/store';
+import { EasyOrdersOrderProvider } from '@/lib/easyorders/order-provider';
+import type { EasyOrdersConnection } from '@/lib/easyorders/types';
 
 /* Where Store Chat's order lookup reads orders from, per site.
 
@@ -23,7 +26,7 @@ import { callWooPlugin, WOO_PLUGIN_ORDER_LOOKUP_PATH } from '@/lib/woo/plugin-cl
    for this customer, or for this order number and email", in the shapes the
    chat already uses. A site with no provider has no order lookup. */
 
-export type OrderProviderPlatform = 'shopify' | 'woocommerce';
+export type OrderProviderPlatform = 'shopify' | 'woocommerce' | 'easyorders';
 
 export interface OrderProvider {
   readonly platform: OrderProviderPlatform;
@@ -37,10 +40,11 @@ export interface OrderProvider {
   lookupByEmailAndNumber(input: {
     orderNumber: string | null;
     email: string | null;
+    phone?: string | null;
     appClientId?: string;
   }): Promise<LookupOutcome>;
   /** Guest proof, answered as the card the shopper sees. */
-  lookupGuestCard(input: { orderNumber: string; email: string; withAmounts: boolean }): Promise<GuestCardOutcome>;
+  lookupGuestCard(input: { orderNumber: string; email: string; phone?: string | null; withAmounts: boolean }): Promise<GuestCardOutcome>;
   /** A verified customer's newest order as the card, no email asked. */
   lookupCustomerCard(input: {
     customerId: string;
@@ -184,6 +188,7 @@ export class WooOrderProvider implements OrderProvider {
 export function orderProviderFor(
   site: { domain?: string | null },
   wooConnection: ActiveWooConnection | null,
+  easyOrdersConnection: EasyOrdersConnection | null = null,
 ): OrderProvider | null {
   const shopDomain = orderShopDomain(site.domain);
   if (shopDomain) return new ShopifyOrderProvider(shopDomain);
@@ -191,7 +196,8 @@ export function orderProviderFor(
   // never told order lookup exists.
   return wooConnection && pluginSupportsOrderLookup(wooConnection.pluginVersion)
     ? new WooOrderProvider(wooConnection)
-    : null;
+    : easyOrdersConnection?.status === 'active' && easyOrdersConnection.api_key
+      ? new EasyOrdersOrderProvider(easyOrdersConnection) : null;
 }
 
 /** The site's active WooCommerce pairing, or null: not Shopify, not paired,
@@ -206,6 +212,9 @@ export async function wooConnectionFor(site: { id: string; domain?: string | nul
   }
 }
 
-export async function resolveOrderProvider(site: { id: string; domain?: string | null }): Promise<OrderProvider | null> {
-  return orderProviderFor(site, await wooConnectionFor(site));
+export async function resolveOrderProvider(site: { id: string; domain?: string | null }, woo?: ActiveWooConnection | null): Promise<OrderProvider | null> {
+  const primary = orderProviderFor(site, woo === undefined ? await wooConnectionFor(site) : woo);
+  if (primary) return primary;
+  try { return orderProviderFor(site, null, await loadEasyOrdersConnection(site.id)); }
+  catch { return null; } // unavailable registry never enables a provider
 }

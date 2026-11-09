@@ -26,6 +26,8 @@ const NO_LIMITERS = {
   proxyShopMint: null,
   pasteShopCheckSite: null,
   pasteShopCheckShop: null,
+  easyOrdersWebhookIp: null,
+  easyOrdersWebhookConnection: null,
 } as const;
 
 function createRatelimiters(): {
@@ -38,6 +40,8 @@ function createRatelimiters(): {
   proxyShopMint: Ratelimit | null;
   pasteShopCheckSite: Ratelimit | null;
   pasteShopCheckShop: Ratelimit | null;
+  easyOrdersWebhookIp: Ratelimit | null;
+  easyOrdersWebhookConnection: Ratelimit | null;
 } {
   /* Redis.fromEnv() only warns when vars are missing, producing a client
      that throws per-call. The strict guard rejects this unconfigured facade
@@ -122,6 +126,25 @@ function createRatelimiters(): {
         prefix: 'gc-ratelimit:paste-shop-check-shop',
         analytics: false,
       }),
+      /* EasyOrders webhooks (app/api/easyorders/webhook/[token]). Admission
+         is per network BEFORE the token lookup, so guessing tokens cannot
+         reach the database freely. EasyOrders delivers every merchant's
+         events from its own servers, so this ceiling is shared by all
+         connected stores and sits well above one store's; the per-connection
+         budget, keyed by the authenticated site, is the one a single store's
+         traffic meets. */
+      easyOrdersWebhookIp: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(600, '60 s'),
+        prefix: 'gc-ratelimit:easyorders-webhook-ip',
+        analytics: false,
+      }),
+      easyOrdersWebhookConnection: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(120, '60 s'),
+        prefix: 'gc-ratelimit:easyorders-webhook-connection',
+        analytics: false,
+      }),
     };
   } catch {
     console.error(
@@ -152,6 +175,8 @@ export const proxyShopReadRatelimit = limiterFacade(limiters.proxyShopRead);
 export const proxyShopMintRatelimit = limiterFacade(limiters.proxyShopMint);
 export const pasteShopCheckSiteRatelimit = limiterFacade(limiters.pasteShopCheckSite);
 export const pasteShopCheckShopRatelimit = limiterFacade(limiters.pasteShopCheckShop);
+export const easyOrdersWebhookIpRatelimit = limiterFacade(limiters.easyOrdersWebhookIp);
+export const easyOrdersWebhookConnectionRatelimit = limiterFacade(limiters.easyOrdersWebhookConnection);
 
 /* Identity of the requesting network for rate-limit keying. Prefers the
    RIGHTMOST x-forwarded-for entry: every proxy on the path appends to the

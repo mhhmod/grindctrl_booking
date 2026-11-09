@@ -12,6 +12,7 @@ import { boundCustomerId, resolveVerifiedCustomer } from '@/lib/messenger/verifi
 import { pickLocalized } from '@/lib/messenger/ai';
 import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
 import type { MessageRecord } from '@/lib/messenger/types';
+import { normalizeEgyptPhone } from '@/lib/easyorders/phone';
 
 /* POST /api/messenger/order-lookup  (Chat-More, contract N48; v16_chat)
    The guest order lookup inside the chat: the order number and the email
@@ -21,7 +22,7 @@ import type { MessageRecord } from '@/lib/messenger/types';
    life, shared with the chat's own lookups), per address and store (20 an
    hour) and per order number (10 a day). The shopper's line keeps only a
    masked email, and the card comes from the store's own order data. Phone
-   matching waits for Shopify's protected customer data approval. */
+   matching is available only to EasyOrders; Shopify still requires email. */
 
 function toWire(m: MessageRecord) {
   return {
@@ -55,7 +56,9 @@ export async function POST(request: NextRequest) {
   const orderNumber = customerMode ? '' : normalizeOrderNumber(body.orderNumber);
   const contact = typeof body.contact === 'string' ? body.contact.trim() : '';
   // The form checks these first; only a well-formed pair is ever looked up.
-  if (!customerMode && (!orderNumber || contact.length > 254 || !ORDER_CONTACT_EMAIL_RE.test(contact))) {
+  const contactIsEmail = ORDER_CONTACT_EMAIL_RE.test(contact);
+  const phone = normalizeEgyptPhone(contact);
+  if (!customerMode && (!orderNumber || contact.length > 254 || (!contactIsEmail && !phone))) {
     return NextResponse.json({ ok: false, error: 'bad_input' }, { status: 400 });
   }
   const locale = body.locale === 'ar' ? 'ar' : 'en';
@@ -81,6 +84,10 @@ export async function POST(request: NextRequest) {
     if (!provider) {
       return NextResponse.json({ ok: false, error: 'not_enabled' }, { status: 404 });
     }
+    if (!customerMode && !contactIsEmail && provider.platform !== 'easyorders') {
+      return NextResponse.json({ ok: false, error: 'bad_input' }, { status: 400 });
+    }
+    const maskedContact = contactIsEmail ? maskEmail(contact) : `***${phone?.slice(-2) ?? ''}`;
 
     if (customerMode) {
       const shopperToken = typeof body.shopperToken === 'string' ? body.shopperToken : null;
@@ -171,7 +178,8 @@ export async function POST(request: NextRequest) {
       gate === 'open'
         ? await provider.lookupGuestCard({
             orderNumber,
-            email: contact,
+            email: contactIsEmail ? contact : '',
+            ...(provider.platform === 'easyorders' ? { phone } : {}),
             withAmounts: features.includes('n47_order_cards'),
           })
         : ({ ok: false, reason: gate === 'spent' ? 'rate_limited' : 'limits_unavailable' } as const);
@@ -179,7 +187,7 @@ export async function POST(request: NextRequest) {
     const asked = await appendMessage({
       conversationId: conversation.id,
       role: 'user',
-      content: `#${orderNumber} · ${maskEmail(contact)}`,
+      content: `#${orderNumber} · ${maskedContact}`,
       metadata: { locale, order_lookup: true },
     });
 
@@ -204,7 +212,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         ok: true,
         order: outcome.card,
-        maskedContact: maskEmail(contact),
+        maskedContact,
         messages: [toWire(asked.message), toWire(reply.message)],
       });
     }

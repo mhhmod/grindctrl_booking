@@ -13,6 +13,8 @@
    No 'server-only': this is parsing and validation, and it is meant to be
    unit-tested directly. */
 
+import { normalizeEgyptPhone } from '@/lib/easyorders/phone';
+
 export const ACTION_SENTINEL = '<<GC_ACTION>>';
 
 /** Everything the server is willing to be asked to do. Unknown names are
@@ -26,6 +28,8 @@ export interface LookupOrderAction {
   orderNumber: string | null;
   /** Lowercased, or null. Proof only — never an identity claim. */
   email: string | null;
+  /** Optional guest proof for providers supporting phone lookup. */
+  phone?: string;
 }
 
 export type ParsedAction = LookupOrderAction;
@@ -97,6 +101,7 @@ export function parseModelTurn(raw: string): ActionParse {
       name: 'lookup_order',
       orderNumber: normalizeOrderNumber(record.order_number),
       email: normalizeEmail(record.email),
+      ...(normalizeEgyptPhone(record.phone) ? { phone: normalizeEgyptPhone(record.phone)! } : {}),
     },
   };
 }
