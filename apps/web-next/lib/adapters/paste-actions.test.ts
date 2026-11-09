@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const m = vi.hoisted(() => ({ auth: vi.fn(), access: vi.fn(), limit: vi.fn(), enable: vi.fn(), add: vi.fn(), remove: vi.fn(), prove: vi.fn(), proveMeta: vi.fn(), rotate: vi.fn(),
-  connection: vi.fn(), status: vi.fn(), invalidate: vi.fn(), check: vi.fn() }));
+  connection: vi.fn(), status: vi.fn(), invalidate: vi.fn(), check: vi.fn(), fingerprint: vi.fn() }));
+vi.mock('@/lib/paste/platform-check', () => ({ schedulePasteDomainPlatformCheck: m.fingerprint }));
 vi.mock('@clerk/nextjs/server', () => ({ auth: m.auth }));
 vi.mock('@/lib/messenger/provisioning', async (original) => ({ ...await original<object>(), requireSiteAccess: m.access }));
 vi.mock('@/lib/request-rate-limit', async (original) => ({ ...await original<object>(), requireMerchantRateLimit: m.limit }));
@@ -24,6 +25,7 @@ beforeEach(() => {
   m.connection.mockResolvedValue({ widget_site_id: SITE, platform: 'shopify', shop_domain: 'merchant.myshopify.com', secret_version: 1, status: 'active',
     shop_proven_at: '2026-11-08T00:00:00Z', app_installed: false });
   m.rotate.mockResolvedValue({ version: 2, overlapUntil: '2026-11-08T15:15:00Z' });
+  m.add.mockResolvedValue({ id: 'domain-a', domain: 'merchant.example', state: 'claimed' });
 });
 afterEach(() => vi.unstubAllEnvs());
 describe('owner-authorized paste plumbing actions', () => {
@@ -59,6 +61,21 @@ describe('owner-authorized paste plumbing actions', () => {
     expect(m.check).not.toHaveBeenCalled();
     expect((await addPasteDomainAction(SITE, 'merchant.example')).ok).toBe(true);
     expect(m.connection).not.toHaveBeenCalled();
+  });
+  it('fingerprints the store platform of a domain once it is trusted, never of a claim or a foreign site', async () => {
+    const domain = (state: string) => ({ id: 'domain-a', domain: 'merchant.example', state });
+    m.add.mockResolvedValue(domain('trusted'));
+    expect((await addPasteDomainAction(SITE, 'merchant.example')).ok).toBe(true);
+    expect(m.fingerprint).toHaveBeenCalledExactlyOnceWith(SITE, 'merchant.example');
+    m.add.mockResolvedValue(domain('claimed'));
+    await addPasteDomainAction(SITE, 'merchant.example');
+    expect(m.fingerprint).toHaveBeenCalledTimes(1);
+    m.prove.mockResolvedValue(domain('trusted')); m.proveMeta.mockResolvedValue(domain('trusted'));
+    await provePasteDomainAction(SITE, 'domain-a'); await provePasteDomainMetaAction(SITE, 'domain-a');
+    expect(m.fingerprint).toHaveBeenCalledTimes(3);
+    m.prove.mockRejectedValue(new PasteError('proof_failed'));
+    expect(await provePasteDomainAction(SITE, 'domain-a')).toEqual({ ok: false, code: 'proof_failed' });
+    expect(m.fingerprint).toHaveBeenCalledTimes(3);
   });
   it('returns rotation metadata and no secret, with the same authorized site scope', async () => {
     const result = await rotatePasteSecretAction(SITE);

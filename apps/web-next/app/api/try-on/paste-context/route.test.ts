@@ -4,13 +4,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const m = vi.hoisted(() => ({ network: vi.fn(), visitor: vi.fn(), siteLimit: vi.fn(), site: vi.fn(), connection: vi.fn(),
   hosts: vi.fn(), proofHosts: vi.fn(), prove: vi.fn(), signal: vi.fn(), signature: vi.fn(), active: vi.fn(), flags: vi.fn(),
-  launch: vi.fn(), storeLaunch: vi.fn(), lookup: vi.fn(), codeVersion: vi.fn() }));
+  launch: vi.fn(), storeLaunch: vi.fn(), lookup: vi.fn(), codeVersion: vi.fn(), platforms: vi.fn(), fingerprint: vi.fn() }));
 vi.mock('@/lib/ratelimit', () => ({ clientIp: () => '203.0.113.5', publicApiRatelimit: { limit: m.network },
   proxyVisitorRatelimit: { limit: m.visitor }, proxyShopMintRatelimit: { limit: m.siteLimit } }));
 vi.mock('@/lib/messenger/public-api', async (original) => ({ ...await original<object>(), loadPublicSite: m.site }));
-vi.mock('@/lib/paste/store', async (original) => ({ pasteTrust: (await original<typeof import('@/lib/paste/store')>()).pasteTrust,
-  getPasteConnection: m.connection, pasteTrustedHosts: m.hosts, pasteProofHosts: m.proofHosts, recordPasteSignal: m.signal,
-  recordPasteCodeVersion: m.codeVersion }));
+vi.mock('@/lib/paste/store', async (original) => {
+  const actual = await original<typeof import('@/lib/paste/store')>();
+  return { pasteTrust: actual.pasteTrust, pasteDomainOf: actual.pasteDomainOf,
+    getPasteConnection: m.connection, pasteTrustedHosts: m.hosts, pasteProofHosts: m.proofHosts, recordPasteSignal: m.signal,
+    recordPasteCodeVersion: m.codeVersion, readPasteDomainPlatforms: m.platforms };
+});
+vi.mock('@/lib/paste/platform-check', () => ({ schedulePasteDomainPlatformCheck: m.fingerprint }));
 // The storefront proof (fetch + render factor) is unit-tested in lib/paste.
 vi.mock('@/lib/paste/shop-proof', () => ({ checkPasteShop: m.prove }));
 vi.mock('@/lib/paste/signing', async (original) => ({ ...await original<object>(), verifyLiquidSignature: m.signature }));
@@ -60,8 +64,10 @@ beforeEach(() => {
   m.signal.mockResolvedValue('granted'); m.signature.mockResolvedValue({ ok: true }); m.active.mockResolvedValue(true);
   m.flags.mockResolvedValue([]); m.launch.mockResolvedValue({ launch: { tryOn: 'live', reason: null }, unsubscribed: false });
   m.lookup.mockResolvedValue([{ address: '93.184.216.34', family: 4 }]);
+  m.platforms.mockResolvedValue([{ domain: 'merchant.example', platform: null, detectedAt: null }]);
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
-afterEach(() => vi.unstubAllEnvs());
+afterEach(() => { vi.unstubAllEnvs(); vi.restoreAllMocks(); });
 
 describe('paste context trust boundary', () => {
   it('mints a site tenant capability with the existing 2 minute TTL', async () => {
@@ -154,6 +160,86 @@ describe('paste context trust boundary', () => {
     expect(m.signature).toHaveBeenCalledWith(expect.objectContaining({ claims: card }));
     // A card's signature cannot start a look for another product.
     expect((await post({ signed: card, productId: '42', variantId: '601' })).status).toBe(401);
+  });
+});
+
+describe('garment photos on a platform image server', () => {
+  const detected = (platform: string | null, domain = 'merchant.example') => [{ domain, platform, detectedAt: platform ? '2026-11-09T00:00:00Z' : null }];
+  const refused = async (imageUrl: string, reason = 'garment_host_untrusted') => {
+    const response = await post({ imageUrl });
+    expect(response.status).toBe(422);
+    expect(await response.json()).toEqual({ error: 'garment_unsafe', reason });
+  };
+
+  it.each([
+    ['easyorders', 'https://files.easy-orders.net/1715000000123.jpeg'],
+    ['easyorders', 'https://flles.easy-orders.net/1715000000123.jpeg'],
+    ['wix', 'https://static.wixstatic.com/media/84770f_ribbed~mv2.jpg'],
+    ['webflow', 'https://cdn.prod.website-files.com/64b/64c_canvas-tote.jpg'],
+    ['salla', 'https://cdn.salla.sa/XyZ/dress.jpg'],
+  ])('signs a %s photo for a page whose domain our server fingerprinted as that platform', async (platform, imageUrl) => {
+    m.platforms.mockResolvedValue(detected(platform));
+    const response = await post({ imageUrl, pageUrl: 'https://merchant.example/products/DRESSA14' });
+    expect(response.status).toBe(200);
+    const claims = verifyStorefrontContext(pasteCapabilitySecret(SITE)!, (await response.json()).context.token)!;
+    expect(claims.canonicalGarmentUrl).toBe(imageUrl);
+    // The SSRF check still resolves the platform host before anything is signed.
+    expect(m.lookup).toHaveBeenCalledWith(new URL(imageUrl).hostname);
+  });
+
+  it('refuses a platform photo when the domain is another platform, unchecked, custom or not migrated yet', async () => {
+    const image = 'https://files.easy-orders.net/1715000000123.jpeg';
+    for (const platform of ['wix', 'custom', 'shopify']) {
+      m.platforms.mockResolvedValue(detected(platform));
+      await refused(image);
+    }
+    m.platforms.mockResolvedValue(detected(null));
+    await refused(image);
+    m.platforms.mockResolvedValue(null);
+    await refused(image);
+    // Another trusted domain's platform never applies to this page.
+    m.platforms.mockResolvedValue([...detected('custom'), ...detected('easyorders', 'other.example')]);
+    await refused(image);
+    expect(m.signal).not.toHaveBeenCalled();
+    expect(console.warn).toHaveBeenCalledWith('[paste] garment refused', expect.objectContaining({ code: 'garment_host_untrusted', host: 'files.easy-orders.net' }));
+  });
+
+  it.each([
+    'https://files.easy-orders.net.evil.com/a.jpeg', 'https://evil-files.easy-orders.net/a.jpeg', 'https://x.files.easy-orders.net/a.jpeg',
+    'https://easy-orders.net/a.jpeg', 'http://files.easy-orders.net/a.jpeg', 'https://files.easy-orders.net:8443/a.jpeg',
+    'https://user:pw@files.easy-orders.net/a.jpeg',
+  ])('refuses the lookalike or unsafe address %s even for a fingerprinted EasyOrders domain', async (imageUrl) => {
+    m.platforms.mockResolvedValue(detected('easyorders'));
+    await refused(imageUrl);
+  });
+
+  it('refuses a Wix lookalike for a Wix domain', async () => {
+    m.platforms.mockResolvedValue(detected('wix'));
+    await refused('https://evil-wixstatic.com/media/a.jpg');
+    await refused('https://static.wixstatic.com.evil.com/media/a.jpg');
+  });
+
+  it('keeps blocking a platform host that resolves to a private address', async () => {
+    m.platforms.mockResolvedValue(detected('easyorders'));
+    m.lookup.mockResolvedValue([{ address: '10.0.0.7', family: 4 }]);
+    await refused('https://files.easy-orders.net/a.jpeg', 'garment_unsafe');
+  });
+
+  it('fingerprints an unchecked domain once a platform photo is refused, and nothing else', async () => {
+    await refused('https://files.easy-orders.net/a.jpeg');
+    expect(m.fingerprint).toHaveBeenCalledExactlyOnceWith(SITE, 'merchant.example');
+    m.platforms.mockResolvedValue(detected('custom'));
+    await refused('https://files.easy-orders.net/a.jpeg');
+    m.platforms.mockResolvedValue(detected(null));
+    await refused('https://attacker.example/a.jpeg');
+    expect(m.fingerprint).toHaveBeenCalledTimes(1);
+  });
+
+  it('reads no platform for a photo on the site itself, nor for a Shopify connection', async () => {
+    expect((await post()).status).toBe(200);
+    m.connection.mockResolvedValue(shopify);
+    expect((await post({ signed, imageUrl: 'https://files.easy-orders.net/a.jpeg' })).status).toBe(422);
+    expect(m.platforms).not.toHaveBeenCalled();
   });
 });
 

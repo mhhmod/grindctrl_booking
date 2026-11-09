@@ -78,6 +78,7 @@ export function TryOnDemo({
     job,
     error,
     unavailable,
+    challengeFailed,
     sessionState,
     sessionError,
     selectPhoto,
@@ -280,6 +281,17 @@ export function TryOnDemo({
               <h3 className="text-lg font-semibold text-foreground" role="status">
                 {t.tryOnUnavailable}
               </h3>
+            ) : challengeFailed ? (
+              <>
+                <div role="alert" className="space-y-1">
+                  <h3 className="text-lg font-semibold text-foreground">{t.challengeFailedTitle}</h3>
+                  <p className="text-sm text-muted-foreground">{t.challengeFailedBody}</p>
+                </div>
+                {/* A fresh check with the same photo and garment. */}
+                <Button variant="outline" onClick={() => void generate()} className="rounded-xl" id="tryon-challenge-retry-btn">
+                  {t.challengeRetry}
+                </Button>
+              </>
             ) : (
               <>
                 <div className="space-y-1">

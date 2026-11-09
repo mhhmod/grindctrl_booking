@@ -1,0 +1,52 @@
+<!doctype html>
+<!-- Imitates: a hand-built store (PHP or a static generator) with a JSON-LD
+     Product, a cart form posting to /cart/add, a hidden mobile duplicate of
+     the cart button, a "recently viewed" card strip with its own Add to cart
+     buttons, a header "Shop now" link and a tracking pixel. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="gc-fixture-path" content="/shop/linen-wrap-dress">
+  <meta name="gc-fixture-expect" content="after">
+  <title>Linen wrap dress | Atelier Nour</title>
+  <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"Product","sku":"LWD-204","name":"Linen wrap dress",
+     "image":["https://cdn.ateliernour.example/products/lwd-204-front.jpg","https://cdn.ateliernour.example/products/lwd-204-back.jpg"],
+     "offers":{"@type":"Offer","price":"89.00","priceCurrency":"USD","availability":"https://schema.org/InStock"}}
+  </script>
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a href="/" class="logo">Atelier Nour</a>
+    <nav><a href="/shop">Shop</a> <a class="btn" href="/shop/new">Shop now</a></nav>
+    <div class="mini-cart"><button type="button" class="add-to-cart">Add to cart</button></div>
+  </header>
+  <main>
+    <section class="recently-viewed">
+      <div class="product-card">
+        <a href="/shop/silk-scarf"><img src="https://cdn.ateliernour.example/products/scarf.jpg" width="300" height="300" alt="Silk scarf"></a>
+        <button type="button">Add to cart</button>
+      </div>
+    </section>
+    <div class="product-layout">
+      <div class="gallery">
+        <img src="https://cdn.ateliernour.example/products/lwd-204-front.jpg" width="900" height="1200" alt="Linen wrap dress">
+      </div>
+      <div class="details">
+        <h1 class="product-title">Linen wrap dress</h1>
+        <p class="price">$89.00</p>
+        <form action="/cart/add" method="post" class="buy-form" data-gc-expect="after">
+          <div class="qty-row"><label for="qty">Quantity</label><input id="qty" name="qty" type="number" value="1"></div>
+          <button type="submit" class="button primary">Add to cart</button>
+        </form>
+        <button type="button" class="add-to-cart" style="display:none">Add to cart</button>
+        <div class="description"><p>Washed linen, midi length.</p></div>
+      </div>
+    </div>
+  </main>
+  <footer><a href="/shop">Shop now</a></footer>
+  <img src="https://track.example/pixel.gif" width="1" height="1" alt="">
+</body>
+</html>

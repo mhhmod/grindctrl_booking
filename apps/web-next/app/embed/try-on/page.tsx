@@ -10,7 +10,7 @@ import { EmbedFrameBridge } from '@/components/try-on/embed-frame-bridge';
 import { getTryOnSettings } from '@/lib/try-on/settings';
 import { isAllowedGarmentUrl } from '@/lib/try-on/image-runner';
 import { normalizeTenantKey, isSiteTenantKey } from '@/lib/tenancy/tenant-key';
-import { checkGarmentUrl, verifiedSiteHosts } from '@/lib/woo/garment-url';
+import { checkGarmentUrl, siteGarmentHosts } from '@/lib/woo/garment-url';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { flagStoreForTenant } from '@/lib/tenancy/tenant-key';
 import { getTypicalLookSeconds } from '@/lib/try-on/look-timing';
@@ -26,11 +26,12 @@ import {
 
 /* The garment image is shown from the query; generation uses the signed
    canonical URL, so this only decides what may be drawn. A site tenant's
-   image must come from one of its verified domains or a listed image CDN. */
+   image must come from one of its verified domains, a listed image CDN or
+   its fingerprinted platform's image server. */
 async function garmentShownFor(shop: string | null, garment: string): Promise<boolean> {
   if (!shop || !isSiteTenantKey(shop)) return isAllowedGarmentUrl(garment);
   try {
-    return checkGarmentUrl(garment, await verifiedSiteHosts(shop.slice('site:'.length))) !== null;
+    return checkGarmentUrl(garment, await siteGarmentHosts(shop.slice('site:'.length))) !== null;
   } catch {
     return false;
   }

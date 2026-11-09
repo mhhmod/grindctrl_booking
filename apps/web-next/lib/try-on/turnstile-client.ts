@@ -12,6 +12,15 @@ type Turnstile = {
 };
 declare global { interface Window { turnstile?: Turnstile } }
 
+/** The challenge itself did not finish (script blocked or offline, rejected,
+ *  expired or timed out). Retrying can help, unlike a missing site key. */
+export class TurnstileChallengeError extends Error {
+  constructor() {
+    super('turnstile_challenge_failed');
+    this.name = 'TurnstileChallengeError';
+  }
+}
+
 let loading: Promise<Turnstile> | undefined;
 function load(): Promise<Turnstile> {
   if (window.turnstile) return Promise.resolve(window.turnstile);
@@ -44,7 +53,7 @@ export async function attemptTurnstileToken(binding: TryOnAttempt['turnstile']):
 }
 
 async function token(binding: Binding): Promise<string> {
-  const api = await load();
+  const api = await load().catch(() => { throw new TurnstileChallengeError(); });
   const container = document.createElement('div');
   // Inside our embed. Interaction-only widgets must be allowed to become visible.
   (document.querySelector('main') ?? document.body).appendChild(container);
@@ -54,7 +63,7 @@ async function token(binding: Binding): Promise<string> {
       clearTimeout(timer);
       if (widget !== undefined) api.remove(widget);
       container.remove();
-      if (value) resolve(value); else reject(new Error('turnstile_unavailable'));
+      if (value) resolve(value); else reject(new TurnstileChallengeError());
     };
     const timer = window.setTimeout(() => finish(), 120000);
     try {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { attemptTurnstileToken } from './turnstile-client';
+import { attemptTurnstileToken, TurnstileChallengeError } from './turnstile-client';
 
 const binding = { siteKey: 'public-site-key', action: 'paste_tryon' as const, cData: 'attempt-bound' };
 beforeEach(() => { window.history.replaceState({}, '', '/embed/try-on'); });
@@ -12,7 +12,10 @@ describe('attempt-bound website Turnstile', () => {
     expect(document.querySelector('script[src*="turnstile"]')).toBeNull();
   });
   it('fails before loading with a missing site key', async () => {
-    await expect(attemptTurnstileToken({ ...binding, siteKey: null })).rejects.toThrow();
+    const error = await attemptTurnstileToken({ ...binding, siteKey: null }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(Error);
+    // A configuration problem, not a challenge the shopper can retry.
+    expect(error).not.toBeInstanceOf(TurnstileChallengeError);
     expect(document.querySelector('script[src*="turnstile"]')).toBeNull();
   });
   it('renders interaction-only inside the embed and executes just before returning a fresh token', async () => {
@@ -37,7 +40,14 @@ describe('attempt-bound website Turnstile', () => {
     let fail = () => {};
     window.turnstile = { render: (_element, options) => { fail = options['error-callback']; return 'widget'; },
       execute: () => fail(), remove: vi.fn() };
-    await expect(attemptTurnstileToken(binding)).rejects.toThrow();
+    await expect(attemptTurnstileToken(binding)).rejects.toBeInstanceOf(TurnstileChallengeError);
     expect(window.turnstile.remove).toHaveBeenCalledWith('widget');
+  });
+  it('reports a challenge script that cannot load as a challenge failure', async () => {
+    document.body.innerHTML = '<main></main>';
+    const pending = attemptTurnstileToken(binding);
+    const script = document.querySelector<HTMLScriptElement>('script[src*="turnstile"]')!;
+    script.dispatchEvent(new Event('error'));
+    await expect(pending).rejects.toBeInstanceOf(TurnstileChallengeError);
   });
 });

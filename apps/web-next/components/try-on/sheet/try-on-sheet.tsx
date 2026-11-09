@@ -237,6 +237,17 @@ export function TryOnSheet({
               <p role="status" className="text-lg font-semibold text-foreground">
                 {t.tryOnUnavailable}
               </p>
+            ) : flow.challengeFailed ? (
+              <>
+                <div role="alert" className="space-y-1">
+                  <p className="text-lg font-semibold text-foreground">{t.challengeFailedTitle}</p>
+                  <p className="text-sm text-muted-foreground">{t.challengeFailedBody}</p>
+                </div>
+                {/* A fresh check with the same photo and garment. */}
+                <button type="button" onClick={() => void flow.generate()} className="rounded-xl border px-4 py-2 text-sm font-medium">
+                  {t.challengeRetry}
+                </button>
+              </>
             ) : (
               <>
                 <div className="space-y-1">

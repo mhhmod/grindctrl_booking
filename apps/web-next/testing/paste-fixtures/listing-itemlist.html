@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- Imitates: a category page that prints a JSON-LD ItemList for SEO, with
+     a grid of cards where the image and the name each link to the product.
+     One listed product has no card on this page, one header link points at
+     a listed product, and a promo tile links elsewhere. Expect one pill per
+     card that matches a listed product. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="gc-fixture-path" content="/category/dresses">
+  <meta name="gc-fixture-expect" content="cards:3">
+  <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"ItemList","itemListElement":[
+      {"@type":"ListItem","position":1,"url":"http://localhost:3000/shop/linen-wrap-dress","item":{"@type":"Product","name":"Linen wrap dress","sku":"LWD-204","image":"https://cdn.ateliernour.example/products/lwd-204-front.jpg"}},
+      {"@type":"ListItem","position":2,"url":"/shop/poplin-shirt-dress/","name":"Poplin shirt dress"},
+      {"@type":"ListItem","position":3,"item":{"@type":"Product","url":"/shop/satin-slip","name":"Satin slip","image":"https://cdn.ateliernour.example/products/satin-slip.jpg"}},
+      {"@type":"ListItem","position":4,"url":"/shop/not-on-this-page","name":"Not on this page"}
+    ]}
+  </script>
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+</head>
+<body>
+  <header><a href="/">Atelier Nour</a> <a href="/shop/linen-wrap-dress"><img src="https://cdn.ateliernour.example/products/lwd-204-front.jpg" width="300" height="300" alt="">Featured</a></header>
+  <main>
+    <h1>Dresses</h1>
+    <div class="grid">
+      <article class="tile">
+        <a href="/shop/linen-wrap-dress" class="tile-media"><img src="https://cdn.ateliernour.example/products/lwd-204-front.jpg" width="400" height="500" alt=""></a>
+        <h2><a href="/shop/linen-wrap-dress">Linen wrap dress</a></h2><span>$89</span>
+      </article>
+      <article class="tile">
+        <a href="/shop/poplin-shirt-dress" class="tile-media"><img src="https://cdn.ateliernour.example/products/poplin.jpg" width="400" height="500" alt=""></a>
+        <h2><a href="/shop/poplin-shirt-dress">Poplin shirt dress</a></h2><span>$75</span>
+      </article>
+      <article class="tile">
+        <a href="/shop/satin-slip?ref=grid" class="tile-media"><img src="https://cdn.ateliernour.example/products/satin-slip.jpg" width="400" height="500" alt=""></a>
+        <h2><a href="/shop/satin-slip?ref=grid">Satin slip</a></h2><span>$110</span>
+      </article>
+      <article class="tile promo"><a href="/journal/summer"><img src="https://cdn.ateliernour.example/journal.jpg" width="400" height="500" alt=""></a><h2>Read the journal</h2></article>
+    </div>
+  </main>
+</body>
+</html>

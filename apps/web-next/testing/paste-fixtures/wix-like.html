@@ -1,0 +1,45 @@
+<!doctype html>
+<!-- Imitates: a Wix Stores product page. Deep generated div nesting with
+     data-hook attributes instead of meaningful classes, JSON-LD Product in
+     the head, images on the platform CDN, and two CTAs side by side
+     ("Add to Cart" in its wrapper, then "Buy Now"). -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="gc-fixture-path" content="/product-page/ribbed-knit-top">
+  <meta name="gc-fixture-expect" content="after">
+  <meta property="og:type" content="product">
+  <script type="application/ld+json">
+    {"@context":"http://schema.org/","@type":"Product","name":"Ribbed knit top","sku":"364215376135191",
+     "image":[{"@type":"ImageObject","contentUrl":"https://static.wixstatic.com/media/84770f_ribbed~mv2.jpg","width":1000,"height":1000}],
+     "Offers":{"@type":"Offer","url":"https://www.studiolea.example/product-page/ribbed-knit-top"},
+     "offers":{"@type":"Offer","priceCurrency":"USD","price":"38.00","availability":"https://schema.org/InStock"}}
+  </script>
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+</head>
+<body>
+  <div id="SITE_CONTAINER"><div id="main_MF"><div id="site-root"><div id="masterPage" class="mesh-layout">
+    <header id="SITE_HEADER"><div class="_1w"><a href="/">Studio Lea</a><button data-hook="cart-icon-button" aria-label="Cart">0</button></div></header>
+    <main id="PAGES_CONTAINER" tabindex="-1"><div id="SITE_PAGES"><div class="_2g"><div class="_3S">
+      <div data-hook="product-page"><div class="_2q"><div class="_7b">
+        <section data-hook="product-gallery-root"><div class="_1q"><div data-hook="main-media-image-wrapper">
+          <img src="https://static.wixstatic.com/media/84770f_ribbed~mv2.jpg/v1/fill/w_500,h_500/ribbed.jpg" width="500" height="500" alt="Ribbed knit top">
+        </div></div></section>
+        <section data-hook="info-section"><div class="_1x"><div class="_3a">
+          <h1 data-hook="product-title" class="_2qrJF">Ribbed knit top</h1>
+          <div data-hook="product-price"><span data-hook="formatted-primary-price">$38.00</span></div>
+          <div data-hook="product-options"><div data-hook="dropdown-base"><select aria-label="Size"><option value="">Size</option><option value="S">S</option><option value="M">M</option></select></div></div>
+          <div data-hook="product-page-cta"><div class="_2N"><div class="_3X">
+            <div data-hook="add-to-cart-wrapper" class="_2KA" data-gc-expect="after">
+              <button data-hook="add-to-cart" class="_2WRYd _3Fm8i" aria-disabled="false"><span class="_1Vo"><span>Add to Cart</span></span></button>
+            </div>
+            <div data-hook="buy-now-wrapper"><button data-hook="buy-now-button" class="_1d7d">Buy Now</button></div>
+          </div></div></div>
+        </div></div></section>
+      </div></div></div>
+    </div></div></div></div></main>
+    <footer id="SITE_FOOTER"><a href="/shop">Shop Now</a></footer>
+  </div></div></div></div>
+</body>
+</html>

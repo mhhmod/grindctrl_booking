@@ -1,0 +1,68 @@
+﻿<!doctype html>
+<!-- Real EasyOrders structure: Next.js SPA, identifier-free Product JSON-LD,
+     two static full-width purchase buttons in separate wrappers, no form.
+     Collection cards use click handlers, without product links or ItemList. -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="gc-fixture-path" content="/products/DRESSA14">
+  <meta name="gc-fixture-expect" content="after">
+  <link rel="canonical" href="/products/DRESSA14">
+  <meta property="og:type" content="product">
+  <meta property="og:title" content="فستان كريب أسود">
+  <meta property="og:image" content="https://files.easy-orders.net/1715000000123.jpeg">
+  <meta property="og:image:width" content="800">
+  <meta property="og:image:height" content="800">
+  <title>فستان كريب أسود</title>
+  <script src="https://cdn.easy-orders.net/_next/static/chunks/main.js" defer></script>
+  <script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"appSettings":{},"themeSettings":{}}}}</script>
+  <script id="product-jsonld" type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"فستان كريب أسود","description":"فستان كريب، مقاسات متعددة.","image":["https://files.easy-orders.net/1715000000123.jpeg"],"offers":[{"@type":"Offer","price":350,"priceCurrency":"EGP","availability":"https://schema.org/InStock"},{"@type":"Offer","price":350,"priceCurrency":"EGP","availability":"https://schema.org/InStock"}],"aggregateRating":{"@type":"AggregateRating","ratingValue":4.8,"reviewCount":12}}</script>
+  <style>
+    .flex { display: flex; } .flex-col { flex-direction: column; }
+    .flex-col-reverse { flex-direction: column-reverse; } .flex-row-reverse { flex-direction: row-reverse; }
+    .gap-4 { gap: 1rem; } .gap-2 { gap: .5rem; } .mt-5 { margin-block-start: 1.25rem; }
+    .product-page { max-inline-size: 64rem; margin-inline: auto; padding-inline: 1rem; }
+    .product-gallery img { max-inline-size: 100%; block-size: auto; }
+    .purchase { inline-size: 100%; min-block-size: 44px; }
+  </style>
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+</head>
+<body>
+  <div id="__next"><main class="product-page">
+    <div class="product-gallery"><img src="https://files.easy-orders.net/1715000000123.jpeg" width="800" height="800" alt="فستان كريب أسود"></div>
+    <h1>فستان كريب أسود</h1>
+    <div class="product-price">350 ج.م</div>
+    <div class="mt-5 flex flex-col flex-col-reverse gap-4" data-gc-expect="after"><button type="button" class="purchase">اضغط هنا للشراء</button></div>
+    <div class="flex flex-row-reverse gap-2 mt-5"><button type="button" class="purchase">أضف للسلة</button></div>
+  </main></div>
+  <button type="button" data-fixture-switch>المنتج التالي</button>
+  <button type="button" data-fixture-collection>كل المنتجات</button>
+  <script data-fixture-app>
+    (function () {
+      document.querySelector('[data-fixture-switch]').addEventListener('click', function () {
+        history.pushState({}, '', '/products/DRESSB20');
+        document.querySelector('link[rel="canonical"]').setAttribute('href', '/products/DRESSB20');
+        var data = JSON.parse(document.getElementById('product-jsonld').textContent);
+        data.name = 'فستان كريب أزرق';
+        data.image = ['https://files.easy-orders.net/1715000000456.jpeg'];
+        data.offers.forEach(function (offer) { offer.price = 450; });
+        document.getElementById('product-jsonld').textContent = JSON.stringify(data);
+        document.querySelector('meta[property="og:title"]').content = data.name;
+        document.querySelector('meta[property="og:image"]').content = data.image[0];
+        document.querySelector('h1').textContent = data.name;
+        document.querySelector('.product-price').textContent = '450 ج.م';
+        document.querySelector('.product-gallery img').src = data.image[0];
+      });
+      document.querySelector('[data-fixture-collection]').addEventListener('click', function () {
+        history.pushState({}, '', '/collections/dresses');
+        document.getElementById('product-jsonld').remove();
+        document.querySelector('link[rel="canonical"]').remove();
+        document.querySelectorAll('meta[property^="og:"]').forEach(function (node) { node.remove(); });
+        document.querySelector('main').innerHTML = '<h1>فساتين</h1><div class="product-card"><img src="https://files.easy-orders.net/1715000000123.jpeg" width="800" height="800" alt="فستان"></div>';
+        document.querySelector('.product-card img').onclick = function () { history.pushState({}, '', '/products/DRESSA14'); };
+      });
+    })();
+  </script>
+</body>
+</html>

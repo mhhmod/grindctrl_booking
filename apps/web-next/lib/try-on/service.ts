@@ -160,7 +160,7 @@ export async function generateTryOn(
     // reservation cannot leave an unhandled speculative fetch rejection.
     const garmentController = new AbortController();
     const garmentStarted = performance.now();
-    const garment = prepareGarmentImage(productId, garmentUrl, shop, garmentController.signal)
+    const garment = prepareGarmentImage(productId, garmentUrl, shop, garmentController.signal, authorization.origin)
       .then(value => ({ value }), error => ({ error: error as unknown }))
       .finally(() => { timings.garment_ms = performance.now() - garmentStarted; });
     const reserve = async () => {
@@ -428,7 +428,7 @@ export async function generateTryOn(
       let completed: TryOnJob;
       try {
         completed = { ...await runImageGeneration(
-          sessionId, productId, photoData, shop, TRYON_IMAGE_MODEL, garmentUrl, productName, { timings },
+          sessionId, productId, photoData, shop, TRYON_IMAGE_MODEL, garmentUrl, productName, { timings, pageOrigin: authorization.origin },
         ), jobId: pending.jobId, requestKey, sessionId, productId, shop, createdAt: pending.createdAt };
       } catch (error) {
         completed = { ...pending, status: 'failed', stage: undefined, message: toShopperFailureMessage(error) };

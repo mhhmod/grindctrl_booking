@@ -26,6 +26,7 @@ const NO_LIMITERS = {
   proxyShopMint: null,
   pasteShopCheckSite: null,
   pasteShopCheckShop: null,
+  pastePlatformCheck: null,
 } as const;
 
 function createRatelimiters(): {
@@ -38,6 +39,7 @@ function createRatelimiters(): {
   proxyShopMint: Ratelimit | null;
   pasteShopCheckSite: Ratelimit | null;
   pasteShopCheckShop: Ratelimit | null;
+  pastePlatformCheck: Ratelimit | null;
 } {
   /* Redis.fromEnv() only warns when vars are missing, producing a client
      that throws per-call. The strict guard rejects this unconfigured facade
@@ -122,6 +124,15 @@ function createRatelimiters(): {
         prefix: 'gc-ratelimit:paste-shop-check-shop',
         analytics: false,
       }),
+      /* Our server fetching a trusted website domain's home page for its
+         store platform (lib/paste/platform-check.ts). Per domain, whoever
+         triggers it: the owner's domain actions or a refused garment. */
+      pastePlatformCheck: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(6, '3600 s'),
+        prefix: 'gc-ratelimit:paste-platform-check',
+        analytics: false,
+      }),
     };
   } catch {
     console.error(
@@ -152,6 +163,7 @@ export const proxyShopReadRatelimit = limiterFacade(limiters.proxyShopRead);
 export const proxyShopMintRatelimit = limiterFacade(limiters.proxyShopMint);
 export const pasteShopCheckSiteRatelimit = limiterFacade(limiters.pasteShopCheckSite);
 export const pasteShopCheckShopRatelimit = limiterFacade(limiters.pasteShopCheckShop);
+export const pastePlatformCheckRatelimit = limiterFacade(limiters.pastePlatformCheck);
 
 /* Identity of the requesting network for rate-limit keying. Prefers the
    RIGHTMOST x-forwarded-for entry: every proxy on the path appends to the

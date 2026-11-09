@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- Imitates: a Salla theme (Twilight) product page in Arabic: dir=rtl,
+     JSON-LD Product with a numeric SKU, images on the platform CDN, and the
+     cart button rendered inside the <salla-add-product-button> web
+     component (an inline custom element around a real <button>). -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="gc-fixture-path" content="/ar/فستان-سهرة-مطرز/p1987654321">
+  <meta name="gc-fixture-expect" content="after">
+  <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"Product","name":"فستان سهرة مطرز","sku":"1987654321",
+     "image":["https://cdn.salla.sa/XyZ/embroidered-dress.jpg"],
+     "offers":{"@type":"Offer","price":"749","priceCurrency":"SAR","availability":"https://schema.org/InStock"}}
+  </script>
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+</head>
+<body class="index product-single">
+  <salla-offer-modal></salla-offer-modal>
+  <header class="store-header"><div class="main-nav-container"><a href="/ar">دار الورد</a><salla-cart-summary><a href="/ar/cart">السلة</a></salla-cart-summary></div></header>
+  <div class="app-inner">
+    <div class="container"><div class="product-entry">
+      <div class="details-slider"><salla-slider type="thumbs"><div class="swiper-slide"><img src="https://cdn.salla.sa/XyZ/embroidered-dress.jpg" width="900" height="1200" alt="فستان سهرة مطرز"></div></salla-slider></div>
+      <div class="main-content">
+        <h1 class="product-title">فستان سهرة مطرز</h1>
+        <div class="price-wrapper"><h4 class="total-price">749 ر.س</h4></div>
+        <form enctype="multipart/form-data" class="product-form" method="post">
+          <salla-product-options product-id="1987654321"></salla-product-options>
+          <section class="sticky-product-bar" data-gc-expect="after">
+            <salla-quantity-input value="1"></salla-quantity-input>
+            <salla-add-product-button product-id="1987654321" product-status="sale" product-type="product">
+              <button type="button" class="s-button-element s-button-btn s-button-solid s-button-wide s-button-primary">
+                <span class="s-button-text">أضف للسلة</span>
+              </button>
+            </salla-add-product-button>
+          </section>
+        </form>
+      </div>
+    </div></div>
+  </div>
+  <footer class="store-footer"><a href="/ar/categories">تسوق الآن</a></footer>
+</body>
+</html>

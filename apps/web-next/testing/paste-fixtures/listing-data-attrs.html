@@ -1,0 +1,30 @@
+<!doctype html>
+<!-- Imitates: a merchant who tagged their own cards with the documented
+     data-grindctrl-card attributes (any stack, no structured data). One
+     card gives only data-url (its id is the last path segment), one has an
+     unsafe image and no picture, so it gets no pill. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="gc-fixture-path" content="/collections/outerwear">
+  <meta name="gc-fixture-expect" content="cards:2">
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+</head>
+<body>
+  <main>
+    <h1>Outerwear</h1>
+    <ul class="cards">
+      <li data-grindctrl-card data-product-id="wool-coat" data-title="Wool coat" data-image="https://img.outerwear.example/wool-coat.jpg">
+        <a href="/p/wool-coat"><div class="pic"><img src="https://img.outerwear.example/wool-coat-400.jpg" width="400" height="500" alt=""></div><span>Wool coat</span></a>
+      </li>
+      <li data-grindctrl-card data-url="/p/quilted-vest" data-title="Quilted vest" data-image="https://img.outerwear.example/quilted-vest.jpg">
+        <div class="pic"><img src="https://img.outerwear.example/quilted-vest-400.jpg" width="400" height="500" alt=""></div><a href="/p/quilted-vest">Quilted vest</a>
+      </li>
+      <li data-grindctrl-card data-product-id="rain-shell" data-title="Rain shell" data-image="javascript:alert(1)">
+        <a href="/p/rain-shell">Rain shell</a>
+      </li>
+    </ul>
+  </main>
+</body>
+</html>

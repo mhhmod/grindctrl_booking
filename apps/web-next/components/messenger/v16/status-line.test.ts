@@ -76,6 +76,8 @@ describe("the piece on the page (You're viewing)", () => {
   it('drops what it cannot trust', () => {
     expect(parsePageProduct(null)).toBeNull();
     expect(parsePageProduct({ handle: 'x', title: 'X', variantId: 'abc' })).toBeNull();
+    // A website product (any stack) has no numeric variant: it is still the piece on the page.
+    expect(parsePageProduct({ handle: 'linen-dress', title: 'Linen dress', variantId: '' })).toMatchObject({ handle: 'linen-dress', variantId: '' });
     expect(
       parsePageProduct({ handle: 'x', title: 'X', variantId: '1', imageUrl: 'javascript:alert(1)', priceMinor: -5, currency: 'egp', tryOn: 'yes' }),
     ).toMatchObject({ imageUrl: '', priceMinor: null, currency: null, tryOn: false });
