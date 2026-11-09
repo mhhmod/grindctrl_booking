@@ -51,6 +51,15 @@ async function as<T>(role: 'authenticated' | 'service_role', work: () => Promise
 }
 
 let legacy: Record<string, string>;
+let provenBefore: string;
+/** What our server does after its fetch found this site's snippet on the page. */
+const verify = (id: string, domainId: string) => op(id, 'verify', null, domainId, null);
+const grant = (id: string, domain: string, apex = domain) =>
+  one<string>('select grant_paste_domain_free_plan($1,$2,$3) as value', [id, domain, apex]);
+const history = async (apex: string) =>
+  (await one<string | undefined>('select first_widget_site_id::text as value from tryon_free_apex_history where apex=$1', [apex])) ?? null;
+const domainRow = (id: string) => db.query<{ verification_status: string; paste_verified_at: string | null; paste_check_outcome: string | null }>(
+  'select verification_status, paste_verified_at, paste_check_outcome from widget_domains where id=$1', [id]).then((r) => r.rows[0]);
 
 beforeAll(async () => {
   db = new PGlite();
@@ -84,6 +93,14 @@ beforeAll(async () => {
   const sql = await read('supabase/20261108_paste_install.sql');
   await db.exec(sql);
   await db.exec(sql);
+  // A domain proven by DNS/meta before verification existed.
+  provenBefore = await site();
+  await enable(provenBefore, 'website');
+  const claim = await op(provenBefore, 'add', 'proven-before.example');
+  await db.query("update widget_domains set verified_at = now() - interval '3 days' where id=$1", [claim.domain!.id]);
+  const verification = await read('supabase/20261109_paste_domain_verification.sql');
+  await db.exec(verification);
+  await db.exec(verification);
 }, 60_000);
 afterAll(async () => { await db?.close(); });
 
@@ -257,11 +274,15 @@ describe('free plan', () => {
   it('grants a Shopify paste store only from a signed render after proof, claiming the shop and its storefront apex', async () => {
     const merchant = await site();
     await enable(merchant, 'shopify', 'freeplan.myshopify.com');
-    await op(merchant, 'add', 'freeplan-store.example');
+    const storefront = await op(merchant, 'add', 'freeplan-store.example');
     expect(await signal(merchant, 'freeplan.myshopify.com', 'freeplan.myshopify.com', true)).toBe('ignored');
     await prove(merchant, 'freeplan.myshopify.com');
 
     expect(await signal(merchant, 'freeplan.myshopify.com', 'freeplan.myshopify.com')).toBe('recorded');
+    // The storefront domain counts only once our server found the code there.
+    expect(await signal(merchant, 'freeplan-store.example', 'freeplan-store.example', true)).toBe('unverified');
+    expect(await history('freeplan-store.example')).toBeNull();
+    await verify(merchant, storefront.domain!.id);
     expect(await signal(merchant, 'freeplan-store.example', 'freeplan-store.example')).toBe('recorded');
     expect((await connection(merchant)).last_seen_at).not.toBeNull();
     expect(await subscribed(merchant)).toBe(false);
@@ -277,7 +298,8 @@ describe('free plan', () => {
   it('grants each apex once, even after the first site is deleted', async () => {
     const first = await site(); const second = await site();
     await enable(first, 'website'); await enable(second, 'website');
-    await op(first, 'add', 'once.example');
+    const added = await op(first, 'add', 'once.example');
+    await verify(first, added.domain!.id);
     expect(await signal(first, 'once.example', 'once.example')).toBe('granted');
     expect(await signal(first, 'once.example', 'once.example')).toBe('granted');
 
@@ -300,6 +322,124 @@ describe('free plan', () => {
     await enable(later, 'shopify', 'reused.myshopify.com');
     await prove(later, 'reused.myshopify.com');
     expect(await signal(later, 'reused.myshopify.com', 'reused.myshopify.com', true)).toBe('apex_taken');
+  });
+});
+
+describe('domain verification (20261109)', () => {
+  it('earns nothing from a forged Origin: an added host is unverified, writes no plan, apex or seen time', async () => {
+    const attacker = await site();
+    await enable(attacker, 'website');
+    const claim = await op(attacker, 'add', 'victim-brand.example');
+    expect(claim.domain).toMatchObject({ verification_status: 'trusted', paste_verified_at: null });
+    // What /api/messenger/config does with `Origin: https://victim-brand.example`.
+    expect(await signal(attacker, 'victim-brand.example', 'victim-brand.example')).toBe('unverified');
+    expect(await grant(attacker, 'victim-brand.example')).toBe('unverified');
+    expect(await subscribed(attacker)).toBe(false);
+    expect(await history('victim-brand.example')).toBeNull();
+    expect(await apexes(attacker)).toEqual([]);
+    expect(await one('select last_seen_at as value from widget_domains where id=$1', [claim.domain!.id])).toBeNull();
+  });
+
+  it('lets the real owner verify and earn the plan after an unverified claim, whether the claim was deleted or still there', async () => {
+    const attacker = await site(); const owner = await site(); const later = await site();
+    await enable(attacker, 'website'); await enable(owner, 'website'); await enable(later, 'website');
+    await op(attacker, 'add', 'squatted.example');
+    await signal(attacker, 'squatted.example', 'squatted.example');
+    // The attacker still holds the host: the owner's add waits as a claim,
+    // and the owner's snippet on the page moves it here. No DNS step.
+    const claim = await op(owner, 'add', 'squatted.example');
+    expect(claim.domain).toMatchObject({ verification_status: 'pending', verification_method: 'paste_dns_txt' });
+    expect((await verify(owner, claim.domain!.id)).domain).toMatchObject({ verification_status: 'trusted', verification_method: 'paste_trusted' });
+    expect(await one("select verification_status as value from widget_domains where widget_site_id=$1 and domain='squatted.example'", [attacker]))
+      .toBe('disputed');
+    expect(await signal(owner, 'squatted.example', 'squatted.example')).toBe('granted');
+    expect(await history('squatted.example')).toBe(owner);
+
+    // Deleted claim: nothing of it survives to block the owner.
+    await op(later, 'add', 'deleted-claim.example');
+    expect(await signal(later, 'deleted-claim.example', 'deleted-claim.example')).toBe('unverified');
+    await db.query('delete from tryon_shops where widget_site_id=$1', [later]);
+    await db.query('delete from widget_sites where id=$1', [later]);
+    const fresh = await site();
+    await enable(fresh, 'website');
+    const mine = await op(fresh, 'add', 'deleted-claim.example');
+    expect(mine.domain?.verification_status).toBe('trusted');
+    await verify(fresh, mine.domain!.id);
+    expect(await grant(fresh, 'deleted-claim.example')).toBe('granted');
+  });
+
+  it('grants once after verification, idempotently, and an unverified sibling never adds its apex', async () => {
+    const s = await site();
+    await enable(s, 'website');
+    const shop = await op(s, 'add', 'grant-once.example');
+    await op(s, 'add', 'grant-other.example');
+    expect(await grant(s, 'grant-once.example')).toBe('unverified');
+    await verify(s, shop.domain!.id);
+    expect(await domainRow(shop.domain!.id)).toMatchObject({ paste_check_outcome: 'verified' });
+    expect(await grant(s, 'grant-once.example')).toBe('granted');
+    expect(await grant(s, 'grant-once.example')).toBe('granted');
+    expect(await signal(s, 'grant-other.example', 'grant-other.example')).toBe('unverified');
+    expect(await apexes(s)).toEqual(['grant-once.example']);
+    expect(await one('select count(*)::int as value from tryon_subscriptions where shop_domain=$1', [`site:${s}`])).toBe(1);
+    // Shopify plans come from signed renders only.
+    const shopify = await site();
+    await enable(shopify, 'shopify', 'grant-shop.myshopify.com');
+    expect(await grant(shopify, 'grant-shop.example')).toBe('ignored');
+  });
+
+  it('records a failed check without verifying, and a re-added host starts over', async () => {
+    const s = await site();
+    await enable(s, 'website');
+    const added = await op(s, 'add', 'checked.example');
+    const check = (outcome: string | null) => one<string>('select record_paste_domain_check($1,$2,$3) as value', [s, added.domain!.id, outcome]);
+    for (const bad of ['verified', 'bogus', null]) expect(await check(bad)).toBe('invalid');
+    expect(await check('not_found')).toBe('recorded');
+    expect(await domainRow(added.domain!.id)).toMatchObject({ paste_verified_at: null, paste_check_outcome: 'not_found' });
+    expect(await one<string>('select record_paste_domain_check($1,$2,$3) as value', [await site(), added.domain!.id, 'not_found'])).toBe('not_found');
+    await verify(s, added.domain!.id);
+    expect((await domainRow(added.domain!.id)).paste_verified_at).not.toBeNull();
+    await op(s, 'remove', null, added.domain!.id);
+    const again = await op(s, 'add', 'checked.example');
+    expect(again.domain).toMatchObject({ verification_status: 'trusted', paste_verified_at: null, paste_check_outcome: null });
+    expect(await signal(s, 'checked.example', 'checked.example')).toBe('unverified');
+  });
+
+  it('keeps a DNS or meta proof made before this migration as verified', async () => {
+    expect(await signal(provenBefore, 'proven-before.example', 'proven-before.example')).toBe('granted');
+    expect(await one('select paste_check_outcome as value from widget_domains where widget_site_id=$1', [provenBefore])).toBe('verified');
+  });
+
+  it('keeps verify, the check and the grant away from browser roles', async () => {
+    const s = await site();
+    for (const call of [
+      ['select record_paste_domain_check($1,$2,$3)', [s, s, 'not_found']],
+      ['select grant_paste_domain_free_plan($1,$2,$3)', [s, 'a.example', 'a.example']],
+      ['select paste_domain_operation($1,$2,null,$3,null)', [s, 'verify', s]],
+    ] as const) {
+      expect(await as('authenticated', () => db.query(call[0], [...call[1]]).then(() => undefined, (e: { code?: string }) => e.code))).toBe('42501');
+    }
+    expect(await as('authenticated', () => db.query('update widget_domains set paste_verified_at = now() where widget_site_id=$1', [provenBefore])
+      .then(() => undefined, (e: { code?: string }) => e.code))).toBe('42501');
+  });
+
+  it('ships a SELECT-only review query that lists apexes claimed without verification', async () => {
+    const text = await read('supabase/20261109_paste_domain_verification.sql');
+    const start = text.indexOf('-- select h.apex');
+    const end = text.indexOf('order by h.claimed_at;', start) + 'order by h.claimed_at;'.length;
+    const query = text.slice(start, end).split('\n').map((line) => line.replace(/^--\s?/, '')).join('\n');
+    expect(query).toMatch(/^select /);
+    expect(query).not.toMatch(/\b(insert|update|delete|drop|alter|truncate)\b/i);
+    // An apex an old, unverified claim took before this migration.
+    const old = await site();
+    await enable(old, 'website');
+    await op(old, 'add', 'taken-early.example');
+    await db.query('insert into tryon_free_apex_history(apex, first_widget_site_id) values ($1,$2)', ['taken-early.example', old]);
+    const rows = (await db.query<{ apex: string }>(query)).rows.map((row) => row.apex);
+    expect(rows).toContain('taken-early.example');
+    // once.example's first claimer site was deleted: listed for a manual look.
+    expect(rows).toContain('once.example');
+    expect(rows).not.toContain('squatted.example');
+    expect(rows).not.toContain('grant-once.example');
   });
 });
 

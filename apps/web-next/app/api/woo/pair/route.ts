@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import { readLimitedJson } from '@/lib/http/read-limited-body';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import {
@@ -145,20 +146,9 @@ export async function POST(request: NextRequest) {
     throw error;
   }
 
-  const declaredLength = Number(request.headers.get('content-length') ?? '0');
-  if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
-    return fail('invalid_request', 413);
-  }
-
-  let bodyText: string;
-  let parsed: unknown;
-  try {
-    bodyText = await request.text();
-    if (Buffer.byteLength(bodyText, 'utf8') > MAX_BODY_BYTES) return fail('invalid_request', 413);
-    parsed = JSON.parse(bodyText);
-  } catch {
-    return fail('invalid_request', 400);
-  }
+  const read = await readLimitedJson(request, MAX_BODY_BYTES);
+  if (!read.ok) return fail('invalid_request', read.status);
+  const parsed = read.value;
 
   const parsedInput = parseInput(parsed);
   if (!parsedInput.ok) return fail(parsedInput.error, 400);

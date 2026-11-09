@@ -11,7 +11,11 @@ import {
 } from '@/lib/try-on/storefront-context';
 import { validateProductId } from '@/lib/try-on/validator';
 import type { TryOnApiResponse, TryOnAttempt } from '@/lib/try-on/types';
-import { pasteTurnstileBinding, pasteTurnstileConfig } from '@/lib/paste/turnstile';
+import { pasteTurnstileBinding, pasteTurnstileConfig, pasteTurnstileRequired } from '@/lib/paste/turnstile';
+import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
+
+/** A session token (at most 4 KiB) plus product ids and nonces. */
+const BODY_LIMIT_BYTES = 16 * 1024;
 
 /** Mints one server-authorized generation attempt from a valid base session.
  * The browser nonce distinguishes explicit user actions; retrying this exact
@@ -20,7 +24,15 @@ export async function POST(request: NextRequest) {
   try {
     await requireRateLimit(publicApiRatelimit, clientIp(request) ?? 'unknown');
 
-    const body = (await request.json()) as {
+    const parsed = await readLimitedJson(request, BODY_LIMIT_BYTES);
+    if (!parsed.ok || !isJsonObject(parsed.value)) {
+      const tooLarge = !parsed.ok && parsed.status === 413;
+      return NextResponse.json(
+        { ok: false, error: tooLarge ? 'Request body is too large.' : 'Invalid JSON payload.' } satisfies TryOnApiResponse,
+        { status: tooLarge ? 413 : 400 },
+      );
+    }
+    const body = parsed.value as {
       sessionId?: unknown;
       productId?: unknown;
       variantId?: unknown;
@@ -92,7 +104,7 @@ export async function POST(request: NextRequest) {
         data: {
           attemptId: attempt.token,
           expiresAt: new Date(attempt.claims.exp * 1000).toISOString(),
-          ...(attempt.claims.platform === 'paste-website' && !attempt.claims.test ? {
+          ...(pasteTurnstileRequired(attempt.claims) ? {
             turnstile: { ...pasteTurnstileConfig(), cData: pasteTurnstileBinding(attempt.claims) },
           } : {}),
         },

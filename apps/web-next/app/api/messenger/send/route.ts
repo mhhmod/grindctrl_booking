@@ -3,6 +3,7 @@ import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
 import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
 import {
   MESSAGE_MAX_LENGTH,
@@ -67,6 +68,9 @@ import type { MessengerLocale } from '@/lib/messenger/types';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const ANON_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
+/* A 2000 character message (up to 6 bytes each once JSON-escaped), a
+   50-line cart and the session fields fit with room to spare. */
+const BODY_LIMIT_BYTES = 64 * 1024;
 
 function bad(code: string, status = 400) {
   return NextResponse.json({ error: code }, { status });
@@ -97,12 +101,10 @@ export async function POST(request: NextRequest) {
     throw error;
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = (await request.json()) as Record<string, unknown>;
-  } catch {
-    return bad('bad_json');
-  }
+  const parsed = await readLimitedJson(request, BODY_LIMIT_BYTES);
+  if (!parsed.ok) return parsed.status === 413 ? bad('too_large', 413) : bad('bad_json');
+  if (!isJsonObject(parsed.value)) return bad('bad_json');
+  const body = parsed.value;
 
   const key = typeof body.key === 'string' ? body.key : '';
   const { origin, trusted: originTrusted } = provenOrigin(

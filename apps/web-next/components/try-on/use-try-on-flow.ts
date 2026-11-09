@@ -257,7 +257,7 @@ export function useTryOnFlow({
 
       setGenerationPhase('session-created');
 
-      // A binding is present only for website paste. A fresh token is obtained
+      // A binding is present only for paid pasted looks. A fresh token is obtained
       // for this attempt; retries below reuse the exact same generation body.
       let turnstileToken: string | undefined;
       try { turnstileToken = await attemptTurnstileToken(attemptData.data.turnstile); }

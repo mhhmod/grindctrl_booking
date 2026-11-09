@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { clientIp, publicApiRatelimit, proxyVisitorRatelimit, proxyShopMintRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
 import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
 import {
-  getPasteConnection, pasteDomainOf, pasteProofHosts, pasteTrust, pasteTrustedHosts, readPasteDomainPlatforms, recordPasteCodeVersion,
-  recordPasteSignal,
+  getPasteConnection, pasteDomainOf, pasteProofHosts, pasteTrust, pasteTrustedHosts, pasteTryOnHosts, readPasteDomainPlatforms,
+  recordPasteCodeVersion, recordPasteSignal,
 } from '@/lib/paste/store';
+import { schedulePasteDomainCheck } from '@/lib/paste/domain-check';
 import { isAnyPlatformImageHost, platformImageHosts } from '@/lib/paste/platform-image-hosts';
 import { schedulePasteDomainPlatformCheck } from '@/lib/paste/platform-check';
 import { checkPasteShop } from '@/lib/paste/shop-proof';
@@ -53,12 +55,10 @@ async function mint(request: NextRequest): Promise<Response> {
   try {
     const ip = clientIp(request) ?? 'unknown';
     await requireRateLimit(publicApiRatelimit, `paste-context:${ip}`);
-    if (Number(request.headers.get('content-length')) > MAX_BODY_BYTES) return json({ error: 'invalid_request' }, 413);
-    const text = await request.text();
-    if (Buffer.byteLength(text) > MAX_BODY_BYTES) return json({ error: 'invalid_request' }, 413);
-    const raw: unknown = JSON.parse(text);
-    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return json({ error: 'invalid_request' }, 400);
-    const b = raw as Record<string, unknown>;
+    const parsed = await readLimitedJson(request, MAX_BODY_BYTES);
+    if (!parsed.ok) return json({ error: 'invalid_request' }, parsed.status);
+    if (!isJsonObject(parsed.value)) return json({ error: 'invalid_request' }, 400);
+    const b = parsed.value;
     // The public key selects a site; a tenant is ALWAYS server-derived.
     if (b.tenant !== undefined || b.shop !== undefined || b.siteId !== undefined || typeof b.key !== 'string'
       || typeof b.productId !== 'string' || !validateProductId(b.productId).ok
@@ -102,7 +102,7 @@ async function mint(request: NextRequest): Promise<Response> {
         return json({ error: 'bad_signature' }, 401);
       }
       const verified = await verifyLiquidSignature({ connection, claims: claims as unknown as LiquidClaims,
-        signature: claims.signature as string, visitor: `${ip}:${b.visitorId}` });
+        signature: claims.signature as string });
       if (!verified.ok) return json({ error: verified.code }, verified.code === 'unavailable' ? 503 : verified.code === 'replayed' ? 409 : 401);
       // Which snippet the store runs, for the dashboard's "copy the new code".
       // Unsigned, so only a hint, and only after this render verified.
@@ -122,6 +122,14 @@ async function mint(request: NextRequest): Promise<Response> {
         }
         if (proof.shopProof !== 'proven') return json({ error: 'shop_proof_pending' }, 403);
       }
+    }
+    // Try-On runs only where our server confirmed this site's code: the
+    // proven shop host, or a domain whose page it found the snippet on.
+    // Store Chat keeps working on a domain that is still waiting; the
+    // button stays hidden there while our check runs.
+    if (!(await pasteTryOnHosts(connection)).includes(page.hostname)) {
+      schedulePasteDomainCheck(site.id, page.hostname);
+      return json({ error: 'not_installed' }, 409);
     }
     if (!(await isActiveTenant(tenant))) return json({ error: 'site_disconnected' }, 403);
     const features = await storeFlags({ widgetSiteId: site.id });
@@ -181,7 +189,7 @@ async function mint(request: NextRequest): Promise<Response> {
       context: { token: context.token, nonce, productId: b.productId, variantId, expiresAt: new Date(context.claims.exp * 1000).toISOString() },
       embedUrl: `${appOrigin}/embed/try-on?${params}#storefrontContext=${encodeURIComponent(context.token)}&storefrontNonce=${nonce}`,
       settings: await buildSiteTryOnConfig(site.id, b.locale),
-      turnstile: connection.platform === 'website' && !audience.test ? pasteTurnstileConfig() : null,
+      turnstile: audience.test ? null : pasteTurnstileConfig(),
     } satisfies PasteContextResponse);
   } catch (error) {
     if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { readLimitedFormData } from '@/lib/http/read-limited-body';
 import { resolveShopperSession } from '@/lib/messenger/public-session';
 import { appendMessage, recordAudit, recordEvent } from '@/lib/messenger/conversations';
 import {
@@ -25,10 +26,9 @@ export const runtime = 'nodejs';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-/* Multipart framing adds a few hundred bytes around the file. This header
-   check is a cheap early exit for an obviously oversized upload, NOT the
-   size rule — Content-Length is client-supplied, so the decision is made
-   against the bytes actually received, below. */
+/* Multipart framing adds a few hundred bytes around the file. The request
+   is cut off as soon as the bytes received cross this ceiling, whatever
+   Content-Length claims; the file's own size rule is applied after. */
 const REQUEST_BYTES_CEILING = MAX_ATTACHMENT_BYTES + 64 * 1024;
 
 const REJECTION_STATUS: Record<string, number> = {
@@ -50,15 +50,11 @@ export async function POST(request: NextRequest) {
     throw error;
   }
 
-  const declared = Number(request.headers.get('content-length') ?? '0');
-  if (Number.isFinite(declared) && declared > REQUEST_BYTES_CEILING) return bad('too_large', 413);
-
-  let form: FormData;
-  try {
-    form = await request.formData();
-  } catch {
-    return bad('bad_form');
-  }
+  /* The shopper's session fields travel inside this multipart body, so the
+     byte ceiling is the check that runs before anything is parsed. */
+  const form = await readLimitedFormData(request, REQUEST_BYTES_CEILING);
+  if (form === 413) return bad('too_large', 413);
+  if (form === 400) return bad('bad_form');
 
   const clientKey = String(form.get('clientKey') ?? '');
   if (!UUID_RE.test(clientKey)) return bad('client_key_required');

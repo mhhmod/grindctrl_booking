@@ -341,6 +341,53 @@ export async function fetchStorefrontPage(domain: string, options: {
   }
 }
 
+declare const domainEvidenceBrand: unique symbol;
+/** Produced only by scanDomainSnippet, from this site's snippet found on the
+ *  domain's own home page by our server. verifyPasteDomain requires it. */
+export type DomainSnippetEvidence = { readonly [domainEvidenceBrand]: true; readonly siteId: string; readonly domainId: string };
+
+/** Hosts our loader is served from: production, and this deployment's own. */
+function loaderHosts(): Set<string> {
+  const hosts = new Set(['grindctrl.cloud']);
+  const app = process.env.NEXT_PUBLIC_APP_URL;
+  if (app && URL.canParse(app)) hosts.add(new URL(app).hostname.toLowerCase());
+  return hosts;
+}
+
+/** Whether the page carries this site's snippet: a real script element
+ *  loading our messenger.js over HTTPS with this site's embed key. Tags
+ *  inside comments, JSON, templates or escaped text never count. */
+export function findSiteSnippet(html: string, embedKey: string): 'found' | 'wrong_site' | 'not_found' {
+  const hosts = loaderHosts();
+  const loaders = startTags(html).filter((tag) => {
+    if (tag.name !== 'script') return false;
+    const src = tag.attrs.get('src') ?? '';
+    if (!URL.canParse(src)) return false;
+    const url = new URL(src);
+    return url.protocol === 'https:' && !url.port && hosts.has(url.hostname.toLowerCase()) && url.pathname === '/widget/v1/messenger.js';
+  }).slice(0, MAX_TAGS);
+  if (loaders.some((tag) => tag.attrs.get('data-key') === embedKey)) return 'found';
+  return loaders.length ? 'wrong_site' : 'not_found';
+}
+
+export type DomainSnippetScan =
+  | { outcome: 'verified'; evidence: DomainSnippetEvidence; page: StorefrontPage }
+  | { outcome: 'not_found' | 'wrong_site' | 'unreachable'; failure?: StorefrontFailure };
+
+/** Fetches a paste domain's home page (fetchStorefrontPage: pinned public
+ *  address, HTTPS only, capped body, redirects only to the www twin) and
+ *  looks for this site's snippet. The URL is built from the stored domain,
+ *  never from a caller. */
+export async function scanDomainSnippet(site: { id: string; embedKey: string }, domain: { id: string; domain: string }, options: {
+  transport?: StorefrontTransport; lookup?: StorefrontLookup;
+} = {}): Promise<DomainSnippetScan> {
+  const page = await fetchStorefrontPage(domain.domain, options);
+  if ('failure' in page) return { outcome: 'unreachable', failure: page.failure };
+  const found = findSiteSnippet(page.html, site.embedKey);
+  if (found !== 'found') return { outcome: found };
+  return { outcome: 'verified', page, evidence: { siteId: site.id, domainId: domain.id } as DomainSnippetEvidence };
+}
+
 /** Fetches the pending shop's storefront and reports what it shows for
  *  this site. Never throws for storefront behavior; throws PasteError only
  *  when our own signing configuration is unavailable. The password, when

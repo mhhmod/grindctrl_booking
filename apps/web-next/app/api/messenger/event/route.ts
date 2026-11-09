@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
 import {
   loadPublicSite,
   loadPublicSiteByDomain,
@@ -10,6 +11,7 @@ import {
 import { recordEvent } from '@/lib/messenger/conversations';
 import { configFailurePayload } from '@/lib/messenger/config-failure';
 import { recordPasteSignal } from '@/lib/paste/store';
+import { schedulePasteDomainCheck } from '@/lib/paste/domain-check';
 
 /* POST /api/messenger/event
    Storefront telemetry. Strict name allowlist so this cannot become a
@@ -56,6 +58,8 @@ export function OPTIONS(request: NextRequest) {
   });
 }
 
+const BODY_LIMIT_BYTES = 32 * 1024;
+
 export async function POST(request: NextRequest) {
   try {
     await requireRateLimit(publicApiRatelimit, `me:${clientIp(request) ?? 'unknown'}`);
@@ -67,12 +71,11 @@ export async function POST(request: NextRequest) {
     return response;
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = (await request.json()) as Record<string, unknown>;
-  } catch {
-    return NextResponse.json({ ok: false }, { status: 400 });
+  const parsed = await readLimitedJson(request, BODY_LIMIT_BYTES);
+  if (!parsed.ok || !isJsonObject(parsed.value)) {
+    return NextResponse.json({ ok: false }, { status: !parsed.ok && parsed.status === 413 ? 413 : 400 });
   }
+  const body = parsed.value;
 
   const key = typeof body.key === 'string' ? body.key : '';
   const shop = typeof body.shop === 'string' ? body.shop : null;
@@ -121,7 +124,10 @@ export async function POST(request: NextRequest) {
     if (!allowed) return NextResponse.json({ ok: false }, { status: 403 });
 
     if (name === 'loader_initialized' && originTrusted && origin && site.status === 'active') {
-      await recordPasteSignal(site.id, origin);
+      // An unverified domain earns nothing from this; our server checks its page.
+      if (await recordPasteSignal(site.id, origin) === 'unverified' && URL.canParse(origin)) {
+        schedulePasteDomainCheck(site.id, new URL(origin).hostname);
+      }
     }
 
     await recordEvent({
