@@ -196,8 +196,9 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
+          # Full checkout: a sparse one trips over the stale .audit-main
+          # gitlink at the repo root ("No url found for submodule path").
           persist-credentials: false
-          sparse-checkout: .github/scripts
       # This key is restricted server-side (authorized_keys `command=`)
       # to only run /root/grindctrl-next/deploy-next.sh — it cannot run
       # arbitrary commands even if this secret ever leaked.
