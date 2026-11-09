@@ -24,6 +24,7 @@ import { V16TryOnStudio, V16TryOnStudioError } from '@/components/dashboard/v16/
 import { V16TryOnApp } from '@/components/dashboard/v16/try-on/v16-tryon-app';
 import { V16NeedsStore } from '@/components/dashboard/v16/states';
 import { tryOnButtonStatus } from '@/lib/dashboard/tryon-button-status';
+import { readPasteCodeOutdated } from '@/lib/paste/status';
 import { isActiveTenant } from '@/lib/shopify/tokens';
 import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
 import { saveTryOnSettingsAction, setTryOnButtonAction, setTryOnCardPillAction } from './actions';
@@ -59,7 +60,7 @@ export async function TryOnPage({
   if (tab === 'setup') {
     // The save action checks the role again.
     if (!canSetUp) redirect('/dashboard/try-on');
-    const [settings, storeLaunch, flagRows, entitlement, activeFlags, installed] = await Promise.all([
+    const [settings, storeLaunch, flagRows, entitlement, activeFlags, installed, codeOutdated] = await Promise.all([
       getTryOnSettingsForEdit(shop).catch((error: unknown) => {
         console.error('[try-on set up] settings failed:', error instanceof Error ? error.message : error);
         return null;
@@ -72,6 +73,8 @@ export async function TryOnPage({
       isSiteTenantKey(shop)
         ? isActiveTenant(shop)
         : shops.some((candidate) => candidate.domain === shop && candidate.status === 'installed'),
+      // Only pasted code has a code version; never fails the page.
+      activeStore.platform === 'paste' && activeStore.siteId ? readPasteCodeOutdated(activeStore.siteId) : false,
     ]);
     const wpAdmin = isWoo && activeStore.siteId
       ? wpAdminUrls((await getActiveWooSiteContext(activeStore.siteId).catch(() => null))?.homeUrl ?? '')
@@ -85,6 +88,7 @@ export async function TryOnPage({
           showButton: settings.showButton,
           entitlement,
           launchState: activeFlags.includes('n5_preview_mode') ? launch.state : 'live',
+          codeOutdated,
         })
       : null;
     const live = Boolean(entitlement?.available) && (settings?.showButton ?? true);

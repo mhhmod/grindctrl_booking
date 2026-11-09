@@ -370,3 +370,8 @@
   color: var(--mantine-color-dimmed);
   font-size: var(--mantine-font-size-xs);
 }
+
+.pillAction {
+  align-self: flex-start;
+  margin-inline-start: calc(var(--mantine-spacing-xs) * -1);
+}

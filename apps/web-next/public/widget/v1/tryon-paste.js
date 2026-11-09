@@ -1,5 +1,5 @@
 /**
- * GRINDCTRL Try-On paste adapters v1.2.0 (website and Shopify paste installs).
+ * GRINDCTRL Try-On paste adapters v1.3.0 (website and Shopify paste installs).
  *
  * Loaded by messenger.js on product pages of a `data-gc-install="paste"`
  * snippet, and on Shopify product listings whose snippet printed signed
@@ -16,6 +16,7 @@
  *   addToCart(variant, qty, state) -> Promise<{ ok, message?, variantTitle? } | 'unsupported'>
  *   placementTarget()       -> Element the injected button goes after | null
  *   injectButton            -> the product page button (after prepare)
+ *   buttonSettings          -> its owner's look from /api/try-on/paste-config, null when unread
  *   injectCards, cardSettings, findCards(rescan) -> product card pills (after prepare)
  */
 (function () {
@@ -335,30 +336,54 @@
       }).catch(function () { return null; });
     }
 
-    function prepareCards() {
-      if (!signed.siteId || !signed.shopDomain || !readCards(document)) return Promise.resolve(false);
-      cardRefreshedUrls[listingAddress()] = true;
+    /* Whether this visitor may see Try-On now, and the owner's button and
+       pill look: read once per page, null when it could not be read. */
+    var configRequest = null;
+    function readPasteConfig() {
+      if (configRequest) return configRequest;
       var params = new URLSearchParams({ key: script.dataset.key || '', locale: options.locale === 'ar' ? 'ar' : 'en' });
       if (/^[A-Za-z0-9_-]{16,64}$/.test(options.visitorId || '')) params.set('vid', options.visitorId);
       if (options.preview) params.set('preview', options.preview);
-      // Nothing is added to the page until the store says pills are on for this visitor.
-      return fetch(options.appOrigin + '/api/try-on/paste-config?' + params.toString(), {
+      configRequest = fetch(options.appOrigin + '/api/try-on/paste-config?' + params.toString(), {
         credentials: 'omit', headers: { Accept: 'application/json' }
-      }).then(function (res) { return res.ok ? res.json() : null; }).then(function (config) {
+      }).then(function (res) { return res.ok ? res.json() : null; }).catch(function () { return null; });
+      return configRequest;
+    }
+
+    function prepareCards() {
+      if (!signed.siteId || !signed.shopDomain || !readCards(document)) return Promise.resolve(false);
+      cardRefreshedUrls[listingAddress()] = true;
+      // Nothing is added to the page until the store says pills are on for this visitor.
+      return readPasteConfig().then(function (config) {
         if (!config || config.tryOn !== 'live' || config.showCardPill !== true) return false;
         adapter.injectCards = true;
         adapter.cardSettings = config;
         return true;
-      }).catch(function () { return false; });
+      });
+    }
+
+    /* The product button, as the Shopify app block: nothing until the config
+       answers, nothing when it says hidden, the owner's look from the first
+       paint when it says live. A config that cannot be read keeps the
+       default look; paste-context still decides at prewarm or tap. */
+    function prepareButton(found) {
+      return Promise.all([found, readPasteConfig()]).then(function (results) {
+        var config = results[1];
+        if (!results[0] || (config && config.tryOn !== 'live')) return false;
+        adapter.buttonSettings = config;
+        adapter.injectButton = true;
+        return true;
+      });
     }
 
     var adapter = {
       injectButton: false,
+      buttonSettings: null,
       injectCards: false,
       cardSettings: null,
       locale: options.locale,
       embedOrigin: options.appOrigin,
-      // The Shopify block's default label; the owner's own label arrives with the context settings.
+      // The Shopify block's default label; the owner's own label comes with buttonSettings (or the context settings).
       buttonLabel: options.locale === 'ar' ? 'جرّبها بالذكاء الاصطناعي' : 'Try it on with AI',
       cardLabel: options.locale === 'ar' ? 'جرّب' : 'Try on',
       lookKey: function (button) { return 'paste:' + script.dataset.key + ':' + button.dataset.productId; },
@@ -367,23 +392,22 @@
       prepare: function () {
         if (platform === 'website') {
           initialProduct = websiteProduct();
-          adapter.injectButton = !!initialProduct;
-          return Promise.resolve(!!initialProduct);
+          return initialProduct ? prepareButton(true) : Promise.resolve(false);
         }
         var match = window.location.pathname.match(/\/products\/([^/]+)/);
         if (!match || !shopifyForm()) return prepareCards();
         if (!SHOPIFY_ID.test(signed.productId)) return Promise.resolve(false);
         var handle;
         try { handle = decodeURIComponent(match[1]); } catch (_) { return Promise.resolve(false); }
-        return fetch(shopifyRoot() + 'products/' + encodeURIComponent(handle) + '.js', {
+        // The product and the config are read in parallel.
+        return prepareButton(fetch(shopifyRoot() + 'products/' + encodeURIComponent(handle) + '.js', {
           credentials: 'same-origin', headers: { Accept: 'application/json' }
         }).then(function (res) { return res.ok ? res.json() : null; }).then(function (data) {
           // The public JSON must describe the product Liquid signed.
           if (!data || String(data.id) !== signed.productId || !Array.isArray(data.variants)) return false;
           productJson = data;
-          adapter.injectButton = !!adapter.detectProduct();
-          return adapter.injectButton;
-        }).catch(function () { return false; });
+          return !!adapter.detectProduct();
+        }).catch(function () { return false; }));
       },
 
       placementTarget: function () {
@@ -504,5 +528,5 @@
     return adapter;
   }
 
-  window.GRINDCTRL_TRYON_PASTE = { version: '1.2.0', create: create, detectWebsiteProduct: websiteProduct };
+  window.GRINDCTRL_TRYON_PASTE = { version: '1.3.0', create: create, detectWebsiteProduct: websiteProduct };
 })();

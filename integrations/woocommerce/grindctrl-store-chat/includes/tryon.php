@@ -103,6 +103,10 @@ function grindctrl_sc_tryon_config() {
 					'bg'           => grindctrl_sc_tryon_color( isset( $data['accentBg'] ) ? $data['accentBg'] : '', '#1f1d1a' ),
 					'fg'           => grindctrl_sc_tryon_color( isset( $data['accentFg'] ) ? $data['accentFg'] : '', '#f6f1e7' ),
 					'radius'       => $radius,
+					// The product page button's animated icon: its gradient and size (the dashboard's 18-40px).
+					'icFrom'       => grindctrl_sc_tryon_color( isset( $data['iconBgFrom'] ) ? $data['iconBgFrom'] : '', '#ff9a3d' ),
+					'icTo'         => grindctrl_sc_tryon_color( isset( $data['iconBgTo'] ) ? $data['iconBgTo'] : '', '#ffd76e' ),
+					'icSize'       => isset( $data['buttonIconPx'] ) && is_numeric( $data['buttonIconPx'] ) ? max( 18, min( 40, (int) round( (float) $data['buttonIconPx'] ) ) ) : 28,
 				);
 			}
 		}
@@ -199,6 +203,25 @@ function grindctrl_sc_tryon_eligible( $product ) {
 }
 
 /**
+ * The Shopify app block's animated icon (scan beam, ring, sparkle), the same
+ * markup the hosted engine adds to a button without one. Printed with the
+ * button so it never pops in; sized inline until the engine's styles load.
+ * Every icon on the page gets its own clipPath id.
+ */
+function grindctrl_sc_tryon_icon_html() {
+	static $count = 0;
+	$clip   = 'gc-tryon-wp-clip-' . ( ++$count );
+	$figure = '<circle cx="12" cy="6.6" r="3.2"/><path d="M4.6 21c0-4.5 3.3-7.2 7.4-7.2s7.4 2.7 7.4 7.2Z"/>';
+	return '<span class="gc-tryon-ic" aria-hidden="true" style="display:inline-flex;inline-size:var(--gc-ic-size,28px);block-size:var(--gc-ic-size,28px)">'
+		. '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="currentColor" stroke="none" focusable="false">'
+		. '<defs><clipPath id="' . esc_attr( $clip ) . '">' . $figure . '</clipPath></defs>'
+		. '<g opacity="0.5">' . $figure . '</g>'
+		. '<g clip-path="url(#' . esc_attr( $clip ) . ')"><rect class="gc-ic-scan" x="2" y="1" width="20" height="2.4" rx="1.2"/></g>'
+		. '<path class="gc-ic-spark" d="m20 2.6.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5Z"/>'
+		. '</svg></span>';
+}
+
+/**
  * @param WC_Product $product Product to try on.
  * @param string     $variant 'page' for a product page button, 'card' for a catalog card.
  * @param string     $label   Optional label override.
@@ -215,6 +238,10 @@ function grindctrl_sc_tryon_button_html( $product, $variant = 'page', $label = '
 		$label = $is_card && ! empty( $config['catalogLabel'] ) ? $config['catalogLabel'] : $config['label'];
 	}
 	$style = sprintf( '--gc-bg:%s;--gc-fg:%s;--gc-radius:%dpx', $config['bg'], $config['fg'], $config['radius'] );
+	// Card buttons have no icon. A config cached by 0.3.3 has no icon fields: the engine's defaults apply.
+	if ( ! $is_card && isset( $config['icFrom'], $config['icTo'], $config['icSize'] ) ) {
+		$style .= sprintf( ';--gc-ic-from:%s;--gc-ic-to:%s;--gc-ic-size:%dpx', $config['icFrom'], $config['icTo'], $config['icSize'] );
+	}
 	if ( ! empty( $config['previewOnly'] ) ) {
 		$style .= ';display:none'; // Hidden before the deferred loader runs too.
 	}
@@ -226,7 +253,7 @@ function grindctrl_sc_tryon_button_html( $product, $variant = 'page', $label = '
 		esc_attr( $product->get_type() ),
 		$is_card ? '' : ' data-gc-page="1"',
 		esc_attr( $style ),
-		esc_html( $label )
+		$is_card ? esc_html( $label ) : grindctrl_sc_tryon_icon_html() . '<span class="gc-tryon-label">' . esc_html( $label ) . '</span>'
 	);
 }
 

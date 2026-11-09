@@ -8,10 +8,33 @@ import { getStoreLaunch } from '@/lib/launch/store-launch';
 import { launchView, type LaunchState } from '@/lib/launch/audience';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { pasteCapabilitySecret } from './signing';
-import { getPasteConnection, listPasteDomains, pasteShopHost, pasteTrust, readPasteCodeVersion } from './store';
+import { getPasteConnection, listPasteDomains, pasteShopHost, pasteTrust, readPasteCodeVersion, type PasteCodeVersion } from './store';
 import { pasteTurnstileSiteKey } from './turnstile';
 import { cachedShopCheck, SHOP_CHECK_RETRY_SECONDS } from './shop-proof';
-import { PASTE_SHOPIFY_CODE_VERSION, type PasteDomain, type PastePlatform, type PasteShopCheckOutcome } from './types';
+import {
+  PASTE_SHOPIFY_CODE_VERSION, type PasteConnection, type PasteDomain, type PastePlatform, type PasteShopCheckOutcome,
+} from './types';
+
+/** A connected (or pending) pasted Shopify install whose last verified render
+ *  ran older code than the snippet we hand out now. False while unknown. */
+export function pasteCodeOutdated(
+  connection: Pick<PasteConnection, 'status' | 'platform'> | null,
+  seenCode: PasteCodeVersion | null,
+): boolean {
+  const shopify = (connection?.status === 'active' || connection?.status === 'pending') && connection.platform === 'shopify';
+  return shopify && seenCode !== null && seenCode.version < PASTE_SHOPIFY_CODE_VERSION;
+}
+
+/** pasteCodeOutdated for one site on its own (the Try-On page). A dashboard
+ *  hint: an unreadable connection or version reads as not outdated. */
+export async function readPasteCodeOutdated(siteId: string): Promise<boolean> {
+  try {
+    const [connection, seenCode] = await Promise.all([getPasteConnection(siteId), readPasteCodeVersion(siteId)]);
+    return pasteCodeOutdated(connection, seenCode);
+  } catch {
+    return false;
+  }
+}
 
 /** Why the connection is not trusted yet; null once it is. */
 export type PasteConnectionReason =
@@ -129,7 +152,7 @@ export async function readPasteInstallStatus(site: { id: string; status: string 
     showButton,
     codeVersion: code?.version ?? null,
     codeVersionSeenAt: code?.seenAt ?? null,
-    codeOutdated: code !== null && code.version < PASTE_SHOPIFY_CODE_VERSION,
+    codeOutdated: pasteCodeOutdated(connection, seenCode),
     plan, mode, secretVersion: connection?.secret_version ?? null,
     rotationOverlapUntil: connection?.previous_valid_until ?? null,
     turnstileConfigured,

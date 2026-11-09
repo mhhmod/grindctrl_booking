@@ -14,7 +14,7 @@ const tryon = read('includes/tryon.php');
 describe('GRINDCTRL Store Chat plugin source', () => {
   it('declares one version in the header, the constant and the readme', () => {
     const header = /\* Version:\s+(\S+)/.exec(main)?.[1];
-    expect(header).toBe('0.3.3');
+    expect(header).toBe('0.3.4');
     expect(main).toContain(`define( 'GRINDCTRL_SC_VERSION', '${header}' );`);
     expect(read('readme.txt')).toMatch(new RegExp(`Stable tag: ${header}\\b`));
     expect(read('readme.txt')).toContain(`= ${header} =`);
@@ -67,6 +67,24 @@ describe('GRINDCTRL Store Chat plugin source', () => {
     expect(image).toContain("! empty( $registered[ $name ]['crop'] )");
     expect(image).toContain('$edge >= 1024 && $edge < $best_edge');
     expect(image).toContain("wp_get_attachment_image_url( $image_id, 'full' )");
+  });
+
+  it('prints the animated icon and its settings on product page buttons only, escaped, with a clipPath id per icon', () => {
+    const icon = tryon.slice(tryon.indexOf('function grindctrl_sc_tryon_icon_html'), tryon.indexOf('function grindctrl_sc_tryon_button_html'));
+    // The Shopify app block's markup (tryon.liquid).
+    for (const part of ['class="gc-tryon-ic" aria-hidden="true"', 'class="gc-ic-scan"', 'class="gc-ic-spark"', '<g opacity="0.5">']) expect(icon).toContain(part);
+    expect(icon).toContain('static $count = 0;');
+    expect(icon).toContain("'gc-tryon-wp-clip-' . ( ++$count )");
+    expect(icon.match(/esc_attr\( \$clip \)/g)).toHaveLength(2);
+    // The same sanitizer as the button colors; the size clamped to the dashboard's range.
+    expect(tryon).toMatch(/'icFrom'\s+=> grindctrl_sc_tryon_color\( isset\( \$data\['iconBgFrom'\] \)/);
+    expect(tryon).toMatch(/'icTo'\s+=> grindctrl_sc_tryon_color\( isset\( \$data\['iconBgTo'\] \)/);
+    expect(tryon).toContain("max( 18, min( 40, (int) round( (float) $data['buttonIconPx'] ) ) )");
+    const button = tryon.slice(tryon.indexOf('function grindctrl_sc_tryon_button_html'), tryon.indexOf('function grindctrl_sc_tryon_current_product'));
+    expect(button).toContain("! $is_card && isset( $config['icFrom'], $config['icTo'], $config['icSize'] )");
+    expect(button).toContain("';--gc-ic-from:%s;--gc-ic-to:%s;--gc-ic-size:%dpx'");
+    expect(button).toContain('esc_attr( $style )');
+    expect(button).toContain("$is_card ? esc_html( $label ) : grindctrl_sc_tryon_icon_html() . '<span class=\"gc-tryon-label\">' . esc_html( $label ) . '</span>'");
   });
 
   it('keeps preview-only entries hidden until the loader sees a preview token and forwards the token to the server', () => {

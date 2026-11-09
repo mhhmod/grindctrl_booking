@@ -129,6 +129,8 @@ describe('card pills on a pasted-code listing', () => {
     expect(pill.querySelector('.gc-tryon-label')).toHaveTextContent('Try on');
     expect(pill.textContent?.replace(/\s+/g, ' ').trim()).toBe('Try on Linen abaya & scarf');
     expect(pill.querySelector('.gc-tryon-pill__icon svg')).not.toBeNull();
+    // The product page button's animated badge is not a pill's.
+    expect(document.querySelector('.gc-tryon-ic')).toBeNull();
     expect(pill.style.getPropertyValue('--gc-pill-font')).toBe('13px');
     expect(pill.style.getPropertyValue('--gc-pill-icon')).toBe('16px');
     expect(pill.style.getPropertyValue('--gc-pill-pad')).toBe('7px');
@@ -298,6 +300,6 @@ describe('messenger on a pasted-code listing', () => {
     (0, eval)(source('messenger'));
     document.dispatchEvent(new Event('DOMContentLoaded'));
     const scripts = [...document.querySelectorAll<HTMLScriptElement>('script[src*="tryon-"]')].map((node) => node.src);
-    expect(scripts).toEqual([`${APP}/widget/v1/tryon-paste.js?v=1.2.0`]);
+    expect(scripts).toEqual([`${APP}/widget/v1/tryon-paste.js?v=1.3.0`]);
   });
 });

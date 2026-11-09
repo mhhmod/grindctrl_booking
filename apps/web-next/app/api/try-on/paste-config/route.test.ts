@@ -22,7 +22,8 @@ const CORE = 'test-only-independent-core-signing-secret-for-paste';
 const proven = { widget_site_id: SITE, platform: 'shopify', shop_domain: 'merchant.myshopify.com', status: 'active', secret_version: 1,
   shop_proven_at: '2026-11-08T00:00:00.000Z', app_installed: false };
 const config = { enabled: true, reason: null, locale: 'ar', showCardPill: true, catalogLabel: 'جرّب', catalogIconPx: 14, catalogFontPx: 12,
-  catalogPadPx: 6, accentBg: '#2a2826', accentFg: '#f0ede9', radiusPx: 999, buttonLabel: 'not needed', features: [] };
+  catalogPadPx: 6, accentBg: '#2a2826', accentFg: '#f0ede9', radiusPx: 999, buttonLabel: 'جرّبها الآن', iconBgFrom: '#ff9a3d',
+  iconBgTo: '#ffd76e', buttonIconPx: 30, widgetTheme: 'light', features: [] };
 const get = (query = 'key=gc_public_key_42&locale=ar&vid=visitor_abcdefghijklmnop') =>
   GET(new NextRequest(`https://grindctrl.cloud/api/try-on/paste-config?${query}`));
 
@@ -36,15 +37,23 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe('GET /api/try-on/paste-config', () => {
-  it('answers live with the card pill switch and only the pill styling, CORS-open and briefly cacheable', async () => {
+  it('answers live with the card pill switch and only the pill and button styling, CORS-open and briefly cacheable', async () => {
     const response = await get();
     expect(response.status).toBe(200);
     expect(response.headers.get('access-control-allow-origin')).toBe('*');
     expect(response.headers.get('cache-control')).toBe('private, max-age=60');
     expect(await response.json()).toEqual({ tryOn: 'live', reason: null, showCardPill: true, locale: 'ar', catalogLabel: 'جرّب',
-      catalogIconPx: 14, catalogFontPx: 12, catalogPadPx: 6, accentBg: '#2a2826', accentFg: '#f0ede9', radiusPx: 999 });
+      catalogIconPx: 14, catalogFontPx: 12, catalogPadPx: 6, accentBg: '#2a2826', accentFg: '#f0ede9', radiusPx: 999,
+      buttonLabel: 'جرّبها الآن', iconBgFrom: '#ff9a3d', iconBgTo: '#ffd76e', buttonIconPx: 30 });
+    // The config paste-context returns as its settings, for the request's locale.
     expect(m.config).toHaveBeenCalledWith(SITE, 'ar');
     expect(m.siteLimit).toHaveBeenCalledWith(`paste-config:${SITE}`);
+  });
+
+  it("returns the button label resolved for the request's locale", async () => {
+    m.config.mockImplementation(async (_site: string, locale: string) => ({ ...config, locale, buttonLabel: locale === 'ar' ? 'جرّبها الآن' : 'Try it now' }));
+    expect(await (await get('key=gc_public_key_42&locale=en')).json()).toMatchObject({ locale: 'en', buttonLabel: 'Try it now' });
+    expect(await (await get('key=gc_public_key_42&locale=ar')).json()).toMatchObject({ locale: 'ar', buttonLabel: 'جرّبها الآن' });
   });
 
   it('carries the card pill switch, and the main switch off hides the pills with Try-On', async () => {

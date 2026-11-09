@@ -4,7 +4,7 @@ Tags: chat, woocommerce, virtual try-on, customer support, order tracking
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.3.3
+Stable tag: 0.3.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,9 @@ Under Advanced on the settings page you can enter the embed key by hand. The cha
 The script loads asynchronously in the footer, and the chat window only loads when a shopper shows interest in it.
 
 == Changelog ==
+
+= 0.3.4 =
+* The Try it on button on product pages shows the animated try-on icon, in the gradient and size set in the GRINDCTRL dashboard, from the first page load.
 
 = 0.3.3 =
 * Try it on buttons on product listings follow the card pill switch in the GRINDCTRL dashboard, and hide when Try-On is switched off there.

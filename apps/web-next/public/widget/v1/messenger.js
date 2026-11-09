@@ -63,7 +63,7 @@
       return new Promise(function (resolve, reject) {
         var script = document.createElement('script');
         script.async = true;
-        script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=1.2.0';
+        script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=1.3.0';
         script.onload = resolve;
         script.onerror = reject;
         document.head.appendChild(script);
