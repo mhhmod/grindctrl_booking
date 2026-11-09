@@ -41,12 +41,17 @@ function load(): Promise<Turnstile> {
   return loading;
 }
 
-/** Only the server's website-paste attempt carries a binding. Never preload for
- * Shopify/Woo/demo or trust a query parameter to decide challenge exemptions.
- * siteKey is read at runtime on the server (TURNSTILE_SITE_KEY) and returned by the attempt route. */
+/* Each action runs only on the page our server verifies it for. */
+const ACTION_PAGES: Record<Binding['action'], string> = { paste_tryon: '/embed/try-on', demo_tryon: '/try-on' };
+
+/** Only the server's pasted-install and public-demo attempts carry a binding.
+ * Never preload for the Shopify app/Woo or trust a query parameter to decide
+ * challenge exemptions. siteKey is read at runtime on the server
+ * (TURNSTILE_SITE_KEY) and returned by the attempt route. */
 export async function attemptTurnstileToken(binding: TryOnAttempt['turnstile']): Promise<string | undefined> {
   if (!binding) return undefined;
-  if (!binding.siteKey || binding.action !== 'paste_tryon' || !binding.cData || window.location.pathname !== '/embed/try-on') {
+  if (!binding.siteKey || !Object.hasOwn(ACTION_PAGES, binding.action) || !binding.cData
+    || window.location.pathname !== ACTION_PAGES[binding.action]) {
     throw new Error('turnstile_unavailable');
   }
   return token(binding);

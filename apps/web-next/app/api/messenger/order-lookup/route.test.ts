@@ -23,11 +23,16 @@ vi.mock('@/lib/ratelimit', () => ({
   publicApiRatelimit: { limit: mocks.limit },
   clientIp: () => '203.0.113.7',
 }));
-vi.mock('@/lib/messenger/order-limits', () => ({
-  orderLookupLimiter: { limit: mocks.orderLimit },
-  orderNumberLimiter: { limit: mocks.numberLimit },
-  wooSiteOrderLimiter: { limit: mocks.wooLimit },
-}));
+vi.mock('@/lib/messenger/order-limits', async (original) => {
+  const actual = await original<typeof import('@/lib/messenger/order-limits')>();
+  const limiters = { address: { limit: mocks.orderLimit }, number: { limit: mocks.numberLimit } };
+  return {
+    orderLookupLimiter: limiters.address,
+    orderNumberLimiter: limiters.number,
+    wooSiteOrderLimiter: { limit: mocks.wooLimit },
+    spendOrderLookupBudget: (input: Parameters<typeof actual.spendOrderLookupBudget>[0]) => actual.spendOrderLookupBudget(input, limiters),
+  };
+});
 vi.mock('@/lib/woo/identity-token', async (original) => ({
   ...(await original<typeof import('@/lib/woo/identity-token')>()),
   verifyWooIdentityToken: mocks.verifyWoo,

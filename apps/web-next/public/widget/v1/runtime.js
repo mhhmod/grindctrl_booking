@@ -1,6 +1,6 @@
 /**
  * GRINDCTRL Embeddable Support Widget (Runtime)
- * Version: 1.0.0
+ * Version: 1.0.1
  *
  * Shadow DOM runtime that boots via Edge Functions:
  * - widget-bootstrap (public)
@@ -244,7 +244,10 @@
       leads: {
         enabled: leads.enabled === true,
         captureTiming: leads.capture_timing || 'off',
-        fields: Array.isArray(leads.fields) ? leads.fields : [],
+        // Field names become element ids and attributes: identifiers only.
+        fields: Array.isArray(leads.fields) ? leads.fields.filter(function (field) {
+          return typeof field === 'string' && /^[a-z_]{1,32}$/.test(field);
+        }) : [],
         requiredFields: Array.isArray(leads.required_fields) ? leads.required_fields : [],
         promptTitle: leads.prompt_title || '',
         promptSubtitle: leads.prompt_subtitle || '',
@@ -592,7 +595,6 @@
     var title = leads.promptTitle || t('lead_capture_title');
     var subtitle = leads.promptSubtitle || t('lead_capture_subtitle');
     var consentMode = leads.consent && leads.consent.mode ? leads.consent.mode : 'none';
-    var privacyUrl = leads.consent && leads.consent.privacy_url ? leads.consent.privacy_url : '';
 
     var fieldHTML = fields.map(function (field) {
       var type = field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text';
@@ -603,15 +605,13 @@
         '</div>';
     }).join('');
 
+    // The consent text and privacy link are merchant settings: they are put
+    // in by fillConsent with textContent and a checked href, never as HTML.
     var consentHTML = '';
     if (consentMode === 'checkbox') {
-      var label = leads.consent && leads.consent.text ? leads.consent.text : t('consent_label');
-      if (privacyUrl) {
-        label += ' <a href="' + escapeHtml(privacyUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(privacyUrl) + '</a>';
-      }
       consentHTML = '<label class="gc-consent">' +
         '<input type="checkbox" id="gc-lead-consent" />' +
-        '<span>' + label + '</span>' +
+        '<span id="gc-consent-text"></span>' +
         '</label>';
     }
 
@@ -631,6 +631,35 @@
       '</div>' +
       '</form>' +
       '</div>';
+  }
+
+  /** The URL when it is an absolute http(s) address, else ''. Merchant
+   *  settings never reach an href, src or window.open as javascript:, data:
+   *  or any other scheme. */
+  function safeHttpUrl(value) {
+    if (typeof value !== 'string' || !value) return '';
+    try {
+      var parsed = new URL(value);
+      return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.href : '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function fillConsent(root, cfg) {
+    var target = root.getElementById('gc-consent-text');
+    if (!target) return;
+    var consent = cfg && cfg.leads && cfg.leads.consent ? cfg.leads.consent : {};
+    target.textContent = consent.text ? String(consent.text) : t('consent_label');
+    var privacyUrl = safeHttpUrl(consent.privacy_url);
+    if (!privacyUrl) return;
+    var link = document.createElement('a');
+    link.href = privacyUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = privacyUrl;
+    target.appendChild(document.createTextNode(' '));
+    target.appendChild(link);
   }
 
   function buildPanelHTML(cfg) {
@@ -660,7 +689,7 @@
       '<div class="gc-header">',
       '  <div class="gc-header-brand">',
       '    <div class="gc-header-logo">',
-      (cfg.branding.logoUrl ? '<img src="' + escapeHtml(cfg.branding.logoUrl) + '" alt="logo"/>' : iconSvg(ICONS.chat)),
+      (safeHttpUrl(cfg.branding.logoUrl) ? '<img src="' + escapeHtml(safeHttpUrl(cfg.branding.logoUrl)) + '" alt="logo"/>' : iconSvg(ICONS.chat)),
       '    </div>',
       '    <div class="gc-header-name">' + escapeHtml(brandName) + '</div>',
       '  </div>',
@@ -726,6 +755,7 @@
 
     // Render
     container.innerHTML = buildLauncherHTML(cfg, false) + buildPanelHTML(cfg);
+    fillConsent(shadow, cfg);
 
     // Offline banner
     var offlineEl = shadow.getElementById('gc-offline');
@@ -1101,7 +1131,8 @@
     track('intent_click', { intent_id: intentId, label: label, behavior: behavior });
 
     if (behavior === 'open_url' && url) {
-      window.open(url, '_blank', 'noopener');
+      // Only an http(s) address opens; anything else is ignored.
+      if (safeHttpUrl(url)) window.open(safeHttpUrl(url), '_blank', 'noopener');
       return;
     }
 

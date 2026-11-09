@@ -73,7 +73,8 @@ describe('POST /api/messenger/handoff', () => {
     const data = await res.json();
 
     expect(res.status).toBe(200);
-    expect(mocks.escalate).toHaveBeenCalledWith('conv-1', 'assistant_unavailable', expect.any(String), expect.objectContaining({ id: 'site-1' }), {});
+    expect(mocks.escalate).toHaveBeenCalledWith('conv-1', 'assistant_unavailable', expect.any(String), expect.objectContaining({ id: 'site-1' }),
+      { visitor: { id: 'v1', network: '203.0.113.7' } });
     expect(data).toMatchObject({ ok: true, status: 'handoff_requested', alert: { status: 'sent', afterHours: false } });
     expect(data.line.content).toBe('Sent to the team.');
   });

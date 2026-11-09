@@ -200,7 +200,19 @@ describe('MessengerPanel reply delivery', () => {
       await vi.advanceTimersByTimeAsync(16_000);
     });
 
-    expect(String(syncCalls()[0]?.[0])).toContain('originToken=tok-abc');
+    const [url, init] = syncCalls()[0] as [string, RequestInit];
+    expect(url).toBe('/api/messenger/sync');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(String(init.body))).toMatchObject({ originToken: 'tok-abc', anonymousId: expect.any(String), conversationId: expect.any(String) });
+  });
+
+  it('keeps the shopper ids out of the polled address', async () => {
+    await bootPanel();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(16_000);
+    });
+    const [url] = syncCalls()[0] as [string, RequestInit];
+    expect(url).not.toMatch(/anonId|conversationId|anonymousId/);
   });
 });
 
@@ -373,6 +385,49 @@ describe('MessengerPanel shopper identity forwarding', () => {
         await vi.advanceTimersByTimeAsync(200);
       });
       expect(bootstrapBody()).not.toBeNull();
+    });
+  });
+
+  describe('when the loader keeps the anonId out of the address (session=1)', () => {
+    let fakeParent: { postMessage: ReturnType<typeof vi.fn> };
+    const originalParent = window.parent;
+    beforeEach(() => {
+      window.history.pushState({}, '', '/embed/messenger?key=gc_test_key&session=1');
+      fakeParent = { postMessage: vi.fn() };
+      Object.defineProperty(window, 'parent', { configurable: true, value: fakeParent });
+    });
+    afterEach(() => {
+      Object.defineProperty(window, 'parent', { configurable: true, value: originalParent });
+    });
+    const bootstrapBody = () => {
+      const call = fetchMock.mock.calls.find((c) => String(c[0]).includes('/api/messenger/bootstrap'));
+      return call ? JSON.parse(String((call[1] as RequestInit).body)) : null;
+    };
+
+    it('asks for it and loads the conversation with the loader’s anonId', async () => {
+      await bootPanel();
+      expect(fakeParent.postMessage).toHaveBeenCalledWith({ type: 'grindctrl-messenger:identity-request' }, '*');
+      expect(bootstrapBody()).toBeNull();
+      await act(async () => {
+        window.dispatchEvent(new MessageEvent('message', {
+          data: { type: 'grindctrl-messenger:session', anonId: 'loader-anon-654321' },
+          source: fakeParent as unknown as MessageEventSource,
+        }));
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(bootstrapBody().anonymousId).toBe('loader-anon-654321');
+    });
+
+    it('ignores a malformed anonId and falls back after the wait', async () => {
+      await bootPanel();
+      await act(async () => {
+        window.dispatchEvent(new MessageEvent('message', {
+          data: { type: 'grindctrl-messenger:session', anonId: 'bad id!' },
+          source: fakeParent as unknown as MessageEventSource,
+        }));
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(bootstrapBody()?.anonymousId).not.toBe('bad id!');
     });
   });
 

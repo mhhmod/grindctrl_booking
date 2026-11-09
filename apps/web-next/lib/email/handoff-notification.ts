@@ -98,3 +98,46 @@ ${messages.map((m) => `<li><strong>${escapeHtml(speaker(m.role, input.locale))}:
 
   return { subject: t.subject(input.storeName), html, text };
 }
+
+const DIGEST_COPY = {
+  en: {
+    subject: (store: string, count: number) => `${count} shoppers are waiting for you: ${store}`,
+    heading: (count: number) => `${count} shoppers are waiting for a person`,
+    body: 'More handoffs than usual came in, so they are listed together here instead of one email each.',
+    cta: 'Open the Inbox',
+    footer: 'You are receiving this because Store Chat handed conversations to your team.',
+  },
+  ar: {
+    subject: (store: string, count: number) => `${count} عملاء ينتظرون ردك: ${store}`,
+    heading: (count: number) => `${count} عملاء ينتظرون التحدث مع شخص من فريقك`,
+    body: 'وصلت تحويلات أكثر من المعتاد، لذلك جمعناها هنا في رسالة واحدة بدل رسالة لكل محادثة.',
+    cta: 'افتح صندوق الوارد',
+    footer: 'تصلك هذه الرسالة لأن دردشة المتجر حوّلت محادثات إلى فريقك.',
+  },
+} as const;
+
+/** One email for several handoffs, sent when a site's alerts are throttled
+ *  (lib/messenger/notify.ts) so a burst never drops a real one. */
+export function buildHandoffDigest(input: {
+  storeName: string;
+  siteId: string;
+  locale: MessengerLocale;
+  items: Array<{ shopperLabel: string; summary: string }>;
+}): { subject: string; html: string; text: string } {
+  const t = DIGEST_COPY[input.locale === 'ar' ? 'ar' : 'en'];
+  const dir = input.locale === 'ar' ? 'rtl' : 'ltr';
+  const count = input.items.length;
+  const link = `https://grindctrl.cloud/dashboard/inbox?site=${encodeURIComponent(input.siteId)}`;
+  const lines = input.items.map((item) => `${clip(item.shopperLabel, 120)}: ${clip(item.summary, 200)}`);
+  const text = [t.heading(count), '', t.body, '', ...lines.map((line) => `- ${line}`), '', `${t.cta}: ${link}`, '', t.footer].join('\n');
+  const html = `<!doctype html><html dir="${dir}"><body style="font-family:-apple-system,Segoe UI,sans-serif;color:#1c1917;line-height:1.5">
+<h2 style="margin:0 0 12px;font-size:18px">${escapeHtml(t.heading(count))}</h2>
+<p style="margin:0 0 16px">${escapeHtml(t.body)}</p>
+<ul style="margin:0 0 20px;padding-inline-start:18px">
+${lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('\n')}
+</ul>
+<p style="margin:0 0 20px"><a href="${escapeHtml(link)}" style="background:#2a2826;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none">${escapeHtml(t.cta)}</a></p>
+<p style="margin:0;font-size:12px;color:#78716c">${escapeHtml(t.footer)}</p>
+</body></html>`;
+  return { subject: t.subject(clip(input.storeName, 120), count), html, text };
+}

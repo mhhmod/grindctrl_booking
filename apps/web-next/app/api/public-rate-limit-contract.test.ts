@@ -55,7 +55,7 @@ vi.mock('@/lib/try-on/service', () => ({ getJob: mocks.job }));
 vi.mock('@/lib/try-on/persistence', () => ({ loadAuthorizedDurableTryOnJob: mocks.durableJob }));
 
 import { POST as bootstrap } from './messenger/bootstrap/route';
-import { GET as sync } from './messenger/sync/route';
+import { GET as sync, POST as syncPost } from './messenger/sync/route';
 import { POST as contact } from './messenger/contact/route';
 import { POST as event, OPTIONS as eventOptions } from './messenger/event/route';
 import { POST as feedback } from './messenger/feedback/route';
@@ -73,6 +73,7 @@ const ORIGIN = 'https://store.example.com';
 const routes = [
   { name: 'messenger bootstrap', run: bootstrap, prefix: 'mb:' },
   { name: 'messenger sync', run: sync, prefix: 'my:' },
+  { name: 'messenger sync (POST)', run: syncPost, prefix: 'my:' },
   { name: 'messenger contact', run: contact, prefix: 'mc:' },
   { name: 'messenger event', run: event, prefix: 'me:', cors: ORIGIN },
   { name: 'messenger feedback', run: feedback, prefix: 'mf:' },

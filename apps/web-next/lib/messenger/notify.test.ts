@@ -24,8 +24,18 @@ const mocks = vi.hoisted(() => {
      *  ignoring them, so a deleted filter makes the relevant test fail. */
     membersRows: { current: [] as Array<Record<string, unknown>> },
     eventsRows: { current: [] as Array<Record<string, unknown>> },
+    conversationRows: { current: [] as Array<Record<string, unknown>> },
+    sendMail: vi.fn(async (_mail: Record<string, unknown>) => ({})),
+    transportReady: { current: false },
+    redisSet: vi.fn(async (..._args: unknown[]): Promise<'OK' | null> => 'OK'),
+    redisDel: vi.fn(async (..._args: unknown[]) => 1),
+    claimAiBudgetAlert: vi.fn(async () => true),
+    releaseAiBudgetAlert: vi.fn(async () => {}),
   };
 });
+
+vi.mock('@/lib/paste/redis', () => ({ pasteRedis: () => ({ set: mocks.redisSet, del: mocks.redisDel }) }));
+vi.mock('./ai-budget', () => ({ claimAiBudgetAlert: mocks.claimAiBudgetAlert, releaseAiBudgetAlert: mocks.releaseAiBudgetAlert }));
 
 vi.mock('@/lib/messenger/conversations', () => ({
   claimHandoffNotification: mocks.claimHandoffNotification,
@@ -42,6 +52,8 @@ vi.mock('@/lib/email/handoff-notification-sender', () => ({
 
 vi.mock('@/lib/email/transport', () => ({
   hasSmtpConfigured: mocks.hasSmtpConfigured,
+  getSmtpTransport: () => (mocks.transportReady.current ? { sendMail: mocks.sendMail } : null),
+  getSmtpFrom: () => (mocks.transportReady.current ? { name: 'GrindCTRL', address: 'alerts@grindctrl.cloud' } : null),
 }));
 
 /* PostgREST-shaped builder that actually filters the fixture rows by the
@@ -51,10 +63,20 @@ vi.mock('@/lib/email/transport', () => ({
 vi.mock('@/lib/messenger/db', () => ({
   getMessengerServiceClient: () => ({
     from: (table: string) => {
-      const source = table === 'workspace_members' ? mocks.membersRows : mocks.eventsRows;
+      const source = table === 'workspace_members' ? mocks.membersRows
+        : table === 'widget_conversations' ? mocks.conversationRows : mocks.eventsRows;
       let rows = source.current;
       const builder = {
         select: () => builder,
+        is: (col: string, val: unknown) => {
+          rows = rows.filter((r) => (r[col] ?? null) === val);
+          return builder;
+        },
+        order: () => builder,
+        limit: (count: number) => {
+          rows = rows.slice(0, count);
+          return builder;
+        },
         eq: (col: string, val: unknown) => {
           rows = rows.filter((r) => r[col] === val);
           return builder;
@@ -75,7 +97,7 @@ vi.mock('@/lib/messenger/db', () => ({
   }),
 }));
 
-import { notifyHandoff, type NotifyHandoffInput } from './notify';
+import { notifyAiBudgetReached, notifyHandoff, type NotifyHandoffInput } from './notify';
 
 function makeInput(overrides?: {
   notifications?: Partial<MessengerNotifications>;
@@ -120,6 +142,13 @@ beforeEach(() => {
   mocks.hasSmtpConfigured.mockReturnValue(true);
   mocks.membersRows.current = [];
   mocks.eventsRows.current = [];
+  mocks.conversationRows.current = [];
+  mocks.transportReady.current = false;
+  mocks.sendMail.mockResolvedValue({});
+  mocks.redisSet.mockResolvedValue('OK');
+  mocks.redisDel.mockResolvedValue(1);
+  mocks.claimAiBudgetAlert.mockResolvedValue(true);
+  mocks.releaseAiBudgetAlert.mockResolvedValue(undefined);
   mocks.getConversationForSite.mockResolvedValue({ id: 'conv-1', metadata: {} });
   mocks.patchConversationMetadata.mockResolvedValue({});
 });
@@ -358,5 +387,99 @@ describe('notifyHandoff outcome', () => {
 
     expect(await notifyHandoff(makeInput())).toMatchObject({ status: 'sent' });
     expect(mocks.patchConversationMetadata).not.toHaveBeenCalled();
+  });
+});
+
+describe('G13: a throttled site gets one digest, never a dropped alert', () => {
+  const overCap = () => {
+    mocks.eventsRows.current = Array.from({ length: 10 }, () => ({
+      widget_site_id: 'site-1', event_name: 'handoff_notified', created_at: new Date().toISOString(),
+    }));
+  };
+  const waiting = (id: string, alert: Record<string, unknown> | null = { status: 'pending', reason: 'throttled', channels: [], at: '2026-10-16T10:00:00Z', attempts: 1 }) => ({
+    id, widget_site_id: 'site-1', status: 'handoff_requested', handoff_notified_at: null,
+    handoff_reason: 'shopper_requested_human', handoff_summary: `summary ${id}`, metadata: alert ? { handoff_alert: alert } : {},
+  });
+
+  it('sends the waiting handoffs together in one email and marks each one sent', async () => {
+    overCap();
+    mocks.transportReady.current = true;
+    mocks.conversationRows.current = [waiting('conv-1', null), waiting('conv-2'), waiting('conv-3'),
+      waiting('conv-4', { status: 'pending', reason: 'after_hours', channels: [], at: '2026-10-16T10:00:00Z', attempts: 0, dueAt: '2999-01-01T00:00:00Z' })];
+
+    const outcome = await notifyHandoff(makeInput());
+
+    expect(outcome).toMatchObject({ status: 'sent', channels: ['email'] });
+    expect(mocks.sendHandoffNotification).not.toHaveBeenCalled();
+    expect(mocks.sendMail).toHaveBeenCalledOnce();
+    const mail = mocks.sendMail.mock.calls[0][0] as { subject: string; text: string; bcc: string[] };
+    expect(mail.subject).toContain('3 shoppers are waiting');
+    expect(mail.text).toContain('summary conv-2');
+    expect(mail.text).not.toContain('summary conv-4');
+    expect(mail.bcc).toEqual(['owner@merchant.com']);
+    expect(mocks.claimHandoffNotification.mock.calls.map((call) => (call as unknown[])[0]).sort()).toEqual(['conv-1', 'conv-2', 'conv-3']);
+    expect(mocks.recordEvent).toHaveBeenCalledWith(expect.objectContaining({ eventName: 'handoff_digest_sent', payload: { count: 3 } }));
+  });
+
+  it('keeps the alert pending for the next window when this one already had its digest', async () => {
+    overCap();
+    mocks.transportReady.current = true;
+    mocks.redisSet.mockResolvedValue(null);
+
+    expect(await notifyHandoff(makeInput())).toMatchObject({ status: 'pending', reason: 'throttled', digest: true });
+    expect(mocks.sendMail).not.toHaveBeenCalled();
+    expect(mocks.claimHandoffNotification).not.toHaveBeenCalled();
+  });
+
+  it('releases every claim and the window when the digest cannot be sent', async () => {
+    overCap();
+    mocks.transportReady.current = true;
+    mocks.conversationRows.current = [waiting('conv-1', null), waiting('conv-2')];
+    mocks.sendMail.mockRejectedValue(new Error('smtp down'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(await notifyHandoff(makeInput())).toMatchObject({ status: 'pending', reason: 'throttled' });
+    expect(mocks.releaseHandoffNotification.mock.calls.map((call) => (call as unknown[])[0]).sort()).toEqual(['conv-1', 'conv-2']);
+    expect(mocks.redisDel).toHaveBeenCalledOnce();
+  });
+
+  it('sends a visitor-throttled alert in a digest even while the site is under its cap', async () => {
+    mocks.transportReady.current = true;
+    const alert = { status: 'pending', reason: 'throttled', channels: [], at: '2026-10-16T10:00:00Z', attempts: 1, digest: true };
+    mocks.conversationRows.current = [waiting('conv-1', alert)];
+
+    const outcome = await notifyHandoff(makeInput({ metadata: { handoff_alert: alert } }));
+
+    expect(outcome.status).toBe('sent');
+    expect(mocks.sendHandoffNotification).not.toHaveBeenCalled();
+    expect(mocks.sendMail).toHaveBeenCalledOnce();
+  });
+});
+
+describe('G08: the daily AI limit alert', () => {
+  it('emails the merchant once and records it', async () => {
+    mocks.transportReady.current = true;
+    await notifyAiBudgetReached(makeInput().site);
+    expect(mocks.sendMail).toHaveBeenCalledOnce();
+    const mail = mocks.sendMail.mock.calls[0][0] as { subject: string; bcc: string[]; headers: Record<string, string> };
+    expect(mail.subject).toContain('reached today');
+    expect(mail.bcc).toEqual(['owner@merchant.com']);
+    expect(mail.headers['X-GrindCTRL-Notification']).toBe('store-chat-ai-limit');
+    expect(mocks.recordEvent).toHaveBeenCalledWith(expect.objectContaining({ eventName: 'ai_budget_alert_sent' }));
+  });
+
+  it('sends nothing when today’s alert was already claimed', async () => {
+    mocks.transportReady.current = true;
+    mocks.claimAiBudgetAlert.mockResolvedValue(false);
+    await notifyAiBudgetReached(makeInput().site);
+    expect(mocks.sendMail).not.toHaveBeenCalled();
+  });
+
+  it('gives the claim back when the email fails, so a later turn tries again, and never throws', async () => {
+    mocks.transportReady.current = true;
+    mocks.sendMail.mockRejectedValue(new Error('smtp down'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    await expect(notifyAiBudgetReached(makeInput().site)).resolves.toBeUndefined();
+    expect(mocks.releaseAiBudgetAlert).toHaveBeenCalledWith('site-1');
   });
 });

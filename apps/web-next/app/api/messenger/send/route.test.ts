@@ -38,6 +38,8 @@ const mocks = vi.hoisted(() => ({
   loadActiveWooConnection: vi.fn(),
   callWooPlugin: vi.fn(),
   verifyWooIdentityToken: vi.fn(),
+  claimAiTurnBudget: vi.fn(),
+  notifyAiBudgetReached: vi.fn(),
 }));
 
 vi.hoisted(() => {
@@ -101,6 +103,13 @@ vi.mock('@/lib/woo/identity-token', async (importOriginal) => {
   return { ...actual, verifyWooIdentityToken: mocks.verifyWooIdentityToken };
 });
 vi.mock('@/lib/messenger/escalate', () => ({ escalateAndNotify: mocks.escalateAndNotify }));
+vi.mock('@/lib/messenger/ai-budget', () => ({ claimAiTurnBudget: mocks.claimAiTurnBudget }));
+// An installed app: a saved identity can only fail on the missing fresh proof.
+vi.mock('@/lib/shopify/tokens', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/shopify/tokens')>()),
+  isActiveShopifyInstallation: async () => true,
+}));
+vi.mock('@/lib/messenger/notify', () => ({ notifyAiBudgetReached: mocks.notifyAiBudgetReached }));
 vi.mock('@/lib/messenger/questions', () => ({ recordUnansweredQuestion: mocks.recordUnansweredQuestion }));
 vi.mock('@/lib/flags/store-flags', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/flags/store-flags')>();
@@ -168,6 +177,9 @@ function makeRequest(body: Record<string, unknown>) {
   });
 }
 
+/** Every escalation names its shopper, for the per-visitor alert caps (G13). */
+const VISITOR_OPTION = { visitor: { id: 'v1', network: '203.0.113.5' } };
+
 const validBody = {
   key: 'gc_test_key',
   origin: 'https://store.example.com',
@@ -198,6 +210,8 @@ beforeEach(() => {
   mocks.patchConversationMetadata.mockResolvedValue({});
   mocks.claimAiTurnWhileWaiting.mockResolvedValue(true);
   mocks.recordUnansweredQuestion.mockResolvedValue('stored');
+  mocks.claimAiTurnBudget.mockResolvedValue('allowed');
+  mocks.notifyAiBudgetReached.mockResolvedValue(undefined);
 });
 
 const SENT_ALERT = { status: 'sent', reason: null, channels: ['email'], at: '2026-10-16T12:00:00.000Z', attempts: 1 };
@@ -351,7 +365,7 @@ describe('POST /api/messenger/send', () => {
       'shopper_requested_human',
       expect.stringContaining('talk to someone'),
       expect.objectContaining({ id: SITE.id, workspace_id: SITE.workspace_id }),
-      {},
+      VISITOR_OPTION,
     );
     expect(mocks.generateAssistantReply).not.toHaveBeenCalled();
   });
@@ -632,7 +646,7 @@ describe('item 7: after hours with n23_after_hours on', () => {
       'shopper_requested_human',
       expect.any(String),
       expect.anything(),
-      { deferUntil: '2027-01-15T08:00:00.000Z' },
+      { deferUntil: '2027-01-15T08:00:00.000Z', ...VISITOR_OPTION },
     );
     expect(data.alert).toMatchObject({ status: 'pending', afterHours: true });
     expect(data.team).toMatchObject({ open: false, opensAt: '10:00', timezone: 'Africa/Cairo' });
@@ -686,7 +700,7 @@ describe('item 8: when the assistant is down', () => {
     expect(data.userMessage.clientKey).toBe(validBody.clientKey);
     expect(data.reply).toMatchObject({ role: 'system', content: 'Sent to the team.' });
     expect(data.alert).toEqual({ status: 'sent', channels: ['email'], at: SENT_ALERT.at, afterHours: false });
-    expect(mocks.escalateAndNotify).toHaveBeenCalledWith(CONVERSATION.id, 'assistant_unavailable', expect.any(String), expect.anything(), {});
+    expect(mocks.escalateAndNotify).toHaveBeenCalledWith(CONVERSATION.id, 'assistant_unavailable', expect.any(String), expect.anything(), VISITOR_OPTION);
     expect(mocks.appendMessage.mock.invocationCallOrder[0]).toBeLessThan(mocks.generateAssistantReply.mock.invocationCallOrder[0]);
   });
 
@@ -825,7 +839,7 @@ describe('item 10: the store\'s handoff rules with n25_handoff_rules on', () => 
       'rule_big_order',
       'Big order: "3ayez 20 7etta men el hoodie"',
       expect.anything(),
-      {},
+      VISITOR_OPTION,
     );
     expect(data.status).toBe('handoff_requested');
     expect(data.alert.status).toBe('sent');
@@ -1135,5 +1149,106 @@ describe('POST /api/messenger/send — WooCommerce order lookup', () => {
     const data = await res.json();
     expect(JSON.stringify(data)).not.toContain('unavailable"');
     expect(mocks.phraseOrderAnswer).not.toHaveBeenCalled();
+  });
+});
+
+describe('G08: the daily AI budget', () => {
+  beforeEach(() => {
+    echoTurn();
+    mocks.getConversationForVisitor.mockResolvedValue({ ...CONVERSATION, metadata: {} });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  it('answers through the team, not the model, once the store used its turns, alerting the merchant', async () => {
+    mocks.claimAiTurnBudget.mockResolvedValue('site_exhausted');
+    mocks.escalateAndNotify.mockResolvedValue(escalation());
+
+    const data = await (await POST(makeRequest(validBody))).json();
+
+    expect(mocks.generateAssistantReply).not.toHaveBeenCalled();
+    expect(mocks.claimAiTurnBudget).toHaveBeenCalledWith('site-1');
+    expect(mocks.escalateAndNotify).toHaveBeenCalledWith(CONVERSATION.id, 'assistant_unavailable', expect.stringContaining('daily limit'), expect.anything(), VISITOR_OPTION);
+    expect(data).toMatchObject({ saved: true, assistant: 'unavailable', status: 'handoff_requested', reply: { content: 'Sent to the team.' } });
+    expect(mocks.notifyAiBudgetReached).toHaveBeenCalledWith(expect.objectContaining({ id: 'site-1' }));
+    expect(mocks.recordEvent).toHaveBeenCalledWith(expect.objectContaining({ eventName: 'ai_budget_reached', payload: { scope: 'site_exhausted' } }));
+  });
+
+  it.each(['global_exhausted', 'unavailable'] as const)('fails closed on %s without calling the model or alerting one merchant', async (budget) => {
+    mocks.claimAiTurnBudget.mockResolvedValue(budget);
+    mocks.escalateAndNotify.mockResolvedValue(escalation());
+
+    const data = await (await POST(makeRequest(validBody))).json();
+
+    expect(mocks.generateAssistantReply).not.toHaveBeenCalled();
+    expect(mocks.notifyAiBudgetReached).not.toHaveBeenCalled();
+    expect(data).toMatchObject({ saved: true, assistant: 'unavailable' });
+  });
+
+  it('keeps the message saved when the store does not hand off', async () => {
+    mocks.loadPublicSite.mockResolvedValue({ ...SITE, config: { ...SITE.config, ai: { ...SITE.config.ai, escalationEnabled: false } } });
+    mocks.claimAiTurnBudget.mockResolvedValue('site_exhausted');
+
+    const data = await (await POST(makeRequest(validBody))).json();
+
+    expect(mocks.generateAssistantReply).not.toHaveBeenCalled();
+    expect(mocks.escalateAndNotify).not.toHaveBeenCalled();
+    expect(data).toMatchObject({ reply: null, saved: true, assistant: 'unavailable', handoffAvailable: false });
+  });
+
+  it('does not count turns that never reach the model', async () => {
+    mocks.detectExplicitHandoffRequest.mockReturnValue(true);
+    mocks.escalateAndNotify.mockResolvedValue(escalation());
+    await POST(makeRequest(validBody));
+    expect(mocks.claimAiTurnBudget).not.toHaveBeenCalled();
+  });
+});
+
+describe('G14: the chat lookup spends the per-order-number budget too', () => {
+  it('counts the normalized order number on the chat path', async () => {
+    mocks.loadPublicSite.mockResolvedValue(ORDER_SITE);
+    stubTurn(ACTION({ action: 'lookup_order', order_number: '#1234', email: 'a@b.com' }));
+    mocks.orderLimit.mockResolvedValue({ success: true, reset: Date.now() + 60_000 });
+    mocks.lookupOrder.mockResolvedValue({ ok: false, reason: 'not_found' });
+
+    await POST(makeRequest(validBody));
+
+    expect(mocks.orderLimit.mock.calls.map((call) => (call as unknown[])[0])).toEqual(['site-1:203.0.113.5', 'site-1:1234']);
+  });
+
+  it('refuses the lookup, with the usual denial, once that number is spent', async () => {
+    mocks.loadPublicSite.mockResolvedValue(ORDER_SITE);
+    stubTurn(ACTION({ action: 'lookup_order', order_number: '1234', email: 'a@b.com' }));
+    mocks.orderLimit
+      .mockResolvedValueOnce({ success: true, reset: Date.now() + 60_000 })
+      .mockResolvedValueOnce({ success: false, reset: Date.now() + 60_000 });
+
+    const data = await (await POST(makeRequest(validBody))).json();
+
+    expect(mocks.lookupOrder).not.toHaveBeenCalled();
+    expect(data.reply.content).not.toMatch(/limit|number/i);
+  });
+
+  it('keys an IPv6 shopper by the /64', async () => {
+    mocks.clientIp.mockReturnValue('2001:db8:1:2:3:4:5:6');
+    await POST(makeRequest(validBody));
+    expect(mocks.publicApiRatelimit.limit).toHaveBeenCalledWith('ms:2001:db8:1:2::/64');
+  });
+});
+
+describe('G09: a saved Shopify identity needs fresh proof', () => {
+  it('looks up as a guest when the conversation was verified before but this request carries no token', async () => {
+    mocks.loadPublicSite.mockResolvedValue(ORDER_SITE);
+    mocks.getConversationForVisitor.mockResolvedValue({
+      ...CONVERSATION,
+      metadata: { identity: { customer_id: '42', app_client_id: 'test-only-client-id', name: 'Sara', verified: true } },
+    });
+    stubTurn(ACTION({ action: 'lookup_order', order_number: '1234', email: 'a@b.com' }));
+    mocks.orderLimit.mockResolvedValue({ success: true, reset: Date.now() + 60_000 });
+    mocks.lookupOrder.mockResolvedValue({ ok: false, reason: 'not_found' });
+
+    await POST(makeRequest(validBody));
+
+    expect(mocks.lookupOrder.mock.calls[0][0].verifiedCustomerId).toBeNull();
+    expect(mocks.generateAssistantReply.mock.calls[0][0].prompt).toContain('NOT identity-verified');
   });
 });

@@ -10,13 +10,18 @@ import {
   releaseHandoffNotification,
 } from './conversations';
 import {
+  alertIsDue,
   readHandoffAlert,
   type HandoffAlert,
   type HandoffAlertReason,
   type HandoffAlertStatus,
 } from './handoff-alert';
 import { sendHandoffNotification } from '@/lib/email/handoff-notification-sender';
-import { hasSmtpConfigured } from '@/lib/email/transport';
+import { getSmtpFrom, getSmtpTransport, hasSmtpConfigured } from '@/lib/email/transport';
+import { buildAiBudgetNotification } from '@/lib/email/ai-budget-notification';
+import { buildHandoffDigest } from '@/lib/email/handoff-notification';
+import { pasteRedis } from '@/lib/paste/redis';
+import { claimAiBudgetAlert, releaseAiBudgetAlert } from './ai-budget';
 import { isPlaceholderEmail } from './emails';
 import { MAX_RECIPIENTS } from './config';
 import type { MessengerLocale, MessengerNotifications } from './types';
@@ -99,9 +104,13 @@ async function recordAlertOutcome(
   conversationId: string,
   status: HandoffAlertStatus,
   reason: HandoffAlertReason | null,
+  digest = false,
 ): Promise<HandoffAlert> {
   const at = new Date().toISOString();
-  let alert: HandoffAlert = { status, reason, channels: status === 'sent' ? ['email'] : [], at, attempts: 1 };
+  let alert: HandoffAlert = {
+    status, reason, channels: status === 'sent' ? ['email'] : [], at, attempts: 1,
+    ...(digest && status === 'pending' ? { digest: true } : {}),
+  };
   try {
     const current = await getConversationForSite(conversationId, siteId);
     if (!current) return alert;
@@ -112,6 +121,120 @@ async function recordAlertOutcome(
     console.error('[messenger] alert outcome not recorded:', error instanceof Error ? error.message : error);
   }
   return alert;
+}
+
+const DIGEST_WINDOW_MS = 15 * 60 * 1000;
+const DIGEST_MAX_ITEMS = 25;
+
+/** One email for every handoff of this site still waiting on a throttled
+ *  alert, the given conversation included. At most one per site per
+ *  DIGEST_WINDOW_MS, claimed in Redis; no claim (or no Redis) means the
+ *  alerts stay pending for a later window, never lost. Each conversation in
+ *  the digest takes its once-per-handoff claim, so none is emailed again.
+ *  True when `conversationId` went out in this digest. */
+async function sendHandoffDigest(site: NotifyHandoffInput['site'], recipients: string[], conversationId: string): Promise<boolean> {
+  const transport = getSmtpTransport();
+  const from = getSmtpFrom();
+  if (!transport || !from) return false;
+  const windowKey = `gc-msgr-handoff-digest:${site.id}:${Math.floor(Date.now() / DIGEST_WINDOW_MS)}`;
+  let redis: ReturnType<typeof pasteRedis>;
+  try {
+    redis = pasteRedis();
+    if ((await redis.set(windowKey, '1', { nx: true, ex: Math.ceil(DIGEST_WINDOW_MS / 1000) })) !== 'OK') return false;
+  } catch {
+    return false;
+  }
+
+  const supabase = getMessengerServiceClient();
+  const waiting = await supabase
+    .from('widget_conversations')
+    .select('id, handoff_reason, handoff_summary, metadata')
+    .eq('widget_site_id', site.id)
+    .eq('status', 'handoff_requested')
+    .is('handoff_notified_at', null)
+    .order('started_at', { ascending: true })
+    .limit(DIGEST_MAX_ITEMS * 2);
+  type Row = { id: string; handoff_reason: string | null; handoff_summary: string | null; metadata: Record<string, unknown> | null };
+  const now = Date.now();
+  const rows = ((waiting.error ? [] : waiting.data ?? []) as Row[]).filter((row) => {
+    if (row.id === conversationId) return true;
+    const alert = readHandoffAlert(row.metadata);
+    return alert?.reason === 'throttled' && alertIsDue(alert, now);
+  });
+  if (!rows.some((row) => row.id === conversationId)) {
+    const current = await getConversationForSite(conversationId, site.id).catch(() => null);
+    if (current) rows.unshift(current as unknown as Row);
+  }
+
+  // A claim that errors is simply not in this digest; it stays pending.
+  const claimed: Row[] = [];
+  for (const row of rows.slice(0, DIGEST_MAX_ITEMS)) {
+    if (await claimHandoffNotification(row.id).catch(() => false)) claimed.push(row);
+  }
+  const release = async () => {
+    await Promise.all(claimed.map((row) => releaseHandoffNotification(row.id).catch(() => {})));
+    await redis.del(windowKey).catch(() => {});
+  };
+  if (claimed.length === 0) {
+    await release();
+    return false;
+  }
+  const { subject, html, text } = buildHandoffDigest({
+    storeName: site.name,
+    siteId: site.id,
+    locale: site.locale,
+    items: claimed.map((row) => ({
+      shopperLabel: shopperLabel({ id: row.id, handoff_reason: row.handoff_reason, handoff_summary: row.handoff_summary, metadata: row.metadata ?? {} }, site.locale),
+      summary: row.handoff_summary || row.handoff_reason || '',
+    })),
+  });
+  try {
+    await transport.sendMail({
+      from, to: from.address, bcc: recipients, subject, html, text, textEncoding: 'base64',
+      headers: { 'X-GrindCTRL-Notification': 'store-chat-handoff-digest' },
+    });
+  } catch (error) {
+    console.error('[messenger] handoff digest failed:', error instanceof Error ? error.message : error);
+    await release();
+    return false;
+  }
+  await Promise.all(claimed.filter((row) => row.id !== conversationId).map((row) =>
+    recordAlertOutcome(site.id, row.id, 'sent', null)));
+  await recordEvent({ siteId: site.id, eventName: 'handoff_digest_sent', payload: { count: claimed.length } }).catch(() => {});
+  return claimed.some((row) => row.id === conversationId);
+}
+
+/** Tells the merchant, at most once a UTC day, that the assistant reached
+ *  the day's AI limit and new questions go to the team. Same recipients and
+ *  mail transport as the handoff alert. Never throws. */
+export async function notifyAiBudgetReached(site: NotifyHandoffInput['site']): Promise<void> {
+  try {
+    if (!hasSmtpConfigured()) return;
+    if (!(await claimAiBudgetAlert(site.id))) return;
+    const recipients =
+      site.notifications.recipients.length > 0
+        ? site.notifications.recipients
+        : await resolveRecipients(site.workspace_id);
+    const transport = getSmtpTransport();
+    const from = getSmtpFrom();
+    if (recipients.length === 0 || !transport || !from) {
+      await releaseAiBudgetAlert(site.id);
+      return;
+    }
+    const { subject, html, text } = buildAiBudgetNotification({ storeName: site.name, siteId: site.id, locale: site.locale });
+    try {
+      await transport.sendMail({
+        from, to: from.address, bcc: recipients, subject, html, text, textEncoding: 'base64',
+        headers: { 'X-GrindCTRL-Notification': 'store-chat-ai-limit' },
+      });
+    } catch (error) {
+      await releaseAiBudgetAlert(site.id);
+      throw error;
+    }
+    await recordEvent({ siteId: site.id, eventName: 'ai_budget_alert_sent' }).catch(() => {});
+  } catch (error) {
+    console.error('[messenger] ai budget alert failed:', error instanceof Error ? error.message : error);
+  }
 }
 
 /** Notifies the merchant that a conversation needs a human, and answers
@@ -164,13 +287,18 @@ export async function notifyHandoff(input: NotifyHandoffInput): Promise<HandoffA
       return await outcome('none', 'no_recipient');
     }
 
-    if (await overHourlyCap(site.id)) {
+    // Over the site's hourly cap, or throttled for its visitor: never an
+    // email of its own, and never dropped. It goes out in the site's digest,
+    // at most one per DIGEST_WINDOW_MS, or waits for the retry worker.
+    const digestOnly = readHandoffAlert(conversation.metadata)?.digest === true;
+    if (digestOnly || (await overHourlyCap(site.id))) {
+      if (await sendHandoffDigest(site, recipients, conversation.id)) return await outcome('sent', null);
       await recordEvent({
         siteId: site.id,
         conversationId: conversation.id,
         eventName: 'handoff_notify_throttled',
       });
-      return await outcome('pending', 'throttled');
+      return await recordAlertOutcome(site.id, conversation.id, 'pending', 'throttled', true);
     }
 
     const claimed = await claimHandoffNotification(conversation.id);

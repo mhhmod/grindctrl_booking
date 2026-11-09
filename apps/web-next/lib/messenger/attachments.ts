@@ -62,17 +62,25 @@ export async function checkAttachmentQuota(conversationId: string): Promise<Atta
   return recent >= ATTACHMENT_BURST_LIMIT ? 'burst' : 'ok';
 }
 
-export async function triageBudgetRemaining(siteId: string): Promise<boolean> {
+/** Triaged photos one conversation may have in a day, so one visitor cannot
+ *  spend the store's whole daily triage budget. Past it, photos still reach
+ *  the team, untriaged. */
+export const TRIAGE_DAILY_LIMIT_PER_CONVERSATION = 3;
+
+export async function triageBudgetRemaining(siteId: string, conversationId: string): Promise<boolean> {
   const supabase = getMessengerServiceClient();
   const since = new Date(Date.now() - 86_400_000).toISOString();
-  const res = await supabase
+  const triaged = () => supabase
     .from('messenger_attachments')
     .select('id', { count: 'exact', head: true })
-    .eq('widget_site_id', siteId)
     .gte('created_at', since)
     .not('triage', 'is', null);
-  if (res.error) return false; // Unknown budget is treated as spent.
-  return (res.count ?? 0) < TRIAGE_DAILY_LIMIT_PER_SITE;
+  const conversation = await triaged().eq('conversation_id', conversationId);
+  // Unknown budget is treated as spent.
+  if (conversation.error || (conversation.count ?? 0) >= TRIAGE_DAILY_LIMIT_PER_CONVERSATION) return false;
+  const site = await triaged().eq('widget_site_id', siteId);
+  if (site.error) return false;
+  return (site.count ?? 0) < TRIAGE_DAILY_LIMIT_PER_SITE;
 }
 
 /** Writes the object, then the row. Site id is the first path segment, so a
