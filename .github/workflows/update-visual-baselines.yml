@@ -19,7 +19,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      - name: Refuse the default branch
+        # Baseline commits go to a feature branch and reach main through a
+        # reviewed pull request, never directly.
+        if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        run: |
+          echo "Dispatch this on a feature branch, not the default branch." >&2
+          exit 1
+
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # npm ci, docker build and Playwright run third-party code; none of
+          # it gets the write token. Only the push step below receives it.
+          persist-credentials: false
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -84,4 +96,13 @@ jobs:
           diffed PNGs before merging/deploying anything that depended on this run —
           this commit only proves the new render is internally consistent, not that
           it is correct."
-          git push origin HEAD:${{ github.ref }}
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+        id: commit
+
+      - name: Push the baseline commit
+        if: steps.commit.outputs.committed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_REF: ${{ github.ref }}
+          REPO: ${{ github.repository }}
+        run: git push "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" "HEAD:${TARGET_REF}"
