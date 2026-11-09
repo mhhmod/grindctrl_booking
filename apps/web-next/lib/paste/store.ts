@@ -2,8 +2,11 @@ import 'server-only';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { normalizeStorefrontDomain, newVerificationToken, txtRecordFor, verifyDomainTxt } from '@/lib/messenger/domains';
 import { apexDomain, registrableDomain } from '@/lib/woo/free-plan';
-import { PasteError, type PasteConnection, type PasteDomain, type PastePlatform, type PasteShopCheckOutcome, type PasteTrust } from './types';
-import type { StorefrontEvidence } from './storefront-scan';
+import {
+  PasteError, type PasteConnection, type PasteDomain, type PasteDomainCheckOutcome, type PasteDomainVerificationReason, type PastePlatform,
+  type PasteShopCheckOutcome, type PasteTrust,
+} from './types';
+import type { DomainSnippetEvidence, StorefrontEvidence } from './storefront-scan';
 import { isDetectedPlatform, type DetectedPlatform } from './platform-detect';
 
 /** A connection's signed shop. Merchants cannot add it as a domain row;
@@ -93,12 +96,37 @@ export async function enablePasteInstall(siteId: string, platform: PastePlatform
 type DomainRow = {
   id: string; domain: string; verification_status: string; verification_token: string;
   first_seen_at: string | null; last_seen_at: string | null;
+  /** Absent before 20261109_paste_domain_verification.sql: unverified. */
+  paste_verified_at?: string | null; paste_check_outcome?: string | null; paste_checked_at?: string | null;
 };
 
+const DOMAIN_CHECK_OUTCOMES: readonly PasteDomainCheckOutcome[] = ['verified', 'not_found', 'wrong_site', 'unreachable'];
+
+/** Why a domain is not verified yet; null once it is. */
+export function domainVerificationReason(domain: Pick<PasteDomain, 'state' | 'domainVerified' | 'check'>): PasteDomainVerificationReason | null {
+  if (domain.state === 'disputed') return 'proven_elsewhere';
+  if (domain.state === 'claimed') return 'held_elsewhere';
+  if (domain.domainVerified) return null;
+  switch (domain.check?.outcome) {
+    case 'not_found': return 'code_not_found';
+    case 'wrong_site': return 'wrong_site';
+    case 'unreachable': return 'unreachable';
+    default: return 'awaiting_code';
+  }
+}
+
 function view(row: DomainRow): PasteDomain {
+  const verifiedAt = row.paste_verified_at ?? null;
+  const outcome = verifiedAt ? 'verified' : DOMAIN_CHECK_OUTCOMES.find((value) => value === row.paste_check_outcome) ?? null;
+  const checkedAt = verifiedAt ? row.paste_checked_at ?? verifiedAt : row.paste_checked_at ?? null;
+  const state = row.verification_status === 'trusted' ? 'trusted' : row.verification_status === 'disputed' ? 'disputed' : 'claimed';
+  const domainVerified = state === 'trusted' && verifiedAt !== null;
+  const check = outcome && checkedAt ? { outcome, checkedAt } : null;
   return {
-    id: row.id, domain: row.domain,
-    state: row.verification_status === 'trusted' ? 'trusted' : row.verification_status === 'disputed' ? 'disputed' : 'claimed',
+    id: row.id, domain: row.domain, state, domainVerified,
+    verifiedAt: state === 'trusted' ? verifiedAt : null,
+    verificationReason: domainVerificationReason({ state, domainVerified, check }),
+    check,
     firstSeenAt: row.first_seen_at, lastSeenAt: row.last_seen_at,
     proof: (({ name, value }) => ({ txtName: name, txtValue: value,
       meta: { name: 'grindctrl-verification' as const, content: row.verification_token } }))(txtRecordFor(row.domain, row.verification_token)),
@@ -106,15 +134,26 @@ function view(row: DomainRow): PasteDomain {
 }
 
 const DOMAIN_COLUMNS = 'id, domain, verification_status, verification_token, first_seen_at, last_seen_at';
+const VERIFICATION_COLUMNS = 'paste_verified_at, paste_check_outcome, paste_checked_at';
+
+/** Only the verification columns themselves, like platformColumnMissing:
+ *  any other schema error is an outage and must not read as "unverified". */
+function verificationColumnMissing(error: { code?: string | null; message?: string | null }): boolean {
+  return (error.code === '42703' || error.code === 'PGRST204') && /\bpaste_(?:verified_at|check_outcome|checked_at)\b/.test(error.message ?? '');
+}
 
 export async function listPasteDomains(siteId: string): Promise<PasteDomain[]> {
-  const rows = checked(await getMessengerServiceClient().from('widget_domains').select(DOMAIN_COLUMNS)
+  const read = (columns: string) => getMessengerServiceClient().from('widget_domains').select(columns)
     .eq('widget_site_id', siteId).in('verification_method', ['paste_trusted', 'paste_dns_txt', 'paste_disputed'])
-    .neq('verification_status', 'disabled').order('created_at', { ascending: true })) as DomainRow[] | null;
+    .neq('verification_status', 'disabled').order('created_at', { ascending: true });
+  let result = await read(`${DOMAIN_COLUMNS}, ${VERIFICATION_COLUMNS}`);
+  // Before its migration every domain reads as unverified (fail closed).
+  if (result.error && verificationColumnMissing(result.error)) result = await read(DOMAIN_COLUMNS);
+  const rows = checked(result) as unknown as DomainRow[] | null;
   return [...new Map((rows ?? []).map((row) => [normalizePasteDomain(row.domain), view(row)])).values()];
 }
 
-async function domainOperation(siteId: string, operation: 'add' | 'remove' | 'prove', input: {
+async function domainOperation(siteId: string, operation: 'add' | 'remove' | 'prove' | 'verify', input: {
   domain?: string; domainId?: string; token?: string;
 }): Promise<DomainRow | null> {
   const result = checked(await getMessengerServiceClient().rpc('paste_domain_operation', {
@@ -163,6 +202,42 @@ export async function provePasteDomainMeta(siteId: string, domainId: string): Pr
   const row = await domainOperation(siteId, 'prove', { domainId, token: own.proof.meta.content });
   if (!row) throw new PasteError('unavailable');
   return view(row);
+}
+
+/** Takes the evidence only the snippet check produces (this site's own
+ *  snippet found on the domain's home page by our server), so nothing a
+ *  browser sends can reach it. Transfers the host like a DNS proof. */
+export async function verifyPasteDomain(siteId: string, evidence: DomainSnippetEvidence): Promise<PasteDomain> {
+  if (evidence.siteId !== siteId) throw new PasteError('proof_failed');
+  const row = await domainOperation(siteId, 'verify', { domainId: evidence.domainId });
+  if (!row) throw new PasteError('unavailable');
+  return view(row);
+}
+
+/** Stores a snippet check that did not find this site's code. */
+export async function recordPasteDomainCheck(siteId: string, domainId: string,
+  outcome: Exclude<PasteDomainCheckOutcome, 'verified'>): Promise<void> {
+  const data = checked(await getMessengerServiceClient().rpc('record_paste_domain_check', {
+    p_site: siteId, p_domain_id: domainId, p_outcome: outcome,
+  }));
+  if (data !== 'recorded' && data !== 'not_found') throw new PasteError('unavailable');
+}
+
+export type PasteGrantResult = 'granted' | 'apex_taken' | 'unverified' | 'ignored' | 'unavailable';
+
+/** The website free plan for a domain our server verified. The RPC checks
+ *  the verification again under the paste lock; an unverified domain never
+ *  claims a plan or apex history. */
+export async function grantPasteDomainPlan(siteId: string, domain: string): Promise<PasteGrantResult> {
+  const apex = apexDomain(domain);
+  if (!apex) return 'ignored';
+  try {
+    const { data, error } = await getMessengerServiceClient().rpc('grant_paste_domain_free_plan', {
+      p_site: siteId, p_domain: domain, p_apex: apex,
+    });
+    if (error) return schemaMissing(error) ? 'ignored' : 'unavailable';
+    return ['granted', 'apex_taken', 'unverified', 'ignored'].includes(data as string) ? data as PasteGrantResult : 'unavailable';
+  } catch { return 'unavailable'; }
 }
 
 export async function rotatePasteSecret(siteId: string): Promise<{ version: number; overlapUntil: string }> {
@@ -219,16 +294,20 @@ export async function finishPasteShopCheck(connection: PasteConnection, outcome:
   await shopRpc('finish_paste_shop_check', connection, ['recorded'] as const, { p_outcome: outcome });
 }
 
-export type PasteSignalResult = 'granted' | 'apex_taken' | 'recorded' | 'ignored' | 'unavailable';
+export type PasteSignalResult = 'granted' | 'apex_taken' | 'recorded' | 'unverified' | 'ignored' | 'unavailable';
 
 /** Only browser Origin / signed-origin-token authorized config/heartbeat
  * callers invoke this. Query-string origins never earn a signal. Existing
  * chat sites and absent migrations remain a no-op, not a new dependency.
- * A `.myshopify.com` host is submitted as its own apex; the RPC records it
- * only when it is this site's trusted connection shop. `signed` is set only
- * by the context route after a verified Liquid render: a Shopify paste store
- * earns its free plan from that alone, and an Origin-only signal is just
- * `recorded`. */
+ * An Origin header is client-chosen outside a browser, so it never earns a
+ * plan by itself: a domain row counts only once our server verified it
+ * (20261109_paste_domain_verification.sql), and an unverified one answers
+ * `unverified` with nothing recorded; the caller may then schedule a
+ * snippet check. A `.myshopify.com` host is submitted as its own apex; the
+ * RPC records it only when it is this site's proven connection shop.
+ * `signed` is set only by the context route after a verified Liquid render:
+ * a Shopify paste store earns its free plan from that alone, and an
+ * Origin-only signal is just `recorded`. */
 export async function recordPasteSignal(siteId: string, origin: string, options: { signed?: boolean } = {}): Promise<PasteSignalResult> {
   try {
     const url = new URL(origin);
@@ -242,20 +321,30 @@ export async function recordPasteSignal(siteId: string, origin: string, options:
       p_site: siteId, p_domain: domain, p_apex: apex, p_signed: options.signed === true,
     });
     if (error) return schemaMissing(error) ? 'ignored' : 'unavailable';
-    return ['granted', 'apex_taken', 'recorded', 'ignored'].includes(data as string) ? data as PasteSignalResult : 'unavailable';
+    return ['granted', 'apex_taken', 'recorded', 'unverified', 'ignored'].includes(data as string) ? data as PasteSignalResult : 'unavailable';
   } catch { return 'unavailable'; }
 }
 
-async function connectionHosts(connection: PasteConnection, shop: string | null): Promise<string[]> {
+async function connectionHosts(connection: PasteConnection, shop: string | null, verifiedOnly = false): Promise<string[]> {
   const domains = (await listPasteDomains(connection.widget_site_id))
-    .filter((row) => row.state === 'trusted').flatMap((row) => pasteDomainHosts(row.domain));
+    .filter((row) => row.state === 'trusted' && (!verifiedOnly || row.domainVerified)).flatMap((row) => pasteDomainHosts(row.domain));
   return shop ? [shop, ...domains] : domains;
 }
 
 /** Every host a trusted connection's code may run on: trusted domain rows
- *  (with their www alias) and, for Shopify, the signed shop host itself. */
+ *  (with their www alias) and, for Shopify, the signed shop host itself.
+ *  Store Chat loads on these at once, verified or not. */
 export async function pasteTrustedHosts(connection: PasteConnection): Promise<string[]> {
   return isPasteTrusted(connection) ? connectionHosts(connection, pasteShopHost(connection)) : [];
+}
+
+/** Where Try-On may run: the proven Shopify shop host and the trusted
+ *  domain rows our server verified. Call after the connection is trusted
+ *  (a pending shop proven in this request included). */
+export async function pasteTryOnHosts(connection: PasteConnection): Promise<string[]> {
+  const shop = connection.platform === 'shopify' && connection.shop_domain && SHOP_HOST_RE.test(connection.shop_domain)
+    ? connection.shop_domain : null;
+  return connection.status === 'disconnected' || connection.app_installed ? [] : connectionHosts(connection, shop, true);
 }
 
 /** Where a pending Shopify connection's proving render may arrive from: the

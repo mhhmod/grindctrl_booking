@@ -33,6 +33,9 @@ import type {
   TryOnPhotoSource,
 } from '@/lib/try-on/types';
 import { verifyPasteTurnstile } from '@/lib/paste/turnstile';
+import { claimPasteLook, PASTE_LOOK_WINDOW_SECONDS } from '@/lib/paste/look-allowance';
+import { getPasteConnection, pasteTryOnHosts } from '@/lib/paste/store';
+import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
 import { loadPublicSite, originAllowed } from '@/lib/messenger/public-api';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { isSiteStorefrontPlatform } from '@/lib/try-on/storefront-context';
@@ -41,6 +44,8 @@ const VALID_PHOTO_SOURCES: TryOnPhotoSource[] = ['upload', 'mock'];
 
 /* Base64 inflates bytes by ~4/3; allow the 8MB file cap plus data-URL header. */
 const MAX_PHOTO_DATA_LENGTH = Math.ceil((TRYON_FILE_CONFIG.maxSizeBytes * 4) / 3) + 64;
+/* The photo plus session/attempt tokens, garment URL and names. */
+const BODY_LIMIT_BYTES = MAX_PHOTO_DATA_LENGTH + 64 * 1024;
 const PHOTO_DATA_PREFIX_RE = /^data:image\/(jpeg|png|webp);base64,/;
 
 /* Register before reserving a look. Adapters without request-scoped after/
@@ -104,7 +109,17 @@ export async function POST(request: NextRequest) {
     const ip = clientIp(request) ?? 'unknown';
     await requireRateLimit(publicApiRatelimit, ip);
 
-    const body = (await request.json()) as {
+    const parsed = await readLimitedJson(request, BODY_LIMIT_BYTES);
+    if (!parsed.ok || !isJsonObject(parsed.value)) {
+      const message = !parsed.ok && parsed.status === 413
+        ? 'Photo must be a jpeg, png, or webp image up to 8 MB.'
+        : 'Invalid JSON payload.';
+      return NextResponse.json(
+        { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+        { status: !parsed.ok && parsed.status === 413 ? 413 : 400 },
+      );
+    }
+    const body = parsed.value as {
       sessionId?: string;
       attemptId?: unknown;
       productId?: string;
@@ -345,11 +360,36 @@ export async function POST(request: NextRequest) {
       if (!site || site.status === 'disabled' || !authorization.origin || !originAllowed(site, authorization.origin, { trusted: true })) {
         return NextResponse.json({ ok: false, error: 'origin_not_allowed' }, { status: 403 });
       }
+      // Contexts are minted only on hosts our server verified; a domain that
+      // was removed and re-added (unverified again) inside a live session
+      // must not keep spending looks.
+      const connection = await getPasteConnection(site.id);
+      const host = new URL(authorization.origin).hostname.toLowerCase();
+      if (!connection || !(await pasteTryOnHosts(connection)).includes(host)) {
+        return NextResponse.json({ ok: false, error: 'origin_not_allowed' }, { status: 403 });
+      }
       const challenge = await verifyPasteTurnstile({ token: body.turnstileToken, authorization, remoteIp: clientIp(request) });
       if (!challenge.ok) return NextResponse.json({ ok: false, code: challenge.code, error: challenge.code }, {
         status: challenge.code === 'turnstile_not_configured' || challenge.code === 'turnstile_unavailable' ? 503 : 403,
         headers: { 'Cache-Control': 'no-store' },
       });
+      // After the challenge, so a failed check never spends the allowance.
+      const allowance = await claimPasteLook(authorization);
+      if (allowance === 'exhausted') {
+        console.info('[try-on] paste look allowance reached', { code: 'paste_look_allowance', shop: authorization.shop });
+        // The embed already shows its localized "Try-On unavailable" state for this code.
+        const message = 'Try-on is unavailable right now.';
+        return NextResponse.json({ ok: false, code: 'TRYON_UNAVAILABLE', message, error: message } satisfies TryOnJobApiResponse, {
+          status: 429, headers: { 'Cache-Control': 'no-store', 'Retry-After': String(PASTE_LOOK_WINDOW_SECONDS) },
+        });
+      }
+      if (allowance === 'unavailable') {
+        console.error('[try-on] paste look allowance unavailable', { code: 'paste_look_allowance', shop: authorization.shop });
+        const message = 'Unable to generate try-on preview right now. Please try again.';
+        return NextResponse.json({ ok: false, message, error: message } satisfies TryOnJobApiResponse, {
+          status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '30' },
+        });
+      }
     }
 
     // Storefront tenants and public-demo uploads use after()/202 by default.

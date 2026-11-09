@@ -6,8 +6,10 @@ import type { PasteInstallStatus } from '@/lib/paste/status';
 import type { PasteDomain } from '@/lib/paste/types';
 import { PasteInstall, type PasteInstallActions } from './paste-install';
 
+/** A trusted address our server has not confirmed the code on yet. */
 const domain = (over: Partial<PasteDomain> = {}): PasteDomain => ({
-  id: 'd1', domain: 'shop.example', state: 'trusted', firstSeenAt: null, lastSeenAt: null,
+  id: 'd1', domain: 'shop.example', state: 'trusted', domainVerified: false, verifiedAt: null,
+  verificationReason: 'awaiting_code', check: null, firstSeenAt: null, lastSeenAt: null,
   proof: { txtName: '_grindctrl.shop.example', txtValue: 'gc-proof', meta: { name: 'grindctrl-verification', content: 'gc-meta' } },
   ...over,
 });
@@ -39,8 +41,13 @@ function actions(initial: PasteInstallStatus | null): PasteInstallActions & { cu
     snippet: vi.fn(async () => ({ ok: true as const, data: { platform: 'website' as const, codeVersion: null, snippet: '<script data-key="k"></script>', steps: [{ kind: 'save' as const }], contextEndpoint: '/api/try-on/paste-context' as const } })),
     status: vi.fn(async () => current.value ? { ok: true as const, data: current.value } : { ok: false as const, code: 'not_found' as const }),
     proveShop: vi.fn(async () => ({ ok: true as const, data: { shopProof: 'pending' as const, shopProvenAt: null, outcome: 'password_required' as const, checkedAt: null, retryAfterSeconds: null } })),
+    checkDomain: vi.fn(async () => ({ ok: true as const, data: { domain: domain(), outcome: 'rate_limited' as const, retryAfterSeconds: 42 } })),
   };
 }
+
+const verified = (over: Partial<PasteDomain> = {}) => domain({
+  domainVerified: true, verifiedAt: new Date().toISOString(), verificationReason: null, ...over,
+});
 
 const copy = pasteInstallCopy('en');
 const ago = (m: number) => `${m} min ago`;
@@ -65,7 +72,7 @@ describe('paste install journey', () => {
 
   it('says plainly when it is installed, folds the steps, and points at the store', async () => {
     const seen = new Date().toISOString();
-    const a = actions(status({ domains: [domain({ lastSeenAt: seen })], seen: true, seenHost: 'shop.example', chatLive: true,
+    const a = actions(status({ domains: [verified({ lastSeenAt: seen })], seen: true, seenHost: 'shop.example', chatLive: true,
       tryOnReady: true, tryOnReason: null, plan: { totalCreditsRemaining: 15 } as PasteInstallStatus['plan'] }));
     renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
 
@@ -81,7 +88,7 @@ describe('paste install journey', () => {
   });
 
   it('names the moment the free looks are being turned on instead of a vague wait', async () => {
-    const a = actions(status({ domains: [domain({ lastSeenAt: new Date().toISOString() })], seen: true, seenHost: 'shop.example',
+    const a = actions(status({ domains: [verified({ lastSeenAt: new Date().toISOString() })], seen: true, seenHost: 'shop.example',
       chatLive: false, tryOnReady: false, tryOnReason: 'not_installed' }));
     renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
     expect(await screen.findByText(copy.tryOnReason('not_installed'))).toBeInTheDocument();
@@ -100,14 +107,38 @@ describe('paste install journey', () => {
   });
 
   it('keeps WooCommerce on its plugin guide and offers proof for a claimed address', async () => {
-    const a = actions(status({ domains: [domain({ state: 'claimed' })] }));
+    const a = actions(status({ domains: [domain({ state: 'claimed', verificationReason: 'held_elsewhere' })] }));
     renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={<p>woo guide</p>} />);
-    fireEvent.click(await screen.findByText(copy.errors.proof_required));
+    /* Pasting the code is the first way to move it here; DNS is the fallback. */
+    expect(await screen.findByText(copy.domainReason('held_elsewhere'))).toBeInTheDocument();
+    expect(await screen.findByText('<script data-key="k"></script>')).toBeInTheDocument();
+    fireEvent.click(screen.getByText(copy.otherProof));
     expect(screen.getByText('<meta name="grindctrl-verification" content="gc-meta">')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('radio', { name: /WooCommerce/ }));
     expect(screen.getByText('woo guide')).toBeInTheDocument();
     expect(a.enable).not.toHaveBeenCalled();
+  });
+
+  it('says an address is confirmed by itself, lets the owner check now, and names a wait', async () => {
+    const a = actions(status({ domains: [domain()], tryOnReason: 'domain_unverified' }));
+    renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+    expect(await screen.findByText(copy.domainReason('awaiting_code'))).toBeInTheDocument();
+    expect(screen.getByText(copy.domainState.waiting)).toBeInTheDocument();
+    /* No DNS step in the normal path. */
+    expect(screen.queryByText(copy.otherProof)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: copy.checkStore }));
+    await waitFor(() => expect(a.checkDomain).toHaveBeenCalledWith('s1', 'd1'));
+    expect(await screen.findByText(copy.shopCheck('rate_limited', 42))).toBeInTheDocument();
+  });
+
+  it('shows a confirmed address as found, and offers another way only when our check cannot open the site', async () => {
+    const a = actions(status({ domains: [verified(), domain({ id: 'd2', domain: 'blocked.example', verificationReason: 'unreachable',
+      check: { outcome: 'unreachable', checkedAt: new Date().toISOString() } })] }));
+    renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+    expect(await screen.findByText(copy.domainState.verified)).toBeInTheDocument();
+    expect(screen.getByText(copy.domainReason('unreachable'))).toBeInTheDocument();
+    expect(screen.getAllByText(copy.otherProof)).toHaveLength(1);
   });
 
   it('explains a failed action in plain words', async () => {
@@ -142,7 +173,7 @@ describe('paste install journey', () => {
     expect(screen.queryByText(copy.steps.code)).not.toBeInTheDocument();
   });
   it('asks a store on the old code to copy the updated one', async () => {
-    const a = actions(status({ domains: [domain({ lastSeenAt: new Date().toISOString() })], seen: true, seenHost: 'shop.example',
+    const a = actions(status({ domains: [verified({ lastSeenAt: new Date().toISOString() })], seen: true, seenHost: 'shop.example',
       chatLive: true, tryOnReady: true, tryOnReason: null, codeOutdated: true, plan: { totalCreditsRemaining: 15 } as PasteInstallStatus['plan'] }));
     renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
     expect(await screen.findByText(copy.codeOutdated)).toBeInTheDocument();

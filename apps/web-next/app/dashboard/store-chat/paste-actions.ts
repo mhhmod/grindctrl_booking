@@ -7,12 +7,18 @@ import { requireMerchantRateLimit, RequestRateLimitError } from '@/lib/request-r
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { invalidateProxyConfig } from '@/lib/shopify/proxy-config-cache';
 import { siteTenantKey } from '@/lib/tenancy/tenant-key';
-import { addPasteDomain, removePasteDomain, provePasteDomain, provePasteDomainMeta, enablePasteInstall, getPasteConnection, pasteTrust, rotatePasteSecret } from '@/lib/paste/store';
+import {
+  addPasteDomain, removePasteDomain, provePasteDomain, provePasteDomainMeta, enablePasteInstall, getPasteConnection, grantPasteDomainPlan,
+  listPasteDomains, pasteTrust, rotatePasteSecret,
+} from '@/lib/paste/store';
 import { buildPasteSnippet } from '@/lib/paste/snippet';
 import { schedulePasteDomainPlatformCheck } from '@/lib/paste/platform-check';
+import { checkPasteDomain } from '@/lib/paste/domain-check';
 import { readPasteInstallStatus, type PasteInstallStatus } from '@/lib/paste/status';
 import { pasteCapabilitySecret } from '@/lib/paste/signing';
-import { PasteError, type PasteDomain, type PastePlatform, type PasteResult, type PasteShopProof, type PasteSnippet } from '@/lib/paste/types';
+import {
+  PasteError, type PasteDomain, type PasteDomainCheck, type PastePlatform, type PasteResult, type PasteShopProof, type PasteSnippet,
+} from '@/lib/paste/types';
 async function authorized<T>(siteId: string, capability: DashboardCapability, mode: 'read' | 'write',
   work: (site: Awaited<ReturnType<typeof requireSiteAccess>>) => Promise<T>): Promise<PasteResult<T>> {
   try {
@@ -44,15 +50,40 @@ export async function enablePasteInstallAction(siteId: string, platform: PastePl
   });
 }
 
-/** A domain that just became trusted gets its store platform fingerprinted
- * after the response (which platform image servers its photos may use). */
-function fingerprintWhenTrusted(siteId: string, domain: PasteDomain): PasteDomain {
-  if (domain.state === 'trusted') schedulePasteDomainPlatformCheck(siteId, domain.domain);
+/** A domain the owner just proved by DNS or meta tag is verified: claim the
+ * website free plan with it (the RPC re-checks the verification) and
+ * fingerprint its store platform after the response. */
+async function afterProof(siteId: string, domain: PasteDomain): Promise<PasteDomain> {
+  if (domain.state !== 'trusted') return domain;
+  await grantPasteDomainPlan(siteId, domain.domain);
+  schedulePasteDomainPlatformCheck(siteId, domain.domain);
   return domain;
 }
 
+/** Adding a domain looks for the code on it at once, so a store that already
+ * has the code is confirmed in the same step. The domain is added either
+ * way: a check that cannot run leaves it waiting for the automatic one. */
 export async function addPasteDomainAction(siteId: string, domain: string): Promise<PasteResult<PasteDomain>> {
-  return authorized(siteId, 'settings', 'write', async (site) => fingerprintWhenTrusted(site.id, await addPasteDomain(site.id, domain)));
+  return authorized(siteId, 'settings', 'write', async (site) => {
+    const added = await addPasteDomain(site.id, domain);
+    if (added.domainVerified || added.state === 'disputed') return added;
+    try {
+      return (await checkPasteDomain({ id: site.id, embedKey: site.embed_key }, added, 'added')).domain;
+    } catch {
+      return added;
+    }
+  });
+}
+
+/** "Check my store" for one website domain: our server looks for this
+ * site's code on the domain's home page. */
+export async function checkPasteDomainAction(siteId: string, domainId: string): Promise<PasteResult<PasteDomainCheck>> {
+  return authorized(siteId, 'settings', 'write', async (site) => {
+    const domain = (await listPasteDomains(site.id)).find((row) => row.id === domainId);
+    if (!domain) throw new PasteError('not_found');
+    if (domain.domainVerified) return { domain, outcome: 'verified', retryAfterSeconds: null };
+    return checkPasteDomain({ id: site.id, embedKey: site.embed_key }, domain, 'owner');
+  });
 }
 
 export async function removePasteDomainAction(siteId: string, domainId: string): Promise<PasteResult<null>> {
@@ -60,11 +91,11 @@ export async function removePasteDomainAction(siteId: string, domainId: string):
 }
 
 export async function provePasteDomainAction(siteId: string, domainId: string): Promise<PasteResult<PasteDomain>> {
-  return authorized(siteId, 'settings', 'write', async (site) => fingerprintWhenTrusted(site.id, await provePasteDomain(site.id, domainId)));
+  return authorized(siteId, 'settings', 'write', async (site) => afterProof(site.id, await provePasteDomain(site.id, domainId)));
 }
 
 export async function provePasteDomainMetaAction(siteId: string, domainId: string): Promise<PasteResult<PasteDomain>> {
-  return authorized(siteId, 'settings', 'write', async (site) => fingerprintWhenTrusted(site.id, await provePasteDomainMeta(site.id, domainId)));
+  return authorized(siteId, 'settings', 'write', async (site) => afterProof(site.id, await provePasteDomainMeta(site.id, domainId)));
 }
 
 export async function rotatePasteSecretAction(siteId: string): Promise<PasteResult<{ version: number; overlapUntil: string }>> {

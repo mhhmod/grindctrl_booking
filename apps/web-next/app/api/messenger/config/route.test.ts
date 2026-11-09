@@ -13,8 +13,10 @@ const mocks = vi.hoisted(() => ({
   getStoreLaunch: vi.fn(),
   isActiveTenant: vi.fn(),
   signal: vi.fn(),
+  domainCheck: vi.fn(),
 }));
 vi.mock('@/lib/paste/store', () => ({ recordPasteSignal: mocks.signal }));
+vi.mock('@/lib/paste/domain-check', () => ({ schedulePasteDomainCheck: mocks.domainCheck }));
 
 vi.mock('@/lib/shopify/tokens', () => ({ isActiveTenant: mocks.isActiveTenant }));
 vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: mocks.getStoreLaunch }));
@@ -262,8 +264,36 @@ describe('GET /api/messenger/config', () => {
     expect(body).toEqual({ error: 'not_found' });
   });
 
+  it('earns nothing from a forged Origin on an unverified domain: chat loads, our server checks the page', async () => {
+    mocks.loadPublicSite.mockResolvedValue({ ...SITE, status: 'active', patterns: [] });
+    mocks.signal.mockResolvedValue('unverified');
+    const response = await GET(new NextRequest('https://app.example.com/api/messenger/config?key=gc_test_key',
+      { headers: { origin: 'https://victim-brand.example' } }));
+    expect(response.status).toBe(200);
+    expect(mocks.domainCheck).toHaveBeenCalledExactlyOnceWith(SITE.id, 'victim-brand.example');
+    mocks.domainCheck.mockClear(); mocks.signal.mockResolvedValue('granted');
+    await GET(new NextRequest('https://app.example.com/api/messenger/config?key=gc_test_key', { headers: { origin: 'https://merchant.example' } }));
+    expect(mocks.domainCheck).not.toHaveBeenCalled();
+  });
+
+  it('asks for a check when this site claimed a host another site holds, and still refuses the origin', async () => {
+    mocks.originAllowed.mockReturnValue(false);
+    mocks.loadPublicSite.mockResolvedValue({ ...SITE, status: 'active', patterns: [
+      { pattern: 'merchant.example', verification_status: 'pending', verification_method: 'paste_dns_txt', environment: 'production' },
+    ] });
+    const refused = await GET(new NextRequest('https://app.example.com/api/messenger/config?key=gc_test_key', { headers: { origin: 'https://www.merchant.example' } }));
+    expect(refused.status).toBe(403);
+    expect(mocks.domainCheck).toHaveBeenCalledExactlyOnceWith(SITE.id, 'www.merchant.example');
+    mocks.domainCheck.mockClear();
+    // A host this site never claimed, or a query-string origin, asks for nothing.
+    await GET(new NextRequest('https://app.example.com/api/messenger/config?key=gc_test_key', { headers: { origin: 'https://evil.example' } }));
+    await GET(req('https://app.example.com/api/messenger/config?key=gc_test_key&origin=https://merchant.example'));
+    expect(mocks.domainCheck).not.toHaveBeenCalled();
+    expect(mocks.signal).not.toHaveBeenCalled();
+  });
+
   it('records a real install signal only after an active site admits a browser Origin', async () => {
-    mocks.loadPublicSite.mockResolvedValue({ ...SITE, status: 'active' });
+    mocks.loadPublicSite.mockResolvedValue({ ...SITE, status: 'active', patterns: [] });
     await GET(new NextRequest('https://app.example.com/api/messenger/config?key=gc_test_key', { headers: { origin: 'https://merchant.example' } }));
     expect(mocks.signal).toHaveBeenCalledExactlyOnceWith(SITE.id, 'https://merchant.example');
     mocks.signal.mockClear();

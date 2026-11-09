@@ -1,4 +1,4 @@
-import type { PasteErrorCode, PasteShopCheckOutcome, PasteStep } from '@/lib/paste/types';
+import type { PasteDomainVerificationReason, PasteErrorCode, PasteShopCheckOutcome, PasteStep } from '@/lib/paste/types';
 
 export type InstallPlatform = 'shopify' | 'woocommerce' | 'website';
 
@@ -18,7 +18,9 @@ export type PasteInstallCopy = {
   shopifyDomainHint: string;
   addDomain: string;
   removeDomain: (domain: string) => string;
-  domainState: { live: (ago: string) => string; waiting: string; proof: string };
+  domainState: { live: (ago: string) => string; waiting: string; proof: string; verified: string };
+  domainReason: (reason: PasteDomainVerificationReason) => string;
+  otherProof: string;
   proofTitle: string;
   proofMeta: string;
   proofDns: string;
@@ -85,8 +87,19 @@ const en: PasteInstallCopy = {
   shopifyDomainHint: 'Add the address shoppers visit, like yourstore.com. Skip this if your store only uses its .myshopify.com address.',
   addDomain: 'Add',
   removeDomain: (domain) => `Remove ${domain}`,
-  domainState: { live: (ago) => `Live, seen ${ago}`, waiting: 'Waiting for your code', proof: 'Needs proof' },
-  proofTitle: 'Another account already uses this address. Show it is yours with either option, then check.',
+  domainState: { live: (ago) => `Live, seen ${ago}`, waiting: 'Waiting for your code', proof: 'Needs proof', verified: 'Code found' },
+  domainReason: (reason) => {
+    switch (reason) {
+      case 'awaiting_code': return 'We’ll confirm automatically once your code is live.';
+      case 'code_not_found': return 'We couldn’t find your code on this address yet. Check it’s saved, then check again.';
+      case 'wrong_site': return 'This address shows code from another account. Replace it with your code, then check again.';
+      case 'unreachable': return 'We couldn’t open this address’s home page. If your site blocks automated visits, confirm it another way.';
+      case 'held_elsewhere': return 'Another account uses this address. Paste your code and we’ll move it here once we find it.';
+      case 'proven_elsewhere': return 'Another account confirmed this address. If it’s yours, paste your code, then check again.';
+    }
+  },
+  otherProof: 'Other ways to confirm',
+  proofTitle: 'Add either of these, then check.',
   proofMeta: 'Add this tag inside your site’s <head>:',
   proofDns: 'Or add this DNS record:',
   proofDnsName: 'Name',
@@ -120,6 +133,7 @@ const en: PasteInstallCopy = {
       case 'plan_inactive': return 'Your plan isn’t active. Choose a plan to turn on Try-On.';
       case 'unavailable': return 'Try-On is unavailable right now. We’re looking into it.';
       case 'shop_proof_pending': return 'Confirm it’s your store to turn on Try-On.';
+      case 'domain_unverified': return 'Try-On turns on once we find your code on your store. We check by ourselves.';
       case 'shopify_app_installed': return 'This store uses the GRINDCTRL Shopify app, so Try-On runs from the app.';
       default: return 'Try-On is getting ready. We are on it.';
     }
@@ -197,8 +211,19 @@ const ar: PasteInstallCopy = {
   shopifyDomainHint: 'أضف العنوان الذي يزوره المتسوقون، مثل yourstore.com. تخطَّ هذه الخطوة إذا كان متجرك يستخدم عنوان ‎.myshopify.com فقط.',
   addDomain: 'إضافة',
   removeDomain: (domain) => `إزالة ${domain}`,
-  domainState: { live: (ago) => `يعمل، آخر ظهور ${ago}`, waiting: 'بانتظار الكود', proof: 'يحتاج إثباتاً' },
-  proofTitle: 'هذا العنوان مستخدم في حساب آخر. أثبت أنه لك بإحدى الطريقتين ثم اضغط تحقق.',
+  domainState: { live: (ago) => `يعمل، آخر ظهور ${ago}`, waiting: 'بانتظار الكود', proof: 'يحتاج إثباتاً', verified: 'تم العثور على الكود' },
+  domainReason: (reason) => {
+    switch (reason) {
+      case 'awaiting_code': return 'سنؤكد تلقائياً بمجرد أن يعمل الكود في متجرك.';
+      case 'code_not_found': return 'لم نجد الكود على هذا العنوان بعد. تأكد من حفظه ثم تحقق مجدداً.';
+      case 'wrong_site': return 'يظهر على هذا العنوان كود من حساب آخر. استبدله بالكود الخاص بك ثم تحقق مجدداً.';
+      case 'unreachable': return 'لم نتمكن من فتح الصفحة الرئيسية لهذا العنوان. إذا كان موقعك يحجب الزيارات الآلية، أكّده بطريقة أخرى.';
+      case 'held_elsewhere': return 'هذا العنوان مستخدم في حساب آخر. الصق الكود الخاص بك وسننقله إلى هنا بمجرد أن نجده.';
+      case 'proven_elsewhere': return 'حساب آخر أكّد هذا العنوان. إذا كان لك، الصق الكود الخاص بك ثم تحقق مجدداً.';
+    }
+  },
+  otherProof: 'طرق أخرى للتأكيد',
+  proofTitle: 'أضف أحد هذين ثم اضغط تحقق.',
   proofMeta: 'أضف هذا الوسم داخل <head> في موقعك:',
   proofDns: 'أو أضف سجل DNS هذا:',
   proofDnsName: 'الاسم',
@@ -232,6 +257,7 @@ const ar: PasteInstallCopy = {
       case 'plan_inactive': return 'خطتك غير مفعّلة. اختر خطة لتشغيل التجربة الافتراضية.';
       case 'unavailable': return 'التجربة الافتراضية غير متاحة الآن. نعمل على ذلك.';
       case 'shop_proof_pending': return 'أكّد أن المتجر لك لتشغيل التجربة الافتراضية.';
+      case 'domain_unverified': return 'تعمل التجربة الافتراضية بمجرد أن نجد الكود في متجرك، ونتحقق من ذلك تلقائياً.';
       case 'shopify_app_installed': return 'هذا المتجر يستخدم تطبيق GRINDCTRL على Shopify، لذا تعمل التجربة الافتراضية من التطبيق.';
       default: return 'نجهّز التجربة الافتراضية، ونعمل على ذلك.';
     }

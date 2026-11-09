@@ -19,7 +19,7 @@ beforeEach(() => {
   vi.stubEnv('TURNSTILE_SECRET_KEY', '1x0000000000000000000000000000000AA');
   vi.stubEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY', '1x00000000000000000000AA');
   m.connection.mockResolvedValue({ status: 'active', platform: 'website', secret_version: 2 });
-  m.domains.mockResolvedValue([{ id: 'domain-a', domain: 'merchant.example', state: 'trusted', firstSeenAt: null, lastSeenAt: null }]);
+  m.domains.mockResolvedValue([{ id: 'domain-a', domain: 'merchant.example', state: 'trusted', domainVerified: true, firstSeenAt: null, lastSeenAt: null }]);
   m.plan.mockResolvedValue({ status: 'active', available: true, totalCreditsRemaining: 5 });
   m.launch.mockResolvedValue(null); m.flags.mockResolvedValue([]); m.code.mockResolvedValue(null);
 });
@@ -39,9 +39,28 @@ describe('paste read model and dashboard tenant', () => {
   it('reports no trusted domain, inactive plan and disabled site honestly', async () => {
     m.domains.mockResolvedValue([{ state: 'claimed' }]);
     expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).toMatchObject({ tryOnReady: false, tryOnReason: 'no_trusted_domain' });
-    m.domains.mockResolvedValue([{ state: 'trusted' }]); m.plan.mockResolvedValue({ status: 'none', available: false, totalCreditsRemaining: 0 });
+    m.domains.mockResolvedValue([{ state: 'trusted', domainVerified: true }]); m.plan.mockResolvedValue({ status: 'none', available: false, totalCreditsRemaining: 0 });
     expect((await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).tryOnReason).toBe('plan_inactive');
     expect((await readPasteInstallStatus({ id: SITE, status: 'disabled' }, NOW)).tryOnReason).toBe('site_disabled');
+  });
+  it('keeps website Try-On off until our server confirms the code on a domain, and says why per domain', async () => {
+    const waiting = { id: 'domain-a', domain: 'merchant.example', state: 'trusted', domainVerified: false,
+      verificationReason: 'awaiting_code', firstSeenAt: null, lastSeenAt: null };
+    m.domains.mockResolvedValue([waiting]);
+    const result = await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW);
+    expect(result).toMatchObject({ tryOnReady: false, tryOnReason: 'domain_unverified', trusted: true });
+    expect(result.domains[0]).toMatchObject({ domainVerified: false, verificationReason: 'awaiting_code' });
+    // A proven Shopify shop runs on its own host meanwhile.
+    m.connection.mockResolvedValue({ status: 'active', platform: 'shopify', shop_domain: 'merchant.myshopify.com', secret_version: 1,
+      shop_proven_at: PROVEN_AT, app_installed: false });
+    expect((await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).tryOnReason).not.toBe('domain_unverified');
+  });
+  it('needs Turnstile configured for Shopify paste Try-On too', async () => {
+    vi.stubEnv('TURNSTILE_SECRET_KEY', '');
+    m.connection.mockResolvedValue({ status: 'active', platform: 'shopify', shop_domain: 'merchant.myshopify.com', secret_version: 1,
+      shop_proven_at: PROVEN_AT, app_installed: false });
+    expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW))
+      .toMatchObject({ tryOnReady: false, tryOnReason: 'turnstile_not_configured', turnstileConfigured: false });
   });
   it('carries preview/live state without changing or granting a plan', async () => {
     m.flags.mockResolvedValue(['n5_preview_mode']); m.launch.mockResolvedValue({ state: 'preview', salt: 'salt' });
