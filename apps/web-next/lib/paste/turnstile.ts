@@ -22,10 +22,18 @@ export function pasteTurnstileBinding(authorization: Pick<VerifiedTryOnSession, 
   return createHash('sha256').update(`paste-look-v1:${authorization.shop}:${authorization.requestKey}`).digest('hex');
 }
 
+/** Every paid look on a pasted install, website or Shopify: a pasted
+ *  Shopify render is public HTML that anyone can replay, so its signature
+ *  alone does not show a person asked for the look. The Shopify app (no
+ *  platform claim) and the owner's signed test looks are exempt. */
+export function pasteTurnstileRequired(authorization: Pick<VerifiedTryOnSession, 'platform' | 'test'>): boolean {
+  return (authorization.platform === 'paste-website' || authorization.platform === 'paste-shopify') && authorization.test !== true;
+}
+
 export async function verifyPasteTurnstile(input: {
   token: unknown; authorization: VerifiedTryOnSession; remoteIp?: string | null;
 }, fetcher: typeof fetch = fetch): Promise<TurnstileResult> {
-  if (input.authorization.platform !== 'paste-website' || input.authorization.test === true) return { ok: true };
+  if (!pasteTurnstileRequired(input.authorization)) return { ok: true };
   const secret = process.env.TURNSTILE_SECRET_KEY?.trim();
   if (!secret) return { ok: false, code: 'turnstile_not_configured' };
   if (typeof input.token !== 'string' || !input.token || input.token.length > 2048) return { ok: false, code: 'turnstile_required' };

@@ -7,7 +7,9 @@ import { ShopifyLogo, WooCommerceLogo } from '@/components/brand-marks';
 import { GcIcon } from '@/components/icons';
 import type { InstallPlatform, PasteInstallCopy } from '@/lib/dashboard/paste-install-copy';
 import type { PasteInstallStatus } from '@/lib/paste/status';
-import type { PasteDomain, PasteErrorCode, PastePlatform, PasteResult, PasteShopCheckOutcome, PasteShopProof, PasteSnippet } from '@/lib/paste/types';
+import type {
+  PasteDomain, PasteDomainCheck, PasteErrorCode, PastePlatform, PasteResult, PasteShopCheckOutcome, PasteShopProof, PasteSnippet,
+} from '@/lib/paste/types';
 import classes from './paste-install.module.css';
 
 export type PasteInstallActions = {
@@ -20,6 +22,7 @@ export type PasteInstallActions = {
   snippet(siteId: string): Promise<PasteResult<PasteSnippet>>;
   status(siteId: string): Promise<PasteResult<PasteInstallStatus>>;
   proveShop(siteId: string, storefrontPassword?: string): Promise<PasteResult<PasteShopProof>>;
+  checkDomain(siteId: string, domainId: string): Promise<PasteResult<PasteDomainCheck>>;
 };
 
 const POLL_MS = 5000;
@@ -69,6 +72,8 @@ export function PasteInstall({
   const [stepsOpen, setStepsOpen] = React.useState(false);
   const [password, setPassword] = React.useState('');
   const [checked, setChecked] = React.useState<{ outcome: PasteShopCheckOutcome | 'rate_limited'; retryAfter: number | null } | null>(null);
+  /* A domain check that could not run this time (rate limited). */
+  const [domainWait, setDomainWait] = React.useState<{ id: string; retryAfter: number | null } | null>(null);
 
   const run = React.useCallback(async <T,>(key: string, call: () => Promise<PasteResult<T>>): Promise<T | null> => {
     setBusy(key);
@@ -91,9 +96,11 @@ export function PasteInstall({
   type Loaded = { status: PasteResult<PasteInstallStatus> | null; snippet: PasteResult<PasteSnippet> | null };
   const load = React.useCallback(async (): Promise<Loaded> => {
     const next = await actions.status(siteId).catch(() => null);
-    /* Shopify is trusted through its signed shop; websites need an address first. */
+    /* Shopify is trusted through its signed shop; websites need an address
+       first. Any address will do: pasting the code is also how an address
+       another account holds moves here. */
     const ready = next?.ok && next.data.connected
-      && (next.data.platform === 'shopify' || next.data.domains.some((d) => d.state === 'trusted'));
+      && (next.data.platform === 'shopify' || next.data.domains.some((d) => d.state !== 'disputed'));
     return { status: next, snippet: ready ? await actions.snippet(siteId).catch(() => null) : null };
   }, [actions, siteId]);
 
@@ -123,8 +130,11 @@ export function PasteInstall({
 
   /* Keep watching while the merchant pastes, and after the first signal
      until Try-On settles (the free looks are granted a moment later). */
-  const settling = status?.tryOnReason === 'not_installed' || status?.tryOnReason === 'shop_proof_pending';
-  const waiting = Boolean(snippet) && (!status?.seen || (!status.tryOnReady && settling));
+  const settling = status?.tryOnReason === 'not_installed' || status?.tryOnReason === 'shop_proof_pending'
+    || status?.tryOnReason === 'domain_unverified';
+  /* Our server confirms an address by itself once the code is live. */
+  const confirming = Boolean(status?.domains.some((d) => !d.domainVerified && d.state !== 'disputed'));
+  const waiting = Boolean(snippet) && (!status?.seen || confirming || (!status.tryOnReady && settling));
   React.useEffect(() => {
     if (!waiting) return;
     const timer = window.setInterval(() => {
@@ -167,6 +177,12 @@ export function PasteInstall({
     if (!data) return;
     setResetUntil(new Date(data.overlapUntil).toLocaleTimeString(locale === 'ar' ? 'ar-EG' : 'en-GB', { hour: '2-digit', minute: '2-digit' }));
     await refresh();
+  }
+
+  async function checkDomain(domainId: string) {
+    const result = await run(`check:${domainId}`, () => actions.checkDomain(siteId, domainId));
+    setDomainWait(result?.outcome === 'rate_limited' ? { id: domainId, retryAfter: result.retryAfterSeconds } : null);
+    if (result) await refresh();
   }
 
   async function checkStore(event: React.FormEvent) {
@@ -306,7 +322,11 @@ export function PasteInstall({
                   <ul className={classes.domains}>
                     {domains.map((d) => {
                       const seen = minutesSince(d.lastSeenAt, now);
-                      const live = d.state === 'trusted' && seen !== null && seen * 60000 <= LIVE_WINDOW_MS;
+                      const live = d.domainVerified && seen !== null && seen * 60000 <= LIVE_WINDOW_MS;
+                      /* DNS or meta tag: for an address another account holds, or
+                         a site our check cannot open. Never the first ask. */
+                      const proofOffered = d.state !== 'trusted' || d.verificationReason === 'unreachable';
+                      const wait = domainWait?.id === d.id ? domainWait : null;
                       return (
                         <li key={d.id} className={classes.domain}>
                           <Group justify="space-between" wrap="nowrap" gap="xs">
@@ -314,10 +334,11 @@ export function PasteInstall({
                               <span dir="ltr" className={classes.domainName}>{d.domain}</span>
                               <Badge
                                 variant="light"
-                                color={d.state !== 'trusted' ? 'orange' : live ? 'green' : 'gray'}
+                                color={d.state !== 'trusted' ? 'orange' : live ? 'green' : d.domainVerified ? 'gray' : 'yellow'}
                                 leftSection={live ? <span className={classes.dot} aria-hidden="true" /> : undefined}
                               >
-                                {d.state !== 'trusted' ? copy.domainState.proof : live ? copy.domainState.live(ago(seen ?? 0)) : copy.domainState.waiting}
+                                {d.state !== 'trusted' ? copy.domainState.proof : live ? copy.domainState.live(ago(seen ?? 0))
+                                  : d.domainVerified ? copy.domainState.verified : copy.domainState.waiting}
                               </Badge>
                             </Group>
                             <Button
@@ -333,7 +354,18 @@ export function PasteInstall({
                               <GcIcon name="close" size={16} />
                             </Button>
                           </Group>
-                          {d.state !== 'trusted' ? (
+                          {d.verificationReason ? (
+                            <Group gap="xs" mt={4} wrap="wrap" align="center">
+                              <Text size="sm" c="dimmed" role="status" className={classes.grow}>
+                                {wait ? copy.shopCheck('rate_limited', wait.retryAfter) : copy.domainReason(d.verificationReason)}
+                              </Text>
+                              <Button size="xs" radius="pill" variant="default" loading={busy === `check:${d.id}`}
+                                onClick={() => void checkDomain(d.id)}>
+                                {copy.checkStore}
+                              </Button>
+                            </Group>
+                          ) : null}
+                          {proofOffered ? (
                             proofFor === d.id ? (
                               <Stack gap="xs" mt="xs" className={classes.proof}>
                                 <Text size="sm">{copy.proofTitle}</Text>
@@ -357,7 +389,7 @@ export function PasteInstall({
                               </Stack>
                             ) : (
                               <Button variant="subtle" size="compact-sm" mt={4} onClick={() => setProofFor(d.id)}>
-                                {copy.errors.proof_required}
+                                {copy.otherProof}
                               </Button>
                             )
                           ) : null}

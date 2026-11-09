@@ -27,6 +27,9 @@ const NO_LIMITERS = {
   pasteShopCheckSite: null,
   pasteShopCheckShop: null,
   pastePlatformCheck: null,
+  pasteDomainCheckAuto: null,
+  pasteDomainCheckOwner: null,
+  pasteDomainCheckHost: null,
 } as const;
 
 function createRatelimiters(): {
@@ -40,6 +43,9 @@ function createRatelimiters(): {
   pasteShopCheckSite: Ratelimit | null;
   pasteShopCheckShop: Ratelimit | null;
   pastePlatformCheck: Ratelimit | null;
+  pasteDomainCheckAuto: Ratelimit | null;
+  pasteDomainCheckOwner: Ratelimit | null;
+  pasteDomainCheckHost: Ratelimit | null;
 } {
   /* Redis.fromEnv() only warns when vars are missing, producing a client
      that throws per-call. The strict guard rejects this unconfigured facade
@@ -133,6 +139,30 @@ function createRatelimiters(): {
         prefix: 'gc-ratelimit:paste-platform-check',
         analytics: false,
       }),
+      /* Our server fetching a paste domain's home page for this site's
+         snippet (lib/paste/domain-check.ts). Auto: what a widget seeing an
+         unverified domain may trigger, once per ten minutes per site and
+         domain, whoever sends the request. Owner: adding the domain and
+         "Check my store". Host: all sites together, so claims on one
+         domain cannot turn us into a crawler of it. */
+      pasteDomainCheckAuto: new Ratelimit({
+        redis,
+        limiter: Ratelimit.fixedWindow(1, '600 s'),
+        prefix: 'gc-ratelimit:paste-domain-check-auto',
+        analytics: false,
+      }),
+      pasteDomainCheckOwner: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(10, '600 s'),
+        prefix: 'gc-ratelimit:paste-domain-check-owner',
+        analytics: false,
+      }),
+      pasteDomainCheckHost: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(30, '600 s'),
+        prefix: 'gc-ratelimit:paste-domain-check-host',
+        analytics: false,
+      }),
     };
   } catch {
     console.error(
@@ -164,6 +194,9 @@ export const proxyShopMintRatelimit = limiterFacade(limiters.proxyShopMint);
 export const pasteShopCheckSiteRatelimit = limiterFacade(limiters.pasteShopCheckSite);
 export const pasteShopCheckShopRatelimit = limiterFacade(limiters.pasteShopCheckShop);
 export const pastePlatformCheckRatelimit = limiterFacade(limiters.pastePlatformCheck);
+export const pasteDomainCheckAutoRatelimit = limiterFacade(limiters.pasteDomainCheckAuto);
+export const pasteDomainCheckOwnerRatelimit = limiterFacade(limiters.pasteDomainCheckOwner);
+export const pasteDomainCheckHostRatelimit = limiterFacade(limiters.pasteDomainCheckHost);
 
 /* Identity of the requesting network for rate-limit keying. Prefers the
    RIGHTMOST x-forwarded-for entry: every proxy on the path appends to the

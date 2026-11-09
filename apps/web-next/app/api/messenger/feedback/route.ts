@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
 import {
@@ -19,6 +20,8 @@ import {
 const ANON_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+const BODY_LIMIT_BYTES = 32 * 1024;
+
 export async function POST(request: NextRequest) {
   try {
     await requireRateLimit(publicApiRatelimit, `mf:${clientIp(request) ?? 'unknown'}`);
@@ -27,12 +30,11 @@ export async function POST(request: NextRequest) {
     throw error;
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = (await request.json()) as Record<string, unknown>;
-  } catch {
-    return NextResponse.json({ ok: false }, { status: 400 });
+  const parsed = await readLimitedJson(request, BODY_LIMIT_BYTES);
+  if (!parsed.ok || !isJsonObject(parsed.value)) {
+    return NextResponse.json({ ok: false }, { status: !parsed.ok && parsed.status === 413 ? 413 : 400 });
   }
+  const body = parsed.value;
 
   const key = typeof body.key === 'string' ? body.key : '';
   const { origin, trusted: originTrusted } = provenOrigin(key, body);

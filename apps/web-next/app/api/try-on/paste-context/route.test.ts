@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const m = vi.hoisted(() => ({ network: vi.fn(), visitor: vi.fn(), siteLimit: vi.fn(), site: vi.fn(), connection: vi.fn(),
   hosts: vi.fn(), proofHosts: vi.fn(), prove: vi.fn(), signal: vi.fn(), signature: vi.fn(), active: vi.fn(), flags: vi.fn(),
-  launch: vi.fn(), storeLaunch: vi.fn(), lookup: vi.fn(), codeVersion: vi.fn(), platforms: vi.fn(), fingerprint: vi.fn() }));
+  launch: vi.fn(), storeLaunch: vi.fn(), lookup: vi.fn(), codeVersion: vi.fn(), platforms: vi.fn(), fingerprint: vi.fn(),
+  tryOnHosts: vi.fn(), domainCheck: vi.fn() }));
 vi.mock('@/lib/ratelimit', () => ({ clientIp: () => '203.0.113.5', publicApiRatelimit: { limit: m.network },
   proxyVisitorRatelimit: { limit: m.visitor }, proxyShopMintRatelimit: { limit: m.siteLimit } }));
 vi.mock('@/lib/messenger/public-api', async (original) => ({ ...await original<object>(), loadPublicSite: m.site }));
@@ -12,9 +13,10 @@ vi.mock('@/lib/paste/store', async (original) => {
   const actual = await original<typeof import('@/lib/paste/store')>();
   return { pasteTrust: actual.pasteTrust, pasteDomainOf: actual.pasteDomainOf,
     getPasteConnection: m.connection, pasteTrustedHosts: m.hosts, pasteProofHosts: m.proofHosts, recordPasteSignal: m.signal,
-    recordPasteCodeVersion: m.codeVersion, readPasteDomainPlatforms: m.platforms };
+    recordPasteCodeVersion: m.codeVersion, readPasteDomainPlatforms: m.platforms, pasteTryOnHosts: m.tryOnHosts };
 });
 vi.mock('@/lib/paste/platform-check', () => ({ schedulePasteDomainPlatformCheck: m.fingerprint }));
+vi.mock('@/lib/paste/domain-check', () => ({ schedulePasteDomainCheck: m.domainCheck }));
 // The storefront proof (fetch + render factor) is unit-tested in lib/paste.
 vi.mock('@/lib/paste/shop-proof', () => ({ checkPasteShop: m.prove }));
 vi.mock('@/lib/paste/signing', async (original) => ({ ...await original<object>(), verifyLiquidSignature: m.signature }));
@@ -65,6 +67,9 @@ beforeEach(() => {
   m.flags.mockResolvedValue([]); m.launch.mockResolvedValue({ launch: { tryOn: 'live', reason: null }, unsubscribed: false });
   m.lookup.mockResolvedValue([{ address: '93.184.216.34', family: 4 }]);
   m.platforms.mockResolvedValue([{ domain: 'merchant.example', platform: null, detectedAt: null }]);
+  // Verified by our server: the shop host and every trusted domain.
+  m.tryOnHosts.mockImplementation(async (c: { shop_domain: string | null }) =>
+    [...(c.shop_domain ? [c.shop_domain] : []), 'merchant.example', 'www.merchant.example']);
   vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.restoreAllMocks(); });
@@ -148,6 +153,22 @@ describe('paste context trust boundary', () => {
     expect((await post({ codeVersion: 2 })).status).toBe(200);
     expect(m.codeVersion).not.toHaveBeenCalled();
     for (const codeVersion of [0, 100, 1.5, '2']) expect((await post({ signed, codeVersion })).status).toBe(400);
+  });
+  it('keeps Try-On hidden on a trusted domain our server has not confirmed, and asks for the check', async () => {
+    m.tryOnHosts.mockResolvedValue([]);
+    const response = await post();
+    expect(response.status).toBe(409);
+    // A code every loader already hides the button for, store-wide.
+    expect(await response.json()).toEqual({ error: 'not_installed' });
+    expect(m.domainCheck).toHaveBeenCalledExactlyOnceWith(SITE, 'merchant.example');
+    // No plan, no signal, nothing minted.
+    expect(m.signal).not.toHaveBeenCalled();
+    expect(m.active).not.toHaveBeenCalled();
+  });
+  it('offers the challenge for paid Shopify paste looks too', async () => {
+    m.connection.mockResolvedValue(shopify);
+    const result = await (await post({ signed })).json();
+    expect(result.turnstile).toEqual({ siteKey: null, action: 'paste_tryon' });
   });
   it('mints a product card context: the card\'s own signed product, on the listing page', async () => {
     m.connection.mockResolvedValue(shopify);
@@ -343,6 +364,23 @@ describe('paste context limits and launch', () => {
     m.signal.mockResolvedValue('apex_taken');
     expect((await post()).status).toBe(409);
     m.connection.mockResolvedValue(null); expect((await post()).status).toBe(403);
+  });
+  it('cuts an oversized body off at the limit, with or without Content-Length, before any site work', async () => {
+    let pulled = 0;
+    const endless = new ReadableStream<Uint8Array>({
+      pull(controller) { pulled += 1024; controller.enqueue(new Uint8Array(1024).fill(0x20)); },
+    }, { highWaterMark: 0 });
+    const response = await POST(new NextRequest('https://grindctrl.cloud/api/try-on/paste-context', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://merchant.example' }, body: endless, duplex: 'half',
+    } as ConstructorParameters<typeof NextRequest>[1]));
+    expect(response.status).toBe(413);
+    expect(pulled).toBeLessThanOrEqual(8192 + 1024);
+    const declared = await POST(new NextRequest('https://grindctrl.cloud/api/try-on/paste-context', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://merchant.example', 'Content-Length': '9000' },
+      body: JSON.stringify({ ...body, title: 'x'.repeat(8800) }),
+    }));
+    expect(declared.status).toBe(413);
+    expect(m.site).not.toHaveBeenCalled();
   });
   it('provides POST preflight without doing any work', () => {
     expect(OPTIONS(new NextRequest('https://grindctrl.cloud/api/try-on/paste-context', { headers: { origin: 'https://merchant.example' } })).status).toBe(204);

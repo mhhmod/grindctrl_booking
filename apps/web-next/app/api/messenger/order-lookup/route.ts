@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { resolveShopperSession } from '@/lib/messenger/public-session';
 import { appendMessage, recordAudit, recordEvent, updateConversationMetadata } from '@/lib/messenger/conversations';
@@ -34,6 +35,8 @@ function toWire(m: MessageRecord) {
   };
 }
 
+const BODY_LIMIT_BYTES = 32 * 1024;
+
 export async function POST(request: NextRequest) {
   const ip = clientIp(request) ?? 'unknown';
   try {
@@ -43,12 +46,12 @@ export async function POST(request: NextRequest) {
     throw error;
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = (await request.json()) as Record<string, unknown>;
-  } catch {
-    return NextResponse.json({ ok: false, error: 'bad_json' }, { status: 400 });
+  const parsed = await readLimitedJson(request, BODY_LIMIT_BYTES);
+  if (!parsed.ok || !isJsonObject(parsed.value)) {
+    const tooLarge = !parsed.ok && parsed.status === 413;
+    return NextResponse.json({ ok: false, error: tooLarge ? 'too_large' : 'bad_json' }, { status: tooLarge ? 413 : 400 });
   }
+  const body = parsed.value;
   /* mode "customer" is the Track my order chip for a verified shopper: no
      number or email, the newest order of the customer the request proves. */
   const customerMode = body.mode === 'customer';

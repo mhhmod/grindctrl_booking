@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import { readLimitedBody } from '@/lib/http/read-limited-body';
 import { processShopifyPrivacyRequest } from '@/lib/shopify/privacy';
 import { resolveShopifyApp } from '@/lib/shopify/app-registry';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
@@ -8,20 +9,15 @@ import { verifyShopifyUninstall } from '@/lib/shopify/tokens';
 import { reconcileShopifyAppPricing } from '@/lib/shopify/app-pricing';
 
 export async function POST(request: NextRequest) {
-  const reader = request.body?.getReader();
-  if (!reader) return NextResponse.json({ error: 'Missing body' }, { status: 400 });
-  const chunks: Uint8Array[] = [];
-  let bytes = 0;
+  if (!request.body) return NextResponse.json({ error: 'Missing body' }, { status: 400 });
+  let raw: Buffer | null;
   try {
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      bytes += value.byteLength;
-      if (bytes > 1024 * 1024) { await reader.cancel(); return NextResponse.json({ error: 'Payload too large' }, { status: 413 }); }
-      chunks.push(value);
-    }
-  } finally { reader.releaseLock(); }
-  const body = Buffer.concat(chunks, bytes).toString('utf8');
+    raw = await readLimitedBody(request, 1024 * 1024);
+  } catch {
+    return NextResponse.json({ error: 'Missing body' }, { status: 400 });
+  }
+  if (!raw) return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+  const body = raw.toString('utf8');
   const hmac = request.headers.get('x-shopify-hmac-sha256') ?? '';
   const resolved = hmac ? resolveShopifyApp((secret) => {
     const expected = createHmac('sha256', secret).update(body).digest('base64');

@@ -1,8 +1,8 @@
 import 'server-only';
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
-import { Redis } from '@upstash/redis';
 import { coreCapabilitySecret } from '@/lib/security/capability-key';
 import { siteTenantKey } from '@/lib/tenancy/tenant-key';
+import { pasteRedis, scriptCount } from './redis';
 import type { PasteConnection } from './types';
 
 export const PASTE_SIGNATURE_WINDOW_SECONDS = 15 * 60;
@@ -59,24 +59,27 @@ export function liquidMacMatches(connection: PasteConnection, claims: LiquidClai
 }
 
 export type SignatureResult ={ ok: true } | { ok: false; code: 'bad_signature' | 'stale_signature' | 'replayed' | 'unavailable' };
-export type ReplayClaim = (key: string, ttlSeconds: number) => Promise<boolean>;
+/** Counts one more use of `key`, expiring it `ttlSeconds` after the first,
+ *  and resolves with the count. Rejects when the count is unknown. */
+export type RenderUseCounter = (key: string, ttlSeconds: number) => Promise<number>;
 
-async function claimReplay(key: string, ttlSeconds: number): Promise<boolean> {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) throw new Error('replay_unavailable');
-  const redis = new Redis({ url, token, retry: false, signal: AbortSignal.timeout(5000) });
-  const result = await redis.set(key, '1', { nx: true, ex: ttlSeconds });
-  if (result !== 'OK' && result !== null) throw new Error('replay_unavailable');
-  return result === 'OK';
-}
+/** Shopper sessions one signed render may mint within its freshness window.
+ *  A shopper needs one or two (prewarm, then a tap after the context aged
+ *  out); a page served from the store's cache to several shoppers runs out
+ *  and the loader fetches a fresh render. */
+export const PASTE_RENDER_MAX_SESSIONS = 3;
+
+const COUNT_SCRIPT = `
+local count = redis.call('INCR', KEYS[1])
+if count == 1 then redis.call('EXPIRE', KEYS[1], tonumber(ARGV[1])) end
+return count`;
+
+const countRenderUse: RenderUseCounter = async (key, ttlSeconds) =>
+  scriptCount(await pasteRedis().eval(COUNT_SCRIPT, [key], [String(ttlSeconds)]));
 
 export async function verifyLiquidSignature(input: {
   connection: PasteConnection; claims: LiquidClaims; signature: string;
-  /** Trusted network plus browser visitor id. Neither alone bypasses the
-   * site-wide and network rate ceilings on the context endpoint. */
-  visitor: string;
-}, options: { nowSeconds?: number; claim?: ReplayClaim } = {}): Promise<SignatureResult> {
+}, options: { nowSeconds?: number; count?: RenderUseCounter } = {}): Promise<SignatureResult> {
   const { connection: c, claims: p, signature } = input;
   // A pending connection is verified too: a valid render is the second
   // proof factor (record_paste_shop_render). It is never proof of theme
@@ -95,12 +98,15 @@ export async function verifyLiquidSignature(input: {
   const matched = liquidMacMatches(c, p, signature, now);
   if (matched === null) return { ok: false, code: 'unavailable' };
   if (!matched) return { ok: false, code: 'bad_signature' };
-  // Do not include secret version: the same render must not earn another
-  // mint during the overlap. Signature is omitted for the same reason.
-  const digest = createHash('sha256').update(`${liquidSignedMessage(p)}\n${input.visitor}`).digest('hex');
+  // The render itself is the replay key: nothing the caller chooses (visitor
+  // id, network) is in it, so rotating those earns no extra session. Secret
+  // version and signature are left out too, so the same render cannot mint
+  // again under the rotation overlap.
+  const digest = createHash('sha256').update(liquidSignedMessage(p)).digest('hex');
   try {
-    const claimed = await (options.claim ?? claimReplay)(`gc-paste:render:v1:${p.siteId}:${digest}`,
+    const uses = await (options.count ?? countRenderUse)(`gc-paste:render:v2:${p.siteId}:${digest}`,
       PASTE_SIGNATURE_WINDOW_SECONDS + PASTE_CLOCK_SKEW_SECONDS + 1);
-    return claimed ? { ok: true } : { ok: false, code: 'replayed' };
+    if (!Number.isSafeInteger(uses) || uses < 1) return { ok: false, code: 'unavailable' };
+    return uses <= PASTE_RENDER_MAX_SESSIONS ? { ok: true } : { ok: false, code: 'replayed' };
   } catch { return { ok: false, code: 'unavailable' }; }
 }

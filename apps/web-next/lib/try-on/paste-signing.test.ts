@@ -1,7 +1,9 @@
 // @vitest-environment node
 import { createHmac } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { pasteLiquidSecret, pasteCapabilitySecret, liquidSignedMessage, verifyLiquidSignature, type LiquidClaims } from '@/lib/paste/signing';
+import {
+  PASTE_RENDER_MAX_SESSIONS, pasteLiquidSecret, pasteCapabilitySecret, liquidSignedMessage, verifyLiquidSignature, type LiquidClaims,
+} from '@/lib/paste/signing';
 import { buildPasteSnippet } from '@/lib/paste/snippet';
 import type { PasteConnection } from '@/lib/paste/types';
 import { signStorefrontContext, signTryOnSession, signTryOnAttempt, verifyStorefrontContext, verifyTryOnSession, verifyTryOnAttempt } from './storefront-context';
@@ -28,47 +30,62 @@ describe('Liquid signatures and replay', () => {
     expect(liquidSignedMessage(claims)).toBe(`gc-paste-v1|${SITE}|merchant.myshopify.com|42|77|2000000000|`);
     expect(liquidSignedMessage({ ...claims, customerId: '5' })).toBe(`gc-paste-v1|${SITE}|merchant.myshopify.com|42|77|2000000000|5`);
   });
-  it('accepts a valid hex MAC and claims a render once per visitor', async () => {
-    const used = new Set<string>();
-    const claim = vi.fn(async (key: string) => { if (used.has(key)) return false; used.add(key); return true; });
-    const input = { connection, claims, signature: mac(), visitor: 'ip:visitor-a' };
-    expect(await verifyLiquidSignature(input, { nowSeconds: NOW, claim })).toEqual({ ok: true });
-    expect(await verifyLiquidSignature(input, { nowSeconds: NOW, claim })).toEqual({ ok: false, code: 'replayed' });
-    expect(await verifyLiquidSignature({ ...input, visitor: 'ip:visitor-b' }, { nowSeconds: NOW, claim })).toEqual({ ok: true });
-    expect(claim.mock.calls[0][0]).not.toContain(claims.customerId || 'merchant');
+  /** An in-memory stand-in for the Redis INCR counter. */
+  function counter() {
+    const uses = new Map<string, number>();
+    return vi.fn(async (key: string) => { const next = (uses.get(key) ?? 0) + 1; uses.set(key, next); return next; });
+  }
+  it('lets one render mint at most three shopper sessions, whatever visitor id or network the caller rotates', async () => {
+    const count = counter();
+    const input = { connection, claims, signature: mac() };
+    for (let session = 1; session <= PASTE_RENDER_MAX_SESSIONS; session++) {
+      expect(await verifyLiquidSignature(input, { nowSeconds: NOW, count })).toEqual({ ok: true });
+    }
+    // The caller-chosen visitor id is not an input any more: the fourth use
+    // of the same render is refused however the request is dressed up.
+    expect(await verifyLiquidSignature({ ...input, visitor: 'ip:visitor-b' } as typeof input, { nowSeconds: NOW, count }))
+      .toEqual({ ok: false, code: 'replayed' });
+    expect(new Set(count.mock.calls.map(([key]) => key)).size).toBe(1);
+    expect(count.mock.calls[0][0]).toMatch(new RegExp(`^gc-paste:render:v2:${SITE}:[a-f0-9]{64}$`));
+    // A different render (a fresh issuedAt) is a different key.
+    const fresh = { ...claims, issuedAt: String(NOW - 1) };
+    expect(await verifyLiquidSignature({ connection, claims: fresh, signature: mac(fresh) }, { nowSeconds: NOW, count })).toEqual({ ok: true });
   });
   it.each(['productId', 'variantId', 'shopDomain', 'siteId', 'customerId'] as const)('rejects tampering with %s before touching Redis', async (field) => {
-    const claim = vi.fn();
+    const count = vi.fn();
     const values = { productId: '99', variantId: '99', shopDomain: 'other.myshopify.com', siteId: OTHER, customerId: '99' };
-    expect(await verifyLiquidSignature({ connection, claims: { ...claims, [field]: values[field] }, signature: mac(), visitor: 'v' }, { nowSeconds: NOW, claim }))
+    expect(await verifyLiquidSignature({ connection, claims: { ...claims, [field]: values[field] }, signature: mac() }, { nowSeconds: NOW, count }))
       .toEqual({ ok: false, code: 'bad_signature' });
-    expect(claim).not.toHaveBeenCalled();
+    expect(count).not.toHaveBeenCalled();
   });
   it.each(['', 'not-hex', 'a'.repeat(63), 'a'.repeat(64), 'A'.repeat(64)])('rejects invalid MAC %s', async (signature) => {
-    expect((await verifyLiquidSignature({ connection, claims, signature, visitor: 'v' }, { nowSeconds: NOW, claim: async () => true })).ok).toBe(false);
+    expect((await verifyLiquidSignature({ connection, claims, signature }, { nowSeconds: NOW, count: async () => 1 })).ok).toBe(false);
   });
   it.each([NOW - 901, NOW + 31])('rejects expired/future render at %s', async (issuedAt) => {
     const p = { ...claims, issuedAt: String(issuedAt) };
-    expect(await verifyLiquidSignature({ connection, claims: p, signature: mac(p), visitor: 'v' }, { nowSeconds: NOW, claim: async () => true }))
+    expect(await verifyLiquidSignature({ connection, claims: p, signature: mac(p) }, { nowSeconds: NOW, count: async () => 1 }))
       .toEqual({ ok: false, code: 'stale_signature' });
   });
   it('allows the current and previous secrets only inside the overlap and keeps replay identity across versions', async () => {
     const rotated = { ...connection, secret_version: 2, previous_secret_version: 1, previous_valid_until: new Date((NOW + 900) * 1000).toISOString() };
-    const used = new Set<string>();
-    const claim = async (key: string) => { if (used.has(key)) return false; used.add(key); return true; };
-    const input = { connection: rotated, claims, signature: mac(), visitor: 'v' };
-    expect(await verifyLiquidSignature(input, { nowSeconds: NOW, claim })).toEqual({ ok: true });
-    expect(await verifyLiquidSignature({ ...input, signature: mac(claims, 2) }, { nowSeconds: NOW, claim })).toEqual({ ok: false, code: 'replayed' });
+    const count = counter();
+    const input = { connection: rotated, claims, signature: mac() };
+    for (let session = 1; session <= PASTE_RENDER_MAX_SESSIONS; session++) {
+      expect(await verifyLiquidSignature(input, { nowSeconds: NOW, count })).toEqual({ ok: true });
+    }
+    expect(await verifyLiquidSignature({ ...input, signature: mac(claims, 2) }, { nowSeconds: NOW, count })).toEqual({ ok: false, code: 'replayed' });
     const expired = { ...rotated, previous_valid_until: new Date(NOW * 1000).toISOString() };
-    expect(await verifyLiquidSignature({ ...input, connection: expired }, { nowSeconds: NOW, claim })).toEqual({ ok: false, code: 'bad_signature' });
+    expect(await verifyLiquidSignature({ ...input, connection: expired }, { nowSeconds: NOW, count })).toEqual({ ok: false, code: 'bad_signature' });
   });
-  it('fails closed when the core secret or distributed replay store is absent or down', async () => {
-    const input = { connection, claims, signature: mac(), visitor: 'v' };
-    expect(await verifyLiquidSignature(input, { nowSeconds: NOW, claim: async () => { throw new Error('redis down'); } })).toEqual({ ok: false, code: 'unavailable' });
+  it('fails closed when the core secret or distributed replay store is absent, down or answers nonsense', async () => {
+    const input = { connection, claims, signature: mac() };
+    expect(await verifyLiquidSignature(input, { nowSeconds: NOW, count: async () => { throw new Error('redis down'); } })).toEqual({ ok: false, code: 'unavailable' });
+    expect(await verifyLiquidSignature(input, { nowSeconds: NOW, count: async () => 0 })).toEqual({ ok: false, code: 'unavailable' });
+    expect(await verifyLiquidSignature(input, { nowSeconds: NOW, count: async () => Number.NaN })).toEqual({ ok: false, code: 'unavailable' });
     vi.stubEnv('UPSTASH_REDIS_REST_URL', ''); vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', '');
     expect(await verifyLiquidSignature(input, { nowSeconds: NOW })).toEqual({ ok: false, code: 'unavailable' });
     vi.stubEnv('GRINDCTRL_CAPABILITY_SECRET', '');
-    expect(await verifyLiquidSignature(input, { nowSeconds: NOW, claim: async () => true })).toEqual({ ok: false, code: 'unavailable' });
+    expect(await verifyLiquidSignature(input, { nowSeconds: NOW, count: async () => 1 })).toEqual({ ok: false, code: 'unavailable' });
   });
 });
 
