@@ -5,15 +5,10 @@ import { describe, expect, it } from 'vitest';
 const read = (name: string) => readFileSync(resolve(process.cwd(), '../../supabase', name), 'utf8');
 
 describe('review 2 data hygiene SQL source contracts (not database execution)', () => {
-  it('keeps optional server actors on every plan operation and best-effort audit writes', () => {
+  it('extends the audit action list without touching any function or removing data', () => {
     const sql = read('20261110_security_action_audit.sql');
-    expect(sql.match(/p_actor_user_id text default null/g)).toHaveLength(4);
-    expect(sql).not.toMatch(/\n\s*'owner'[,\n]/);
-    expect(sql).toContain('exception when others then');
-    for (const action of ['member_role_changed', 'member_removed', 'embed_key_regenerated', 'site_key_regenerated', 'trusted_domain_added', 'trusted_domain_removed', 'store_disconnected', 'manual_credit_grant']) expect(sql).toContain(`'${action}'`);
-    expect(sql).toContain('from public,anon,authenticated');
-    expect(sql).not.toMatch(/^as \$$|^\$;$/m);
-    expect(sql.match(/\$\$/g)).toHaveLength(16);
+    for (const action of ['member_role_changed', 'member_removed', 'site_key_regenerated', 'trusted_domain_added', 'trusted_domain_removed', 'manual_credit_grant', 'manual_plan_changed', 'order_lookup_performed']) expect(sql).toContain(`'${action}'`);
+    expect(sql).not.toMatch(/create (or replace )?function|drop function|delete from|drop table|drop column/i);
   });
   it('backfills the same digest used at runtime and leaves plaintext cleanup commented', () => {
     const sql = read('20261110_shop_link_hashes.sql');

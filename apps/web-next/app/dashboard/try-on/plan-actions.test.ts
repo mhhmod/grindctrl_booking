@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   reconcileShopSubscription: vi.fn(),
   runOwnerEntitlementMutation: vi.fn(),
   revalidatePath: vi.fn(),
+  recordAudit: vi.fn(),
 }));
 
 vi.mock('@clerk/nextjs/server', () => ({ auth: mocks.auth }));
@@ -30,6 +31,7 @@ vi.mock('@/lib/try-on/entitlement', () => ({
 }));
 
 vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidatePath }));
+vi.mock('@/lib/messenger/conversations', () => ({ recordAudit: mocks.recordAudit }));
 
 import {
   activatePlan,
@@ -149,8 +151,14 @@ describe('try-on plan owner actions', () => {
       expect.objectContaining({ p_action_key: '44444444-4444-4444-8444-444444444444' }),
     );
     expect(mocks.revalidatePath).toHaveBeenCalledTimes(4);
+    // The signed-in operator is recorded for every manual action, never sent to the RPC.
     for (const [, params] of mocks.runOwnerEntitlementMutation.mock.calls) {
-      expect(params.p_actor_user_id).toBe('user_operator');
+      expect(params).not.toHaveProperty('p_actor_user_id');
     }
+    expect(mocks.recordAudit).toHaveBeenCalledTimes(4);
+    expect(mocks.recordAudit).toHaveBeenCalledWith(expect.objectContaining({
+      siteId: null, actorClerkUserId: 'user_operator', action: 'manual_credit_grant',
+      detail: expect.objectContaining({ operation: 'apply_tryon_top_up', action_key: '33333333-3333-4333-8333-333333333333' }),
+    }));
   });
 });
