@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react';
-import { MessageSquareText, X } from 'lucide-react';
+import { Bot, Check, ChevronLeft, MessageSquareText, PanelRight, SendHorizontal, X } from 'lucide-react';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -70,6 +70,12 @@ const COPY = {
     composerReply: 'Reply',
     composerNote: 'Note',
     noteLabel: 'Private note: only your team sees this',
+    dayToday: 'Today',
+    dayYesterday: 'Yesterday',
+    aiLabel: 'Assistant',
+    teamLabel: 'Your team',
+    enterHint: 'Enter to send, Shift+Enter for a new line',
+    noteHint: 'Notes stay inside your team.',
     notePh: 'Type a private note…',
     cannedInsert: 'Saved replies',
     tabsLabel: 'Conversations by status',
@@ -129,6 +135,12 @@ const COPY = {
     composerReply: 'رد',
     composerNote: 'ملاحظة',
     noteLabel: 'ملاحظة خاصة: لفريقك فقط',
+    dayToday: 'اليوم',
+    dayYesterday: 'أمس',
+    aiLabel: 'المساعد',
+    teamLabel: 'فريقك',
+    enterHint: 'Enter للإرسال، وShift+Enter لسطر جديد',
+    noteHint: 'الملاحظات تبقى داخل فريقك.',
     notePh: 'اكتب ملاحظة خاصة…',
     cannedInsert: 'ردود محفوظة',
     tabsLabel: 'المحادثات حسب الحالة',
@@ -217,6 +229,25 @@ function triageLabel(category: string, t: (typeof COPY)['en']): string {
 function initialOf(name: string): string {
   const trimmed = name.trim();
   return trimmed ? trimmed[0].toUpperCase() : '?';
+}
+
+function dayKey(iso: string): string {
+  return new Date(iso).toDateString();
+}
+
+/** Today, Yesterday, or the date, for the separator above a day's messages. */
+function dayLabel(iso: string, locale: 'en' | 'ar', t: (typeof COPY)['en']): string {
+  const day = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date(today.getTime() - 86_400_000);
+  if (day.toDateString() === today.toDateString()) return t.dayToday;
+  if (day.toDateString() === yesterday.toDateString()) return t.dayYesterday;
+  return day.toLocaleDateString(locale === 'ar' ? 'ar-EG-u-nu-latn' : 'en-GB', { day: 'numeric', month: 'short', year: day.getFullYear() === today.getFullYear() ? undefined : 'numeric' });
+}
+
+/** The clock time under a message; the day is in the separator above it. */
+function timeOf(iso: string, locale: 'en' | 'ar'): string {
+  return new Date(iso).toLocaleTimeString(locale === 'ar' ? 'ar-EG-u-nu-latn' : 'en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
 function relativeTime(iso: string | null, t: (typeof COPY)['en']): string {
@@ -512,8 +543,9 @@ export function ConversationsPanel({
         }`}
       >
       {/* List */}
-      <div className={`${mobileThreadOpen ? 'hidden lg:flex' : 'flex'} h-full min-h-0 min-w-0 flex-col gap-2`}>
-      <div className="shrink-0">
+      <div className={`${mobileThreadOpen ? 'hidden lg:flex' : 'flex'} h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card`}>
+      <div className="grid shrink-0 gap-2 border-b border-border p-3">
+      <div>
         <label htmlFor="conversation-search" className="sr-only">
           {t.searchPlaceholder}
         </label>
@@ -569,20 +601,21 @@ export function ConversationsPanel({
       )}
       <p
         role="status"
-        className={`shrink-0 text-xs font-medium ${
+        className={`text-xs font-medium ${
           totalUnread > 0 ? 'text-foreground' : 'text-muted-foreground'
         }`}
       >
         {totalUnread > 0 ? t.unreadTotal(totalUnread) : t.allRead}
       </p>
+      </div>
       {visibleConversations.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+        <div className="m-3 rounded-2xl border border-dashed border-border p-8 text-center">
           <p className="text-sm font-semibold">{t.filteredEmpty}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t.filteredEmptyBody}</p>
         </div>
       ) : (
       <ul
-        className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pe-1"
+        className="flex min-h-0 flex-1 flex-col divide-y divide-border overflow-y-auto overscroll-contain"
         aria-label={t.title}
       >
         {visibleConversations.map((conversation) => (
@@ -614,10 +647,10 @@ export function ConversationsPanel({
                 }
               }}
               aria-current={selectedId === conversation.id ? 'true' : undefined}
-              className={`w-full rounded-xl border p-3 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 ${
+              className={`relative w-full px-3 py-3 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset ${
                 selectedId === conversation.id
-                  ? 'border-primary bg-primary/5 shadow-sm'
-                  : 'border-transparent bg-card hover:border-border hover:bg-accent/40'
+                  ? 'bg-primary/[0.07] before:absolute before:inset-y-2 before:start-0 before:w-[3px] before:rounded-full before:bg-primary'
+                  : 'hover:bg-accent/40'
               }`}
             >
               <span className="flex min-w-0 items-start gap-2.5">
@@ -625,7 +658,7 @@ export function ConversationsPanel({
                     than being four identical lines of "Anonymous shopper". */}
                 <span
                   aria-hidden="true"
-                  className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
+                  className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
                     unreadFor(conversation) > 0
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-muted-foreground'
@@ -662,10 +695,22 @@ export function ConversationsPanel({
                     </span>
                   )}
 
-                  <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                    <Badge variant={statusBadge(conversation.status).variant}>
+                  <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+                      <span
+                        aria-hidden="true"
+                        className={`size-1.5 rounded-full ${
+                          conversation.status === 'handoff_requested'
+                            ? 'bg-amber-500'
+                            : conversation.status === 'handoff_active'
+                              ? 'bg-primary'
+                              : conversation.status === 'closed'
+                                ? 'bg-muted-foreground/50'
+                                : 'bg-emerald-500'
+                        }`}
+                      />
                       {statusBadge(conversation.status).label}
-                    </Badge>
+                    </span>
                     {unreadFor(conversation) > 0 && (
                       <span className="shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-primary-foreground">
                         <span className="sr-only">{t.unreadOne}: </span>
@@ -701,19 +746,28 @@ export function ConversationsPanel({
 
       {/* Thread */}
       <section className={`${mobileThreadOpen ? 'flex' : 'hidden lg:flex'} h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card`} aria-label={t.title}>
-        <header className="flex max-h-[40%] shrink-0 flex-wrap items-center justify-between gap-2 overflow-y-auto overscroll-contain border-b border-border px-3 py-2 sm:px-4">
-          <div className="w-full lg:hidden">
-            <Button ref={backRef} variant="ghost" size="sm" className="min-h-11" onClick={() => setMobileThreadOpen(false)}>
-              <span className="inline-block rtl:rotate-180" aria-hidden="true">←</span>
-              {t.back}
+        <header className="flex max-h-[40%] shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 overflow-y-auto overscroll-contain border-b border-border px-3 py-2.5 sm:px-4">
+          {/* Who this is gets its own row on a phone; the actions wrap below it. */}
+          <div className="flex min-w-0 basis-full items-center gap-2.5 sm:basis-auto sm:flex-1">
+            <Button ref={backRef} variant="ghost" size="icon" className="min-h-11 min-w-11 shrink-0 lg:hidden" aria-label={t.back} onClick={() => setMobileThreadOpen(false)}>
+              <ChevronLeft className="rtl:rotate-180" aria-hidden="true" />
             </Button>
-          </div>
+            {selectedConversation && (
+              <span aria-hidden="true" className="hidden size-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground sm:flex">
+                {initialOf(selectedConversation.visitorName || selectedConversation.visitorEmail || t.anonymous)}
+              </span>
+            )}
           <div className="min-w-0">
+            {selectedConversation && (
+              <p className="truncate text-sm font-semibold">
+                {selectedConversation.visitorName || selectedConversation.visitorEmail || t.anonymous}
+              </p>
+            )}
             {status === 'handoff_requested' && (
               <p className="text-xs text-amber-800 dark:text-amber-400">{handoffReasonLabel(selectedConversation?.handoffReason, t)}</p>
             )}
             {status ? (
-              <Badge variant={statusBadge(status).variant}>{statusBadge(status).label}</Badge>
+              <Badge variant={statusBadge(status).variant} className="mt-0.5">{statusBadge(status).label}</Badge>
             ) : !error ? (
               <div role="status" aria-label={t.loading}>
                 <Skeleton className="h-5 w-28" />
@@ -721,14 +775,10 @@ export function ConversationsPanel({
               </div>
             ) : null}
           </div>
-          <div className="flex min-w-0 flex-wrap gap-2">
-            {aside && selectedId && (
-              <Button ref={asideButtonRef} size="sm" className="min-h-11 xl:hidden" variant="outline" onClick={() => setAsideOpen(true)}>
-                {aside.label}
-              </Button>
-            )}
+          </div>
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             {(status === 'open' || status === 'handoff_requested') && selectedId && (
-              <Button size="sm" className="min-h-11" variant="outline" disabled={pending} onClick={() => selectedId && act(() => actions.takeoverConversation(siteId, selectedId))}>
+              <Button size="sm" className="min-h-11" variant={status === 'handoff_requested' ? 'default' : 'outline'} disabled={pending} onClick={() => selectedId && act(() => actions.takeoverConversation(siteId, selectedId))}>
                 {t.takeOver}
               </Button>
             )}
@@ -759,7 +809,13 @@ export function ConversationsPanel({
             )}
             {status && status !== 'closed' && selectedId && (
               <Button size="sm" className="min-h-11" variant="ghost" disabled={pending} onClick={() => selectedId && act(() => actions.closeConversationAction(siteId, selectedId))}>
+                <Check aria-hidden="true" />
                 {t.resolve}
+              </Button>
+            )}
+            {aside && selectedId && (
+              <Button ref={asideButtonRef} size="icon" className="min-h-11 min-w-11 xl:hidden" variant="outline" aria-label={aside.label} onClick={() => setAsideOpen(true)}>
+                <PanelRight className="rtl:-scale-x-100" aria-hidden="true" />
               </Button>
             )}
           </div>
@@ -795,7 +851,14 @@ export function ConversationsPanel({
               {t.loadOlder}
             </Button>
           )}
-          {messages.slice(-visibleCount).map((message) =>
+          {messages.slice(-visibleCount).map((message, index, shown) => (
+            <React.Fragment key={message.id}>
+            {(index === 0 || dayKey(shown[index - 1].createdAt) !== dayKey(message.createdAt)) && (
+              <p className="flex items-center gap-3 py-1 text-[11px] font-medium text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
+                {dayLabel(message.createdAt, locale, t)}
+              </p>
+            )}
+            {
             /* Staff-only note: a full-width amber block, unmistakable from a
                real shopper-visible reply. Checked before the system branch —
                a note also carries role 'system' but is not the handoff line. */
@@ -823,12 +886,16 @@ export function ConversationsPanel({
                   : ''}
               </p>
             ) : (
-              <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}>
+              <div key={message.id} className={`flex flex-col ${message.role === 'user' ? 'items-start' : 'items-end'}`}>
+                {/* Shopper, assistant and your team each look different, so a
+                    glance at the thread says who said what. */}
                 <div
-                  className={`min-w-0 max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm sm:max-w-[80%] ${
+                  className={`min-w-0 max-w-[85%] whitespace-pre-wrap break-words px-3.5 py-2 text-sm sm:max-w-[75%] ${
                     message.role === 'user'
-                      ? 'bg-muted'
-                      : 'bg-primary text-primary-foreground'
+                      ? 'rounded-2xl rounded-ss-md bg-muted'
+                      : message.author === 'human'
+                        ? 'rounded-2xl rounded-se-md bg-primary text-primary-foreground'
+                        : 'rounded-2xl rounded-se-md border border-border bg-background'
                   }`}
                 >
                   {attachments[message.id] && (
@@ -850,13 +917,15 @@ export function ConversationsPanel({
                     </figure>
                   )}
                   <MessageText text={message.content} />
-                  <span className="mt-0.5 block text-[10px] opacity-70">
+                </div>
+                <span className="mt-1 flex items-center gap-1 px-1 text-[11px] text-muted-foreground">
+                    {message.role === 'assistant' && message.author !== 'human' && <Bot className="size-3.5" aria-hidden="true" />}
                     {message.role === 'assistant'
                       ? message.author === 'human'
-                        ? locale === 'ar' ? 'فريقك' : 'Your team'
-                        : 'AI'
-                      : ''}{' '}
-                    {relativeTime(message.createdAt, t)}
+                        ? t.teamLabel
+                        : t.aiLabel
+                      : ''}{message.role === 'assistant' ? ' · ' : ''}
+                    {timeOf(message.createdAt, locale)}
                     {/* The shopper's own rating on this reply, if any. A
                         plain glyph, deliberately not a button — this view
                         is read-only, staff never submit a rating here. */}
@@ -869,24 +938,52 @@ export function ConversationsPanel({
                         {message.feedback === 'up' ? '👍' : '👎'}
                       </span>
                     )}
-                  </span>
-                </div>
+                </span>
               </div>
-            ),
-          )}
+            )}
+            </React.Fragment>
+          ))}
         </div>
 
         {status && (
           <footer className="shrink-0 border-t border-border p-3">
-            <div className="mb-2 flex items-center gap-1" role="group" aria-label={`${t.composerReply} / ${t.composerNote}`}>
+            {/* One box: Reply or Note on top, the message, then the hint and
+                Send. A note tints the whole box so it is never mistaken for a
+                reply the shopper will see. */}
+            <form
+              className={`rounded-xl border transition-colors focus-within:ring-2 focus-within:ring-ring/40 ${
+                composerMode === 'note' || status === 'closed' ? 'border-amber-600/40 bg-amber-500/[0.06]' : 'border-input bg-background'
+              }`}
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (composerMode === 'note' || status === 'closed') sendNote();
+                else sendReply();
+              }}
+            >
+            <div className="flex items-center gap-1 px-1.5 pt-1" role="group" aria-label={`${t.composerReply} / ${t.composerNote}`}>
               {status !== 'closed' && (
-                <PillToggle active={composerMode === 'reply'} onClick={() => setComposerMode('reply')}>
+                <button
+                  type="button"
+                  aria-pressed={composerMode === 'reply'}
+                  onClick={() => setComposerMode('reply')}
+                  className={`min-h-9 rounded-lg px-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    composerMode === 'reply' ? 'text-foreground underline decoration-2 underline-offset-[10px]' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
                   {t.composerReply}
-                </PillToggle>
+                </button>
               )}
-              <PillToggle active={composerMode === 'note' || status === 'closed'} onClick={() => setComposerMode('note')}>
+              <button
+                type="button"
+                aria-pressed={composerMode === 'note' || status === 'closed'}
+                onClick={() => setComposerMode('note')}
+                className={`min-h-9 rounded-lg px-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  composerMode === 'note' || status === 'closed' ? 'text-amber-800 underline decoration-2 underline-offset-[10px] dark:text-amber-400' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
                 {t.composerNote}
-              </PillToggle>
+              </button>
+              <span className="ms-auto" />
               {activeCanned.length > 0 && (
                 <Popover open={cannedOpen} onOpenChange={setCannedOpen}>
                   <PopoverTrigger asChild>
@@ -916,20 +1013,12 @@ export function ConversationsPanel({
                 </Popover>
               )}
             </div>
-            <form
-              className="flex items-end gap-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (composerMode === 'note' || status === 'closed') sendNote();
-                else sendReply();
-              }}
-            >
               <label htmlFor={composerMode === 'note' || status === 'closed' ? 'staff-note' : 'staff-reply'} className="sr-only">
                 {composerMode === 'note' || status === 'closed' ? t.notePh : t.replyPh}
               </label>
               <Textarea
                 id={composerMode === 'note' || status === 'closed' ? 'staff-note' : 'staff-reply'}
-                rows={1}
+                rows={2}
                 value={draft}
                 onChange={(e) => {
                   setDraft(e.target.value.slice(0, 2000));
@@ -956,13 +1045,17 @@ export function ConversationsPanel({
                   }
                 }}
                 placeholder={composerMode === 'note' || status === 'closed' ? t.notePh : t.replyPh}
-                className={`h-11 min-h-11 min-w-0 flex-1 resize-none overflow-y-auto ${
-                  composerMode === 'note' || status === 'closed' ? 'border-amber-600/50 bg-amber-500/10' : ''
-                }`}
+                className="field-sizing-content max-h-40 min-h-11 w-full min-w-0 resize-none overflow-y-auto border-0! bg-transparent px-3 py-2 shadow-none! focus-visible:ring-0!"
               />
-              <Button type="submit" size="sm" className="min-h-11 min-w-11" disabled={!draft.trim() || pending}>
-                {t.send}
-              </Button>
+              <div className="flex items-center justify-between gap-2 px-2 pb-2">
+                <p className="min-w-0 truncate text-[11px] text-muted-foreground">
+                  {composerMode === 'note' || status === 'closed' ? t.noteHint : <span className="hidden sm:inline">{t.enterHint}</span>}
+                </p>
+                <Button type="submit" size="sm" className="min-h-11 min-w-11 shrink-0" disabled={!draft.trim() || pending}>
+                  <SendHorizontal className="rtl:-scale-x-100" aria-hidden="true" />
+                  {t.send}
+                </Button>
+              </div>
             </form>
           </footer>
         )}

@@ -1,7 +1,14 @@
 import React from 'react';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ConversationsPanel, type ConversationListItem } from './conversations-panel';
+
+/* The open conversation's name also heads the thread, so a name is looked
+   up in the list itself. An empty filter has no list: nothing is in it. */
+function inList() {
+  const list = screen.queryByRole('list', { name: /^(Conversations|المحادثات)$/ });
+  return within(list ?? document.createElement('div'));
+}
 
 const fetchConversationMessages = vi.fn();
 const staffReply = vi.fn();
@@ -299,10 +306,10 @@ describe('ConversationsPanel unread', () => {
       />,
     );
 
-    fireEvent.click(screen.getByText('Read already'));
+    fireEvent.click(inList().getByText('Read already'));
     expect(markConversationRead).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByText('shopper@example.com'));
+    fireEvent.click(inList().getByText('shopper@example.com'));
     expect(markConversationRead).toHaveBeenCalledWith('site-1', 'conv-1');
   });
 });
@@ -344,8 +351,8 @@ describe('ConversationsPanel assignee', () => {
     );
 
     expect(screen.queryByRole('button', { name: 'Assigned to me' })).not.toBeInTheDocument();
-    expect(screen.getByText('Shopper One')).toBeInTheDocument();
-    expect(screen.getByText('Shopper Two')).toBeInTheDocument();
+    expect(inList().getByText('Shopper One')).toBeInTheDocument();
+    expect(inList().getByText('Shopper Two')).toBeInTheDocument();
   });
 
   it('filters the list to only my conversations when the toggle is active', () => {
@@ -359,18 +366,18 @@ describe('ConversationsPanel assignee', () => {
       />,
     );
 
-    expect(screen.getByText('Shopper One')).toBeInTheDocument();
-    expect(screen.getByText('Shopper Two')).toBeInTheDocument();
+    expect(inList().getByText('Shopper One')).toBeInTheDocument();
+    expect(inList().getByText('Shopper Two')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Assigned to me' }));
 
-    expect(screen.getByText('Shopper One')).toBeInTheDocument();
-    expect(screen.queryByText('Shopper Two')).not.toBeInTheDocument();
+    expect(inList().getByText('Shopper One')).toBeInTheDocument();
+    expect(inList().queryByText('Shopper Two')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'All' }));
 
-    expect(screen.getByText('Shopper One')).toBeInTheDocument();
-    expect(screen.getByText('Shopper Two')).toBeInTheDocument();
+    expect(inList().getByText('Shopper One')).toBeInTheDocument();
+    expect(inList().getByText('Shopper Two')).toBeInTheDocument();
   });
 
   it('shows an empty state instead of a blank list when nothing is assigned to me', () => {
@@ -465,19 +472,19 @@ describe('ConversationsPanel search and status filters', () => {
       expect(tab(/^Needs you/)).toHaveTextContent('Needs you 2');
       expect(tab(/^Assistant/)).toHaveTextContent('Assistant 1');
       expect(tab(/^Resolved/)).toHaveTextContent('Resolved 1');
-      expect(screen.getByText('bob@example.com')).toBeInTheDocument();
-      expect(screen.getByText('Cara')).toBeInTheDocument();
-      expect(screen.queryByText('Alice Shopper')).not.toBeInTheDocument();
+      expect(inList().getByText('bob@example.com')).toBeInTheDocument();
+      expect(inList().getByText('Cara')).toBeInTheDocument();
+      expect(inList().queryByText('Alice Shopper')).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'All statuses' })).not.toBeInTheDocument();
     });
 
     it('shows the assistant’s chats and the resolved ones under their tabs, and counts only mine when asked', () => {
       renderInbox();
       fireEvent.click(tab(/^Assistant/));
-      expect(screen.getByText('Alice Shopper')).toBeInTheDocument();
-      expect(screen.queryByText('Cara')).not.toBeInTheDocument();
+      expect(inList().getByText('Alice Shopper')).toBeInTheDocument();
+      expect(inList().queryByText('Cara')).not.toBeInTheDocument();
       fireEvent.click(tab(/^Resolved/));
-      expect(screen.getByText('Dan')).toBeInTheDocument();
+      expect(inList().getByText('Dan')).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole('button', { name: 'Assigned to me' }));
       expect(tab(/^Needs you/)).toHaveTextContent('Needs you 1');
@@ -493,10 +500,10 @@ describe('ConversationsPanel search and status filters', () => {
   it('shows every conversation before any filter is applied', () => {
     renderFilterable();
 
-    expect(screen.getByText('Alice Shopper')).toBeInTheDocument();
-    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
-    expect(screen.getByText('Cara')).toBeInTheDocument();
-    expect(screen.getByText('Dan')).toBeInTheDocument();
+    expect(inList().getByText('Alice Shopper')).toBeInTheDocument();
+    expect(inList().getByText('bob@example.com')).toBeInTheDocument();
+    expect(inList().getByText('Cara')).toBeInTheDocument();
+    expect(inList().getByText('Dan')).toBeInTheDocument();
   });
 
   it('narrows the list by visitor name, case-insensitively', () => {
@@ -504,10 +511,10 @@ describe('ConversationsPanel search and status filters', () => {
 
     fireEvent.change(screen.getByLabelText('Search conversations'), { target: { value: 'ALICE' } });
 
-    expect(screen.getByText('Alice Shopper')).toBeInTheDocument();
-    expect(screen.queryByText('bob@example.com')).not.toBeInTheDocument();
-    expect(screen.queryByText('Cara')).not.toBeInTheDocument();
-    expect(screen.queryByText('Dan')).not.toBeInTheDocument();
+    expect(inList().getByText('Alice Shopper')).toBeInTheDocument();
+    expect(inList().queryByText('bob@example.com')).not.toBeInTheDocument();
+    expect(inList().queryByText('Cara')).not.toBeInTheDocument();
+    expect(inList().queryByText('Dan')).not.toBeInTheDocument();
   });
 
   it('matches against visitor email and message preview too', () => {
@@ -515,13 +522,13 @@ describe('ConversationsPanel search and status filters', () => {
 
     // Email match (null visitorName on conv-bob must not crash).
     fireEvent.change(screen.getByLabelText('Search conversations'), { target: { value: 'bob@example' } });
-    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
-    expect(screen.queryByText('Alice Shopper')).not.toBeInTheDocument();
+    expect(inList().getByText('bob@example.com')).toBeInTheDocument();
+    expect(inList().queryByText('Alice Shopper')).not.toBeInTheDocument();
 
     // Preview match.
     fireEvent.change(screen.getByLabelText('Search conversations'), { target: { value: 'refund' } });
-    expect(screen.getByText('Alice Shopper')).toBeInTheDocument();
-    expect(screen.queryByText('bob@example.com')).not.toBeInTheDocument();
+    expect(inList().getByText('Alice Shopper')).toBeInTheDocument();
+    expect(inList().queryByText('bob@example.com')).not.toBeInTheDocument();
   });
 
   it('restores the full list when the search box is cleared', () => {
@@ -529,41 +536,41 @@ describe('ConversationsPanel search and status filters', () => {
 
     const search = screen.getByLabelText('Search conversations');
     fireEvent.change(search, { target: { value: 'alice' } });
-    expect(screen.queryByText('Dan')).not.toBeInTheDocument();
+    expect(inList().queryByText('Dan')).not.toBeInTheDocument();
 
     fireEvent.change(search, { target: { value: '' } });
-    expect(screen.getByText('Alice Shopper')).toBeInTheDocument();
-    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
-    expect(screen.getByText('Cara')).toBeInTheDocument();
-    expect(screen.getByText('Dan')).toBeInTheDocument();
+    expect(inList().getByText('Alice Shopper')).toBeInTheDocument();
+    expect(inList().getByText('bob@example.com')).toBeInTheDocument();
+    expect(inList().getByText('Cara')).toBeInTheDocument();
+    expect(inList().getByText('Dan')).toBeInTheDocument();
   });
 
   it('each status pill shows only its bucket; All statuses restores everything', () => {
     renderFilterable();
 
     fireEvent.click(screen.getByRole('button', { name: 'Needs a reply' }));
-    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
-    expect(screen.queryByText('Alice Shopper')).not.toBeInTheDocument();
-    expect(screen.queryByText('Cara')).not.toBeInTheDocument();
-    expect(screen.queryByText('Dan')).not.toBeInTheDocument();
+    expect(inList().getByText('bob@example.com')).toBeInTheDocument();
+    expect(inList().queryByText('Alice Shopper')).not.toBeInTheDocument();
+    expect(inList().queryByText('Cara')).not.toBeInTheDocument();
+    expect(inList().queryByText('Dan')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'In progress' }));
-    expect(screen.getByText('Alice Shopper')).toBeInTheDocument();
-    expect(screen.getByText('Cara')).toBeInTheDocument();
-    expect(screen.queryByText('bob@example.com')).not.toBeInTheDocument();
-    expect(screen.queryByText('Dan')).not.toBeInTheDocument();
+    expect(inList().getByText('Alice Shopper')).toBeInTheDocument();
+    expect(inList().getByText('Cara')).toBeInTheDocument();
+    expect(inList().queryByText('bob@example.com')).not.toBeInTheDocument();
+    expect(inList().queryByText('Dan')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Resolved' }));
-    expect(screen.getByText('Dan')).toBeInTheDocument();
-    expect(screen.queryByText('Alice Shopper')).not.toBeInTheDocument();
-    expect(screen.queryByText('bob@example.com')).not.toBeInTheDocument();
-    expect(screen.queryByText('Cara')).not.toBeInTheDocument();
+    expect(inList().getByText('Dan')).toBeInTheDocument();
+    expect(inList().queryByText('Alice Shopper')).not.toBeInTheDocument();
+    expect(inList().queryByText('bob@example.com')).not.toBeInTheDocument();
+    expect(inList().queryByText('Cara')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'All statuses' }));
-    expect(screen.getByText('Alice Shopper')).toBeInTheDocument();
-    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
-    expect(screen.getByText('Cara')).toBeInTheDocument();
-    expect(screen.getByText('Dan')).toBeInTheDocument();
+    expect(inList().getByText('Alice Shopper')).toBeInTheDocument();
+    expect(inList().getByText('bob@example.com')).toBeInTheDocument();
+    expect(inList().getByText('Cara')).toBeInTheDocument();
+    expect(inList().getByText('Dan')).toBeInTheDocument();
   });
 
   it('applies search AND status together — a text match outside the bucket is excluded', () => {
@@ -572,10 +579,10 @@ describe('ConversationsPanel search and status filters', () => {
     // "human" only appears in conv-bob's preview, which is handoff_requested,
     // not "In progress" — so combining both filters must hide it.
     fireEvent.change(screen.getByLabelText('Search conversations'), { target: { value: 'human' } });
-    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
+    expect(inList().getByText('bob@example.com')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'In progress' }));
-    expect(screen.queryByText('bob@example.com')).not.toBeInTheDocument();
+    expect(inList().queryByText('bob@example.com')).not.toBeInTheDocument();
     expect(screen.getByText('No conversations match')).toBeInTheDocument();
   });
 
@@ -585,7 +592,7 @@ describe('ConversationsPanel search and status filters', () => {
     fireEvent.change(screen.getByLabelText('Search conversations'), { target: { value: 'no-such-shopper-zzz' } });
 
     expect(screen.getByText('No conversations match')).toBeInTheDocument();
-    expect(screen.queryByText('Alice Shopper')).not.toBeInTheDocument();
+    expect(inList().queryByText('Alice Shopper')).not.toBeInTheDocument();
   });
 
   it('still renders the true empty state when the host sends zero conversations', () => {
@@ -690,7 +697,7 @@ describe('ConversationsPanel internal notes', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Note' }));
     expect(screen.getByRole('button', { name: 'Note' })).toHaveAttribute('aria-pressed', 'true');
 
-    fireEvent.click(screen.getByText('Shopper Two'));
+    fireEvent.click(inList().getByText('Shopper Two'));
 
     // Switching threads clears the status until the reload lands, so the
     // footer (and its toggle) briefly unmounts — wait for it to come back.
