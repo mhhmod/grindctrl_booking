@@ -248,3 +248,13 @@ it('uses the server-detected EasyOrders platform, not the shopper or a hostname 
   expect(result?.easyOrders).toBe(true);
   expect(mocks.platforms).toHaveBeenCalledWith('site-1');
 });
+
+it('reads Woo detection for pasted websites from the existing domain platform reader', async () => {
+  mocks.paste.mockResolvedValue(pasteStatus());
+  mocks.platforms.mockResolvedValue([{ domain: 'shop.example', platform: 'woocommerce' }]);
+  const input = { activeStore: { shopDomain: null, siteId: 'site-1', tenantKey: 'site:1', platform: 'paste' as const },
+    role: 'owner' as const, timeZone: 'UTC', now: NOW };
+  expect(await getYourStoreFacts(input)).toMatchObject({ platform: 'paste_website', wooDetected: true });
+  mocks.platforms.mockResolvedValue([{ domain: 'shop.example', platform: 'custom' }]);
+  expect(await getYourStoreFacts(input)).toMatchObject({ wooDetected: false });
+});

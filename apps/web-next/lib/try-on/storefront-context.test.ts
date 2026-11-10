@@ -297,3 +297,16 @@ describe('Try-On storefront capabilities', () => {
     expect(verifyTryOnSession('', 'anything', {}, NOW)).toBeNull();
   });
 });
+
+it.each(['woocommerce', 'paste-website', 'paste-shopify'] as const)('carries the signed store title and garment through sessions and attempts for %s', (platform) => {
+  const woo = platform === 'woocommerce';
+  const context = signStorefrontContext(SECRET, { shop: 'site:11111111-1111-4111-8111-111111111111', platform,
+    productId: '14', variantId: '14', productGid: woo ? 'woo:14' : 'paste:14', variantGid: woo ? 'woo:14' : 'paste:14',
+    title: 'Store-owned shirt', canonicalGarmentUrl: 'https://store.example/shirt.jpg', origin: 'https://store.example', nonce: NONCE }, NOW);
+  const verifiedContext = verifyStorefrontContext(SECRET, context.token, {}, NOW)!;
+  const session = signTryOnSession(SECRET, { purpose: 'storefront', context: verifiedContext }, NOW);
+  const verified = verifyTryOnSession(SECRET, session.token, {}, NOW)!;
+  expect(verified).toMatchObject({ title: 'Store-owned shirt', canonicalGarmentUrl: 'https://store.example/shirt.jpg' });
+  const attempt = signTryOnAttempt(SECRET, { session: verified, attemptNonce: NONCE });
+  expect(verifyTryOnAttempt(SECRET, attempt.token, verified, NOW)).toMatchObject({ title: 'Store-owned shirt', canonicalGarmentUrl: 'https://store.example/shirt.jpg' });
+});

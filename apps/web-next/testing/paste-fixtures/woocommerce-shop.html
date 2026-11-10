@@ -1,0 +1,32 @@
+<!doctype html>
+<!-- Imitates WooCommerce classic and block shop loops without ItemList or merchant card tags. -->
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="gc-fixture-path" content="/shop/">
+  <meta name="gc-fixture-expect" content="cards:2">
+  <title>WooCommerce shop</title>
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+</head><body>
+<script>window.wc_add_to_cart_params = {};</script>
+<main>
+  <ul class="products">
+    <li class="product">
+      <a class="woocommerce-LoopProduct-link" href="/product/linen-shirt/">
+        <img src="https://store.example/wp-content/uploads/linen.jpg" width="600" height="800" alt="Linen shirt photo">
+        <h2 class="woocommerce-loop-product__title">Linen shirt</h2>
+      </a>
+      <a class="add_to_cart_button" data-product_id="14" href="?add-to-cart=14">Add to cart</a>
+    </li>
+  </ul>
+  <div class="wc-block-grid"><ul class="wc-block-grid__products">
+    <li class="wc-block-grid__product">
+      <a class="wc-block-grid__product-link" href="/product/silk-scarf/">
+        <img src="https://store.example/wp-content/uploads/silk.jpg" width="600" height="800" alt="Silk scarf">
+        <div class="wc-block-grid__product-title">Silk scarf</div>
+      </a>
+      <a class="add_to_cart_button" data-product_id="15" href="?add-to-cart=15">Add to cart</a>
+    </li>
+  </ul></div>
+</main>
+</body></html>

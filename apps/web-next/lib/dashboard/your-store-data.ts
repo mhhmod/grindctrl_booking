@@ -141,6 +141,7 @@ export async function getYourStoreFacts({
     codeOutdated: paste?.codeOutdated ?? false,
     health,
     pillsOn,
+    wooDetected: domainPlatforms?.some((domain) => domain.platform === 'woocommerce') ?? false,
     easyOrders: domainPlatforms?.some((domain) => domain.platform === 'easyorders') ?? false,
     tryOn: { tenant, showButton, ...looksOf(entitlement), pasteReason: paste?.tryOnReason ?? null },
     chat: siteId && siteStatus !== null ? { siteId, enabled: siteStatus === 'active' } : null,

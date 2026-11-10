@@ -64,9 +64,10 @@ const pills = () => [...document.querySelectorAll<HTMLButtonElement>('.gc-tryon-
 const pillFor = (id: string) => document.querySelector<HTMLButtonElement>(`.gc-tryon-pill[data-product-id="${id}"]`)!;
 const contextFor = (id: string) => ({ context: { expiresAt: later(), variantId: id }, embedUrl: `${APP}/embed/try-on?product=${id}&sheet=1#storefrontContext=proof` });
 
-async function start(config: unknown = LIVE, handlers: Record<string, Handler> = {}) {
+async function start(config: unknown = LIVE, handlers: Record<string, Handler> = {}, platform = 'shopify') {
   route({ '/api/try-on/paste-config': () => json(config), '/collections/all': () => html('<html></html>'), ...handlers });
-  const adapter = (globals.GRINDCTRL_TRYON_PASTE as Paste).create({ script: snippet(), appOrigin: APP, locale: 'en',
+  const script = snippet(); script.dataset.gcPlatform = platform;
+  const adapter = (globals.GRINDCTRL_TRYON_PASTE as Paste).create({ script, appOrigin: APP, locale: 'en',
     visitorId: 'shared-visitor-123456', preview: '' });
   const found = await adapter.prepare();
   if (found) {
@@ -95,7 +96,7 @@ beforeEach(() => {
   document.body.innerHTML = '';
   document.documentElement.lang = 'en';
   window.localStorage.clear();
-  for (const key of ['GRINDCTRL_TRYON_PASTE', 'GRINDCTRL_TRYON_ENGINE', '__gcPasteTryOn', 'GRINDCTRL_MESSENGER', 'Shopify']) delete globals[key];
+  for (const key of ['GRINDCTRL_TRYON_PASTE', 'GRINDCTRL_TRYON_ENGINE', '__gcPasteTryOn', 'GRINDCTRL_MESSENGER', 'Shopify', 'woocommerce_params', 'wc_add_to_cart_params']) delete globals[key];
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json({})));
   (0, eval)(source('tryon-paste'));
 });
@@ -304,5 +305,60 @@ describe('messenger on a pasted-code listing', () => {
     expect(scripts).toHaveLength(2);
     expect(scripts[0]).toMatch(/tryon-paste\.js\?v=[a-f0-9]{12}$/);
     expect(scripts[1]).toMatch(/tryon-engine\.js\?v=[a-f0-9]{12}$/);
+  });
+});
+
+describe('WooCommerce loops through pasted website code', () => {
+  function woo(markers = true) {
+    window.history.replaceState({}, '', '/shop/');
+    const fixture = new DOMParser().parseFromString(readFileSync('testing/paste-fixtures/woocommerce-shop.html', 'utf8'), 'text/html');
+    document.body.innerHTML = fixture.body.innerHTML;
+    if (markers) globals.wc_add_to_cart_params = {};
+  }
+  it('reads classic and block cards with the store product id, title and image', async () => {
+    woo();
+    const { adapter } = await start(LIVE, {}, 'website');
+    expect(pills().map((p) => p.dataset.productId)).toEqual(['14', '15']);
+    expect(adapter.detectProduct(pillFor('14'))).toMatchObject({ id: '14', title: 'Linen shirt', imageUrl: 'https://store.example/wp-content/uploads/linen.jpg' });
+    expect(adapter.detectProduct(pillFor('15'))).toMatchObject({ id: '15', title: 'Silk scarf', imageUrl: 'https://store.example/wp-content/uploads/silk.jpg' });
+    expect(adapter.injectButton).toBe(false);
+    pillFor('14').click();
+    await tick();
+    expect(contextBody()).toMatchObject({ productId: '14', title: 'Linen shirt', imageUrl: 'https://store.example/wp-content/uploads/linen.jpg' });
+  });
+  it('requires Woo markers even on /shop/ with identical loop markup', async () => {
+    woo(false);
+    const { found } = await start(LIVE, {}, 'website');
+    expect(found).toBe(false); expect(pills()).toHaveLength(0);
+  });
+  it('finds late cards, including an initially empty grid, without duplicates', async () => {
+    woo(); const card = document.querySelector('li.product')!.outerHTML;
+    document.querySelector('main')!.innerHTML = '<ul class="products"></ul>';
+    await start(LIVE, {}, 'website');
+    expect(pills()).toHaveLength(0);
+    document.querySelector('ul')!.insertAdjacentHTML('beforeend', card);
+    await wait(350);
+    expect(pills()).toHaveLength(1);
+    document.body.insertAdjacentHTML('beforeend', '<div>filter done</div>');
+    await wait(350); expect(pills()).toHaveLength(1);
+  });
+  it('skips foreign links and incomplete cards and honours the config gate', async () => {
+    woo(); document.querySelector('.woocommerce-LoopProduct-link')!.setAttribute('href', 'https://foreign.example/product/tee');
+    document.querySelector('.wc-block-grid__product img')!.remove();
+    await start(LIVE, {}, 'website'); expect(pills()).toHaveLength(0);
+    woo();
+    await start({ ...LIVE, showCardPill: false }, {}, 'website'); expect(pills()).toHaveLength(0);
+  });
+  it('keeps pills off the single-product page', async () => {
+    woo(); window.history.replaceState({}, '', '/product/tee');
+    document.querySelector('main')!.insertAdjacentHTML('afterbegin', '<h1>Tee</h1><div data-grindctrl-tryon data-product-id="tee" data-title="Tee" data-image="https://store.example/tee.jpg"></div><form class="cart"><button class="single_add_to_cart_button">Buy</button></form>');
+    const { adapter } = await start(LIVE, {}, 'website');
+    expect(adapter.injectCards).toBe(false); expect(pills()).toHaveLength(0);
+  });
+  it('prefers explicit merchant card tags over Woo loop discovery', async () => {
+    woo();
+    document.querySelector('main')!.insertAdjacentHTML('beforeend', '<div data-grindctrl-card data-product-id="merchant" data-title="Merchant card" data-image="https://store.example/own.jpg" data-url="/product/merchant"><img src="https://store.example/own.jpg" width="600" height="800"></div>');
+    await start(LIVE, {}, 'website');
+    expect(pills().map((p) => p.dataset.productId)).toEqual(['merchant']);
   });
 });

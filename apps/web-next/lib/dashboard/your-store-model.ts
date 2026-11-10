@@ -61,6 +61,7 @@ export type YourStoreFacts = {
   health?: HealthCounts;
   pillsOn?: boolean;
   easyOrders?: boolean;
+  wooDetected?: boolean;
   tryOn: null | {
     tenant: string;
     showButton: boolean;
@@ -346,7 +347,7 @@ function storeCheck(facts: YourStoreFacts, copy: YourStoreCopy, locale: SiteLoca
     else if (health?.photos) well.push({ key: 'productPhotos', title: r.productPhotos, sentence: r.photosReady, link: null });
     else wait('productPhotos', r.productPhotos);
 
-    if (facts.platform === 'paste_website') {
+    if (facts.platform === 'paste_website' && !facts.wooDetected) {
       if (facts.easyOrders) more.push({ key: 'collectionPages', title: r.collectionPages, sentence: r.easyOrdersPills, link: null });
     } else if (facts.platform === 'paste_shopify' && facts.codeOutdated) {
       problem('collectionPages', 'attention', r.collectionPages, copy.updatedCodeNote, setUp(copy.getUpdatedCode));

@@ -108,6 +108,8 @@ export type StorefrontContextClaims = {
 export type TryOnSessionPurpose = 'storefront' | 'public-demo' | 'legacy-compat';
 
 export type VerifiedTryOnSession = {
+  /** Store title carried only from the signed context. */
+  title?: string;
   iss: typeof ISSUER;
   aud: typeof SESSION_AUDIENCE;
   purpose: TryOnSessionPurpose;
@@ -493,7 +495,7 @@ export function signTryOnSession(
     // shopless. It carries an authoritative garment but can never select a
     // merchant entitlement or enter the billable storefront branch.
     shop: input.purpose === 'storefront' ? context?.shop ?? null : null,
-    ...(input.purpose === 'storefront' && context?.platform ? { platform: context.platform } : {}),
+    ...(input.purpose === 'storefront' && context?.platform ? { platform: context.platform, ...wooAuditClaims({ title: context.title }) } : {}),
     ...(input.purpose === 'storefront' && context?.platform?.startsWith('paste-') ? { origin: context.origin } : {}),
     productId,
     variantId: context?.variantId ?? null,
@@ -596,7 +598,7 @@ export function verifyTryOnSession(
     purpose: payload.purpose,
     sessionId: payload.sessionId,
     shop,
-    ...(woo ? { platform: payload.platform as StorefrontPlatform } : {}),
+    ...(woo ? { platform: payload.platform as StorefrontPlatform, ...wooAuditClaims({ title: payload.title }) } : {}),
     ...(typeof payload.origin === 'string' && payload.platform !== 'woocommerce' && woo ? { origin: payload.origin } : {}),
     productId: payload.productId,
     variantId,

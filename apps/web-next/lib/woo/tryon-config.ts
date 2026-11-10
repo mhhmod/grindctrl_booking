@@ -1,11 +1,12 @@
 import 'server-only';
 
+import type { configTiming } from '@/lib/storefront-config-cache';
 import { cachedProxyConfig, proxyConfigCacheKey, storeProxyConfig } from '@/lib/shopify/proxy-config-cache';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { flagStoreForTenant, siteTenantKey } from '@/lib/tenancy/tenant-key';
 import { DEFAULT_TRYON_LOCALE, isTryOnLocale, type TryOnLocale } from '@/lib/try-on/i18n';
 import { pickMerchantCopy } from '@/lib/try-on/merchant-copy';
-import { getTryOnSettings } from '@/lib/try-on/settings';
+import { getTryOnSettings, getTryOnSettingsForEdit } from '@/lib/try-on/settings';
 import { cardPillsOn } from '@/lib/try-on/card-pill';
 import { verifiedSiteHosts } from './garment-url';
 import { readSiteLaunch } from './tryon-site';
@@ -25,19 +26,22 @@ export function siteConfigLocale(value: unknown): TryOnLocale {
 export async function buildSiteTryOnConfig(
   siteId: string,
   localeInput: unknown,
+  options?: { fresh?: boolean; timing?: ReturnType<typeof configTiming> },
 ): Promise<Record<string, unknown>> {
   const locale = siteConfigLocale(localeInput);
   const tenant = siteTenantKey(siteId);
   const cacheKey = proxyConfigCacheKey(tenant, locale);
-  const cached = cachedProxyConfig(cacheKey);
+  const cached = options?.fresh ? null : cachedProxyConfig(cacheKey);
   if (cached) return cached;
 
+  const measure = options?.timing?.measure ?? (async <T,>(_phase: string, run: () => Promise<T>) => run());
   const [hasVerifiedDomain, settings, { launch, unsubscribed }, features] = await Promise.all([
-    verifiedSiteHosts(siteId).then((hosts) => hosts.length > 0).catch(() => false),
-    getTryOnSettings(tenant),
-    readSiteLaunch(siteId),
-    storeFlags(flagStoreForTenant(tenant) ?? { widgetSiteId: siteId }),
+    verifiedSiteHosts(siteId).then((hosts) => hosts.length > 0).catch((error) => { if (options?.fresh) throw error; return false; }),
+    measure('settings', () => options?.fresh ? getTryOnSettingsForEdit(tenant) : getTryOnSettings(tenant)),
+    measure('plan', () => readSiteLaunch(siteId)),
+    measure('flags', () => storeFlags(flagStoreForTenant(tenant) ?? { widgetSiteId: siteId }, Date.now(), { fresh: true, strict: true })),
   ]);
+  if (options?.fresh && launch.reason === 'unavailable') throw new Error('site plan unavailable');
   const copy = pickMerchantCopy(settings, locale);
   const enabled = hasVerifiedDomain && (launch.tryOn === 'live' || unsubscribed);
   const reason = enabled ? null : hasVerifiedDomain ? launch.reason : 'no_verified_domain';
@@ -63,6 +67,6 @@ export async function buildSiteTryOnConfig(
     features,
   };
   // A failed read is not cached: the next request retries.
-  if (launch.reason !== 'unavailable') storeProxyConfig(cacheKey, body);
+  if (!options?.fresh && launch.reason !== 'unavailable') storeProxyConfig(cacheKey, body, enabled ? 20_000 : 5_000);
   return body;
 }

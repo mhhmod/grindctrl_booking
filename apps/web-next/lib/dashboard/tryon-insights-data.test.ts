@@ -18,16 +18,18 @@ vi.mock('@/lib/shopify/tokens', () => ({ getShopToken: mocks.token }));
 vi.mock('@/lib/shopify/admin', () => ({ adminGraphql: mocks.graphql }));
 vi.mock('@/lib/messenger/db', () => {
   class Query {
+    private selected = '';
     private filters: Array<[string, unknown]> = [];
     constructor(readonly table: string) {}
-    select(columns: string) { mocks.calls.push(['select', this.table, columns]); return this; }
+    select(columns: string) { this.selected = columns; mocks.calls.push(['select', this.table, columns]); return this; }
     eq(column: string, value: unknown) { this.filters.push([column, value]); mocks.calls.push(['eq', column, value]); return this; }
     gte(column: string, value: unknown) { mocks.calls.push(['gte', column, value]); return this; }
     order() { return this; }
     limit() { return this; }
     then(resolve: (value: unknown) => unknown) {
+      if (mocks.error?.message.includes('product_') && this.selected.includes('product_title')) return Promise.resolve({ data: null, error: mocks.error }).then(resolve);
       const testFilter = this.filters.some(([column]) => column === 'is_test');
-      if (mocks.error && testFilter) return Promise.resolve({ data: null, error: mocks.error }).then(resolve);
+      if (mocks.error && !mocks.error.message.includes('product_') && testFilter) return Promise.resolve({ data: null, error: mocks.error }).then(resolve);
       return Promise.resolve({ data: mocks.jobs, error: null }).then(resolve);
     }
   }
@@ -93,6 +95,21 @@ describe('getTryOnResultsFacts', () => {
     expect(facts.jobs).toHaveLength(3);
   });
 
+  it('uses the newest stored product snapshot for site tenants, with legacy id fallback', async () => {
+    const key = 'site:11111111-1111-4111-8111-111111111111';
+    mocks.jobs = [
+      { ...job('14', 2), product_title: 'Old', product_image_url: 'https://shop.example/old.jpg' },
+      job('15', 0), job('14', 0),
+      { ...job('linen-tee', 1), product_image_url: 'https://shop.example/tee.jpg' },
+      { ...job('linen-tee', 2), product_title: 'Store tee' },
+      { ...job('14', 1), product_title: 'New title', product_image_url: 'https://shop.example/new.jpg' },
+    ];
+    const facts = await getTryOnResultsFacts({ shop: key, period: 30, now: NOW });
+    expect(facts.products).toEqual({ '14': { title: 'New title', imageUrl: 'https://shop.example/new.jpg' }, 'linen-tee': { title: 'Store tee', imageUrl: 'https://shop.example/tee.jpg' } });
+    expect(facts.products['15']).toBeUndefined();
+    expect(mocks.graphql).not.toHaveBeenCalled();
+  });
+
   it('reads again without the test-look filter before the column exists', async () => {
     mocks.error = { code: '42703', message: 'column tryon_jobs.is_test does not exist' };
     const facts = await getTryOnResultsFacts({ shop: SHOP, period: 7, now: NOW });
@@ -122,4 +139,11 @@ describe('getTryOnResultsFacts', () => {
     mocks.error = { message: 'connection refused' };
     await expect(getTryOnResultsFacts({ shop: SHOP, period: 30, now: NOW })).rejects.toThrow('connection refused');
   });
+});
+
+it.each(['42703', 'PGRST204'])('reads legacy site jobs before the product columns exist (%s)', async (code) => {
+  mocks.error = { code, message: 'column tryon_jobs.product_title does not exist' };
+  const facts = await getTryOnResultsFacts({ shop: 'site:11111111-1111-4111-8111-111111111111', period: 30, now: NOW });
+  expect(facts.jobs).toHaveLength(3); expect(facts.products).toEqual({});
+  expect(mocks.calls).toContainEqual(['select', 'tryon_jobs', 'product_id, status, duration_ms, message, created_at']);
 });

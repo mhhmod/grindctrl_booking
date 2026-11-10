@@ -18,6 +18,8 @@ export const RECENT_LOOKS = 6;
 const REASON_ORDER: readonly TryOnFailureKind[] = ['photo_rejected', 'busy', 'service_unavailable', 'unknown'];
 
 export type ResultsJob = {
+  product_title?: string | null;
+  product_image_url?: string | null;
   product_id: string;
   status: string;
   duration_ms: number | null;

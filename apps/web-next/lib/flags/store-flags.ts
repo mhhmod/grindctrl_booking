@@ -7,7 +7,7 @@ import { getMessengerServiceClient } from '@/lib/messenger/db';
    Every new v16 feature appears only when its flag is on for that store and
    its contract answers. A store is a Shopify shop, or a Store Chat site on
    another website. Flags live in supabase/20261016_store_flags.sql, are read
-   only here, cached for 60 seconds like the App Proxy config, and flipped
+   only here, cached for five seconds beneath storefront config snapshots, and flipped
    only by the platform operator.
 
    The v16 screens and team invites are on for every store, with no row and
@@ -41,7 +41,7 @@ export const ALWAYS_ON: readonly StoreFlag[] = ['n21_team_invites', 'v16_dashboa
 export type FlagStore = { shopDomain: string } | { widgetSiteId: string };
 
 const STORE_FLAG_NAMES = Object.keys(STORE_FLAGS) as StoreFlag[];
-const CACHE_TTL_MS = 60_000;
+const CACHE_TTL_MS = 5_000;
 const SHOP_DOMAIN_RE = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -89,13 +89,13 @@ function isMissingTable(error: { code?: string; message?: string }): boolean {
   );
 }
 
-/** The flags on for this store, in a stable order. Never throws. */
-export async function storeFlags(store: FlagStore, now: number = Date.now()): Promise<StoreFlag[]> {
+/** The flags on for this store, in a stable order. Config snapshots request fresh, strict reads so errors are never cached. */
+export async function storeFlags(store: FlagStore, now: number = Date.now(), options?: { fresh?: boolean; strict?: boolean }): Promise<StoreFlag[]> {
   const valid = validStore(store);
   if (!valid) return [...ALWAYS_ON];
   const key = cacheKey(valid);
   const cached = cache.get(key);
-  if (cached && cached.expiresAt > now) return cached.flags;
+  if (!options?.fresh && cached && cached.expiresAt > now) return cached.flags;
 
   try {
     const [column, value] = keyColumn(valid);
@@ -105,6 +105,7 @@ export async function storeFlags(store: FlagStore, now: number = Date.now()): Pr
       .eq(column, value)
       .eq('enabled', true);
     if (error) {
+      if (options?.strict) throw new Error('store flags unavailable');
       /* Until the owner applies the table, every store simply has no flags.
          That answer is cached like any other; a passing database error is
          not, so the next read can recover. */
@@ -115,7 +116,8 @@ export async function storeFlags(store: FlagStore, now: number = Date.now()): Pr
     const flags = STORE_FLAG_NAMES.filter((flag) => on.has(flag) || ALWAYS_ON.includes(flag));
     cache.set(key, { flags, expiresAt: now + CACHE_TTL_MS });
     return flags;
-  } catch {
+  } catch (error) {
+    if (options?.strict) throw error;
     return [...ALWAYS_ON];
   }
 }

@@ -1,15 +1,17 @@
+import { StorefrontConfigCache, configTiming } from '@/lib/storefront-config-cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { clientIp, proxyShopReadRatelimit, publicApiRatelimit } from '@/lib/ratelimit';
 import { rateLimitErrorResponse, RequestRateLimitError, requireRateLimit } from '@/lib/request-rate-limit';
 import { getPasteConnection, pasteTrust } from '@/lib/paste/store';
 import { isActiveTenant } from '@/lib/shopify/tokens';
 import { siteTenantKey } from '@/lib/tenancy/tenant-key';
-import { buildSiteTryOnConfig } from '@/lib/woo/tryon-config';
+import { buildSiteTryOnConfig, siteConfigLocale } from '@/lib/woo/tryon-config';
 import { siteByEmbedKey } from '@/lib/woo/tryon-site';
 import { launchAudience, launchVisitorId } from '@/lib/launch/audience';
 import { getStoreLaunch } from '@/lib/launch/store-launch';
 import { verifyPreviewTokenAnyApp } from '@/lib/launch/preview-token';
 
+const configs = new StorefrontConfigCache<Record<string, unknown>>();
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -26,8 +28,9 @@ export const dynamic = 'force-dynamic';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
+  'Timing-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Expose-Headers': 'Retry-After',
+  'Access-Control-Expose-Headers': 'Retry-After, Server-Timing',
 };
 
 function reply(body: Record<string, unknown>, cache = 'no-store', status = 200) {
@@ -39,10 +42,15 @@ function hidden(reason: string, status = 200) {
 }
 
 export async function GET(request: NextRequest) {
+  const timing = configTiming();
+  return timing.finish(await getConfig(request, timing));
+}
+
+async function getConfig(request: NextRequest, timing: ReturnType<typeof configTiming>) {
   try {
     await requireRateLimit(publicApiRatelimit, `paste-config:${clientIp(request) ?? 'unknown'}`);
     const params = request.nextUrl.searchParams;
-    const site = await siteByEmbedKey(params.get('key'));
+    const site = await timing.measure('site', () => siteByEmbedKey(params.get('key')));
     if (!site || site.status === 'disabled') return hidden('not_found', 404);
     await requireRateLimit(proxyShopReadRatelimit, `paste-config:${site.id}`);
 
@@ -53,10 +61,13 @@ export async function GET(request: NextRequest) {
     // Before the shared config cache: a disconnected site must never read as live.
     if (!active) return hidden('site_disconnected');
 
-    const config = await buildSiteTryOnConfig(site.id, params.get('locale'));
+    const cacheKey = JSON.stringify([site.id, site.settings_version ?? 0, siteConfigLocale(params.get('locale'))]);
+    const config = await configs.read(cacheKey,
+      () => buildSiteTryOnConfig(site.id, params.get('locale'), { fresh: true, timing }),
+      (value) => value.reason === 'unavailable' ? 0 : value.enabled === true ? 20_000 : 5_000);
     const features = Array.isArray(config.features) ? (config.features as string[]) : [];
     const audience = launchAudience({
-      launch: features.includes('n5_preview_mode') ? await getStoreLaunch(tenant) : null,
+      launch: features.includes('n5_preview_mode') ? await timing.measure('plan', () => getStoreLaunch(tenant)) : null,
       features,
       preview: verifyPreviewTokenAnyApp(params.get('preview'), tenant),
       visitorId: launchVisitorId(params.get('vid')),
@@ -65,6 +76,7 @@ export async function GET(request: NextRequest) {
     // The owner's test looks do not spend the store's looks.
     const live = config.enabled === true || (audience.test && config.reason === 'out_of_looks');
     const tryOn = audience.show && live ? 'live' : 'hidden';
+    if (tryOn === 'hidden') configs.delete(cacheKey);
     return reply({
       tryOn,
       reason: !audience.show ? audience.reason : live ? null : config.reason,
@@ -83,7 +95,7 @@ export async function GET(request: NextRequest) {
       iconBgFrom: config.iconBgFrom,
       iconBgTo: config.iconBgTo,
       buttonIconPx: config.buttonIconPx,
-    }, config.reason === 'unavailable' ? 'no-store' : 'private, max-age=60');
+    }, 'no-store');
   } catch (error) {
     if (error instanceof RequestRateLimitError) {
       const response = rateLimitErrorResponse(error);

@@ -31,13 +31,13 @@ export function cachedProxyConfig(key: string): Record<string, unknown> | null {
   return hit.body;
 }
 
-export function storeProxyConfig(key: string, body: Record<string, unknown>): void {
+export function storeProxyConfig(key: string, body: Record<string, unknown>, ttlMs = CACHE_TTL_MS): void {
   while (responseCache.size >= CACHE_MAX_ENTRIES) {
     const oldest = responseCache.keys().next().value;
     if (oldest === undefined) break;
     responseCache.delete(oldest);
   }
-  responseCache.set(key, { expires: Date.now() + CACHE_TTL_MS, body });
+  responseCache.set(key, { expires: Date.now() + ttlMs, body });
 }
 
 /** Drop every cached config answer for a shop, in every language. */
