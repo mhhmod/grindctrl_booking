@@ -6,6 +6,8 @@ const source = (file: string) => readFileSync(`public/widget/v1/${file}.js`, 'ut
 type Product = { id: string; variantId: string | null; title: string; imageUrl: string; price: number | null; currency: string | null };
 type Context = { embedUrl: string; context: { expiresAt: string }; settings?: Record<string, unknown> };
 type Adapter = {
+  productMissing?: boolean;
+  refresh: () => boolean;
   prepare: () => Promise<boolean>; detectProduct: () => Product | null; placementTarget: () => Element | null;
   getContext: (product: Product) => Promise<Context>; addToCart: (variant: string, qty: number, state?: { product: Product }) => Promise<unknown>;
   getProduct: (product: Product) => Promise<{ variants: Array<{ id: string }> } | null>;
@@ -55,6 +57,7 @@ const shopifyContext = (variant = '77') => ({ context: { expiresAt: later(), var
   embedUrl: `${APP}/embed/try-on?product=42&variant=${variant}&sheet=1#storefrontContext=proof` });
 
 beforeEach(() => {
+  vi.stubGlobal('navigator', Object.create(navigator, { sendBeacon: { value: vi.fn(() => true) } }));
   delete globals.woocommerce_params; delete globals.wc_add_to_cart_params; delete globals.wpApiSettings;
   for (const target of [document, window]) {
     const add = target.addEventListener.bind(target);
@@ -541,4 +544,47 @@ describe('messenger paste loading', () => {
     expect(pageFetch.mock.calls.some(([url]) => String(url).includes('/api/messenger/config'))).toBe(true);
     expect(globals.GRINDCTRL_MESSENGER).toBeDefined();
   });
+});
+
+describe('product-page detection health', () => {
+  it('reports a product-page miss even when no button can mount', async () => {
+    document.body.innerHTML = '<main>Product without metadata</main>';
+    const a = adapter();
+    expect(await a.prepare()).toBe(true);
+    expect(a.productMissing).toBe(true);
+    mount(a);
+    await tick();
+    expect(navigator.sendBeacon).toHaveBeenCalledWith(APP + '/api/store/signals', JSON.stringify({ kind: 'product_page', productDetected: false, key: 'embed-key' }));
+  });
+  it('does not call an ordinary content page a missing product', async () => {
+    window.history.replaceState({}, '', '/about');
+    document.body.innerHTML = '<main>About our store</main>';
+    const a = adapter();
+    expect(await a.prepare()).toBe(false);
+    expect(a.productMissing).toBe(false);
+    expect(navigator.sendBeacon).not.toHaveBeenCalled();
+  });
+});
+
+it('a product page with recommendation cards still reports its own missing details', async () => {
+  document.body.innerHTML = '<main><h1>Dress</h1><div data-grindctrl-card data-product-id="recommended" data-title="Another dress" data-image="https://shop.example/image.jpg" data-url="/products/recommended"><a href="/products/recommended">Another dress</a></div></main>';
+  const a = adapter();
+  expect(await a.prepare()).toBe(true);
+  expect(a.productMissing).toBe(true);
+  mount(a);
+  await tick();
+  expect(navigator.sendBeacon).toHaveBeenCalledWith(APP + '/api/store/signals', JSON.stringify({ kind: 'product_page', productDetected: false, key: 'embed-key' }));
+  expect(document.querySelector('.gc-tryon-pill')).toBeNull();
+});
+
+it('recovers when product metadata arrives after the first missing-details observation', async () => {
+  document.body.innerHTML = '<main>Product is loading</main>';
+  const a = adapter();
+  expect(await a.prepare()).toBe(true);
+  expect(a.productMissing).toBe(true);
+  document.body.innerHTML = '<div data-grindctrl-tryon data-product-id="dress" data-title="Dress" data-image="https://shop.example/dress.jpg"></div>';
+  expect(a.refresh()).toBe(true);
+  expect(a.productMissing).toBe(false);
+  mount(a);
+  expect(document.querySelector('.gc-tryon-btn')).not.toBeNull();
 });

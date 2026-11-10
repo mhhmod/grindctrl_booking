@@ -321,3 +321,66 @@ describe('buildTodayStoreCard', () => {
     });
   });
 });
+
+const emptyHealth = () => ({ inline: 0, floating: 0, detected: 0, missing: 0, listings: 0, pills: 0, photos: 0, photoHost: null as string | null });
+describe.each(['en', 'ar'] as const)('Store check observations (%s)', (locale) => {
+  const copy = getYourStoreCopy(locale);
+  const check = (overrides: Partial<YourStoreFacts> = {}) => buildYourStoreView(facts({ health: emptyHealth(), ...overrides }), copy, locale).check!;
+  it('keeps unobserved rows waiting, outside fixes and working well', () => {
+    const c = check({ platform: 'paste_shopify' });
+    expect(c.fix).toEqual([]);
+    expect(c.pending.map((r) => r.key)).toEqual(['productPages', 'productDetails', 'productPhotos', 'collectionPages']);
+    expect(c.pending.every((r) => r.sentence === copy.pill.waiting)).toBe(true);
+    expect(c.well.some((r) => r.key === 'productPhotos')).toBe(false);
+  });
+  it('collapses observed inline placement, detected details, fetched photos and listing pills', () => {
+    const c = check({ platform: 'paste_shopify', health: { ...emptyHealth(), inline: 12, detected: 12, photos: 2, listings: 1, pills: 24 } });
+    expect(c.fix).toEqual([]); expect(c.pending).toEqual([]);
+    expect(c.well.slice(-4).map((r) => [r.key, r.sentence])).toEqual([
+      ['productPages', copy.rows.inlinePages(12, 12)], ['productDetails', copy.rows.connected],
+      ['productPhotos', copy.rows.photosReady], ['collectionPages', copy.rows.pillProducts(24)],
+    ]);
+  });
+  it('orders Not working, Needs attention, then quiet optional rows; only first bad action leads', () => {
+    const c = check({ platform: 'paste_shopify', codeOutdated: true, health: { ...emptyHealth(), floating: 1, missing: 3, photoHost: 'cdn.example.com' } });
+    expect(c.fix.map((r) => [r.key, r.kind, r.action?.primary])).toEqual([
+      ['productDetails', 'bad', true], ['productPhotos', 'bad', false], ['productPages', 'attention', false], ['collectionPages', 'attention', false],
+    ]);
+    expect(c.fix[0]).toMatchObject({ sentence: copy.rows.missingDetails, action: { label: copy.rows.askUs, href: 'mailto:grindctrlnow@gmail.com' } });
+    expect(c.fix[1].sentence).toBe(copy.rows.photoFailure('cdn.example.com'));
+    expect(c.fix[2]).toMatchObject({ sentence: copy.rows.floating, action: { label: copy.rows.pickSpot, href: '/dashboard/try-on/setup' } });
+    expect(c.fix[3]).toMatchObject({ sentence: copy.updatedCodeNote, action: { label: copy.getUpdatedCode, href: INSTALL_HREF } });
+  });
+  it('uses More you can add for pills off, and only EasyOrders gets the connection line', () => {
+    expect(check({ platform: 'paste_shopify', pillsOn: false }).more).toEqual([
+      { key: 'collectionPages', title: copy.rows.collectionPages, sentence: copy.rows.pillsOff, link: { label: copy.rows.turnOnPills, href: '/dashboard/try-on/setup' } },
+    ]);
+    expect(check({ platform: 'paste_website', easyOrders: true }).more[0]).toMatchObject({ sentence: copy.rows.easyOrdersPills });
+    const other = check({ platform: 'paste_website' });
+    expect([...other.fix, ...other.more, ...other.well, ...other.pending].some((r) => r.key === 'collectionPages')).toBe(false);
+  });
+  it('withholds unsupported Shopify app rows and respects switch/edit permissions', () => {
+    const app = check({ platform: 'shopify_app' });
+    expect(app.pending).toEqual([]); expect(app.more).toEqual([]);
+    expect(check({ tryOn: tryOn({ showButton: false }) }).pending).toEqual([]);
+    expect(check({ canChange: false, health: { ...emptyHealth(), floating: 1 } }).fix[0].action).toBeNull();
+    expect(check({ platform: 'paste_shopify', pillsOn: false, canChange: false }).more[0].link).toBeNull();
+  });
+  it('does not claim missing product details when any visited product was detected', () => {
+    expect(check({ health: { ...emptyHealth(), detected: 1, missing: 3 } }).fix).toEqual([]);
+  });
+});
+
+it('uses the handoff strings word for word in EN/AR', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const { resolve } = await import('node:path');
+  const lines = (await readFile(resolve(process.cwd(), '../../docs/design-briefs/pack-a/handoff.txt'), 'utf8')).split(/\r?\n/);
+  for (const [locale, offset] of [['en', 0], ['ar', 1]] as const) {
+    const c = getYourStoreCopy(locale);
+    for (const text of [c.rows.productPages, c.rows.floating, c.rows.pickSpot, c.rows.collectionPages, c.rows.easyOrdersPills,
+      c.rows.productPhotos, c.rows.photosReady, c.rows.missingDetails, c.rows.askUs, c.rows.addLine, c.rows.contactUs,
+      c.rows.pillsOff, c.rows.turnOnPills, c.rows.inlinePages(12, 12), c.rows.pillProducts(24), c.rows.photoFailure('cdn.example.com')]) {
+      expect(lines.some((line, i) => line === text && (offset === 0 ? lines[i - 1]?.startsWith('A6') : lines[i - 2]?.startsWith('A6')))).toBe(true);
+    }
+  }
+});

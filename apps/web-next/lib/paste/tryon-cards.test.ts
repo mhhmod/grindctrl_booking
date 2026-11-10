@@ -77,6 +77,7 @@ async function start(config: unknown = LIVE, handlers: Record<string, Handler> =
 }
 
 beforeEach(() => {
+  vi.stubGlobal('navigator', Object.create(navigator, { sendBeacon: { value: vi.fn(() => true) } }));
   for (const target of [document, window]) {
     const add = target.addEventListener.bind(target);
     vi.spyOn(target, 'addEventListener').mockImplementation((type, listener, options) => {

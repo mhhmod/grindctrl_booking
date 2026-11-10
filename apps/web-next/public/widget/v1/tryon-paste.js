@@ -932,7 +932,16 @@
       });
     }
 
+    function productPageHint() {
+      if (/\/(products?|item)\/[^/]+/.test(window.location.pathname)) return true;
+      return Array.prototype.some.call(document.querySelectorAll(BUY_MARKUP), function (button) {
+        return !button.closest(NOT_PRODUCT_AREA + ', ' + PRODUCT_CARD);
+      });
+    }
+
     var adapter = {
+      signalKey: script.dataset.key,
+      productMissing: false,
       injectButton: false,
       buttonSettings: null,
       injectCards: false,
@@ -952,7 +961,11 @@
       prepare: function () {
         if (platform === 'website') {
           // Nothing is asked of the server on a page with no product and no cards.
-          if (!websiteProduct() && !hasWebsiteCards()) return Promise.resolve(false);
+          // Only a recognisable product-page address/purchase area can report
+          // missing data. An ordinary content page is not a broken product.
+          var detectedProduct = websiteProduct();
+          adapter.productMissing = !detectedProduct && productPageHint();
+          if (!detectedProduct && !adapter.productMissing && !hasWebsiteCards()) return Promise.resolve(false);
           return readPasteConfig().then(function (config) {
             websiteConfig = config;
             return adapter.refresh();
@@ -979,15 +992,16 @@
          at prepare decides; one that could not be read keeps the default
          button, as on Shopify, and adds no pills. */
       refresh: function () {
-        if (platform !== 'website') return adapter.injectButton || adapter.injectCards;
+        if (platform !== 'website') return adapter.injectButton || adapter.injectCards || adapter.productMissing;
         if (websiteConfig === undefined) return false;
         var live = !websiteConfig || websiteConfig.tryOn === 'live';
         var product = live ? websiteProduct() : null;
         adapter.buttonSettings = websiteConfig;
+        adapter.productMissing = live && !product && productPageHint();
         adapter.injectButton = !!product;
-        adapter.injectCards = !product && !!websiteConfig && websiteConfig.tryOn === 'live' && websiteConfig.showCardPill === true && hasWebsiteCards();
+        adapter.injectCards = !product && !adapter.productMissing && !!websiteConfig && websiteConfig.tryOn === 'live' && websiteConfig.showCardPill === true && hasWebsiteCards();
         adapter.cardSettings = adapter.injectCards ? websiteConfig : null;
-        return adapter.injectButton || adapter.injectCards;
+        return adapter.injectButton || adapter.injectCards || adapter.productMissing;
       },
 
       placement: function () {

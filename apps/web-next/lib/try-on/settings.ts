@@ -258,18 +258,26 @@ export class TryOnShowCardPillUnavailableError extends TryOnSwitchUnavailableErr
  *  On without storage and before the migration. Throws on a failed read, so
  *  the launch answer reports `unavailable` rather than guessing. */
 export async function readTryOnShowButton(shop: string): Promise<boolean> {
+  return readTryOnSwitch(shop, 'show_button');
+}
+
+export async function readTryOnShowCardPill(shop: string): Promise<boolean> {
+  return readTryOnSwitch(shop, 'show_card_pill');
+}
+
+async function readTryOnSwitch(shop: string, column: 'show_button' | 'show_card_pill'): Promise<boolean> {
   const supabase = getServiceClient();
   if (!supabase) return true;
   const { data, error } = await supabase
     .from('tryon_settings')
-    .select('shop, show_button')
+    .select(`shop, ${column}`)
     .in('shop', shop === 'default' ? ['default'] : ['default', shop]);
   if (error) {
-    if (missingSwitchColumn(error) === 'show_button') return true;
+    if (missingSwitchColumn(error) === column) return true;
     throw new Error(`try-on button switch read failed: ${error.message}`);
   }
-  const rows = (data ?? []) as Array<{ shop: string; show_button: boolean | null }>;
-  const value = (key: string) => rows.find((row) => row.shop === key)?.show_button;
+  const rows = (data ?? []) as Array<{ shop: string; show_button?: boolean | null; show_card_pill?: boolean | null }>;
+  const value = (key: string) => rows.find((row) => row.shop === key)?.[column];
   return value(shop) ?? value('default') ?? true;
 }
 

@@ -10,6 +10,7 @@ const CORE_SECRET = 'test-only-independent-core-signing-key-2026';
 
 const mocks = vi.hoisted(() => ({
   verify: vi.fn(),
+  photo: vi.fn(),
   visitorLimit: vi.fn(),
   shopLimit: vi.fn(),
   active: vi.fn(),
@@ -23,6 +24,7 @@ const mocks = vi.hoisted(() => ({
   storeLaunch: vi.fn(),
 }));
 
+vi.mock('@/lib/store-health/signals', () => ({ recordPhotoHealth: mocks.photo }));
 vi.mock('@/lib/woo/signed-request', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/woo/signed-request')>()),
   verifyWooSignedRequest: mocks.verify,
@@ -213,6 +215,7 @@ describe('POST /api/woo/tryon-context', () => {
     const other = await post({ ...BODY, imageUrl: 'https://evil.test/a.jpg' });
     expect(other.status).toBe(422);
     expect(await other.json()).toEqual({ error: 'garment_unsafe' });
+    expect(mocks.photo).toHaveBeenLastCalledWith(SITE, 'https://evil.test/a.jpg', false);
 
     mocks.lookup.mockResolvedValue([{ address: '169.254.169.254', family: 4 }]);
     const metadata = await post();

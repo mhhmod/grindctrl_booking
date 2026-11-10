@@ -2,7 +2,7 @@ import 'server-only';
 
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { getShopEntitlement, type ShopEntitlement } from '@/lib/try-on/entitlement';
-import { readTryOnShowButton } from '@/lib/try-on/settings';
+import { readTryOnShowButton, readTryOnShowCardPill } from '@/lib/try-on/settings';
 import { getStoreLaunch } from '@/lib/launch/store-launch';
 import { launchView, type LaunchState } from '@/lib/launch/audience';
 import { storeFlags } from '@/lib/flags/store-flags';
@@ -11,6 +11,8 @@ import { getWooSiteConnection } from '@/lib/woo/connection';
 import { roleCan, type DashboardWorkspaceRole } from '@/lib/rbac/dashboard-policy';
 import { activeTenantKey, flagStoreOf, type ActiveStore } from './active-store';
 import { listDashboardShops } from './active-store-server';
+import { readHealthCounts } from '@/lib/store-health/signals';
+import { readPasteDomainPlatforms } from '@/lib/paste/store';
 import type { YourStoreFacts, YourStorePlatform } from './your-store-model';
 
 /* The facts behind Your store, for the active store only (resolved among
@@ -117,10 +119,13 @@ export async function getYourStoreFacts({
     return null;
   }
 
-  const [showButton, entitlement, launchState] = await Promise.all([
+  const [showButton, entitlement, launchState, health, pillsOn, domainPlatforms] = await Promise.all([
     readTryOnShowButton(tenant),
     paste ? Promise.resolve(paste.plan) : getShopEntitlement(tenant),
     paste ? Promise.resolve(paste.mode) : readLaunchState(activeStore, tenant, now),
+    readHealthCounts(siteId ? [siteId] : [], now),
+    readTryOnShowCardPill(tenant),
+    platform === 'paste_website' && siteId ? readPasteDomainPlatforms(siteId) : Promise.resolve(null),
   ]);
 
   return {
@@ -134,6 +139,9 @@ export async function getYourStoreFacts({
     code,
     launchState,
     codeOutdated: paste?.codeOutdated ?? false,
+    health,
+    pillsOn,
+    easyOrders: domainPlatforms?.some((domain) => domain.platform === 'easyorders') ?? false,
     tryOn: { tenant, showButton, ...looksOf(entitlement), pasteReason: paste?.tryOnReason ?? null },
     chat: siteId && siteStatus !== null ? { siteId, enabled: siteStatus === 'active' } : null,
     domains:

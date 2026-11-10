@@ -1,3 +1,4 @@
+import { recordPhotoHealth } from '@/lib/store-health/signals';
 import { NextRequest, NextResponse } from 'next/server';
 import { clientIp, publicApiRatelimit, proxyVisitorRatelimit, proxyShopMintRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
@@ -149,6 +150,7 @@ async function mint(request: NextRequest): Promise<Response> {
       garment = await assertSafeGarmentUrl(b.imageUrl, { site: siteHosts, exact: platformImageHosts(pageDomain?.platform) });
     } catch (error) {
       if (!(error instanceof UnsafeGarmentUrlError)) throw error;
+      await recordPhotoHealth(site.id, b.imageUrl as string, false);
       const reason = garmentRefusalReason(error);
       const imageHost = URL.canParse(b.imageUrl) ? new URL(b.imageUrl).hostname.toLowerCase() : null;
       console.warn('[paste] garment refused', { code: reason, site: site.id, host: imageHost, platform: pageDomain?.platform ?? null });

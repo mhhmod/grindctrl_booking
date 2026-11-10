@@ -1,3 +1,4 @@
+import { recordPhotoHealth } from '@/lib/store-health/signals';
 import 'server-only';
 
 import { isIP } from 'node:net';
@@ -207,10 +208,16 @@ export async function fetchSiteGarment(
 ): Promise<{ mime: string; bytes: Buffer }> {
   // Generation must supply the signed origin to enable platform hosts.
   const hosts = deps.hosts ?? (await siteGarmentHosts(siteId, deps.pageOrigin ?? ''));
-  const target = await assertSafeGarmentUrl(rawUrl, hosts, deps.lookup);
-  const result = await (deps.fetcher ?? pinnedFetch)(target);
-  if (result.status !== 200) throw new Error(`Garment image fetch failed (HTTP ${result.status}).`);
-  if (!IMAGE_MIME_RE.test(result.mime)) throw new Error('Garment image must be jpeg, png, or webp.');
-  if (result.body.length > MAX_GARMENT_BYTES) throw new Error('garment_too_large');
-  return { mime: result.mime, bytes: result.body };
+  try {
+    const target = await assertSafeGarmentUrl(rawUrl, hosts, deps.lookup);
+    const result = await (deps.fetcher ?? pinnedFetch)(target);
+    if (result.status !== 200) throw new Error(`Garment image fetch failed (HTTP ${result.status}).`);
+    if (!IMAGE_MIME_RE.test(result.mime)) throw new Error('Garment image must be jpeg, png, or webp.');
+    if (result.body.length > MAX_GARMENT_BYTES) throw new Error('garment_too_large');
+    await recordPhotoHealth(siteId, rawUrl, true);
+    return { mime: result.mime, bytes: result.body };
+  } catch (error) {
+    await recordPhotoHealth(siteId, rawUrl, false);
+    throw error;
+  }
 }

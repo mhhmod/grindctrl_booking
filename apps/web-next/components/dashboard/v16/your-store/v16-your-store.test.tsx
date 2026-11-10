@@ -226,3 +226,11 @@ describe('V16YourStoreTodayCard', () => {
     expect(within(section).getByRole('link', { name: 'اعرض فحص المتجر' })).toBeInTheDocument();
   });
 });
+
+it('isolates the recorded photo hostname in Arabic and keeps the handoff sentence intact', () => {
+  const copy = getYourStoreCopy('ar');
+  renderStore(facts({ health: { inline: 0, floating: 0, detected: 0, missing: 0, listings: 0, pills: 0, photos: 0, photoHost: 'cdn.example.com' } }), 'ar');
+  const host = screen.getByText('cdn.example.com', { selector: 'bdi' });
+  expect(host).toHaveAttribute('dir', 'ltr');
+  expect(host.parentElement?.textContent).toBe(copy.rows.photoFailure('cdn.example.com'));
+});

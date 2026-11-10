@@ -45,6 +45,23 @@ export interface YourStoreCopy {
     waiting: string;
   };
   rows: {
+    productPages: string;
+    floating: string;
+    pickSpot: string;
+    collectionPages: string;
+    easyOrdersPills: string;
+    productPhotos: string;
+    photosReady: string;
+    productDetails: string;
+    missingDetails: string;
+    askUs: string;
+    addLine: string;
+    contactUs: string;
+    pillsOff: string;
+    turnOnPills: string;
+    inlinePages: (inline: number, total: number) => string;
+    pillProducts: (n: number) => string;
+    photoFailure: (host: string) => string;
     code: string;
     seen: (ago: string) => string;
     connected: string;
@@ -130,6 +147,24 @@ const en: YourStoreCopy = {
     waiting: "We'll check your store as soon as your code is live.",
   },
   rows: {
+    productPages: "Product pages",
+    floating: "Showing as a floating button. Pick a spot?",
+    pickSpot: "Pick a spot",
+    collectionPages: "Collection pages",
+    easyOrdersPills: "Show a Try-On pill on your collection pages. Needs Connect EasyOrders.",
+    productPhotos: "Product photos",
+    photosReady: "Ready for Try-On",
+    missingDetails: "We can't find product details on your product pages. Add one line, or",
+    askUs: "ask us",
+    addLine: "Add one line",
+    contactUs: "Contact us",
+    pillsOff: "Pills are off.",
+    turnOnPills: "Turn on pills",
+    // No title/healthy details sentence in A6: reuse Product pages / Connected.
+    productDetails: "Product pages",
+    inlinePages: (inline, total) => `Next to "Add to cart" on ${inline} of ${total} pages`,
+    pillProducts: (n) => `Try on pills on ${n} products`,
+    photoFailure: (host) => `We can't use your product photos from ${host}. Contact us, we'll add it.`,
     code: 'Code on your store',
     seen: (ago) => `Seen ${ago}`,
     connected: 'Connected',
@@ -214,6 +249,24 @@ const ar: YourStoreCopy = {
     waiting: 'سنفحص متجرك فور أن يعمل الكود.',
   },
   rows: {
+    productPages: "صفحات المنتجات",
+    floating: "يظهر كزر عائم. هل تختار له مكانًا؟",
+    pickSpot: "اختر المكان",
+    collectionPages: "صفحات المجموعات",
+    easyOrdersPills: "اعرض شارة القياس الافتراضي في صفحات المجموعات. يحتاج إلى ربط EasyOrders.",
+    productPhotos: "صور المنتجات",
+    photosReady: "جاهزة للقياس الافتراضي",
+    missingDetails: "لا نجد بيانات المنتج في صفحات منتجاتك. أضف سطرًا واحدًا، أو",
+    askUs: "اطلب منا",
+    addLine: "أضف سطرًا واحدًا",
+    contactUs: "تواصل معنا",
+    pillsOff: "الشارات متوقفة.",
+    turnOnPills: "شغّل الشارات",
+    // No title/healthy details sentence in A6: reuse Product pages / Connected.
+    productDetails: "صفحات المنتجات",
+    inlinePages: (inline, total) => `بجوار «أضف للسلة» في ${inline} من ${total} صفحة`,
+    pillProducts: (n) => `شارات القياس على ${n} منتجًا`,
+    photoFailure: (host) => `لا نستطيع استخدام صور منتجاتك من ${host}. تواصل معنا وسنضيفه.`,
     code: 'الكود على متجرك',
     seen: (ago) => `شوهد ${ago}`,
     connected: 'مربوط',

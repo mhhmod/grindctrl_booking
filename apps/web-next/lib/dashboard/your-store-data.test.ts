@@ -5,6 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 vi.mock('server-only', () => ({}));
 
 const mocks = vi.hoisted(() => ({
+  platforms: vi.fn(),
   siteStatus: 'active' as string | null,
   siteError: null as null | { message: string },
   shops: vi.fn(),
@@ -34,11 +35,14 @@ vi.mock('@/lib/messenger/db', () => ({
 vi.mock('./active-store-server', () => ({ listDashboardShops: mocks.shops }));
 vi.mock('@/lib/woo/connection', () => ({ getWooSiteConnection: mocks.woo }));
 vi.mock('@/lib/paste/status', () => ({ readPasteInstallStatus: mocks.paste }));
-vi.mock('@/lib/try-on/settings', () => ({ readTryOnShowButton: mocks.showButton }));
+vi.mock('@/lib/try-on/settings', () => ({ readTryOnShowButton: mocks.showButton, readTryOnShowCardPill: async () => true }));
+vi.mock('@/lib/store-health/signals', () => ({ readHealthCounts: vi.fn(async () => ({ inline: 0, floating: 0, detected: 0, missing: 0, listings: 0, pills: 0, photos: 0, photoHost: null })) }));
+vi.mock('@/lib/paste/store', () => ({ readPasteDomainPlatforms: mocks.platforms }));
 vi.mock('@/lib/try-on/entitlement', () => ({ getShopEntitlement: mocks.entitlement }));
 vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: mocks.flags }));
 vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: mocks.launch }));
 
+import { readHealthCounts } from '@/lib/store-health/signals';
 import { getYourStoreFacts } from './your-store-data';
 
 const NOW = Date.parse('2026-11-10T12:00:00Z');
@@ -76,6 +80,7 @@ const domain = (overrides: Record<string, unknown>) => ({
 });
 
 beforeEach(() => {
+  mocks.platforms.mockResolvedValue([]);
   mocks.siteStatus = 'active';
   mocks.siteError = null;
   for (const fn of [mocks.shops, mocks.woo, mocks.paste, mocks.showButton, mocks.entitlement, mocks.flags, mocks.launch]) fn.mockReset();
@@ -225,4 +230,21 @@ describe('getYourStoreFacts', () => {
       getYourStoreFacts({ activeStore: { shopDomain: null, siteId: 'site-1', tenantKey: 'site:1', platform: 'paste' }, role: 'owner', timeZone: 'UTC', now: NOW }),
     ).rejects.toThrow('switch read failed');
   });
+});
+
+
+it('passes only the active authorized site to the bounded seven-day health reader', async () => {
+  vi.mocked(readHealthCounts).mockClear();
+  mocks.paste.mockResolvedValue(pasteStatus());
+  const result = await getYourStoreFacts({ activeStore: { shopDomain: null, siteId: 'site-1', tenantKey: 'site:1', platform: 'paste' }, role: 'owner', timeZone: 'UTC', now: NOW });
+  expect(readHealthCounts).toHaveBeenCalledExactlyOnceWith(['site-1'], NOW);
+  expect(result?.health).toMatchObject({ inline: 0, photos: 0, photoHost: null });
+});
+
+it('uses the server-detected EasyOrders platform, not the shopper or a hostname guess', async () => {
+  mocks.paste.mockResolvedValue(pasteStatus());
+  mocks.platforms.mockResolvedValue([{ domain: 'shop.example', platform: 'easyorders' }]);
+  const result = await getYourStoreFacts({ activeStore: { shopDomain: null, siteId: 'site-1', tenantKey: 'site:1', platform: 'paste' }, role: 'owner', timeZone: 'UTC', now: NOW });
+  expect(result?.easyOrders).toBe(true);
+  expect(mocks.platforms).toHaveBeenCalledWith('site-1');
 });
