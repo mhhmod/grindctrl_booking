@@ -27,8 +27,14 @@
 .logo {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   block-size: 20px;
   margin-block-end: 2px;
+}
+
+.wpMark {
+  inline-size: 18px;
+  block-size: 18px;
 }
 
 .steps {

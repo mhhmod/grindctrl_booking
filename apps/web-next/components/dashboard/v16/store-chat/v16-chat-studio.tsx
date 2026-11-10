@@ -7,8 +7,6 @@ import { ActionIcon, Button, ColorInput, Modal, SegmentedControl, Switch, TextIn
 import { useMediaQuery } from '@mantine/hooks';
 import { GcIcon } from '@/components/icons';
 import { PreviewFrame } from '@/components/dashboard/messenger/preview-frame';
-import { appEmbedActivationUrl } from '@/lib/shopify/app-identity';
-import { buildCanonicalInstallSnippet } from '@/lib/adapters/install';
 import { getChatStudioCopy, type ChatStudioCopy } from '@/lib/dashboard/chat-studio-copy';
 import { MORE_SETTINGS } from '@/lib/dashboard/store-chat-legacy-tab';
 import {
@@ -28,10 +26,8 @@ import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import type { WooSiteConnectionSummary } from '@/lib/woo/connection';
 import { pluginSupportsOrderLookup, WOO_ORDER_LOOKUP_MIN_PLUGIN_VERSION } from '@/lib/woo/plugin-version';
-import { StorefrontDomains } from './storefront-domains';
-import { PasteInstall, type PasteInstallActions } from './paste-install';
-import { pasteInstallCopy } from '@/lib/dashboard/paste-install-copy';
-import { WoocommerceGuide, type CreateWooPairingCode } from './woocommerce-guide';
+import type { PasteInstallActions } from './paste-install';
+import type { CreateWooPairingCode } from './woocommerce-guide';
 import classes from './v16-chat-studio.module.css';
 
 /* The v16 Store Chat Set up tab (04-dashboard.md, the ChatStudio board) on
@@ -338,7 +334,6 @@ export function V16ChatStudio({
   const [confirm, setConfirm] = React.useState<'revert' | 'disconnect' | null>(null);
   const [patternError, setPatternError] = React.useState<string | null>(null);
   const [emailError, setEmailError] = React.useState<string | null>(null);
-  const [copied, setCopied] = React.useState(false);
   const router = useRouter();
   /* Publish and Discard leave with the changes; focus goes to what is
      left, not to the page's start. */
@@ -482,6 +477,8 @@ export function V16ChatStudio({
      step, so it comes before every chat setting. Shopify app stores keep
      their usual order (the app installs the chat). */
   const installFirst = !shopify && seen === null;
+  /* Installing and checking the store live on Store setup (owner decision
+     2026-11-10); Store Chat keeps its own version and disconnect here. */
   const installSection = (
     <section id="install" aria-labelledby={`${id}-install`} className={classes.card}>
             <h2 id={`${id}-install`} className={classes.h2}>
@@ -489,107 +486,18 @@ export function V16ChatStudio({
             </h2>
             <div className={classes.block}>
               <p className={classes.muted}>{seen === null ? copy.neverChecked : copy.lastCheck(copy.ago(seen))}</p>
+              <p className={classes.muted}>{copy.installMoved}</p>
               <div className={classes.buttons}>
-                {shopify && meta.domain && (
-                  <Button
-                    component="a"
-                    href={appEmbedActivationUrl(meta.domain, 'messenger')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variant="default"
-                    radius="pill"
-                    rightSection={<GcIcon name="ext" size={14} />}
-                  >
-                    {copy.openThemeEditor}
-                  </Button>
-                )}
+                <Button component={Link} href="/dashboard/store#connect" variant={seen === null ? 'filled' : 'default'} radius="pill">
+                  {copy.openStoreSetup}
+                </Button>
                 {meta.domain && (
                   <Button component="a" href={`https://${meta.domain}`} target="_blank" rel="noopener noreferrer" variant="default" radius="pill">
                     {copy.testNow}
                   </Button>
                 )}
               </div>
-              {(shopify || !actions.paste) && <p className={classes.muted}>
-                {copy.notShopify}{' '}
-                <Button
-                  variant="subtle"
-                  size="compact-sm"
-                  className={classes.inlineButton}
-                  onClick={() => {
-                    void navigator.clipboard
-                      ?.writeText(buildCanonicalInstallSnippet(meta.embedKey))
-                      .then(() => {
-                        setCopied(true);
-                        setTimeout(() => setCopied(false), 2000);
-                      })
-                      .catch(() => {});
-                  }}
-                >
-                  {copied ? copy.copied : copy.copyScript}
-                </Button>
-              </p>}
             </div>
-            {!shopify && actions.paste && (
-              <PasteInstall
-                siteId={siteId}
-                locale={locale}
-                copy={pasteInstallCopy(locale)}
-                ago={copy.ago}
-                actions={actions.paste}
-                initialPlatform={meta.wooConnection ? 'woocommerce' : null}
-                woocommerce={
-                  <>
-                    <WoocommerceGuide
-                      locale={locale}
-                      siteId={siteId}
-                      connection={meta.wooConnection}
-                      createPairingCode={actions.createWooPairingCodeAction}
-                      copy={copy.woocommerce}
-                      copyLabels={copy.domains}
-                    />
-                    {actions.listDomainsAction && actions.addDomainAction && actions.checkDomainAction && actions.removeDomainAction && (
-                      <StorefrontDomains
-                        siteId={siteId}
-                        copy={copy.domains}
-                        actions={{
-                          listDomainsAction: actions.listDomainsAction,
-                          addDomainAction: actions.addDomainAction,
-                          checkDomainAction: actions.checkDomainAction,
-                          removeDomainAction: actions.removeDomainAction,
-                        }}
-                      />
-                    )}
-                  </>
-                }
-              />
-            )}
-            {!shopify && !actions.paste && (
-              <WoocommerceGuide
-                locale={locale}
-                siteId={siteId}
-                connection={meta.wooConnection}
-                createPairingCode={actions.createWooPairingCodeAction}
-                copy={copy.woocommerce}
-                copyLabels={copy.domains}
-              />
-            )}
-            {!shopify &&
-              !actions.paste &&
-              actions.listDomainsAction &&
-              actions.addDomainAction &&
-              actions.checkDomainAction &&
-              actions.removeDomainAction && (
-                <StorefrontDomains
-                  siteId={siteId}
-                  copy={copy.domains}
-                  actions={{
-                    listDomainsAction: actions.listDomainsAction,
-                    addDomainAction: actions.addDomainAction,
-                    checkDomainAction: actions.checkDomainAction,
-                    removeDomainAction: actions.removeDomainAction,
-                  }}
-                />
-              )}
             <div className={classes.row}>
               <h3 className={classes.h3}>{copy.publishedVersion(version)}</h3>
               {meta.canRevert && (

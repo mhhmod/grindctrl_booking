@@ -85,6 +85,8 @@ export interface YourStoreCopy {
   ago: { justNow: string; minutes: (n: number) => string; hours: (n: number) => string; days: (n: number) => string };
   since: { weekday: (day: string) => string; date: (date: string) => string };
   notConnected: { title: string; body: string; action: string };
+  /** The Connect your store card at the top of Store setup. */
+  connect: { title: string; connectedTitle: string; installed: (ago: string) => string; waiting: string; hideSteps: string; openStore: string };
   todayCard: { viewStoreCheck: string };
 }
 
@@ -192,6 +194,14 @@ const en: YourStoreCopy = {
     days: (n) => (n === 1 ? '1 day ago' : `${n} days ago`),
   },
   since: { weekday: (day) => day, date: (date) => date },
+  connect: {
+    title: 'Connect your store',
+    connectedTitle: 'Your store',
+    installed: (ago) => `Installed · last seen ${ago}`,
+    waiting: 'Waiting for your code',
+    hideSteps: 'Hide install steps',
+    openStore: 'Open my store',
+  },
   notConnected: {
     title: 'Not connected yet',
     body: 'One code runs everything.',
@@ -295,6 +305,14 @@ const ar: YourStoreCopy = {
     days: (n) => `منذ ${arCount(n, { one: 'يوم', two: 'يومين', few: (m) => `${m} أيام`, many: (m) => `${m} يومًا` })}`,
   },
   since: { weekday: (day) => `يوم ${day}`, date: (date) => date },
+  connect: {
+    title: 'اربط متجرك',
+    connectedTitle: 'متجرك',
+    installed: (ago) => `مُركّب · آخر ظهور ${ago}`,
+    waiting: 'في انتظار الكود',
+    hideSteps: 'إخفاء خطوات التركيب',
+    openStore: 'افتح متجري',
+  },
   notConnected: {
     title: 'لم يُربط بعد',
     body: 'كود واحد يشغّل كل شيء.',

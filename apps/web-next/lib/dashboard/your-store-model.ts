@@ -20,7 +20,7 @@ export const LOOKS_LOW_SHARE = 0.2;
 
 /** The existing install surface: the steps, the code (updated when it
  *  changes) and each address's proof, on Store Chat's Set up. */
-export const INSTALL_HREF = '/dashboard/store-chat/setup#install';
+export const INSTALL_HREF = '/dashboard/store#connect';
 export const PLAN_HREF = '/dashboard/plan';
 export const YOUR_STORE_HREF = '/dashboard/store';
 

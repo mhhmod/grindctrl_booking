@@ -547,7 +547,7 @@ function ButtonSwitch({
           {line}
         </span>
         {!installed ? (
-          <Button component={Link} href="/dashboard/store-chat/setup#install" variant="subtle" size="compact-sm">
+          <Button component={Link} href="/dashboard/store#connect" variant="subtle" size="compact-sm">
             {copy.install}
           </Button>
         ) : null}
@@ -569,7 +569,7 @@ function ButtonSwitch({
               {!on ? copy.pillNeedsButton : pill && status.codeOutdated ? copy.pillCodeOutdated : copy.pillBody}
             </span>
             {on && pill && status.codeOutdated ? (
-              <Button component={Link} href="/dashboard/store-chat/setup#install" variant="subtle" size="compact-sm" className={classes.pillAction}>
+              <Button component={Link} href="/dashboard/store#connect" variant="subtle" size="compact-sm" className={classes.pillAction}>
                 {copy.pillGetCode}
               </Button>
             ) : null}

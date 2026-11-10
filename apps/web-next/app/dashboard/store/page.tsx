@@ -3,7 +3,8 @@ import { getActiveStore, getActiveStoreRole, getActiveStoreTimeZone } from '@/li
 import { getYourStoreFacts } from '@/lib/dashboard/your-store-data';
 import { buildYourStoreView } from '@/lib/dashboard/your-store-model';
 import { getYourStoreCopy } from '@/lib/dashboard/your-store-copy';
-import { V16YourStore, V16YourStoreNotConnected } from '@/components/dashboard/v16/your-store/v16-your-store';
+import { V16YourStore } from '@/components/dashboard/v16/your-store/v16-your-store';
+import { StoreChatPage } from '@/app/dashboard/store-chat/store-chat-page';
 import { roleCan } from '@/lib/rbac/dashboard-policy';
 import { setTryOnButtonAction } from '@/app/dashboard/try-on/actions';
 import { setMessengerEnabled } from '@/app/dashboard/store-chat/actions';
@@ -11,8 +12,8 @@ import { checkPasteDomainAction } from '@/app/dashboard/store-chat/paste-actions
 
 export const dynamic = 'force-dynamic';
 
-/* Your store (Pack A handoff, A5 and A6): how GRINDCTRL is on the active
-   store, a switch per product and the Store check. Everyone who sees Store
+/* Store setup (Pack A handoff, A4 to A6): connect the store, a switch per
+   product and the Store check. Everyone who sees Store
    Chat and Try-On sees it; the switches save through the same actions as
    their Set up pages, which check the person's role again. A failed read
    throws to the dashboard's error state. */
@@ -25,9 +26,13 @@ export default async function YourStorePage() {
   ]);
   const canChange = roleCan(role, 'settings');
   const facts = await getYourStoreFacts({ activeStore, role, timeZone });
-  if (!facts) return <V16YourStoreNotConnected locale={locale} canChange={canChange} />;
+  /* Connect your store comes first: it is the whole page until a store is
+     connected, then a one-line card above the switches and the check. */
+  const connect = <StoreChatPage params={{}} tab="install" />;
+  if (!facts) return connect;
   return (
     <V16YourStore
+      connect={connect}
       view={buildYourStoreView(facts, getYourStoreCopy(locale), locale)}
       canChange={canChange}
       locale={locale}

@@ -85,7 +85,7 @@ describe('DashboardOverviewPage, v16 Today', () => {
     vi.mocked(getActiveStore).mockResolvedValueOnce({ shopDomain: null, siteId: null });
     renderWithMantine(await DashboardOverviewPage());
     expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: chat })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
+    expect(screen.getByRole('link', { name: chat })).toHaveAttribute('href', '/dashboard/store#connect');
     expect(getTodayFacts).not.toHaveBeenCalled();
     expect(storeFlags).not.toHaveBeenCalled();
     expect(getYourStoreFacts).not.toHaveBeenCalled();

@@ -45,8 +45,8 @@ const en: DashboardCopy = {
       description: 'The chat box on your storefront: appearance, AI, behaviour, installation.',
     },
     '/dashboard/store': {
-      title: 'Your store',
-      description: 'How GRINDCTRL runs on your store, and what to fix.',
+      title: 'Store setup',
+      description: 'Connect your store, choose what shoppers see, and check it works.',
     },
     '/dashboard/install': {
       title: 'Widget / Embed',
@@ -84,8 +84,8 @@ const ar: DashboardCopy = {
       description: 'صندوق الدردشة في متجرك: المظهر، الذكاء الاصطناعي، السلوك، والتثبيت.',
     },
     '/dashboard/store': {
-      title: 'متجرك',
-      description: 'كيف يعمل GRINDCTRL على متجرك، وما يحتاج إصلاحًا.',
+      title: 'إعداد المتجر',
+      description: 'اربط متجرك، واختر ما يراه المتسوقون، وتأكد أنه يعمل.',
     },
     '/dashboard/install': {
       title: 'الأداة والتضمين',
