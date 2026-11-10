@@ -29,6 +29,23 @@
 (function () {
   'use strict';
   if (window.GRINDCTRL_TRYON_ENGINE) return;
+  // One fire-and-forget health beacon per document, shared across engine mounts.
+  var healthSent = false;
+  function healthBeacon(adapter, facts) {
+    if (healthSent || !adapter.signalKey || (navigator.connection && navigator.connection.saveData)) return;
+    healthSent = true;
+    setTimeout(function () {
+      try {
+        if (navigator.connection && navigator.connection.saveData) return;
+        facts.key = adapter.signalKey;
+        var body = JSON.stringify(facts);
+        var url = (adapter.embedOrigin || 'https://grindctrl.cloud') + '/api/store/signals';
+        if (navigator.sendBeacon && navigator.sendBeacon(url, body)) return;
+        if (window.fetch) window.fetch(url, { method: 'POST', body: body, keepalive: true,
+          credentials: 'omit', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=UTF-8' } }).catch(function () {});
+      } catch (_) { /* Never affect the storefront. */ }
+    }, 0);
+  }
   // Per page, across mounts: every icon's clipPath needs its own id.
   var iconCount = 0;
   window.GRINDCTRL_TRYON_ENGINE = { version: '1.4.0', mount: function (adapter) {
@@ -732,6 +749,9 @@
       for (var i = 0; i < cards.length && count < MAX_PILLS; i++) {
         try { addPill(cards[i], look); count++; } catch (_) { /* one odd card must not stop the rest */ }
       }
+      var products = {};
+      document.querySelectorAll(PILL).forEach(function (pill) { products[pill.dataset.productId] = true; });
+      if (count > 0) healthBeacon(adapter, { kind: 'listing', pills: Object.keys(products).length });
       if (count >= MAX_PILLS && pillObserver) pillObserver.disconnect();
     }
     function schedule() { if (!pillsStopped && !timer) timer = setTimeout(scan, 300); }
@@ -859,6 +879,7 @@
     applySettings(button, adapter.buttonSettings, null);
     if (float) document.body.appendChild(button); else spot.node.insertAdjacentElement('afterend', button);
     injected = button;
+    healthBeacon(adapter, { kind: 'product_page', productDetected: true, placement: float ? 'floating' : 'inline' });
     settleFloat();
     indicatorFor(button);
     observeForPrewarm(button, function () { if (button === injected) openTryOn(button, true); });
@@ -867,6 +888,16 @@
   injectStyles();
   if (adapter.injectCards) mountPills();
   placeButton();
+  if (adapter.productMissing) healthBeacon(adapter, { kind: 'product_page', productDetected: false });
+  // Woo prints its own product and catalog buttons before this engine mounts.
+  var nativeProducts = {};
+  document.querySelectorAll(BUTTON).forEach(function (button) {
+    if (adapter.injectButton || adapter.injectCards || !owns(button) || button.hidden ||
+        button.style.display === 'none' || button.classList.contains('gc-tryon-btn--preview')) return;
+    if (button.dataset.gcPage === '1') healthBeacon(adapter, { kind: 'product_page', productDetected: true, placement: 'inline' });
+    else if (button.classList.contains('gc-tryon-btn--card')) nativeProducts[button.dataset.productId] = true;
+  });
+  if (Object.keys(nativeProducts).length) healthBeacon(adapter, { kind: 'listing', pills: Object.keys(nativeProducts).length });
   window.addEventListener('gc:chat-launcher', settleFloat);
   // An exhausted store stays hidden to shoppers. Only a preview token reveals
   // its test entry; the context route is still the authority for test looks.

@@ -4,7 +4,7 @@ Tags: chat, woocommerce, virtual try-on, customer support, order tracking
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.3.5
+Stable tag: 0.3.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,9 @@ Under Advanced on the settings page you can enter the embed key by hand. The cha
 The script loads asynchronously in the footer, and the chat window only loads when a shopper shows interest in it.
 
 == Changelog ==
+
+= 0.3.6 =
+* Try-On reports where its button sits and whether product details were found, so Store check in your GRINDCTRL dashboard can show what to fix. Only daily counts are sent; no visitor data.
 
 = 0.3.5 =
 * The per-visitor Try-On limit uses the connection address (IPv6 by /64). Private, loopback and link-local proxy connections automatically use the last public X-Forwarded-For address or X-Real-IP. Public proxy/CDN connections can use a trusted header selected under WooCommerce > Settings > Products. The count is atomic and keeps one row per visitor, cleared daily.

@@ -675,3 +675,11 @@
 :where([dir='rtl']) .domainName {
   text-align: right;
 }
+
+.optionalGroup { background: transparent; }
+.optionalRow { padding-block: 16px; }
+.optionalAction { inline-size: 100%; }
+.wellSentence { overflow-wrap: anywhere; }
+@media (min-width: 48em) {
+  .optionalAction { inline-size: auto; min-inline-size: 190px; }
+}

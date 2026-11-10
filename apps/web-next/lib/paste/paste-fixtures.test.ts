@@ -60,6 +60,7 @@ const pills = () => [...document.querySelectorAll<HTMLButtonElement>('.gc-tryon-
 const launchers = () => document.querySelectorAll('[data-gc-chat-launcher]');
 
 beforeEach(() => {
+  vi.stubGlobal('navigator', Object.create(navigator, { sendBeacon: { value: vi.fn(() => true) } }));
   for (const target of [document, window]) {
     const add = target.addEventListener.bind(target);
     vi.spyOn(target, 'addEventListener').mockImplementation((type, listener, options) => {

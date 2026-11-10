@@ -29,7 +29,12 @@ const BASE: YourStoreFacts = {
   domains: [{ id: 'd1', domain: ADDRESS, verified: true, state: 'trusted', reason: null }],
 };
 
+const EMPTY_HEALTH = { inline: 0, floating: 0, detected: 0, missing: 0, listings: 0, pills: 0, photos: 0, photoHost: null };
 const STATES: Record<string, YourStoreFacts> = {
+  'health-working': { ...BASE, platform: 'paste_shopify', health: { ...EMPTY_HEALTH, inline: 12, detected: 12, photos: 2, listings: 1, pills: 24 } },
+  'health-broken': { ...BASE, platform: 'paste_shopify', codeOutdated: true, health: { ...EMPTY_HEALTH, missing: 4, floating: 1, photoHost: 'a-very-long-product-image-cdn-host-that-must-wrap.example.com' } },
+  'health-off': { ...BASE, platform: 'paste_shopify', pillsOn: false, health: EMPTY_HEALTH },
+  'health-easyorders': { ...BASE, easyOrders: true, health: EMPTY_HEALTH },
   connected: { ...BASE, tryOn: { ...BASE.tryOn!, showButton: false }, chat: { siteId: 'demo', enabled: false } },
   tryon: { ...BASE, chat: { siteId: 'demo', enabled: false } },
   preview: { ...BASE, launchState: 'preview' },

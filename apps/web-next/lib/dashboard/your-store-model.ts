@@ -2,10 +2,9 @@
    A6), worked out from facts the app already records, so every rule can be
    tested without rendering. The model decides each product's status pill
    and sentence, the heading, and which Store check rows exist and in what
-   order. Rows whose facts the server does not record yet (product page
-   placement, product photo hosts, collection pages, the EasyOrders
-   connection) are left out rather than guessed. */
+   order. Storefront facts are aggregate observations; absent evidence waits. */
 
+import type { HealthCounts } from '@/lib/store-health/signals';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import type { LaunchState } from '@/lib/launch/audience';
 import { intlLocale } from '@/lib/copy/rules';
@@ -59,6 +58,9 @@ export type YourStoreFacts = {
   launchState: LaunchState;
   /** A pasted Shopify install runs older code than the snippet handed out now. */
   codeOutdated: boolean;
+  health?: HealthCounts;
+  pillsOn?: boolean;
+  easyOrders?: boolean;
   tryOn: null | {
     tenant: string;
     showButton: boolean;
@@ -93,16 +95,20 @@ export type ProductCardView = {
 
 export type DomainLine = { domain: string; state: 'live' | 'waiting' | 'needs_proof'; label: string };
 
+export type CheckKey = 'code' | 'looks' | 'addresses' | 'productPages' | 'productDetails' | 'productPhotos' | 'collectionPages';
+
 export type FixRow = {
-  key: 'code' | 'looks' | 'addresses';
+  key: CheckKey;
   kind: 'bad' | 'attention';
+  /** Isolate a Latin hostname inside an Arabic sentence without altering copy. */
+  host?: string;
   title: string;
   sentence: string;
   domains: DomainLine[];
   action: (Link & { primary: boolean }) | null;
 };
 
-export type WellLine = { key: 'code' | 'looks' | 'storeChat' | 'addresses'; title: string; sentence: string; link: Link | null };
+export type WellLine = { key: CheckKey | 'storeChat'; title: string; sentence: string; link: Link | null };
 
 export type StoreCheckView = {
   checkedAt: string;
@@ -110,6 +116,8 @@ export type StoreCheckView = {
   waiting: boolean;
   fix: FixRow[];
   well: WellLine[];
+  more: WellLine[];
+  pending: WellLine[];
 };
 
 export type YourStoreView = {
@@ -245,11 +253,13 @@ export function checkedAtTime(now: number, locale: SiteLocale, timeZone: string)
 
 function storeCheck(facts: YourStoreFacts, copy: YourStoreCopy, locale: SiteLocale, code: CodeState): StoreCheckView {
   const checkedAt = copy.check.checkedAt(checkedAtTime(facts.now, locale, facts.timeZone));
-  if (code === 'waiting') return { checkedAt, waiting: true, fix: [], well: [] };
+  if (code === 'waiting') return { checkedAt, waiting: true, fix: [], well: [], more: [], pending: [] };
   const r = copy.rows;
   const bad: FixRow[] = [];
   const attention: FixRow[] = [];
   const well: WellLine[] = [];
+  const more: WellLine[] = [];
+  const pending: WellLine[] = [];
   const setUp = (label: string) => (facts.canChange ? { label, href: INSTALL_HREF } : null);
   const plan = (label: string) => (facts.canBilling ? { label, href: PLAN_HREF } : null);
 
@@ -316,11 +326,42 @@ function storeCheck(facts: YourStoreFacts, copy: YourStoreCopy, locale: SiteLoca
     }
   }
 
+  if (tryOn?.showButton && facts.platform !== 'shopify_app') {
+    const health = facts.health;
+    const tryOnSetup = (label: string) => facts.canChange ? { label, href: '/dashboard/try-on/setup' } : null;
+    const support = (label: string) => ({ label, href: 'mailto:grindctrlnow@gmail.com' });
+    const wait = (key: CheckKey, title: string) => pending.push({ key, title, sentence: copy.pill.waiting, link: null });
+    const problem = (key: CheckKey, kind: FixRow['kind'], title: string, sentence: string, link: Link | null, host?: string) =>
+      (kind === 'bad' ? bad : attention).push({ key, kind, title, sentence, domains: [], action: withPrimary(link), ...(host ? { host } : {}) });
+    const pages = (health?.inline ?? 0) + (health?.floating ?? 0);
+    if (!pages) wait('productPages', r.productPages);
+    else if (health!.floating > 0) problem('productPages', 'attention', r.productPages, r.floating, tryOnSetup(r.pickSpot));
+    else well.push({ key: 'productPages', title: r.productPages, sentence: r.inlinePages(health!.inline, pages), link: null });
+
+    if (!health || health.detected + health.missing === 0) wait('productDetails', r.productDetails);
+    else if (health.detected === 0) problem('productDetails', 'bad', r.productDetails, r.missingDetails, support(r.askUs));
+    else well.push({ key: 'productDetails', title: r.productDetails, sentence: r.connected, link: null });
+
+    if (health?.photoHost) problem('productPhotos', 'bad', r.productPhotos, r.photoFailure(health.photoHost), support(r.contactUs), health.photoHost);
+    else if (health?.photos) well.push({ key: 'productPhotos', title: r.productPhotos, sentence: r.photosReady, link: null });
+    else wait('productPhotos', r.productPhotos);
+
+    if (facts.platform === 'paste_website') {
+      if (facts.easyOrders) more.push({ key: 'collectionPages', title: r.collectionPages, sentence: r.easyOrdersPills, link: null });
+    } else if (facts.platform === 'paste_shopify' && facts.codeOutdated) {
+      problem('collectionPages', 'attention', r.collectionPages, copy.updatedCodeNote, setUp(copy.getUpdatedCode));
+    } else if (facts.pillsOn === false) {
+      more.push({ key: 'collectionPages', title: r.collectionPages, sentence: r.pillsOff, link: tryOnSetup(r.turnOnPills) });
+    } else if (health?.listings) {
+      well.push({ key: 'collectionPages', title: r.collectionPages, sentence: r.pillProducts(health.pills), link: null });
+    } else wait('collectionPages', r.collectionPages);
+  }
+
   // Not working first, then needs attention; only the first Not working fix leads.
   const fix = [...bad, ...attention].map((row, index) =>
     row.action ? { ...row, action: { ...row.action, primary: row.kind === 'bad' && bad.findIndex((b) => b.action) === index } } : row,
   );
-  return { checkedAt, waiting: false, fix, well };
+  return { checkedAt, waiting: false, fix, well, more, pending };
 }
 
 function withPrimary(link: Link | null): (Link & { primary: boolean }) | null {

@@ -69,7 +69,7 @@
     widgetLoads[name] = new Promise(function (resolve, reject) {
       var script = document.createElement('script');
       script.async = true;
-      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=d6687c263081';
+      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=bec19d0ae3d6';
       script.onload = resolve;
       script.onerror = function () { delete widgetLoads[name]; reject(new Error('widget_unavailable')); };
       document.head.appendChild(script);
@@ -80,6 +80,7 @@
   /* A product or product cards described on this page, by any of the
      sources tryon-paste.js reads. A cheap look before loading it. */
   function websiteSignals() {
+    if (/\/(products?|item)\/[^/]+/.test(window.location.pathname) || document.querySelector('button[name="add-to-cart"],button[name="add"],.single_add_to_cart_button')) return true;
     if (document.querySelector('[data-grindctrl-tryon][data-product-id],[data-grindctrl-card],meta[property^="product:"],' +
         'meta[property="og:type"][content="product"],[itemscope][itemtype*="schema.org/Product"]')) return true;
     return Array.prototype.some.call(document.querySelectorAll('script[type="application/ld+json"]'), function (node) {

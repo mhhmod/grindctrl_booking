@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const photo = vi.hoisted(() => vi.fn());
+vi.mock('@/lib/store-health/signals', () => ({ recordPhotoHealth: photo }));
 const paste = vi.hoisted(() => ({ connection: vi.fn(), hosts: vi.fn(), platforms: vi.fn() }));
 vi.mock('@/lib/paste/store', async (original) => ({ ...await original<object>(),
   getPasteConnection: paste.connection, pasteTrustedHosts: paste.hosts, readPasteDomainPlatforms: paste.platforms }));
@@ -202,5 +204,25 @@ describe('fetchSiteGarment', () => {
       ),
     ).rejects.toBeInstanceOf(UnsafeGarmentUrlError);
     expect(fetcher).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('server photo health recording', () => {
+  it('records host refusal and fetch failure, and successful verified image fetch', async () => {
+    photo.mockClear();
+    const deps = { hosts: HOSTS, lookup: async () => PUBLIC, fetcher: vi.fn(async () => ({ status: 403, mime: 'image/jpeg', body: Buffer.alloc(0) })) };
+    const good = 'https://shop.example.com/image.jpg?private=not-stored';
+    const bad = 'https://cdn.example.com/image.jpg';
+    await expect(fetchSiteGarment('site', bad, deps)).rejects.toMatchObject({ code: 'host_not_allowed' });
+    expect(photo).toHaveBeenLastCalledWith('site', bad, false);
+    await expect(fetchSiteGarment('site', good, deps)).rejects.toThrow('Garment image fetch failed (HTTP 403).');
+    expect(photo).toHaveBeenLastCalledWith('site', good, false);
+    deps.fetcher.mockResolvedValue({ status: 200, mime: 'image/jpeg', body: Buffer.from('jpeg') });
+    await expect(fetchSiteGarment('site', good, deps)).resolves.toEqual({ mime: 'image/jpeg', bytes: Buffer.from('jpeg') });
+    expect(photo).toHaveBeenLastCalledWith('site', good, true);
+    deps.fetcher.mockRejectedValueOnce(new Error('network timeout'));
+    await expect(fetchSiteGarment('site', good, deps)).rejects.toThrow('network timeout');
+    expect(photo).toHaveBeenLastCalledWith('site', good, false);
   });
 });

@@ -46,3 +46,9 @@ describe('proxy matcher', () => {
     expect(matcher.test('/dashboard/messenger')).toBe(true);
   });
 });
+
+it('exempts only the exact public Store check beacon from Clerk', () => {
+  expect(matcher.test('/api/store/signals')).toBe(false);
+  expect(matcher.test('/api/store/signals/admin')).toBe(true);
+  expect(matcher.test('/api/store/signals-private')).toBe(true);
+});
