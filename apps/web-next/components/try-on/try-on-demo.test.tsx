@@ -274,6 +274,7 @@ describe('TryOnDemo storefront session lifecycle', () => {
         );
       }
       if (url.endsWith('/api/try-on/jobs/tryon_async')) {
+        if (init?.method === 'PATCH') return new Response(null, { status: 204 });
         polls.push(url);
         const done = polls.length > 1;
         return jsonResponse({

@@ -5,7 +5,8 @@
 import { classifyTryOnFailure, type TryOnFailureKind } from './shopper-errors';
 import { retryAfterDelayMs, TRYON_ASYNC_POLL_TIMEOUT_MS, TRYON_POLL_INITIAL_DELAY_MS, TRYON_POLL_TIMEOUT_MS, tryOnPollDelayMs } from './poll-policy';
 import { recordTryOnPhase } from './performance';
-import { attemptTurnstileToken, TurnstileChallengeError } from './turnstile-client';
+import { preloadTurnstile, TurnstileChallengeError } from './turnstile-client';
+import { LookPreparation, type ClientLookTimings } from './look-preparation';
 import type { TryOnApiResponse, TryOnAttempt, TryOnJobApiResponse, TryOnSession } from './types';
 
 export function createAttemptNonce(): string {
@@ -14,6 +15,39 @@ export function createAttemptNonce(): string {
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return window.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+/** Acknowledgment time cannot be known in the original request body. This
+ * best-effort report uses the same signed session as polling, no photo data. */
+export function reportClientLookTimings(jobId: string, session: string, clientTimings: ClientLookTimings): void {
+  void fetch(`/api/try-on/jobs/${encodeURIComponent(jobId)}`, {
+    method: 'PATCH', headers: { Authorization: `Bearer ${session}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clientTimings }), keepalive: true,
+  }).catch(() => {});
+}
+
+export type PublicLookPreparation = { session: TryOnSession; preparation: LookPreparation };
+export async function preparePublicLook(productId: string, signal?: AbortSignal): Promise<PublicLookPreparation> {
+  const response = await fetchWithOneRetry('/api/try-on/session', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ productId, context: 'public-demo' }), signal,
+  });
+  const data = await readJson<TryOnApiResponse<TryOnSession>>(response);
+  if (!response.ok || !data?.ok || !data.data) throw stopFor(response, data?.error);
+  const session = data.data;
+  if (session.humanCheck) preloadTurnstile();
+  const preparation = new LookPreparation(async (attemptSignal) => {
+    const res = await fetchWithOneRetry('/api/try-on/attempt', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: attemptSignal,
+      body: JSON.stringify({ sessionId: session.sessionId, productId, attemptNonce: createAttemptNonce() }),
+    });
+    const attempt = await readJson<TryOnApiResponse<TryOnAttempt>>(res);
+    if (!res.ok || !attempt?.ok || !attempt.data) throw stopFor(res, attempt?.error);
+    return attempt.data;
+  });
+  signal?.addEventListener('abort', () => preparation.abort(), { once: true });
+  if (signal?.aborted) { preparation.abort(); throw new DOMException('Aborted', 'AbortError'); }
+  return { session, preparation };
 }
 
 function isAbort(error: unknown): boolean {
@@ -249,42 +283,24 @@ export async function runPublicTryOn({
   photoDataUrl,
   signal,
   onProgress,
+  prepared,
 }: {
   productId: string;
   photoDataUrl: string;
   signal?: AbortSignal;
   onProgress?: (data: TryOnJobApiResponse) => void;
+  prepared?: PublicLookPreparation;
 }): Promise<PublicTryOnResult> {
   try {
-    const sessionRes = await fetchWithOneRetry('/api/try-on/session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId, context: 'public-demo' }),
-      signal,
-    });
-    const sessionData = await readJson<TryOnApiResponse<TryOnSession>>(sessionRes);
-    if (!sessionRes.ok || !sessionData?.ok || !sessionData.data) {
-      throw stopFor(sessionRes, sessionData?.error);
-    }
-    const session = sessionData.data;
-
-    const attemptRes = await fetchWithOneRetry('/api/try-on/attempt', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId: session.sessionId, productId, attemptNonce: createAttemptNonce() }),
-      signal,
-    });
-    const attemptData = await readJson<TryOnApiResponse<TryOnAttempt>>(attemptRes);
-    if (!attemptRes.ok || !attemptData?.ok || !attemptData.data) {
-      throw stopFor(attemptRes, attemptData?.error);
-    }
-
-    // Live demo looks carry a binding: a fresh check for this attempt, reused
-    // unchanged by the one automatic retry below.
-    let turnstileToken: string | undefined;
+    const usable = prepared?.session.productId === productId && Date.parse(prepared.session.expiresAt) > Date.now() + 5000;
+    if (prepared && !usable) prepared.preparation.abort();
+    const { session, preparation } = usable ? prepared : await preparePublicLook(productId, signal);
+    let look;
     try {
-      turnstileToken = await attemptTurnstileToken(attemptData.data.turnstile);
+      look = await preparation.take(signal);
     } catch (error) {
+      if (isAbort(error)) throw error;
+      if (!(error instanceof TurnstileChallengeError) && error instanceof TryOnStop) throw error;
       throw new TryOnStop(error instanceof TurnstileChallengeError ? { kind: 'challenge' } : { kind: 'unavailable' });
     }
 
@@ -294,16 +310,18 @@ export async function runPublicTryOn({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sessionId: session.sessionId,
-        attemptId: attemptData.data.attemptId,
+        attemptId: look.attempt.attemptId,
         productId,
         photoSource: 'upload',
         photoReference: 'uploaded-photo',
         photoData: photoDataUrl,
-        turnstileToken,
+        turnstileToken: look.token,
+        clientTimings: look.timings,
       }),
       signal,
     });
     let job = await readJson<TryOnJobApiResponse>(generateRes);
+    if (job?.ok && job.jobId) reportClientLookTimings(job.jobId, session.sessionId, { ...look.timings, upload_ms: performance.now() - uploadStartedAt });
     // Fetch exposes submission-to-acknowledgment, including server validation
     // and reservation. A synchronous fallback also includes generation, so
     // omit its split measurements rather than mislabel provider time as upload.

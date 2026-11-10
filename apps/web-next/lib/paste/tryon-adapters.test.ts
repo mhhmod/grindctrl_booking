@@ -7,7 +7,8 @@ type Product = { id: string; variantId: string | null; title: string; imageUrl: 
 type Context = { embedUrl: string; context: { expiresAt: string }; settings?: Record<string, unknown> };
 type Adapter = {
   prepare: () => Promise<boolean>; detectProduct: () => Product | null; placementTarget: () => Element | null;
-  getContext: (product: Product) => Promise<Context>; addToCart: (variant: string, qty: number) => Promise<unknown>;
+  getContext: (product: Product) => Promise<Context>; addToCart: (variant: string, qty: number, state?: { product: Product }) => Promise<unknown>;
+  getProduct: (product: Product) => Promise<{ variants: Array<{ id: string }> } | null>;
 };
 type Paste = { create: (options: Record<string, unknown>) => Adapter; detectWebsiteProduct: () => Product | null };
 const globals = window as unknown as Record<string, unknown>;
@@ -54,6 +55,7 @@ const shopifyContext = (variant = '77') => ({ context: { expiresAt: later(), var
   embedUrl: `${APP}/embed/try-on?product=42&variant=${variant}&sheet=1#storefrontContext=proof` });
 
 beforeEach(() => {
+  delete globals.woocommerce_params; delete globals.wc_add_to_cart_params; delete globals.wpApiSettings;
   for (const target of [document, window]) {
     const add = target.addEventListener.bind(target);
     vi.spyOn(target, 'addEventListener').mockImplementation((type, listener, options) => {
@@ -254,6 +256,11 @@ describe('shared hosted engine with a paste adapter', () => {
     expect(button.previousElementSibling?.matches('form[action*="/cart/add"]')).toBe(true);
     expect(button.dataset.productId).toBe('42');
     expect(frame.src.startsWith(`${APP}/embed/try-on?`)).toBe(true);
+    expect(frame.hasAttribute('title')).toBe(false);
+    expect(frame.getAttribute('aria-label')).toBe('GRINDCTRL Try-On');
+    expect(sheet.querySelectorAll('.gc-tryon-skeleton__tips span')).toHaveLength(3);
+    expect(sheet.querySelector('.gc-tryon-skeleton__button')).not.toBeNull();
+    expect(source('tryon-engine')).toMatch(/@media \(min-width:640px\)[\s\S]*?\.gc-tryon-sheet__handle\{display:none\}/);
     message('https://evil.example', frame.contentWindow, { type: 'grindctrl-tryon:close' });
     message(APP, window, { type: 'grindctrl-tryon:close' });
     expect(sheet.hidden).toBe(false);
@@ -437,6 +444,50 @@ describe("the pasted product button waits for the store's config", () => {
   });
 });
 
+describe('pasted WooCommerce cart', () => {
+  function woo(variable = false) {
+    const variations = [{ variation_id: 77, attributes: { attribute_pa_size: 'm' }, is_in_stock: true }];
+    document.body.innerHTML = `<div data-grindctrl-tryon data-product-id="dress" data-title="Dress" data-image="https://images.example/dress.jpg"></div>
+      <form class="cart ${variable ? 'variations_form' : ''}" data-product_id="42">
+        <button class="single_add_to_cart_button" name="add-to-cart" value="42">Add to cart</button>
+        ${variable ? '<input name="variation_id" value="77"><select name="attribute_pa_size"><option value="m">M</option></select>' : ''}</form>`;
+    if (variable) document.querySelector('form')!.setAttribute('data-product_variations', JSON.stringify(variations));
+    globals.wc_add_to_cart_params = { cart_url: '/cart/' };
+    pageFetch.mockImplementation(async () => new Response('{}', { headers: { Nonce: 'fresh-nonce' } }));
+    const a = adapter();
+    const product = a.detectProduct()!;
+    return { a, product };
+  }
+  it.each([false, true])('adds only this simple/variable product (%s) with a Store API nonce and quantity', async (variable) => {
+    const { a, product } = woo(variable);
+    const id = variable ? '77' : '42';
+    expect(product.variantId).toBe(id);
+    expect((await a.getProduct(product))?.variants.map((v) => v.id)).toEqual([id]);
+    expect(await a.addToCart(id, 3, { product })).toMatchObject({ ok: true });
+    expect(String(pageFetch.mock.calls[0][0])).toContain('/wp-json/wc/store/v1/cart');
+    const init = pageFetch.mock.calls[1][1]!;
+    expect(new Headers(init.headers).get('Nonce')).toBe('fresh-nonce');
+    expect(JSON.parse(String(init.body))).toMatchObject({ id: Number(id), quantity: 3 });
+    if (variable) expect(JSON.parse(String(init.body)).variation).toEqual([{ attribute: 'pa_size', value: 'm' }]);
+  });
+  it('refuses another product or variation and quantities outside 1–99 before fetching', async () => {
+    const { a, product } = woo(true);
+    for (const id of ['42', '999']) expect(await a.addToCart(id, 1, { product })).toEqual({ ok: false });
+    for (const qty of [0, 100, -1, 1.5, NaN]) expect(await a.addToCart('77', qty, { product })).toEqual({ ok: false });
+    expect(pageFetch).not.toHaveBeenCalled();
+    expect(await a.addToCart('77', 99, { product })).toMatchObject({ ok: true });
+  });
+  it('keeps every non-Woo website unsupported regardless of its address', async () => {
+    const { a, product } = woo();
+    delete globals.wc_add_to_cart_params;
+    document.querySelector('form')!.remove();
+    window.history.replaceState({}, '', '/woocommerce/product/dress');
+    expect(await a.addToCart('42', 1, { product })).toBe('unsupported');
+    expect(await a.getProduct(product)).toBeNull();
+    expect(pageFetch).not.toHaveBeenCalled();
+  });
+});
+
 describe('messenger paste loading', () => {
   it.each(['website', 'shopify'])('loads no Try-On assets on non-product %s pages', async (platform) => {
     window.history.replaceState({}, '', '/pages/about');
@@ -448,7 +499,7 @@ describe('messenger paste loading', () => {
     expect(document.querySelector('script[src*="tryon-"]')).toBeNull();
     expect(globals.GRINDCTRL_MESSENGER).toBeDefined();
   });
-  it('loads only the versioned paste adapter on a website product page, and fetches config for the install signal', async () => {
+  it('requests the versioned engine beside the adapter before config resolves, and mounts only after prepare', async () => {
     document.body.innerHTML = `<script type="application/ld+json">${JSON.stringify({ '@type': 'Product', sku: 'dress', image: 'https://images.example/d.jpg' })}</script>`;
     delete globals.GRINDCTRL_TRYON_PASTE;
     vi.spyOn(document, 'currentScript', 'get').mockReturnValue(snippet('website'));
@@ -456,7 +507,24 @@ describe('messenger paste loading', () => {
     (0, eval)(source('messenger'));
     document.dispatchEvent(new Event('DOMContentLoaded'));
     const scripts = [...document.querySelectorAll<HTMLScriptElement>('script[src*="tryon-"]')].map((node) => node.src);
-    expect(scripts).toEqual([`${APP}/widget/v1/tryon-paste.js?v=1.4.1`]);
+    expect(scripts).toHaveLength(2);
+    expect(scripts[0]).toMatch(/tryon-paste\.js\?v=[a-f0-9]{12}$/);
+    expect(scripts[1]).toMatch(/tryon-engine\.js\?v=[a-f0-9]{12}$/);
+    let finish = (_found: boolean) => {};
+    const prepare = vi.fn(() => new Promise<boolean>((resolve) => { finish = resolve; }));
+    const mount = vi.fn();
+    globals.GRINDCTRL_TRYON_PASTE = { create: () => ({ prepare }) };
+    globals.GRINDCTRL_TRYON_ENGINE = { mount };
+    document.querySelector('script[src*="tryon-paste"]')!.dispatchEvent(new Event('load'));
+    await tick();
+    expect(prepare).toHaveBeenCalledOnce();
+    expect(mount).not.toHaveBeenCalled();
+    document.querySelector('script[src*="tryon-engine"]')!.dispatchEvent(new Event('load'));
+    await tick();
+    expect(mount).not.toHaveBeenCalled();
+    finish(true);
+    await tick();
+    expect(mount).toHaveBeenCalledOnce();
     expect(pageFetch.mock.calls.some(([url]) => String(url).startsWith(`${APP}/api/messenger/config?key=embed-key`))).toBe(true);
   });
   it('chat boots even when product adapter loading fails', async () => {

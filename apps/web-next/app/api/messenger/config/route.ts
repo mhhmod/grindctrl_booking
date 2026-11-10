@@ -90,14 +90,17 @@ export async function GET(request: NextRequest) {
     // here: it only schedules our own check of the domain's page.
     // Store Chat off leaves the site in `draft`; the pasted code still runs
     // Try-On there, so only an operator-disabled site is left out.
-    if (headerOrigin && site.status !== 'disabled') {
-      const signal = await recordPasteSignal(site.id, headerOrigin);
-      if (signal === 'unverified') schedulePasteDomainCheck(site.id, new URL(headerOrigin).hostname);
-    }
-    const features = await storeFlags(flagStore);
+    const [features, orderProvider] = await Promise.all([
+      storeFlags(flagStore),
+      resolveOrderProvider(site),
+      headerOrigin && site.status !== 'disabled'
+        ? Promise.resolve(recordPasteSignal(site.id, headerOrigin)).then((signal) => {
+          if (signal === 'unverified') schedulePasteDomainCheck(site.id, new URL(headerOrigin).hostname);
+        }) : Promise.resolve(),
+    ]);
     const now = new Date();
     const payload = features.includes('v16_chat')
-      ? toPublicPayload(site, now, features, { orderProviderAvailable: Boolean(await resolveOrderProvider(site)) })
+      ? toPublicPayload(site, now, features, { orderProviderAvailable: Boolean(orderProvider) })
       : toPublicPayload(site, now, features);
     /* Who sees Store Chat on a Shopify store or a paired WooCommerce store
        (phase zero item 9): only the owner's preview link while it is in

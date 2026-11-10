@@ -43,6 +43,17 @@ describe('attempt-bound website Turnstile', () => {
     await expect(attemptTurnstileToken(binding)).rejects.toBeInstanceOf(TurnstileChallengeError);
     expect(window.turnstile.remove).toHaveBeenCalledWith('widget');
   });
+  it('removes a pending widget immediately when its look is aborted', async () => {
+    const controller = new AbortController();
+    window.turnstile = { render: () => 'pending-widget', execute: vi.fn(), remove: vi.fn() };
+    const pending = attemptTurnstileToken(binding, { signal: controller.signal, background: true });
+    await Promise.resolve();
+    await Promise.resolve();
+    controller.abort();
+    await expect(pending).rejects.toBeInstanceOf(TurnstileChallengeError);
+    expect(window.turnstile.remove).toHaveBeenCalledWith('pending-widget');
+    expect(document.body.childElementCount).toBe(0);
+  });
   it('reports a challenge script that cannot load as a challenge failure', async () => {
     document.body.innerHTML = '<main></main>';
     const pending = attemptTurnstileToken(binding);

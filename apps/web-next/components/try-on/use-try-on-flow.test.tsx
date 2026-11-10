@@ -28,6 +28,37 @@ beforeEach(() => {
 afterEach(() => { vi.unstubAllGlobals(); delete window.turnstile; });
 
 describe('paste Turnstile generation handoff', () => {
+  it('prepares once after acceptance, sends that token at tap, and discards it when the photo changes or sheet closes', async () => {
+    window.history.replaceState({}, '', '/embed/try-on');
+    let options: Parameters<NonNullable<Window['turnstile']>['render']>[1];
+    const render = vi.fn<NonNullable<Window['turnstile']>['render']>((_el, given) => { options = given; return 'widget'; });
+    window.turnstile = { render, execute: () => options.callback('prepared-token'), remove: vi.fn() };
+    const response = (body: unknown) => new Response(JSON.stringify(body));
+    let attempts = 0;
+    vi.mocked(fetch).mockImplementation(async (url, init) => {
+      if (url === '/api/try-on/session') return response({ ok: true, data: session });
+      if (url === '/api/try-on/attempt') return response({ ok: true, data: { attemptId: `attempt-${++attempts}`,
+        expiresAt: new Date(Date.now() + 600000).toISOString(), turnstile: { siteKey: 'key', action: 'paste_tryon', cData: `bound-${attempts}` } } });
+      if (init?.method === 'PATCH' || init?.method === 'DELETE') return new Response(null, { status: 204 });
+      return response({ ok: true, jobId: 'fresh', status: 'completed', productId: product.id, resultImageUrl: LOOK,
+        meta: { runtime: 'live', provider: 'test', costEstimate: null } });
+    });
+    const { result, unmount } = renderHook(() => useTryOnFlow(props));
+    await waitFor(() => expect(result.current.sessionState).toBe('ready'));
+    act(() => result.current.selectPhoto(PHOTO));
+    act(() => { result.current.acceptPhoto(); result.current.acceptPhoto(); });
+    await waitFor(() => expect(window.turnstile!.remove).toHaveBeenCalledTimes(1));
+    await act(() => result.current.generate());
+    expect(attempts).toBe(1);
+    const sent = vi.mocked(fetch).mock.calls.find(([url]) => url === '/api/try-on/generate');
+    expect(JSON.parse(String(sent?.[1]?.body))).toMatchObject({ attemptId: 'attempt-1', turnstileToken: 'prepared-token', clientTimings: { check_prewarmed: true } });
+    act(() => { result.current.reset(); result.current.selectPhoto(PHOTO + 'new'); });
+    act(() => result.current.acceptPhoto());
+    await waitFor(() => expect(render).toHaveBeenCalledTimes(2));
+    act(() => window.dispatchEvent(new MessageEvent('message', { source: window.parent, data: { type: 'grindctrl-tryon:visibility', open: false } })));
+    expect(attempts).toBe(2);
+    unmount();
+  });
   it.each([true, false])('includes a token only for the server-required website attempt: %s', async (website) => {
     window.history.replaceState({}, '', '/embed/try-on');
     let complete: (token: string) => void = () => {};

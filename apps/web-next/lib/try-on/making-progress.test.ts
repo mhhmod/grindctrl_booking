@@ -2,6 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { MAX_FRACTION, makingProgress } from './making-progress';
 
 describe('making the look', () => {
+  it('keeps reading until acceptance, fits while working, and holds final details at 85% of Muse time', () => {
+    const at = (elapsedMs: number, acceptedElapsedMs: number | null, stage: 'received' | 'making' | 'finishing' = 'making') =>
+      makingProgress({ elapsedMs, acceptedElapsedMs, estimateSeconds: null, stepCount: 3, stage });
+    const phases = [at(0, null), at(30_000, null), at(30_000, 0), at(35_000, 5_000), at(42_000, 12_000), at(120_000, 90_000)];
+    expect(phases.map((p) => p.stepIndex)).toEqual([0, 0, 1, 1, 2, 2]);
+    expect(at(31_000, 1000, 'finishing').stepIndex).toBe(2);
+    for (let i = 0; i < phases.length; i++) {
+      expect(phases[i].fraction).toBeLessThan(1);
+      if (i) expect(phases[i].fraction).toBeGreaterThanOrEqual(phases[i - 1].fraction);
+    }
+  });
   it('counts down only while the real median estimate is credible', () => {
     const at = (s: number) => makingProgress({ elapsedMs: s * 1000, estimateSeconds: 12, stepCount: 3 });
     expect(at(0)).toEqual({ stepIndex: 0, secondsLeft: 12, fraction: 0, overEstimate: false });

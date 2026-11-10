@@ -300,6 +300,8 @@ describe('messenger on a pasted-code listing', () => {
     (0, eval)(source('messenger'));
     document.dispatchEvent(new Event('DOMContentLoaded'));
     const scripts = [...document.querySelectorAll<HTMLScriptElement>('script[src*="tryon-"]')].map((node) => node.src);
-    expect(scripts).toEqual([`${APP}/widget/v1/tryon-paste.js?v=1.4.1`]);
+    expect(scripts).toHaveLength(2);
+    expect(scripts[0]).toMatch(/tryon-paste\.js\?v=[a-f0-9]{12}$/);
+    expect(scripts[1]).toMatch(/tryon-engine\.js\?v=[a-f0-9]{12}$/);
   });
 });

@@ -32,13 +32,8 @@ export async function buildSiteTryOnConfig(
   const cached = cachedProxyConfig(cacheKey);
   if (cached) return cached;
 
-  let hasVerifiedDomain = false;
-  try {
-    hasVerifiedDomain = (await verifiedSiteHosts(siteId)).length > 0;
-  } catch {
-    hasVerifiedDomain = false;
-  }
-  const [settings, { launch, unsubscribed }, features] = await Promise.all([
+  const [hasVerifiedDomain, settings, { launch, unsubscribed }, features] = await Promise.all([
+    verifiedSiteHosts(siteId).then((hosts) => hosts.length > 0).catch(() => false),
     getTryOnSettings(tenant),
     readSiteLaunch(siteId),
     storeFlags(flagStoreForTenant(tenant) ?? { widgetSiteId: siteId }),

@@ -69,7 +69,7 @@
     widgetLoads[name] = new Promise(function (resolve, reject) {
       var script = document.createElement('script');
       script.async = true;
-      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=1.4.1';
+      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=d6687c263081';
       script.onload = resolve;
       script.onerror = function () { delete widgetLoads[name]; reject(new Error('widget_unavailable')); };
       document.head.appendChild(script);
@@ -153,17 +153,14 @@
     }
     if (!website.adapter && !websiteSignals()) return;
     website.busy = true;
-    loadWidget('tryon-paste.js', 'GRINDCTRL_TRYON_PASTE').then(function () {
+    Promise.all([loadWidget('tryon-paste.js', 'GRINDCTRL_TRYON_PASTE').then(function () {
       if (!website.adapter) {
         website.adapter = window.GRINDCTRL_TRYON_PASTE.create({ script: SCRIPT, appOrigin: APP_ORIGIN,
           locale: pasteLocale(), visitorId: launchVisitorId(), preview: previewToken() });
       }
-      return website.adapter.prepare().then(function (found) {
-        if (!found) return;
-        return loadWidget('tryon-engine.js', 'GRINDCTRL_TRYON_ENGINE').then(function () {
-          website.handle = window.GRINDCTRL_TRYON_ENGINE.mount(website.adapter) || null;
-        });
-      });
+      return website.adapter.prepare();
+    }), loadWidget('tryon-engine.js', 'GRINDCTRL_TRYON_ENGINE')]).then(function (ready) {
+      if (ready[0]) website.handle = window.GRINDCTRL_TRYON_ENGINE.mount(website.adapter) || null;
     }).catch(function () { /* Store Chat remains available. */ }).then(function () {
       website.busy = false;
       if (website.again) { website.again = false; syncWebsiteTryOn(); }
@@ -185,13 +182,13 @@
       !!document.querySelector('script[type="application/json"][data-gc-cards]');
     if (!productPage && !listing) return;
     window.__gcPasteTryOn = true;
-    loadWidget('tryon-paste.js', 'GRINDCTRL_TRYON_PASTE').then(function () {
-      var adapter = window.GRINDCTRL_TRYON_PASTE.create({ script: SCRIPT, appOrigin: APP_ORIGIN,
+    var adapter;
+    Promise.all([loadWidget('tryon-paste.js', 'GRINDCTRL_TRYON_PASTE').then(function () {
+      adapter = window.GRINDCTRL_TRYON_PASTE.create({ script: SCRIPT, appOrigin: APP_ORIGIN,
         locale: pasteLocale(), visitorId: launchVisitorId(), preview: previewToken() });
-      return adapter.prepare().then(function (found) {
-        if (!found || (adapter.injectButton && !adapter.placementTarget())) return;
-        return loadWidget('tryon-engine.js', 'GRINDCTRL_TRYON_ENGINE').then(function () { window.GRINDCTRL_TRYON_ENGINE.mount(adapter); });
-      });
+      return adapter.prepare();
+    }), loadWidget('tryon-engine.js', 'GRINDCTRL_TRYON_ENGINE')]).then(function (ready) {
+      if (ready[0] && (!adapter.injectButton || adapter.placementTarget())) window.GRINDCTRL_TRYON_ENGINE.mount(adapter);
     }).catch(function () { /* Store Chat remains available. */ });
   }
   /* Storage namespace has to be stable BEFORE the config response arrives,

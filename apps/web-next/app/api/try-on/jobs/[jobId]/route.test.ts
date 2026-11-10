@@ -29,7 +29,8 @@ vi.mock('@/lib/try-on/persistence', async () => {
   };
 });
 
-import { DELETE, GET } from '@/app/api/try-on/jobs/[jobId]/route';
+import { DELETE, GET, PATCH } from '@/app/api/try-on/jobs/[jobId]/route';
+import * as timing from '@/lib/try-on/job-timings';
 import { generateTryOn, getJob, storeJob } from '@/lib/try-on/service';
 import { TryOnResultPersistenceError } from '@/lib/try-on/result-errors';
 import {
@@ -41,6 +42,23 @@ const CORE_SECRET = 'test-only-independent-core-signing-key-2026';
 const SECRET = 'test-shopify-secret';
 
 describe('GET /api/try-on/jobs/[jobId]', () => {
+  it('accepts only validated client timings for the exact signed session and job', async () => {
+    const session = signTryOnSession(CORE_SECRET, { purpose: 'public-demo', productId: 'premium-ringer-tee' });
+    const job = await generateTryOn(session.claims, 'upload');
+    const save = vi.spyOn(timing, 'persistJobTimings').mockResolvedValue();
+    const patch = (token: string) => PATCH(new NextRequest(`https://app.example/api/try-on/jobs/${job.jobId}`, {
+      method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientTimings: { attempt_ms: 10, upload_ms: 999999, check_ms: -1, check_prewarmed: 'yes', photo: 'private' } }),
+    }), { params: Promise.resolve({ jobId: job.jobId }) });
+    expect((await patch(session.token)).status).toBe(204);
+    expect(save).toHaveBeenCalledWith(expect.objectContaining({ jobId: job.jobId, sessionId: session.claims.sessionId, shop: null }),
+      { client: { attempt_ms: 10, upload_ms: 600000 } });
+    save.mockClear();
+    const other = signTryOnSession(CORE_SECRET, { purpose: 'public-demo', productId: 'premium-ringer-tee' });
+    expect((await patch(other.token)).status).toBe(404);
+    expect((await patch('invalid')).status).toBe(401);
+    expect(save).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';

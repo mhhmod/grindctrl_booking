@@ -14,9 +14,11 @@ const mocks = vi.hoisted(() => ({
   isActiveTenant: vi.fn(),
   signal: vi.fn(),
   domainCheck: vi.fn(),
+  orderProvider: vi.fn(),
 }));
 vi.mock('@/lib/paste/store', () => ({ recordPasteSignal: mocks.signal }));
 vi.mock('@/lib/paste/domain-check', () => ({ schedulePasteDomainCheck: mocks.domainCheck }));
+vi.mock('@/lib/messenger/order-provider', () => ({ resolveOrderProvider: mocks.orderProvider }));
 
 vi.mock('@/lib/shopify/tokens', () => ({ isActiveTenant: mocks.isActiveTenant }));
 vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: mocks.getStoreLaunch }));
@@ -53,6 +55,23 @@ function req(url: string) {
 }
 
 describe('GET /api/messenger/config', () => {
+  it('profiles independent config reads without a network', async () => {
+    vi.useFakeTimers();
+    const delayed = <T,>(value: T, ms: number) => new Promise<T>((resolve) => setTimeout(() => resolve(value), ms));
+    mocks.loadPublicSite.mockImplementation(() => delayed({ id: 'site-1', domain: 'store.myshopify.com' }, 50));
+    mocks.storeFlags.mockImplementation(() => delayed(['v16_chat', 'n5_preview_mode'], 35));
+    mocks.signal.mockImplementation(() => delayed('verified', 40));
+    mocks.orderProvider.mockImplementation(() => delayed(null, 65));
+    mocks.getStoreLaunch.mockImplementation(() => delayed(null, 45));
+    {
+      const start = Date.now();
+      const response = GET(new NextRequest('https://app.example/api/messenger/config?key=gc_test_key', { headers: { Origin: 'https://store.example' } }));
+      await vi.runAllTimersAsync();
+      expect((await response).status).toBe(200);
+      expect(Date.now() - start).toBe(160);
+    }
+    vi.useRealTimers();
+  });
   beforeEach(() => {
     vi.resetAllMocks();
     mocks.rateLimit.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
