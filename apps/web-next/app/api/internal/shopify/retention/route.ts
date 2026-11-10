@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { CHAT_RETENTION_BATCH_LIMIT, cleanupInactiveStoreChat } from '@/lib/shopify/chat-retention';
-import { redactDueWooSites } from '@/lib/woo/privacy';
+import { redactDueWooSites, redactDuePasteSites } from '@/lib/woo/privacy';
 
 export const runtime = 'nodejs';
 
@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
   // Independent jobs on one schedule: a failure in one never skips the other.
   let data: Awaited<ReturnType<typeof cleanupInactiveStoreChat>> | null = null;
   let woo: Awaited<ReturnType<typeof redactDueWooSites>> | null = null;
+  let paste: Awaited<ReturnType<typeof redactDuePasteSites>> | null = null;
   try {
     data = await cleanupInactiveStoreChat(CHAT_RETENTION_BATCH_LIMIT);
   } catch {
@@ -32,15 +33,21 @@ export async function POST(request: NextRequest) {
   } catch {
     console.error('[woo-site-redaction] failed', { failed: 1 });
   }
-  if (data && data.failed === 0 && woo && woo.failed === 0) {
+  try {
+    paste = await redactDuePasteSites();
+  } catch {
+    console.error('[paste-site-redaction] failed', { failed: 1 });
+  }
+  if (data && data.failed === 0 && woo && woo.failed === 0 && paste && paste.failed === 0) {
     console.info('[store-chat-retention] completed', data);
     if (woo.sites > 0 || woo.storageRemoved > 0) console.info('[woo-site-redaction] completed', woo);
-    return NextResponse.json({ ok: true, data, woo }, { headers });
+    return NextResponse.json({ ok: true, data, woo, paste }, { headers });
   }
   if (data && data.failed > 0) console.error('[store-chat-retention] failed', data);
   if (woo && woo.failed > 0) console.error('[woo-site-redaction] failed', woo);
+  if (paste && paste.failed > 0) console.error('[paste-site-redaction] failed', paste);
   return NextResponse.json(
-    { ok: false, error: 'Store Chat retention did not complete.', ...(data ? { data } : {}), ...(woo ? { woo } : {}) },
+    { ok: false, error: 'Store Chat retention did not complete.', ...(data ? { data } : {}), ...(woo ? { woo } : {}), ...(paste ? { paste } : {}) },
     { status: 500, headers },
   );
 }

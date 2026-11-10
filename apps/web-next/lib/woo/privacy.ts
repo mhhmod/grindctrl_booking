@@ -221,12 +221,20 @@ function isPrivacySchemaMissing(error: { code?: string; message?: string }): boo
  * Idempotent: the SQL function re-checks the due condition under a row lock
  * and a finished site clears redact_after. */
 export async function redactDueWooSites(): Promise<WooRedactionSummary> {
+  return redactDueSites('woo');
+}
+
+export async function redactDuePasteSites(): Promise<WooRedactionSummary> {
+  return redactDueSites('paste');
+}
+
+async function redactDueSites(kind: 'woo' | 'paste'): Promise<WooRedactionSummary> {
   const client = getMessengerServiceClient();
   const summary: WooRedactionSummary = { sites: 0, completed: 0, pending: 0, storageRemoved: 0, failed: 0 };
 
-  const due = await client.rpc('woo_sites_due_for_redaction', { p_limit: REDACT_SITES_PER_RUN });
+  const due = await client.rpc(`${kind}_sites_due_for_redaction`, { p_limit: REDACT_SITES_PER_RUN });
   if (due.error && isPrivacySchemaMissing(due.error)) {
-    console.warn('[woo-site-redaction] skipped: privacy migration not applied');
+    console.warn(`[${kind}-site-redaction] skipped: privacy migration not applied`);
     return { ...summary, notReady: true };
   }
   if (due.error || !Array.isArray(due.data)) {
@@ -241,7 +249,7 @@ export async function redactDueWooSites(): Promise<WooRedactionSummary> {
       try {
         let done = false;
         for (let batch = 0; batch < REDACT_BATCHES_PER_SITE && !done; batch += 1) {
-          const result = await client.rpc('woo_site_redact', { p_site: siteId });
+          const result = await client.rpc(`${kind}_site_redact`, { p_site: siteId });
           const data = result.data as { done?: unknown; redacted?: unknown } | null;
           if (result.error || !data || typeof data.done !== 'boolean') throw new Error('woo_site_redact_failed');
           // redacted:false means the site was re-paired or already handled

@@ -9,7 +9,7 @@ export const PASTE_CARD_LIMIT = 50;
 
 export type PasteErrorCode =
   | 'forbidden' | 'unavailable' | 'schema_not_ready' | 'rate_limited'
-  | 'invalid_domain' | 'limit_reached' | 'not_found' | 'proof_required'
+  | 'invalid_request' | 'invalid_domain' | 'limit_reached' | 'not_found' | 'proof_required'
   | 'proof_failed' | 'invalid_platform' | 'connection_conflict';
 
 export type PasteResult<T> = { ok: true; data: T } | { ok: false; code: PasteErrorCode; retryAfterSeconds?: number };

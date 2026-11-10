@@ -177,6 +177,7 @@ const en: PasteInstallCopy = {
   resetDone: (time) => `New code ready. Paste it before ${time}.`,
   cancel: 'Cancel',
   errors: {
+    invalid_request: 'Check the request details and try again.',
     forbidden: 'Only the store owner can change this.',
     unavailable: 'This is not available right now. Try again in a minute.',
     schema_not_ready: 'Installing by code is almost ready. Check back soon.',
@@ -301,6 +302,7 @@ const ar: PasteInstallCopy = {
   resetDone: (time) => `الكود الجديد جاهز. الصقه قبل ${time}.`,
   cancel: 'إلغاء',
   errors: {
+    invalid_request: 'تحقق من تفاصيل الطلب وحاول مجدداً.',
     forbidden: 'صاحب المتجر وحده يستطيع تغيير هذا.',
     unavailable: 'هذا غير متاح الآن. حاول بعد دقيقة.',
     schema_not_ready: 'التثبيت بالكود أوشك على الجاهزية. عُد قريباً.',

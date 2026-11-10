@@ -785,21 +785,25 @@ export async function recordFeedback(input: {
 }
 
 export async function recordAudit(input: {
-  siteId: string;
+  siteId: string | null;
   actorProfileId?: string | null;
   actorClerkUserId?: string | null;
   action: string;
   detail?: Record<string, unknown>;
 }): Promise<void> {
-  const supabase = getMessengerServiceClient();
-  const res = await supabase.from('messenger_audit').insert({
-    widget_site_id: input.siteId,
-    actor_profile_id: input.actorProfileId ?? null,
-    actor_clerk_user_id: input.actorClerkUserId ?? null,
-    action: input.action,
-    detail: input.detail ?? {},
-  });
-  if (res.error) console.error('[messenger] audit insert failed:', res.error.message);
+  try {
+    const supabase = getMessengerServiceClient();
+    const res = await supabase.from('messenger_audit').insert({
+      widget_site_id: input.siteId,
+      actor_profile_id: input.actorProfileId ?? null,
+      actor_clerk_user_id: input.actorClerkUserId ?? null,
+      action: input.action,
+      detail: input.detail ?? {},
+    });
+    if (res.error) console.error('[messenger] audit insert failed');
+  } catch {
+    console.error('[messenger] audit insert failed');
+  }
 }
 
 /* ── Overview aggregates ─────────────────────────────────────────────── */
