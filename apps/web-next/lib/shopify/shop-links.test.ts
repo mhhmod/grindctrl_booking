@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createHash } from 'node:crypto';
 
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
@@ -132,7 +133,7 @@ describe('createShopLinkCode', () => {
     expect(removePrior.isCalls).toContainEqual(['consumed_at', null]);
     expect(insertCode.operation).toBe('insert');
     expect(insertCode.payload).toEqual({
-      code: result.code,
+      code_hash: createHash('sha256').update(result.code).digest('hex'),
       clerk_user_id: 'user_owner',
       expires_at: '2026-09-10T10:10:00.000Z',
     });
@@ -151,7 +152,10 @@ describe('consumeShopLinkCode', () => {
       'linked',
     );
 
-    expect(findCode.eqCalls).toContainEqual(['code', 'ABCDEFGH']);
+    const hash = createHash('sha256').update('ABCDEFGH').digest('hex');
+    expect(findCode.eqCalls).toContainEqual(['code_hash', hash]);
+    expect(consumeCode.eqCalls).toContainEqual(['code_hash', hash]);
+    expect(findCode.eqCalls.some(([key]) => key === 'code')).toBe(false);
     expect(findShop.eqCalls).toContainEqual(['shop_domain', 'real-shop.myshopify.com']);
     expect(linkShop.payload).toEqual({ owner_clerk_user_id: 'user_owner' });
     expect(linkShop.eqCalls).toContainEqual(['shop_domain', 'real-shop.myshopify.com']);

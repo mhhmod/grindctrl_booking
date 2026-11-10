@@ -5,6 +5,7 @@ import { requireManagedTenant } from '@/lib/tenancy/managed-tenant';
 import { requireMerchantRateLimit, merchantActionFailure, type MerchantActionFailure } from '@/lib/request-rate-limit';
 import { requireTryOnPlatformOperator, PlatformOperatorRequiredError } from '@/lib/shopify/platform-operator';
 import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
+import { recordAudit } from '@/lib/messenger/conversations';
 import {
   getShopEntitlement,
   listEntitlementCatalog,
@@ -25,11 +26,19 @@ async function runManualPlanAction(
   params: Record<string, unknown> & { p_action_key: string },
 ): Promise<OwnerPlanActionResult> {
   try {
-    await requireTryOnPlatformOperator();
+    const actorUserId = await requireTryOnPlatformOperator();
     // Billing is the owner's alone, never an admin's or a member's (item 12).
     const domain = await requireManagedTenant(shop, { capability: 'billing' });
     await requireMerchantRateLimit(`shop:${domain}`);
     const result = await runOwnerEntitlementMutation(name, { ...params, p_shop_domain: domain });
+    // Who did it: the ledger says 'owner' for every manual action, so the
+    // operator is recorded here, joined to the ledger by the action key.
+    await recordAudit({
+      siteId: null,
+      actorClerkUserId: actorUserId,
+      action: name === 'apply_tryon_top_up' ? 'manual_credit_grant' : 'manual_plan_changed',
+      detail: { shop: domain, operation: name, action_key: params.p_action_key },
+    });
     // Set up (/dashboard/try-on/setup) and the shell's looks meter read the plan, under the dashboard layout.
     revalidatePath('/dashboard', 'layout');
     return { ...result, ok: true, state: await getShopEntitlement(domain) };

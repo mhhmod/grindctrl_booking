@@ -14,7 +14,7 @@ const tryon = read('includes/tryon.php');
 describe('GRINDCTRL Store Chat plugin source', () => {
   it('declares one version in the header, the constant and the readme', () => {
     const header = /\* Version:\s+(\S+)/.exec(main)?.[1];
-    expect(header).toBe('0.3.4');
+    expect(header).toBe('0.3.5');
     expect(main).toContain(`define( 'GRINDCTRL_SC_VERSION', '${header}' );`);
     expect(read('readme.txt')).toMatch(new RegExp(`Stable tag: ${header}\\b`));
     expect(read('readme.txt')).toContain(`= ${header} =`);
@@ -26,6 +26,35 @@ describe('GRINDCTRL Store Chat plugin source', () => {
     expect(claim).toMatch(/INSERT IGNORE INTO \{\$wpdb->options\}/);
     expect(claim).toContain('1 === $inserted');
     expect(claim).not.toMatch(/get_transient|set_transient|get_option/);
+  });
+
+  it('keys the Try-On visitor cap by the connection address and counts it atomically', () => {
+    const ip = tryon.slice(tryon.indexOf('function grindctrl_sc_tryon_client_ip'), tryon.indexOf('function grindctrl_sc_tryon_visitor_hash'));
+    expect(ip).toContain("$_SERVER['REMOTE_ADDR']");
+    expect(ip).toContain('FILTER_FLAG_IPV6');
+    expect(ip).toContain("'/64'");
+    expect(ip).toContain("'' === $choice && grindctrl_sc_tryon_local_proxy( $ip )");
+    expect(ip).toContain("array( 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP' )");
+    expect(ip).toContain('array_reverse( $parts )');
+    expect(ip).toContain('FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE');
+    expect(ip).toContain('break 2;');
+    expect(ip).toContain('return inet_ntop( substr( $packed, 12 ) );');
+    // Public peers cannot enter automatic forwarding, and all local ranges,
+    // including mapped IPv4, are recognized independently of header contents.
+    for (const range of ['10 ===', '127 ===', '172 ===', '192 ===', '169 ===', '0xfc', '0x80', 'str_repeat( "\\0", 15 )', 'str_repeat( "\\0", 10 )']) {
+      expect(ip).toContain(range);
+    }
+    const hash = tryon.slice(tryon.indexOf('function grindctrl_sc_tryon_visitor_hash'), tryon.indexOf('function grindctrl_sc_tryon_visitor_allowed'));
+    expect(hash).not.toMatch(/HTTP_USER_AGENT|WC_Geolocation|X_FORWARDED/);
+    const cap = tryon.slice(tryon.indexOf('function grindctrl_sc_tryon_visitor_allowed'), tryon.indexOf('function grindctrl_sc_tryon_purge_visitors'));
+    expect(cap).toContain('wp_cache_incr');
+    expect(cap).toMatch(/INSERT IGNORE INTO \{\$wpdb->options\}/);
+    expect(cap).toContain('1 === $updated');
+    expect(cap).not.toMatch(/get_transient|set_transient|get_option/);
+    expect(cap).toContain("$name . '_' . $window");
+    expect(cap).toMatch(/\$name,\r?\n/);
+    expect(main).toContain('grindctrl_sc_tryon_purge_visitors();');
+    expect(read('uninstall.php')).toContain("'grindctrl_sc_tryon_ip_header'");
   });
 
   it('shows catalog cards only while the dashboard card pill switch allows them, on every catalog hook', () => {

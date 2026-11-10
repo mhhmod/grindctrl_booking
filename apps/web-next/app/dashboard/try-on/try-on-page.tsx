@@ -109,8 +109,8 @@ export async function TryOnPage({
         )}
         {flagRows && (
           <StoreFlagsCard
-            kind={isWoo ? 'site' : 'shop'}
-            storeKey={isWoo ? (activeStore.siteId ?? shop) : shop}
+            kind={isSiteTenantKey(shop) ? 'site' : 'shop'}
+            storeKey={isSiteTenantKey(shop) ? (activeStore.siteId ?? shop) : shop}
             launchKey={shop}
             storeLabel={shop}
             rows={flagRows}
@@ -118,7 +118,7 @@ export async function TryOnPage({
           />
         )}
         {/* Not on the board: the Shopify app, and connecting another store. */}
-        {!isWoo && <V16TryOnApp locale={locale} shop={shop} />}
+        {activeStore.platform === 'shopify' && <V16TryOnApp locale={locale} shop={shop} />}
       </V16TryOnFrame>
     );
   }

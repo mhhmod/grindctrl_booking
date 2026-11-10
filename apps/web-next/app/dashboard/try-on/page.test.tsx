@@ -67,6 +67,9 @@ vi.mock('@/lib/woo/connection', () => ({
   listActiveWooSiteIds: vi.fn(async () => woo.active),
   getActiveWooSiteContext: vi.fn(async () => ({ homeUrl: woo.homeUrl, timezone: 'Africa/Cairo' })),
 }));
+const paste = vi.hoisted(() => ({ active: new Set<string>() }));
+vi.mock('@/lib/paste/store', () => ({ listActivePasteSiteIds: vi.fn(async () => paste.active) }));
+vi.mock('@/lib/paste/status', () => ({ readPasteCodeOutdated: vi.fn(async () => false) }));
 vi.mock('@/app/dashboard/connect-shop/actions', () => ({ generateShopLinkCode: vi.fn() }));
 
 /* The v16 Try-On: its facts are covered in
@@ -213,6 +216,18 @@ describe('DashboardTryOnPage for a paired WooCommerce store', () => {
     expect(screen.getByRole('link', { name: studio.moveInSiteEditor })).toHaveAttribute('href', 'https://shop.example.com/wp-admin/site-editor.php');
     expect(screen.getByRole('link', { name: studio.moveInCustomizer })).toHaveAttribute('href', 'https://shop.example.com/wp-admin/customize.php');
     expect(screen.queryByRole('link', { name: studio.moveInThemeEditor })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: getTryOnDashboardCopy('en').openShopifyApp })).not.toBeInTheDocument();
+  });
+
+  it('never offers the Shopify app to a store installed by pasting the code', async () => {
+    woo.active = new Set();
+    paste.active = new Set([SITE_ID]);
+    try {
+      render(await DashboardTryOnSetupPage({ searchParams: Promise.resolve({}) }));
+    } finally {
+      paste.active = new Set();
+    }
+    expect(getTryOnSettingsForEdit).toHaveBeenCalledWith(KEY);
     expect(screen.queryByRole('link', { name: getTryOnDashboardCopy('en').openShopifyApp })).not.toBeInTheDocument();
   });
 

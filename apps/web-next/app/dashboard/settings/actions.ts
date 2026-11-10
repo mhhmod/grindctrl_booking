@@ -7,6 +7,7 @@ import { getActiveStore, getActiveStoreRole } from '@/lib/dashboard/active-store
 import { teamWorkspaceId } from '@/lib/dashboard/team-data';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { getProfileId, UnauthorizedError } from '@/lib/messenger/provisioning';
+import { recordAudit } from '@/lib/messenger/conversations';
 import { RequestRateLimitError, requireMerchantRateLimit } from '@/lib/request-rate-limit';
 import { RoleNotAllowedError, roleCan } from '@/lib/rbac/dashboard-policy';
 import { resolveCallbackBase } from '@/lib/shopify/oauth';
@@ -44,7 +45,7 @@ async function teamContext() {
   const workspaceId = await teamWorkspaceId({ userId, siteId: active.siteId, shopDomain: active.shopDomain });
   if (!workspaceId) throw new NotAllowed();
   await requireMerchantRateLimit(`team:${workspaceId}`, 'write');
-  return { workspaceId, callerProfileId: await getProfileId(userId) };
+  return { workspaceId, callerProfileId: await getProfileId(userId), userId, siteId: active.siteId };
 }
 
 async function senderForRequest() {
@@ -96,14 +97,16 @@ export async function revokeInviteAction(input: { inviteId: string }): Promise<T
 
 export async function changeRoleAction(input: { profileId: string; role: InviteRole }): Promise<TeamActionResult> {
   return run('change role', async () => {
-    const { workspaceId, callerProfileId } = await teamContext();
+    const { workspaceId, callerProfileId, userId, siteId } = await teamContext();
     await changeRole({ workspaceId, profileId: String(input.profileId ?? ''), role: input.role, callerProfileId });
+    await recordAudit({ siteId, actorClerkUserId: userId, action: 'member_role_changed', detail: { profile_id: input.profileId, role: input.role, workspace_id: workspaceId } });
   });
 }
 
 export async function removeMemberAction(input: { profileId: string }): Promise<TeamActionResult> {
   return run('remove', async () => {
-    const { workspaceId, callerProfileId } = await teamContext();
+    const { workspaceId, callerProfileId, userId, siteId } = await teamContext();
     await removeMember({ workspaceId, profileId: String(input.profileId ?? ''), callerProfileId });
+    await recordAudit({ siteId, actorClerkUserId: userId, action: 'member_removed', detail: { profile_id: input.profileId, workspace_id: workspaceId } });
   });
 }

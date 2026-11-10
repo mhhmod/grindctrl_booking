@@ -119,6 +119,23 @@ describe('paste Turnstile generation handoff', () => {
   });
 });
 
+describe('what a shopper is told when a look cannot start', () => {
+  it.each([
+    ['the network drops', () => Promise.reject(new TypeError('Failed to fetch'))],
+    ['the server answers with technical text', () => Promise.resolve({ ok: false, status: 400, json: async () => ({ ok: false, error: 'Invalid generation attempt.' }) } as Response)],
+    ['the server answers with a page, not JSON', () => Promise.resolve({ ok: false, status: 502, json: async () => { throw new SyntaxError("Unexpected token '<'"); } } as unknown as Response)],
+  ])('shows the generic message, never the raw error, when %s', async (_name, attempt) => {
+    const response = (body: unknown) => ({ ok: true, status: 200, json: async () => body }) as Response;
+    vi.mocked(fetch).mockResolvedValueOnce(response({ ok: true, data: session })).mockImplementation(attempt);
+    const { result } = renderHook(() => useTryOnFlow(props));
+    await waitFor(() => expect(result.current.sessionState).toBe('ready'));
+    act(() => result.current.selectPhoto(PHOTO));
+    await act(() => result.current.generate());
+    expect(result.current.step).toBe('error');
+    expect(result.current.error).toBe(props.t.genericError);
+  });
+});
+
 describe('device look restoration in the storefront flow', () => {
   it('saves finished bytes before exposing result actions and restores them on a later visit', async () => {
     const response = (data: unknown) => ({ ok: true, status: 200, headers: new Headers(), json: async () => data }) as Response;
