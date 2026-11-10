@@ -171,7 +171,7 @@ describe('the storefront Try-On switch', () => {
     draw({ showButton: true, tryOnState: 'not_installed', reason: null, codeOutdated: false }, vi.fn());
     expect(screen.getByText(sw.state.not_installed)).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: sw.on })).toBeDisabled();
-    expect(screen.getByRole('link', { name: sw.install })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
+    expect(screen.getByRole('link', { name: sw.install })).toHaveAttribute('href', '/dashboard/store#connect');
   });
 
   it('names why an installed, switched-on button is not showing', () => {
@@ -188,7 +188,7 @@ describe('the collection card pill switch', () => {
         buttonStatus={{ showButton: true, tryOnState: 'on', reason: null, codeOutdated: true }} setButton={vi.fn()} cardPill setCardPill={vi.fn()} />,
     );
     expect(screen.getByText(sw.pillCodeOutdated)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: sw.pillGetCode })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
+    expect(screen.getByRole('link', { name: sw.pillGetCode })).toHaveAttribute('href', '/dashboard/store#connect');
   });
 
   it('turns the pills off on their own, and needs Try-On on', async () => {

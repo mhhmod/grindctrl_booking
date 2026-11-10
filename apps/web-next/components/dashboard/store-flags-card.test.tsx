@@ -18,7 +18,9 @@ describe('StoreFlagsCard', () => {
 
   it('shows each flag with its state', () => {
     render(<StoreFlagsCard kind="shop" storeKey="maison.myshopify.com" storeLabel="maison.myshopify.com" rows={ROWS} />);
-    expect(screen.getByText('N23, The assistant answers after hours')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Operator tools: early features' })).toBeInTheDocument();
+    expect(screen.getByText('The assistant answers after hours')).toBeInTheDocument();
+    expect(screen.getByText('N23 \u00b7 n23_after_hours')).toBeInTheDocument();
     const buttons = screen.getAllByRole('button');
     expect(buttons.map((b) => b.getAttribute('aria-pressed'))).toEqual(['false', 'true']);
   });

@@ -15,6 +15,6 @@ import DashboardInstallPage from '@/app/dashboard/install/page';
 describe('DashboardInstallPage', () => {
   it('sends the merchant to the real installation surface', () => {
     DashboardInstallPage();
-    expect(mocks.redirect).toHaveBeenCalledWith('/dashboard/store-chat/setup');
+    expect(mocks.redirect).toHaveBeenCalledWith('/dashboard/store');
   });
 });

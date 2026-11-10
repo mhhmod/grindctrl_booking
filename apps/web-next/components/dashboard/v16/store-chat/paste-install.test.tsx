@@ -87,6 +87,23 @@ describe('paste install journey', () => {
     expect(screen.getByText(copy.steps.code)).toBeInTheDocument();
   });
 
+  it('keeps step four installed after a quiet two hours', async () => {
+    const lastSeenAt = new Date(Date.now() - 120 * 60_000).toISOString();
+    const a = actions(status({ domains: [verified({ lastSeenAt })], seen: false, tryOnReady: true, tryOnReason: null }));
+    renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+    expect(await screen.findByText(copy.installedTitle('shop.example'))).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: copy.showSteps }));
+    expect(screen.getByText(copy.domainState.live('120 min ago'))).toBeInTheDocument();
+    expect(screen.queryByText(copy.waiting)).not.toBeInTheDocument();
+  });
+
+  it('shows step four waiting when the code has never been seen', async () => {
+    const a = actions(status({ domains: [verified()], seen: false }));
+    renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+    expect(await screen.findByText(copy.waiting)).toBeInTheDocument();
+    expect(screen.queryByText(copy.installedTitle('shop.example'))).not.toBeInTheDocument();
+  });
+
   it('names the moment the free looks are being turned on instead of a vague wait', async () => {
     const a = actions(status({ domains: [verified({ lastSeenAt: new Date().toISOString() })], seen: true, seenHost: 'shop.example',
       chatLive: false, tryOnReady: false, tryOnReason: 'not_installed' }));

@@ -69,7 +69,7 @@ describe('V16YourStore, product cards', () => {
     renderStore(facts({ tryOn: { ...facts().tryOn!, showButton: false }, chat: { siteId: 'site-1', enabled: false } }), 'ar');
     expect(screen.getByRole('heading', { name: 'الكود يعمل على lulusfashion.com' })).toBeInTheDocument();
     expect(screen.getByText('لا يظهر شيء للمتسوقين بعد. شغّل ما تريده من الأسفل.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'اعرض خطوات التركيب' })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
+    expect(screen.getByRole('link', { name: 'اعرض خطوات التركيب' })).toHaveAttribute('href', '/dashboard/store#connect');
     expect(screen.getByRole('heading', { name: 'شغّل ما تريد' })).toBeInTheDocument();
     const tryOn = screen.getByRole('switch', { name: 'القياس الافتراضي' });
     expect(tryOn).not.toBeChecked();
@@ -115,7 +115,7 @@ describe('V16YourStore, product cards', () => {
     renderStore(facts({ platform: 'paste_shopify', codeOutdated: true }));
     const tryOn = screen.getByRole('region', { name: 'Try-On' });
     expect(within(tryOn).getByText('Collection pills need your updated code. Everything else keeps working.')).toBeInTheDocument();
-    expect(within(tryOn).getByRole('link', { name: 'Get my updated code' })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
+    expect(within(tryOn).getByRole('link', { name: 'Get my updated code' })).toHaveAttribute('href', '/dashboard/store#connect');
   });
 
   it('keeps the store address left to right in Arabic', () => {
@@ -197,7 +197,7 @@ describe('V16YourStoreNotConnected', () => {
   it('says the store is not connected and opens set up', () => {
     render(<V16YourStoreNotConnected locale="en" canChange />);
     expect(screen.getByRole('heading', { name: 'Not connected yet' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Connect your store' })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
+    expect(screen.getByRole('link', { name: 'Connect your store' })).toHaveAttribute('href', '/dashboard/store#connect');
   });
 
   it('in Arabic, with no set-up link for a member', () => {

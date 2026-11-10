@@ -58,6 +58,7 @@ function draw(a = actions(), locale: 'en' | 'ar' = 'en', meta: Partial<ChatStudi
 }
 
 describe('V16ChatStudio', () => {
+  // This full Mantine board can exceed the default timeout under parallel Windows load.
   it('lays out the board’s cards on today’s settings', () => {
     draw();
     for (const name of [en.whereItAppears.label, en.look.label, en.welcome.label, en.assistant.label, en.person.label, en.photosOrders.label, en.alerted.label, en.hours, en.installation]) {
@@ -67,10 +68,12 @@ describe('V16ChatStudio', () => {
     expect(screen.getByText(en.orderAccess)).toBeInTheDocument();
     expect(screen.getByText('Last storefront check 2 min ago.')).toBeInTheDocument();
     expect(screen.getByText('Published version 14')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: en.openThemeEditor })).toHaveAttribute('href', '/api/shopify/theme-link?shop=maison-noor.myshopify.com&block=messenger&mode=embed');
+    expect(screen.getByText(en.installMoved)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: en.openStoreSetup })).toHaveAttribute('href', '/dashboard/store#connect');
+    expect(screen.queryByRole('link', { name: en.openThemeEditor })).not.toBeInTheDocument();
     expect(screen.getByText('Always open.')).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: en.changesLabel })).not.toBeInTheDocument();
-  });
+  }, 20000);
 
   it('saves each change to the draft, counts it, and shows it in the preview', async () => {
     const a = draw();
@@ -170,16 +173,10 @@ describe('V16ChatStudio', () => {
     expect(router.replace).toHaveBeenCalledWith('/dashboard/store-chat');
   });
 
-  it('offers the WooCommerce setup path off Shopify only', () => {
-    draw();
-    expect(screen.queryByRole('heading', { level: 3, name: en.woocommerce.title })).not.toBeInTheDocument();
-  });
-
-  it('shows the WooCommerce connection-code path for a store that is not on Shopify', () => {
+  it('directs WooCommerce installation to Store setup', () => {
     draw(undefined, 'en', { domain: 'shop.example.com' });
-    expect(screen.getByRole('heading', { level: 3, name: en.woocommerce.title })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: en.woocommerce.getCode })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: en.woocommerce.download })).toHaveAttribute('href', '/downloads/grindctrl-store-chat.zip');
+    expect(screen.queryByRole('heading', { level: 3, name: en.woocommerce.title })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: en.openStoreSetup })).toHaveAttribute('href', '/dashboard/store#connect');
   });
 
   describe('order lookup on a connected WooCommerce store', () => {

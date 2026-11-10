@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithMantine as render } from '@/components/mantine/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 /* Settings: who may open it and what it renders. The reader, the model and
@@ -14,12 +15,18 @@ const mocks = vi.hoisted(() => ({
   flags: vi.fn(),
   locale: vi.fn(),
   facts: vi.fn(),
+  operator: vi.fn(),
+  rows: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }));
 vi.mock('@/lib/auth/dashboard', () => ({ requireDashboardUser: mocks.user }));
 vi.mock('@/lib/auth/locale', () => ({ getRequestLocale: mocks.locale }));
 vi.mock('@/lib/dashboard/active-store-server', () => ({ getActiveStore: mocks.active, getActiveStoreRole: mocks.role }));
-vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: mocks.flags }));
+vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: mocks.flags, storeFlagRows: mocks.rows, flagStoreForTenant: (shop: string) => ({ shopDomain: shop }) }));
+vi.mock('@/lib/shopify/platform-operator', () => ({ isTryOnPlatformOperator: mocks.operator }));
+vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: vi.fn(async () => null) }));
+vi.mock('@/lib/launch/audience', () => ({ launchView: () => ({ state: 'setup' }) }));
+vi.mock('@/components/dashboard/store-flags-card', () => ({ StoreFlagsCard: ({ storeKey }: { storeKey: string }) => <div data-testid="operator-tools">{storeKey}</div> }));
 vi.mock('@/lib/dashboard/team-data', () => ({ getTeamFacts: mocks.facts }));
 vi.mock('./actions', () => ({
   inviteTeammateAction: vi.fn(),
@@ -46,6 +53,8 @@ const SITE_ID = '11111111-1111-4111-8111-111111111111';
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.operator.mockResolvedValue(false);
+  mocks.rows.mockResolvedValue([]);
   mocks.user.mockResolvedValue('user_123');
   mocks.active.mockResolvedValue({ shopDomain: 'maison.myshopify.com', siteId: SITE_ID });
   mocks.role.mockResolvedValue('admin');
@@ -66,6 +75,17 @@ describe('SettingsPage', () => {
     expect(mocks.facts).toHaveBeenCalledWith({ userId: 'user_123', siteId: SITE_ID, shopDomain: 'maison.myshopify.com', withInvites: false });
     expect(screen.getByTestId('v16-team')).toHaveTextContent('en:Hana Adel');
     expect(screen.getByTestId('v16-team')).toHaveAttribute('data-actions', '');
+  });
+
+  it('shows operator tools below the team only to an operator', async () => {
+    mocks.operator.mockResolvedValue(true);
+    const { unmount } = render(await SettingsPage());
+    expect(screen.getByTestId('operator-tools')).toHaveTextContent('maison.myshopify.com');
+    expect(screen.getByTestId('v16-team').compareDocumentPosition(screen.getByTestId('operator-tools')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    unmount();
+    mocks.operator.mockResolvedValue(false);
+    render(await SettingsPage());
+    expect(screen.queryByTestId('operator-tools')).not.toBeInTheDocument();
   });
 
   it('reads the invites and hands over the team actions with n21_team_invites', async () => {
