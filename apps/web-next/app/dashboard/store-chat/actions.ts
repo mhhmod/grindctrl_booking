@@ -230,6 +230,7 @@ export async function addDomainAction(siteId: string, domain: string): Promise<D
     const userId = await currentUser();
     await requireOwnedSite(userId, siteId, 'settings');
     const added = await addSiteDomain(siteId, String(domain ?? ''));
+    await recordAudit({ siteId, actorClerkUserId: userId, action: 'trusted_domain_added', detail: { domain_id: added.id, domain: added.domain } });
     revalidateStoreChat();
     return { ok: true, domain: added };
   } catch (error) {
@@ -254,6 +255,7 @@ export async function removeDomainAction(siteId: string, domainId: string): Prom
     const userId = await currentUser();
     await requireOwnedSite(userId, siteId, 'settings');
     await removeSiteDomain(siteId, domainId);
+    await recordAudit({ siteId, actorClerkUserId: userId, action: 'trusted_domain_removed', detail: { domain_id: domainId } });
     revalidateStoreChat();
     return { ok: true };
   } catch (error) {

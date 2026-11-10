@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const m = vi.hoisted(() => ({ auth: vi.fn(), access: vi.fn(), limit: vi.fn(), enable: vi.fn(), add: vi.fn(), remove: vi.fn(), prove: vi.fn(), proveMeta: vi.fn(), rotate: vi.fn(),
-  connection: vi.fn(), status: vi.fn(), invalidate: vi.fn(), check: vi.fn(), fingerprint: vi.fn(), domainCheck: vi.fn(), grant: vi.fn(), list: vi.fn() }));
+  connection: vi.fn(), status: vi.fn(), invalidate: vi.fn(), check: vi.fn(), fingerprint: vi.fn(), domainCheck: vi.fn(), grant: vi.fn(), list: vi.fn(), audit: vi.fn() }));
+vi.mock('@/lib/messenger/conversations', () => ({ recordAudit: m.audit }));
 vi.mock('@/lib/paste/platform-check', () => ({ schedulePasteDomainPlatformCheck: m.fingerprint }));
 vi.mock('@/lib/paste/domain-check', () => ({ checkPasteDomain: m.domainCheck }));
 vi.mock('@clerk/nextjs/server', () => ({ auth: m.auth }));
@@ -31,6 +32,14 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 describe('owner-authorized paste plumbing actions', () => {
+  it('audits domain changes and key rotation with actor and target, excluding secrets', async () => {
+    await addPasteDomainAction(SITE, 'merchant.example');
+    await removePasteDomainAction(SITE, 'domain-a');
+    await rotatePasteSecretAction(SITE);
+    expect(m.audit).toHaveBeenCalledWith({ siteId: SITE, actorClerkUserId: 'owner', action: 'trusted_domain_added', detail: { domain_id: 'domain-a', domain: 'merchant.example', state: 'claimed' } });
+    expect(m.audit).toHaveBeenCalledWith({ siteId: SITE, actorClerkUserId: 'owner', action: 'trusted_domain_removed', detail: { domain_id: 'domain-a' } });
+    expect(m.audit).toHaveBeenCalledWith({ siteId: SITE, actorClerkUserId: 'owner', action: 'site_key_regenerated', detail: { version: 2 } });
+  });
   it('creates a site tenant without granting credits or changing visible setup', async () => {
     expect(await enablePasteInstallAction(SITE, 'shopify', 'Merchant.MyShopify.com')).toEqual({ ok: true, data: { tenantKey: `site:${SITE}` } });
     expect(m.access).toHaveBeenCalledWith('owner', SITE, 'store');

@@ -293,6 +293,20 @@ add_filter(
 			'default' => 'no',
 		);
 		$settings[] = array(
+			'title'    => __( 'Visitor address', 'grindctrl-store-chat' ),
+			'desc'     => __( 'Limits how many looks one visitor can start each minute. Automatic uses the connection address, or the last public forwarded address through a private or local proxy. Choose a header only if your proxy or CDN sets it. Otherwise visitors could fake their address.', 'grindctrl-store-chat' ),
+			'desc_tip' => false,
+			'id'       => 'grindctrl_sc_tryon_ip_header',
+			'type'     => 'select',
+			'default'  => '',
+			'options'  => array(
+				''                 => __( 'Automatic (recommended)', 'grindctrl-store-chat' ),
+				'cf_connecting_ip' => __( 'Cloudflare: CF-Connecting-IP', 'grindctrl-store-chat' ),
+				'x_real_ip'        => __( 'Proxy: X-Real-IP', 'grindctrl-store-chat' ),
+				'x_forwarded_for'  => __( 'Proxy: X-Forwarded-For (last address)', 'grindctrl-store-chat' ),
+			),
+		);
+		$settings[] = array(
 			'type' => 'sectionend',
 			'id'   => 'grindctrl_sc_tryon_options',
 		);
@@ -455,28 +469,140 @@ add_action(
 
 /* ── REST: mint a Try-On session ──────────────────────────────────────── */
 
-function grindctrl_sc_tryon_visitor_hash() {
-	$ip = '';
-	if ( class_exists( 'WC_Geolocation' ) ) {
-		$ip = (string) WC_Geolocation::get_ip_address();
-	}
-	if ( '' === $ip && isset( $_SERVER['REMOTE_ADDR'] ) ) {
-		$ip = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
-	}
-	$agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
-	// Salted and one-way: GRINDCTRL receives a rate-limit key, never an address.
-	return grindctrl_sc_base64url( hash_hmac( 'sha256', $ip . '|' . $agent, wp_salt( 'auth' ) . '|grindctrl-tryon', true ) );
+/** Proxy headers a merchant may opt into; anything else falls back to REMOTE_ADDR. */
+function grindctrl_sc_tryon_ip_headers() {
+	return array(
+		'cf_connecting_ip' => 'HTTP_CF_CONNECTING_IP',
+		'x_real_ip'        => 'HTTP_X_REAL_IP',
+		'x_forwarded_for'  => 'HTTP_X_FORWARDED_FOR',
+	);
 }
 
-/** A short per-visitor cap so one client cannot spend the whole site's budget. */
-function grindctrl_sc_tryon_visitor_allowed( $visitor_hash ) {
-	$key   = 'grindctrl_sc_tryon_v_' . substr( md5( $visitor_hash ), 0, 20 );
-	$count = (int) get_transient( $key );
-	if ( $count >= GRINDCTRL_SC_TRYON_VISITOR_MAX ) {
+/**
+ * The client address for the per-visitor cap. Browsers can send any proxy
+ * header, so public connections use REMOTE_ADDR unless explicitly configured.
+ * Local proxy connections use the last valid public forwarded address.
+ * IPv6 is keyed by its /64, the block one client holds.
+ */
+function grindctrl_sc_tryon_client_ip() {
+	$ip      = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) wp_unslash( $_SERVER['REMOTE_ADDR'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- validated by filter_var below.
+	$headers = grindctrl_sc_tryon_ip_headers();
+	$choice  = get_option( 'grindctrl_sc_tryon_ip_header', '' );
+	if ( isset( $headers[ $choice ] ) && isset( $_SERVER[ $headers[ $choice ] ] ) ) {
+		$parts     = explode( ',', (string) wp_unslash( $_SERVER[ $headers[ $choice ] ] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- validated by filter_var below.
+		$candidate = trim( (string) end( $parts ) );
+		if ( false !== filter_var( $candidate, FILTER_VALIDATE_IP ) ) {
+			$ip = $candidate;
+		}
+	} elseif ( '' === $choice && grindctrl_sc_tryon_local_proxy( $ip ) ) {
+		foreach ( array( 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP' ) as $header ) {
+			$parts = isset( $_SERVER[ $header ] ) ? explode( ',', (string) wp_unslash( $_SERVER[ $header ] ) ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- validated below.
+			foreach ( array_reverse( $parts ) as $part ) {
+				$candidate = trim( $part );
+				if ( false !== filter_var( $candidate, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) && ! grindctrl_sc_tryon_local_proxy( $candidate ) ) {
+					$ip = $candidate;
+					break 2;
+				}
+			}
+		}
+	}
+	if ( false === filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+		return '';
+	}
+	if ( false !== filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
+		$packed = inet_pton( $ip );
+		if ( false !== $packed && 16 === strlen( $packed ) ) {
+			// Mapped IPv4 peers still identify individual IPv4 visitors.
+			if ( substr( $packed, 0, 12 ) === str_repeat( "\0", 10 ) . "\xff\xff" ) {
+				return inet_ntop( substr( $packed, 12 ) );
+			}
+			return inet_ntop( substr( $packed, 0, 8 ) . str_repeat( "\0", 8 ) ) . '/64';
+		}
+	}
+	return $ip;
+}
+
+/** Only private, loopback and link-local peers qualify for automatic forwarding. */
+function grindctrl_sc_tryon_local_proxy( $ip ) {
+	$packed = @inet_pton( $ip );
+	if ( false === $packed ) {
 		return false;
 	}
-	set_transient( $key, $count + 1, GRINDCTRL_SC_TRYON_VISITOR_SPAN );
-	return true;
+	// Normalize IPv4-mapped IPv6 peers before checking their address range.
+	if ( 16 === strlen( $packed ) && substr( $packed, 0, 12 ) === str_repeat( "\0", 10 ) . "\xff\xff" ) {
+		$packed = substr( $packed, 12 );
+	}
+	if ( 4 === strlen( $packed ) ) {
+		$bytes = array_values( unpack( 'C4', $packed ) );
+		return 10 === $bytes[0] || 127 === $bytes[0]
+			|| ( 172 === $bytes[0] && $bytes[1] >= 16 && $bytes[1] <= 31 )
+			|| ( 192 === $bytes[0] && 168 === $bytes[1] )
+			|| ( 169 === $bytes[0] && 254 === $bytes[1] );
+	}
+	return $packed === str_repeat( "\0", 15 ) . "\1"
+		|| ( ord( $packed[0] ) & 0xfe ) === 0xfc
+		|| ( 0xfe === ord( $packed[0] ) && ( ord( $packed[1] ) & 0xc0 ) === 0x80 );
+}
+
+function grindctrl_sc_tryon_visitor_hash() {
+	// Salted and one-way: GRINDCTRL receives a rate-limit key, never an address.
+	return grindctrl_sc_base64url( hash_hmac( 'sha256', grindctrl_sc_tryon_client_ip(), wp_salt( 'auth' ) . '|grindctrl-tryon', true ) );
+}
+
+/**
+ * A short per-visitor cap so one client cannot spend the whole site's budget.
+ * Check and count are one atomic step (a get-then-set lets parallel requests
+ * all pass). With a persistent object cache: add then incr on a per-window
+ * key that expires on its own. Otherwise one option row per client holds
+ * window * 100 + count, and a single conditional UPDATE starts a new window
+ * or adds one below the cap. One row per client, purged by the daily heartbeat.
+ */
+function grindctrl_sc_tryon_visitor_allowed( $visitor_hash ) {
+	$name   = 'gc_sc_tv_' . substr( hash( 'sha256', $visitor_hash ), 0, 40 );
+	$window = (int) floor( time() / GRINDCTRL_SC_TRYON_VISITOR_SPAN );
+	if ( wp_using_ext_object_cache() ) {
+		$key = $name . '_' . $window;
+		wp_cache_add( $key, 0, 'grindctrl_sc', 2 * GRINDCTRL_SC_TRYON_VISITOR_SPAN );
+		$count = wp_cache_incr( $key, 1, 'grindctrl_sc' );
+		return false !== $count && $count <= GRINDCTRL_SC_TRYON_VISITOR_MAX;
+	}
+	global $wpdb;
+	$inserted = $wpdb->query(
+		$wpdb->prepare(
+			"INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
+			$name,
+			(string) ( $window * 100 + 1 )
+		)
+	);
+	if ( 1 === $inserted ) {
+		return true;
+	}
+	$updated = $wpdb->query(
+		$wpdb->prepare(
+			"UPDATE {$wpdb->options}
+			SET option_value = CASE WHEN CAST(option_value AS UNSIGNED) DIV 100 = %d THEN CAST(option_value AS UNSIGNED) + 1 ELSE %d END
+			WHERE option_name = %s
+			AND ( CAST(option_value AS UNSIGNED) DIV 100 <> %d OR CAST(option_value AS UNSIGNED) MOD 100 < %d )",
+			$window,
+			$window * 100 + 1,
+			$name,
+			$window,
+			GRINDCTRL_SC_TRYON_VISITOR_MAX
+		)
+	);
+	return 1 === $updated;
+}
+
+/* Drops per-visitor counters from past windows. */
+function grindctrl_sc_tryon_purge_visitors() {
+	global $wpdb;
+	$wpdb->query(
+		$wpdb->prepare(
+			"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s AND CAST(option_value AS UNSIGNED) DIV 100 < %d",
+			$wpdb->esc_like( 'gc_sc_tv_' ) . '%',
+			(int) floor( time() / GRINDCTRL_SC_TRYON_VISITOR_SPAN )
+		)
+	);
 }
 
 function grindctrl_sc_tryon_error( $code, $status, $headers = array() ) {

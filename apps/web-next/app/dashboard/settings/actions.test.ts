@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
    twenty a day) are tested in lib/team/invites.test.ts. */
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
+  audit: vi.fn(),
   active: vi.fn(),
   role: vi.fn(),
   flags: vi.fn(),
@@ -23,6 +24,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidate }));
+vi.mock('@/lib/messenger/conversations', () => ({ recordAudit: mocks.audit }));
 vi.mock('next/headers', () => ({ headers: async () => ({ get: (name: string) => mocks.headers.get(name) ?? null }) }));
 vi.mock('@clerk/nextjs/server', () => ({ auth: mocks.auth }));
 vi.mock('@/lib/dashboard/active-store-server', () => ({ getActiveStore: mocks.active, getActiveStoreRole: mocks.role }));
@@ -100,6 +102,8 @@ describe('the Team actions', () => {
     expect(mocks.revoke).toHaveBeenCalledWith(expect.objectContaining({ workspaceId: 'ws_1', inviteId: 'i1' }));
     expect(mocks.change).toHaveBeenCalledWith({ workspaceId: 'ws_1', profileId: 'p2', role: 'admin', callerProfileId: 'p_caller' });
     expect(mocks.remove).toHaveBeenCalledWith({ workspaceId: 'ws_1', profileId: 'p2', callerProfileId: 'p_caller' });
+    expect(mocks.audit).toHaveBeenCalledWith({ siteId: SITE_ID, actorClerkUserId: 'user_1', action: 'member_role_changed', detail: { profile_id: 'p2', role: 'admin', workspace_id: 'ws_1' } });
+    expect(mocks.audit).toHaveBeenCalledWith({ siteId: SITE_ID, actorClerkUserId: 'user_1', action: 'member_removed', detail: { profile_id: 'p2', workspace_id: 'ws_1' } });
   });
 
   it('refuses without the flags, for a member, signed out, or for a site the person may not manage', async () => {

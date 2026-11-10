@@ -149,5 +149,8 @@ describe('try-on plan owner actions', () => {
       expect.objectContaining({ p_action_key: '44444444-4444-4444-8444-444444444444' }),
     );
     expect(mocks.revalidatePath).toHaveBeenCalledTimes(4);
+    for (const [, params] of mocks.runOwnerEntitlementMutation.mock.calls) {
+      expect(params.p_actor_user_id).toBe('user_operator');
+    }
   });
 });

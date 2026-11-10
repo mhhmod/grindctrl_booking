@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { auth, clerkClient } from '@clerk/nextjs/server';
-import { randomInt } from 'node:crypto';
+import { createHash, randomInt } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 
 const LINK_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -47,6 +47,10 @@ function normalizeCode(code: string): string {
   return code.replace(/[\s-]/g, '').toUpperCase();
 }
 
+function codeHash(code: string): string {
+  return createHash('sha256').update(normalizeCode(code), 'utf8').digest('hex');
+}
+
 export async function createShopLinkCode(): Promise<ShopLinkCode> {
   const clerkUserId = await requireDashboardOwner();
   const supabase = getServiceClient();
@@ -61,7 +65,7 @@ export async function createShopLinkCode(): Promise<ShopLinkCode> {
   const code = generateCode();
   const expiresAt = new Date(Date.now() + LINK_CODE_LIFETIME_MS).toISOString();
   const { error: insertError } = await supabase.from('tryon_shop_links').insert({
-    code,
+    code_hash: codeHash(code),
     clerk_user_id: clerkUserId,
     expires_at: expiresAt,
   });
@@ -79,7 +83,7 @@ async function markCodeConsumed(
   const { error } = await supabase
     .from('tryon_shop_links')
     .update({ consumed_at: consumedAt, consumed_shop_domain: shopDomain })
-    .eq('code', code)
+    .eq('code_hash', codeHash(code))
     .is('consumed_at', null);
   if (error) throw new Error(`Unable to consume shop link code: ${error.message}`);
 }
@@ -98,7 +102,7 @@ export async function consumeShopLinkCode(
   const { data: link, error: linkError } = await supabase
     .from('tryon_shop_links')
     .select('clerk_user_id, expires_at, consumed_at')
-    .eq('code', normalizedCode)
+    .eq('code_hash', codeHash(normalizedCode))
     .maybeSingle();
 
   if (linkError) throw new Error(`Unable to read shop link code: ${linkError.message}`);

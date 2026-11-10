@@ -28,13 +28,15 @@ function grindctrl_sc_delete_options() {
 		'grindctrl_sc_last_error',
 		'grindctrl_sc_tryon_product',
 		'grindctrl_sc_tryon_catalog',
+		'grindctrl_sc_tryon_ip_header',
 	) as $name ) {
 		delete_option( $name );
 	}
 
-	// Spent request nonces (see grindctrl_sc_claim_nonce).
+	// Spent request nonces (see grindctrl_sc_claim_nonce) and Try-On visitor counters.
 	global $wpdb;
 	$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( 'gc_sc_n_' ) . '%' ) );
+	$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( 'gc_sc_tv_' ) . '%' ) );
 }
 
 if ( is_multisite() ) {

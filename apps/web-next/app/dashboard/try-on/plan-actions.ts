@@ -25,11 +25,11 @@ async function runManualPlanAction(
   params: Record<string, unknown> & { p_action_key: string },
 ): Promise<OwnerPlanActionResult> {
   try {
-    await requireTryOnPlatformOperator();
+    const actorUserId = await requireTryOnPlatformOperator();
     // Billing is the owner's alone, never an admin's or a member's (item 12).
     const domain = await requireManagedTenant(shop, { capability: 'billing' });
     await requireMerchantRateLimit(`shop:${domain}`);
-    const result = await runOwnerEntitlementMutation(name, { ...params, p_shop_domain: domain });
+    const result = await runOwnerEntitlementMutation(name, { ...params, p_shop_domain: domain, p_actor_user_id: actorUserId });
     // Set up (/dashboard/try-on/setup) and the shell's looks meter read the plan, under the dashboard layout.
     revalidatePath('/dashboard', 'layout');
     return { ...result, ok: true, state: await getShopEntitlement(domain) };

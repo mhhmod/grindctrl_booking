@@ -1,6 +1,7 @@
 'use server';
 
 import { auth } from '@clerk/nextjs/server';
+import { recordAudit } from '@/lib/messenger/conversations';
 import { requireSiteAccess, UnauthorizedError } from '@/lib/messenger/provisioning';
 import { RoleNotAllowedError, type DashboardCapability } from '@/lib/rbac/dashboard-policy';
 import { requireMerchantRateLimit, RequestRateLimitError } from '@/lib/request-rate-limit';
@@ -20,13 +21,13 @@ import {
   PasteError, type PasteDomain, type PasteDomainCheck, type PastePlatform, type PasteResult, type PasteShopProof, type PasteSnippet,
 } from '@/lib/paste/types';
 async function authorized<T>(siteId: string, capability: DashboardCapability, mode: 'read' | 'write',
-  work: (site: Awaited<ReturnType<typeof requireSiteAccess>>) => Promise<T>): Promise<PasteResult<T>> {
+  work: (site: Awaited<ReturnType<typeof requireSiteAccess>>, userId: string) => Promise<T>): Promise<PasteResult<T>> {
   try {
     const { userId } = await auth();
     if (!userId) return { ok: false, code: 'forbidden' };
     const site = await requireSiteAccess(userId, siteId, capability);
     await requireMerchantRateLimit(`paste:${site.id}:${userId}`, mode);
-    const data = await work(site);
+    const data = await work(site, userId);
     if (mode === 'write') invalidateProxyConfig(siteTenantKey(site.id));
     return { ok: true, data };
   } catch (error) {
@@ -64,8 +65,9 @@ async function afterProof(siteId: string, domain: PasteDomain): Promise<PasteDom
  * has the code is confirmed in the same step. The domain is added either
  * way: a check that cannot run leaves it waiting for the automatic one. */
 export async function addPasteDomainAction(siteId: string, domain: string): Promise<PasteResult<PasteDomain>> {
-  return authorized(siteId, 'settings', 'write', async (site) => {
+  return authorized(siteId, 'settings', 'write', async (site, userId) => {
     const added = await addPasteDomain(site.id, domain);
+    await recordAudit({ siteId: site.id, actorClerkUserId: userId, action: 'trusted_domain_added', detail: { domain_id: added.id, domain: added.domain, state: added.state } });
     if (added.domainVerified || added.state === 'disputed') return added;
     try {
       return (await checkPasteDomain({ id: site.id, embedKey: site.embed_key }, added, 'added')).domain;
@@ -87,7 +89,11 @@ export async function checkPasteDomainAction(siteId: string, domainId: string): 
 }
 
 export async function removePasteDomainAction(siteId: string, domainId: string): Promise<PasteResult<null>> {
-  return authorized(siteId, 'settings', 'write', async (site) => { await removePasteDomain(site.id, domainId); return null; });
+  return authorized(siteId, 'settings', 'write', async (site, userId) => {
+    await removePasteDomain(site.id, domainId);
+    await recordAudit({ siteId: site.id, actorClerkUserId: userId, action: 'trusted_domain_removed', detail: { domain_id: domainId } });
+    return null;
+  });
 }
 
 export async function provePasteDomainAction(siteId: string, domainId: string): Promise<PasteResult<PasteDomain>> {
@@ -99,7 +105,11 @@ export async function provePasteDomainMetaAction(siteId: string, domainId: strin
 }
 
 export async function rotatePasteSecretAction(siteId: string): Promise<PasteResult<{ version: number; overlapUntil: string }>> {
-  return authorized(siteId, 'store', 'write', (site) => rotatePasteSecret(site.id));
+  return authorized(siteId, 'store', 'write', async (site, userId) => {
+    const result = await rotatePasteSecret(site.id);
+    await recordAudit({ siteId: site.id, actorClerkUserId: userId, action: 'site_key_regenerated', detail: { version: result.version } });
+    return result;
+  });
 }
 
 /** Only this owner-only action returns Liquid containing a derived secret.

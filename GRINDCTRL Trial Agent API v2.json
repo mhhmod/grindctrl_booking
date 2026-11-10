@@ -2406,53 +2406,7 @@
       "name": "Respond Image Success"
     }
   ],
-  "pinData": {
-    "Webhook Trial Agent": [
-      {
-        "json": {
-          "headers": {
-            "host": "n8n.srv1141109.hstgr.cloud",
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
-            "content-length": "193",
-            "accept": "*/*",
-            "accept-encoding": "gzip, deflate, br, zstd",
-            "accept-language": "en-US,en;q=0.9",
-            "content-type": "application/json",
-            "origin": "null",
-            "priority": "u=1, i",
-            "sec-ch-ua": "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\"",
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": "\"Windows\"",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "cross-site",
-            "x-forwarded-for": "102.186.180.206",
-            "x-forwarded-host": "n8n.srv1141109.hstgr.cloud",
-            "x-forwarded-port": "443",
-            "x-forwarded-proto": "https",
-            "x-forwarded-server": "b3b649865be6",
-            "x-real-ip": "102.186.180.206"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "session_id": "ba161860-d52d-4b7e-bc2d-872b76f50dfe",
-            "message": "hi",
-            "content_type": "text",
-            "language": "en",
-            "fingerprint_hash": "19c432f9-099f-4197-bb26-8a2f55b92204",
-            "turn_number": 1,
-            "history": []
-          },
-          "webhookUrl": "https://n8n.srv1141109.hstgr.cloud/webhook/trial-agent",
-          "executionMode": "production"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ]
-  },
+  "pinData": {},
   "connections": {
     "Webhook Trial Agent": {
       "main": [
