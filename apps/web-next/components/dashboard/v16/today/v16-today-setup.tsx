@@ -48,11 +48,14 @@ export function V16TodaySetup({
   locale,
   shop,
   actions,
+  storeCard,
 }: {
   view: TodaySetupView;
   locale: SiteLocale;
   shop: string;
   actions: TodaySetupActions;
+  /** The Your store card, first on the page when the store has one. */
+  storeCard?: React.ReactNode;
 }) {
   const copy = getTodaySetupCopy(locale);
   const router = useRouter();
@@ -191,6 +194,7 @@ export function V16TodaySetup({
 
   return (
     <div className={classes.page}>
+      {storeCard}
       <section aria-labelledby={`${id}-title`} className={`${classes.card} ${classes.checklist}`}>
         <div className={classes.head}>
           <div className={classes.headRow}>

@@ -1,0 +1,677 @@
+/* Your store (Pack A handoff, A5 and A6) and its card on Today. Colours,
+   radii and type come from the tokens; layout uses logical properties so
+   Arabic mirrors. Phone first; the handoff's desktop columns from 48em. */
+
+.page {
+  display: grid;
+  gap: 16px;
+  min-inline-size: 0;
+}
+
+.card {
+  min-inline-size: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--gc-radius-card);
+}
+
+.h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.muted {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.visuallyHidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Links: 44px targets, the handoff's 3px focus ring. */
+.textLink,
+.quietLink,
+.todayLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-block-size: 44px;
+  color: inherit;
+  font-weight: 700;
+  border-radius: var(--gc-radius-segment);
+}
+
+.textLink {
+  justify-self: start;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.quietLink {
+  font-size: 0.875rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.textLink:focus-visible,
+.quietLink:focus-visible,
+.todayLink:focus-visible {
+  outline: 3px solid color-mix(in oklab, var(--ring) 50%, transparent);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .textLink:hover,
+  .quietLink:hover,
+  .todayLink:hover {
+    color: var(--muted-foreground);
+  }
+}
+
+/* Header line: the store address and Install steps. */
+.headerLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 16px;
+  margin: 0;
+  color: var(--muted-foreground);
+}
+
+.address {
+  overflow-wrap: anywhere;
+  min-inline-size: 0;
+}
+
+/* Status pill: icon and word, 28px (26px inside a product card on phones). */
+.pill {
+  block-size: 28px;
+  padding-inline: 8px 10px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  flex-shrink: 0;
+}
+
+.pill[data-kind='waiting'],
+.pill[data-kind='preview'] {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.pill[data-compact] {
+  block-size: 26px;
+}
+
+@media (min-width: 48em) {
+  .pill[data-compact] {
+    block-size: 28px;
+  }
+}
+
+/* Icon tile: 32px on phones, 44px from 48em. */
+.tile {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  flex-shrink: 0;
+  border-radius: var(--gc-radius-icon-tile);
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.tile svg {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+@media (min-width: 48em) {
+  .tile {
+    inline-size: 44px;
+    block-size: 44px;
+  }
+
+  .tile svg {
+    inline-size: 24px;
+    block-size: 24px;
+  }
+}
+
+.tile[data-product='tryOn'] {
+  background: linear-gradient(135deg, var(--gc-tryon-from), var(--gc-tryon-to));
+  color: var(--gc-on-tryon);
+}
+
+.tileSuccess {
+  background: var(--gc-success-soft);
+  color: var(--gc-success);
+}
+
+/* Just connected banner (A5.1). */
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px 16px;
+  padding: 16px;
+}
+
+.bannerText {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+}
+
+.bannerTitle {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.bannerText .muted {
+  font-size: 0.9375rem;
+}
+
+@media (min-width: 48em) {
+  .banner {
+    padding: 20px 24px;
+  }
+
+  .bannerTitle,
+  .h2 {
+    font-size: 1.25rem;
+  }
+}
+
+/* Product cards: icon tile, name and pill, switch on the first row; the
+   body rows sit under the name and run to the card's end. */
+.products {
+  display: grid;
+  gap: 12px;
+  margin-block-start: 8px;
+}
+
+.productList {
+  display: grid;
+  gap: 12px;
+}
+
+.product {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px 12px;
+  padding: 16px;
+}
+
+@media (min-width: 48em) {
+  .product {
+    padding: 20px 24px;
+  }
+}
+
+.productTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  min-block-size: 32px;
+  min-inline-size: 0;
+}
+
+@media (min-width: 48em) {
+  .productTitle {
+    min-block-size: 44px;
+  }
+}
+
+.productName {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.switch {
+  min-block-size: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.switch :global(.mantine-Switch-label) {
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+/* The handoff's 48 by 28 track. */
+.switchTrack {
+  --switch-width: 48px;
+  --switch-height: 28px;
+  --switch-thumb-size: 20px;
+}
+
+/* Full card width on phones; under the name from 48em. */
+.productBody {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+  min-inline-size: 0;
+}
+
+@media (min-width: 48em) {
+  .productBody {
+    grid-column: 2 / -1;
+  }
+}
+
+.sentence {
+  margin: 0;
+}
+
+.sentence[data-quiet] {
+  color: var(--muted-foreground);
+}
+
+.looks {
+  margin: 0;
+  font-weight: 700;
+}
+
+.note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-block-start: 4px;
+  padding: 12px 14px;
+  border-radius: var(--gc-radius-input);
+  background: var(--gc-attention-soft);
+}
+
+.noteText {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 999 1 220px;
+  min-inline-size: 0;
+}
+
+.noteIcon {
+  flex-shrink: 0;
+  color: var(--gc-attention);
+}
+
+.noteAction {
+  flex: 1 1 190px;
+}
+
+.error {
+  margin: 0;
+  color: var(--gc-danger);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.newFeatures {
+  margin: 0;
+  padding-inline: 4px;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+/* Store check */
+.check {
+  display: grid;
+  gap: 16px;
+  margin-block-start: 16px;
+}
+
+.checkHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.checkTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+  flex: 999 1 240px;
+  min-inline-size: 0;
+}
+
+.runCheck {
+  flex: 1 1 170px;
+}
+
+@media (min-width: 48em) {
+  .runCheck {
+    flex: 0 0 auto;
+  }
+}
+
+.group {
+  overflow: hidden;
+}
+
+.groupTitle {
+  margin: 0;
+  padding: 16px 16px 12px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.wellHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gc-success);
+}
+
+@media (min-width: 48em) {
+  .groupTitle {
+    padding: 20px 24px 16px;
+  }
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A row to fix: pill, title and sentence, one fix. Stacked on phones,
+   three columns from 48em. */
+.fixRow {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-block-start: 1px solid var(--border);
+}
+
+.fixPill {
+  display: flex;
+}
+
+.fixText {
+  display: grid;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.rowTitle {
+  margin: 0;
+  font-weight: 700;
+}
+
+.rowSentence {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.fixAction {
+  inline-size: 100%;
+}
+
+@media (min-width: 48em) {
+  .fixRow {
+    grid-template-columns: 160px minmax(0, 1fr) 190px;
+    align-items: center;
+    gap: 10px 24px;
+    padding: 16px 24px;
+  }
+}
+
+.domains {
+  display: grid;
+  gap: 2px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.domain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+}
+
+.domainName {
+  overflow-wrap: anywhere;
+  min-inline-size: 0;
+}
+
+.domainState {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+
+.domainState[data-state='live'] {
+  color: var(--gc-success);
+}
+
+.domainState[data-state='needs_proof'] {
+  color: var(--gc-attention);
+}
+
+/* A healthy row on one line. */
+.wellLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  min-block-size: 44px;
+  padding: 4px 16px;
+  border-block-start: 1px solid var(--border);
+}
+
+@media (min-width: 48em) {
+  .wellLine {
+    padding-inline: 24px;
+  }
+}
+
+.wellTick {
+  flex-shrink: 0;
+  color: var(--gc-success);
+}
+
+.wellTitle {
+  flex: 0 0 auto;
+  min-inline-size: min(200px, 45%);
+  font-weight: 700;
+}
+
+.wellSentence {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.waitingCard {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  padding: 16px;
+}
+
+@media (min-width: 48em) {
+  .waitingCard {
+    padding: 20px 24px;
+  }
+}
+
+.waitingText {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.skeletonRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 24px;
+  padding: 20px 16px;
+}
+
+.skeletonRow + .skeletonRow {
+  border-block-start: 1px solid var(--border);
+}
+
+@media (min-width: 48em) {
+  .skeletonRow {
+    padding-inline: 24px;
+  }
+}
+
+.skeletonLine {
+  flex: 1 1 200px;
+}
+
+/* Static bars: no shimmer is needed (handoff, Skeleton). */
+.skeleton::after,
+.skeleton::before {
+  animation: none;
+}
+
+/* Today card: a column on phones, one row from 48em. */
+.todayCard {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.todayHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+}
+
+.todayTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.todayProducts {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.todayProduct {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+}
+
+.todayName {
+  font-weight: 700;
+}
+
+.todayLink {
+  justify-content: center;
+  margin-block-start: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--gc-radius-pill);
+  text-decoration: none;
+}
+
+@media (min-width: 48em) {
+  .todayCard {
+    display: flex;
+    align-items: center;
+    gap: 12px 32px;
+    min-block-size: 92px;
+    padding: 16px 24px;
+  }
+
+  .todayHead {
+    display: grid;
+    flex: 0 0 auto;
+    gap: 0;
+  }
+
+  .todayProducts {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    gap: 8px 32px;
+    min-inline-size: 0;
+  }
+
+  .todayProduct {
+    justify-content: flex-start;
+  }
+
+  .todayLink {
+    flex: 0 0 auto;
+    margin: 0;
+    margin-inline-start: auto;
+    border: 0;
+    white-space: nowrap;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+/* Phones: the status pill gets a row of its own under the name, so its word
+   is never cut short beside the switch (it was at 320px). */
+@media (max-width: 47.99em) {
+  .productTitle {
+    display: contents;
+  }
+
+  .product > .tile {
+    grid-area: 1 / 1;
+  }
+
+  .productName {
+    grid-area: 1 / 2;
+    align-self: center;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .product > .switch {
+    grid-area: 1 / 3;
+  }
+
+  .productTitle .pill {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+/* An address is LTR text (bdi dir=ltr), so on an Arabic page its wrapped lines
+   would start on the left. Keep them on the page's side. */
+:where([dir='rtl']) .address,
+:where([dir='rtl']) .domainName {
+  text-align: right;
+}

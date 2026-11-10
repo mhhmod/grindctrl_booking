@@ -7,6 +7,7 @@ import { storeFlags } from '@/lib/flags/store-flags';
 import { getTodayFacts } from '@/lib/dashboard/today-data';
 import { getTodaySetupFacts } from '@/lib/dashboard/today-setup-data';
 import { getActiveStore, getActiveStoreRole } from '@/lib/dashboard/active-store-server';
+import { getYourStoreFacts } from '@/lib/dashboard/your-store-data';
 import { createPreviewLink, setLaunchState } from '@/app/dashboard/try-on/launch-actions';
 import { renderWithMantine } from '@/components/mantine/test-utils';
 
@@ -19,6 +20,7 @@ vi.mock('@/lib/dashboard/active-store-server', () => ({
 vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: vi.fn(async () => []) }));
 vi.mock('@/lib/dashboard/today-data', () => ({ getTodayFacts: vi.fn() }));
 vi.mock('@/lib/dashboard/today-setup-data', () => ({ getTodaySetupFacts: vi.fn(async () => null) }));
+vi.mock('@/lib/dashboard/your-store-data', () => ({ getYourStoreFacts: vi.fn(async () => null) }));
 vi.mock('@/app/dashboard/try-on/launch-actions', () => ({ setLaunchState: vi.fn(), createPreviewLink: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock('@/app/dashboard/connect-shop/actions', () => ({ generateShopLinkCode: vi.fn() }));
@@ -46,6 +48,7 @@ beforeEach(() => {
   vi.mocked(getRequestLocale).mockResolvedValue('en');
   vi.mocked(storeFlags).mockClear().mockResolvedValue([]);
   vi.mocked(getTodayFacts).mockReset().mockResolvedValue(FACTS);
+  vi.mocked(getYourStoreFacts).mockClear();
 });
 
 describe('DashboardOverviewPage, v16 Today', () => {
@@ -85,6 +88,40 @@ describe('DashboardOverviewPage, v16 Today', () => {
     expect(screen.getByRole('link', { name: chat })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
     expect(getTodayFacts).not.toHaveBeenCalled();
     expect(storeFlags).not.toHaveBeenCalled();
+    expect(getYourStoreFacts).not.toHaveBeenCalled();
+  });
+
+  it('puts the Your store card first when a store is connected, and leaves it out when none is or the read fails', async () => {
+    vi.mocked(getYourStoreFacts).mockResolvedValueOnce({
+      now: Date.parse('2026-10-02T11:00:00Z'),
+      timeZone: 'Africa/Cairo',
+      platform: 'shopify_app',
+      address: 'alpha.myshopify.com',
+      storeUrl: 'https://alpha.myshopify.com',
+      canChange: true,
+      canBilling: true,
+      code: { lastSeenAt: null, connected: true },
+      launchState: 'live',
+      codeOutdated: false,
+      tryOn: { tenant: 'alpha.myshopify.com', showButton: true, looksLeft: 0, looksIncluded: 20, planActive: true, pasteReason: null },
+      chat: null,
+      domains: [],
+    });
+    const { unmount } = renderWithMantine(await DashboardOverviewPage());
+    const card = screen.getByRole('region', { name: 'Your store' });
+    expect(card).toHaveTextContent('Try-OnNot working');
+    expect(screen.getByRole('link', { name: 'View store check' })).toHaveAttribute('href', '/dashboard/store');
+    unmount();
+
+    const second = renderWithMantine(await DashboardOverviewPage());
+    expect(screen.queryByRole('region', { name: 'Your store' })).toBeNull();
+    second.unmount();
+
+    vi.spyOn(console, 'error').mockImplementationOnce(() => {});
+    vi.mocked(getYourStoreFacts).mockRejectedValueOnce(new Error('down'));
+    renderWithMantine(await DashboardOverviewPage());
+    expect(screen.queryByRole('region', { name: 'Your store' })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Needs you' })).toBeInTheDocument();
   });
 });
 
