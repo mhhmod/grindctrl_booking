@@ -9,8 +9,7 @@ import { shopChoices } from '@/lib/dashboard/shell-model';
 import { isTryOnPlatformOperator } from '@/lib/shopify/platform-operator';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { LaunchCard } from '@/components/dashboard/launch-card';
-import { StoreFlagsCard } from '@/components/dashboard/store-flags-card';
-import { flagStoreForTenant, storeFlagRows, storeFlags } from '@/lib/flags/store-flags';
+import { flagStoreForTenant, storeFlags } from '@/lib/flags/store-flags';
 import { getStoreLaunch } from '@/lib/launch/store-launch';
 import { launchView } from '@/lib/launch/audience';
 import { roleCan } from '@/lib/rbac/dashboard-policy';
@@ -60,13 +59,12 @@ export async function TryOnPage({
   if (tab === 'setup') {
     // The save action checks the role again.
     if (!canSetUp) redirect('/dashboard/try-on');
-    const [settings, storeLaunch, flagRows, entitlement, activeFlags, installed, codeOutdated] = await Promise.all([
+    const [settings, storeLaunch, entitlement, activeFlags, installed, codeOutdated] = await Promise.all([
       getTryOnSettingsForEdit(shop).catch((error: unknown) => {
         console.error('[try-on set up] settings failed:', error instanceof Error ? error.message : error);
         return null;
       }),
       getStoreLaunch(shop),
-      canManagePlan ? storeFlagRows(flagStoreForTenant(shop)) : null,
       getShopEntitlement(shop).catch(() => null),
       storeFlags(flagStoreForTenant(shop)),
       // A paired WooCommerce or trusted pasted-code site, or an installed Shopify app.
@@ -106,16 +104,6 @@ export async function TryOnPage({
         {/* Try it yourself and Go live (phase zero item 9), while n5_preview_mode is on. */}
         {activeFlags.includes('n5_preview_mode') && (
           <LaunchCard locale={locale === 'ar' ? 'ar' : 'en'} shop={shop} launch={launch} holdoutAvailable={activeFlags.includes('n6_holdout')} />
-        )}
-        {flagRows && (
-          <StoreFlagsCard
-            kind={isSiteTenantKey(shop) ? 'site' : 'shop'}
-            storeKey={isSiteTenantKey(shop) ? (activeStore.siteId ?? shop) : shop}
-            launchKey={shop}
-            storeLabel={shop}
-            rows={flagRows}
-            launchState={launch.state}
-          />
         )}
         {/* Not on the board: the Shopify app, and connecting another store. */}
         {activeStore.platform === 'shopify' && <V16TryOnApp locale={locale} shop={shop} />}

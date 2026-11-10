@@ -324,12 +324,15 @@ export function V16YourStore({
   canChange,
   locale,
   actions,
+  connect,
 }: {
   view: YourStoreView;
   /** Owners and admins; for anyone else the switches show, disabled (item 12). */
   canChange: boolean;
   locale: SiteLocale;
   actions: YourStoreActions;
+  /** The Connect your store card; it carries the store's address and install steps. */
+  connect?: React.ReactNode;
 }) {
   const copy = getYourStoreCopy(locale);
   /* A switch shows its new position at once and goes back if the save
@@ -365,7 +368,7 @@ export function V16YourStore({
 
   return (
     <div className={classes.page}>
-      {view.header.address && (
+      {connect ?? (view.header.address && (
         <p className={classes.headerLine}>
           <bdi dir="ltr" className={classes.address}>
             {view.header.address}
@@ -376,7 +379,7 @@ export function V16YourStore({
             </Link>
           )}
         </p>
-      )}
+      ))}
 
       {view.banner && (
         <section aria-labelledby="your-store-banner" className={`${classes.card} ${classes.banner}`}>

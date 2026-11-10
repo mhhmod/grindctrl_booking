@@ -49,8 +49,8 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
   },
   {
     pathname: '/dashboard/store',
-    title: 'Your store',
-    description: 'How GRINDCTRL runs on your store, and what to fix.',
+    title: 'Store setup',
+    description: 'Connect your store, choose what shoppers see, and check it works.',
   },
   {
     pathname: '/dashboard/install',

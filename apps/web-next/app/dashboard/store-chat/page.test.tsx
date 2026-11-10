@@ -77,6 +77,7 @@ vi.mock('./actions', () => ({
   removeDomainAction: vi.fn(),
 }));
 vi.mock('./woo-actions', () => ({ createWooPairingCodeAction: vi.fn() }));
+vi.mock('@/components/dashboard/v16/store-setup/store-connect', () => ({ StoreConnect: ({ siteId, actions }: { siteId: string; actions?: object }) => <div data-testid="store-connect" data-actions={actions ? Object.keys(actions).sort().join(',') : ''}>{siteId}</div> }));
 // ChatStudio has its own tests (v16-chat-studio.test.tsx); here only what it is handed.
 vi.mock('@/components/dashboard/v16/store-chat/v16-chat-studio', () => ({
   V16ChatStudio: ({ meta, actions }: { meta: { version: number; domain: string | null; wooConnection: { status: string } | null }; actions: object }) => (
@@ -95,6 +96,7 @@ vi.mock('@/components/dashboard/messenger/messenger-tabs', () => ({
 }));
 
 import MessengerPage from './page';
+import { StoreChatPage } from './store-chat-page';
 import StoreChatSetupPage from './setup/page';
 import StoreChatMoreSettingsPage from './setup/more/page';
 import { storeFlags } from '@/lib/flags/store-flags';
@@ -118,6 +120,18 @@ beforeEach(() => {
 });
 
 describe('the Store Chat routes', () => {
+  it('renders install for the selected site with actions only for settings roles', async () => {
+    render(await StoreChatPage({ params: {}, tab: 'install' }));
+    expect(screen.getByTestId('store-connect')).toHaveTextContent(SITE.id);
+    expect(screen.getByTestId('store-connect').getAttribute('data-actions')).toContain('paste');
+    cleanup();
+    vi.mocked(listMessengerSites).mockResolvedValueOnce([]);
+    vi.mocked(listTeamSites).mockResolvedValueOnce([{ ...SITE, role: 'member' }] as never);
+    render(await StoreChatPage({ params: {}, tab: 'install' }));
+    expect(screen.getByTestId('store-connect')).toHaveAttribute('data-actions', '');
+    expect(screen.queryByTestId('chat-studio')).not.toBeInTheDocument();
+  });
+
   it('opens on What it knows, reading only the 7-day numbers and the knowledge', async () => {
     render(await knows());
     expect(within(tabs()!).getByRole('link', { name: 'What it knows' })).toHaveAttribute('aria-current', 'page');

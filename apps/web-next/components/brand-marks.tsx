@@ -42,6 +42,7 @@ import {
   siWhatsapp,
   siWoo,
   siWoocommerce,
+  siWordpress,
   siZapier,
 } from 'simple-icons';
 
@@ -108,6 +109,8 @@ export const StripeMark = makeMark(siStripe);
 export const AirtableMark = makeMark(siAirtable);
 export const LinearMark = makeMark(siLinear);
 export const WooCommerceMark = makeMark(siWoocommerce);
+/* WooCommerce runs on WordPress; stores know themselves by both names. */
+export const WordPressMark = makeMark(siWordpress);
 export const OpenRouterMark = makeMark(siOpenrouter);
 /* Salla's official colour is a pale mint that disappears on a light page, so
    callers render this one with `monochrome`. Zid has no simple-icons mark and

@@ -240,7 +240,7 @@ describe('DashboardTryOnPage for a paired WooCommerce store', () => {
     woo.active = new Set();
     await renderPage();
     expect(screen.getByRole('heading', { name: 'Connect your store to turn on Try-On' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Connect a WooCommerce store' })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
+    expect(screen.getByRole('link', { name: 'Connect a WooCommerce store' })).toHaveAttribute('href', '/dashboard/store#connect');
     expect(getTryOnResultsFacts).not.toHaveBeenCalled();
   });
 });

@@ -73,7 +73,7 @@ const en: PasteInstallCopy = {
   platformLegend: 'Where is your store?',
   platforms: {
     shopify: { name: 'Shopify', body: 'Paste one block in your theme.' },
-    woocommerce: { name: 'WooCommerce', body: 'Install our plugin.' },
+    woocommerce: { name: 'WordPress · WooCommerce', body: 'Install our plugin.' },
     website: { name: 'Any other website', body: 'EasyOrders, a custom site or any platform that accepts code.' },
   },
   steps: { address: 'Your store address', code: 'Copy your code', paste: 'Paste it in your store', live: 'Check it’s live' },
@@ -197,7 +197,7 @@ const ar: PasteInstallCopy = {
   platformLegend: 'أين متجرك؟',
   platforms: {
     shopify: { name: 'Shopify', body: 'الصق كوداً واحداً في القالب.' },
-    woocommerce: { name: 'WooCommerce', body: 'ثبّت الإضافة الخاصة بنا.' },
+    woocommerce: { name: 'WordPress · WooCommerce', body: 'ثبّت الإضافة الخاصة بنا.' },
     website: { name: 'أي موقع آخر', body: 'EasyOrders أو موقع مخصص أو أي منصة تقبل إضافة كود.' },
   },
   steps: { address: 'عنوان متجرك', code: 'انسخ الكود', paste: 'الصقه في متجرك', live: 'تأكد أنه يعمل' },

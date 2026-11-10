@@ -66,9 +66,9 @@ export function StoreFlagsCard({
     <Paper withBorder radius="card" p="lg" lang="en" dir="ltr" data-testid="store-flags-card">
       <Stack gap="md">
         <Stack gap={4}>
-          <Title order={2} size="h4">Store flags</Title>
+          <Title order={2} size="h4">Operator tools: early features</Title>
           <Text size="sm" c="dimmed">
-            Operator only. A v16 feature reaches {storeLabel} only while its flag is on.
+            Only operators see this. Each switch turns one early feature on for {storeLabel} alone; merchants never see this list.
           </Text>
         </Stack>
         <Stack component="ul" gap="xs" m={0} p={0} style={{ listStyle: 'none' }}>
@@ -79,9 +79,9 @@ export function StoreFlagsCard({
                 <Group justify="space-between" gap="sm" wrap="wrap">
                   <div style={{ minWidth: 0 }}>
                     <Text size="sm" fw={500}>
-                      {row.code}, {row.title}
+                      {row.title}
                     </Text>
-                    <Text size="xs" c="dimmed" ff="monospace">{row.flag}</Text>
+                    <Text size="xs" c="dimmed" ff="monospace">{row.code} · {row.flag}</Text>
                   </div>
                   <Button
                     type="button"

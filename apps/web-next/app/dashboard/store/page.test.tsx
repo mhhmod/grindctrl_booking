@@ -7,6 +7,7 @@ import { getActiveStoreRole } from '@/lib/dashboard/active-store-server';
 import { getYourStoreFacts } from '@/lib/dashboard/your-store-data';
 import type { YourStoreFacts } from '@/lib/dashboard/your-store-model';
 
+vi.mock('@/app/dashboard/store-chat/store-chat-page', () => ({ StoreChatPage: ({ tab }: { tab: string }) => <div data-testid="connect">{tab}</div> }));
 vi.mock('@/lib/auth/locale', () => ({ getRequestLocale: vi.fn() }));
 vi.mock('@/lib/dashboard/active-store-server', () => ({
   getActiveStore: vi.fn(async () => ({ shopDomain: null, siteId: 'site-1', tenantKey: 'site:1', platform: 'paste' })),
@@ -47,6 +48,7 @@ describe('YourStorePage', () => {
     vi.mocked(getYourStoreFacts).mockResolvedValue(FACTS);
     renderWithMantine(await YourStorePage());
     expect(getYourStoreFacts).toHaveBeenCalledWith(expect.objectContaining({ role: 'owner', timeZone: 'UTC' }));
+    expect(screen.getByTestId('connect')).toHaveTextContent('install');
     expect(screen.getByRole('switch', { name: 'Try-On' })).toBeEnabled();
     expect(screen.getByRole('heading', { name: 'Store check' })).toBeInTheDocument();
   });
@@ -59,12 +61,12 @@ describe('YourStorePage', () => {
     expect(screen.getByRole('switch', { name: 'Store Chat' })).toBeDisabled();
   });
 
-  it('says the store is not connected yet, in Arabic', async () => {
+  it('renders only the connect card when there are no facts', async () => {
     vi.mocked(getRequestLocale).mockResolvedValue('ar');
     vi.mocked(getYourStoreFacts).mockResolvedValue(null);
     renderWithMantine(await YourStorePage());
-    expect(screen.getByRole('heading', { name: 'لم يُربط بعد' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'اربط متجرك' })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
+    expect(screen.getByTestId('connect')).toHaveTextContent('install');
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
   });
 
   it('lets a failed read reach the dashboard error state instead of drawing a blank page', async () => {
