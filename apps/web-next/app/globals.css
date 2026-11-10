@@ -290,6 +290,12 @@
      the theme's cream gives 4.44:1 here, white 4.92:1. */
   --gc-alert: oklch(0.56 0.15 55);
   --gc-on-alert: oklch(1 0 0);
+  /* The Try-On mark: the same orange-gold badge as the storefront button's
+     default icon (lib/try-on/settings.ts), in both themes. Charcoal on it is
+     about 8:1 at the orange end. Only on that mark, never on a surface. */
+  --gc-tryon-from: #ff9a3d;
+  --gc-tryon-to: #ffd76e;
+  --gc-on-tryon: oklch(0.235 0.006 60);
   /* Radii are the same in both themes. */
   --gc-radius-card: 1.25rem;
   --gc-radius-dialog: 1.25rem;

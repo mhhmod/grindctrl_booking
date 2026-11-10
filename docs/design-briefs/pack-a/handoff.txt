@@ -1,0 +1,811 @@
+Handoff. Pack A: Install & Store health
+Screens and states, every string in English and Arabic, components, interactions, and where the design departs from the brief.
+1. Screens and states
+A1.1 Empty
+A1.2 Typing
+A1.3 Checking
+A1.4 Detected
+A1.5 Not recognised
+A1.6 Address unreachable
+A1.7 Already connected elsewhere
+A1.8 Shopify name completed
+A2 Platform picker
+A3 Shopify
+A3 Shopify, code copied
+A3 WooCommerce
+A3 EasyOrders with A8.1 Connect card
+A3 Any website
+A3 Salla [TBC]
+A3 Zid [TBC]
+A3 Wix [TBC]
+A3 Squarespace [TBC]
+A3 Webflow [TBC]
+A3 Use Google Tag Manager, open
+A3 Send to my developer, form
+A3 Send to my developer, sent
+A3 We install it for you, form
+A3 We install it for you, tracker
+A4.1 Waiting
+A4.2 Shopify storefront password
+A4.3 Found
+A4.4 Not found after 5 minutes
+A4.5 Code belongs to a different store
+A5.1 Just connected, switches off
+A5.2 Try-On switched on
+A5.3 Preview mode
+A6.1 Running, things to fix
+A6.2 Everything working well
+A6.3 Waiting for data, first time
+A6.4 Run check now, loading
+A6.5 Code not seen for 48 hours
+A6.6 Other problems and row variants
+A8.2 Connect EasyOrders, waiting
+A8.3 Connect EasyOrders, connected
+A8.4 Connect EasyOrders, error
+A8.5 Disconnect confirmation
+A7.1 Alert email
+A7.2 It is working again email
+A1.4b Detected WooCommerce
+A6 Today card
+Each one is drawn in English and Arabic, light mode, at desktop 1440 and phone 390. A1, A2, A5 and A6 are also drawn in dark mode in English. A8.1 is on the A3 EasyOrders board.
+3. Components
+Existing (Mantine 9)
+Card
+Every surface that groups content. 20px radius, 1px border, card fill. 24px padding on desktop, 16px on phone.
+Button
+Primary (charcoal fill, cream text; reversed in dark), outline, quiet text button. 44px high, pill radius. Loading shows a spinner and aria-busy. Disabled uses muted fill and muted text.
+TextInput
+Store address, developer email, storefront password, note. 48px high, 12px radius. Address and email stay left-to-right in Arabic.
+Radio.Card
+Platform list rows (A2) and the two access choices in We install it for you. 48px minimum height, the selected row has a muted fill or a charcoal border.
+Badge
+Beta, Detected, and the status pill (Badge with a leading icon). Pill radius. Status pill: 28px high, 26px on phone inside product cards.
+Alert
+Address unreachable, already connected, disconnect confirmation, EasyOrders error, the updated code note on a product card. 12px radius, soft status fill, icon plus text.
+Code + Copy
+Code box with a Copy code button that turns to Copied for 2 seconds. Code is always left-to-right.
+Switch row
+Try-On and Store Chat switches inside the product cards. 48 by 28 track, the word On or Off beside it.
+Numbered step list
+The three steps (Your store, Paste one code, Check it's live). Marker 28px: green tick when done, charcoal number when current, outlined grey number when to do.
+Skeleton
+A1.3 checking and A6.4 Run check now. Muted bars, no shimmer needed; respect reduced motion if one is added.
+Drawer (bottom)
+Phone platform picker (A2). Bottom sheet over a 45% scrim, 20px top radius, grabber, Done button.
+New
+Product card
+Anatomy: icon tile (44px, 32px on phone), name, status pill, switch on the first row; one sentence, the looks line (Try-On only) and See it on your store on full-width rows below. States: off (no pill, grey sentence), on with any of the five pill kinds, on with an updated code note. Hover: none on the card. Focus: on the switch and the link only. Disabled: switch greyed while a change is saving. Loading: pill shows Waiting for data until the first check. Error: sentence turns to the can't-see wording and the pill reads Not working. Spacing: 8px between header and body, 6px between body lines, body indented 56px on desktop to sit under the name.
+Store check row
+Anatomy: status pill (fixed 160px column), row title in bold, one sentence, one fix button (fixed about 190px column). On phone the three parts stack and the button is full width. States: Not working (the first such row gets the primary button), Needs attention (outline button). Hover and focus on the button only. Loading: the whole list is replaced by skeleton rows during Run check now. Spacing: 16px vertical padding, 24px side padding (16px on phone), 1px divider between rows.
+Optional row
+Lives in the quiet group More you can add, which has a border and no fill. Anatomy: title with an optional Beta badge, one sentence, one outline button that may carry a platform logo. No status pill.
+Working well line
+A healthy row collapsed to one line: green tick, name in bold, short grey sentence. 44px minimum height. The Code on your store line ends with the quiet text link Install steps.
+Detected platform chip
+A pill with the platform logo in its own colours, the platform name and an optional Beta badge, inside a muted box with the sentence We found a ... store and a Change link. Variants: detected, any website (globe, no error tone). 36px high chip, 44px link target.
+Path chips
+The menu path inside a platform. Each chip is a 28px muted pill. The arrow is glued to the chip that follows it so a line never ends with an arrow. Arrows mirror in Arabic. Platform menu names stay in the language the platform shows them in.
+Short code box
+Shopify only. Fixed height of about five lines (124px), fade over the last two lines, a Show full code text link under it that expands the box. Copy code always copies the full code.
+Secondary options row
+Three quiet text buttons under step 2 (Use Google Tag Manager, Send to my developer, We install it for you). One panel open at a time, inline, 12px radius. Google Tag Manager is hidden for Shopify and WooCommerce.
+Request tracker
+Requested, In progress, Live. Same markers as the step list at 24px, joined by a short line.
+Live check block
+Step 3 body. Waiting: a static dot in a muted circle (pulse allowed when motion is allowed), heading, helper, Open my store. Found: green tick and Continue. Not found: three causes with one-line fixes, Check again, We install it for you.
+4. Interactions
+A1 address field
+Accepts anything: https, www, paths, bare Shopify names. Detection starts 600 ms after typing stops or on blur. Checking shows for 1 to 5 seconds, then the chip appears in place without moving the Continue button. Continue is disabled while empty or checking.
+A2 picker
+Opens from Change. Desktop: an inline panel inside the same card, never a modal. Phone: a bottom sheet. Picking a row applies at once; Done only closes the sheet.
+A3 copy
+Copy code turns to Copied for 2 seconds, then back. Show full code expands the Shopify box in place.
+A3 secondary options
+Each text button opens its panel inline under the row and closes the other two. Send shows the sent line in place of the form. The install request shows the tracker in place of the form and stays until Live.
+A4 live check
+The screen checks by itself every 5 seconds while it is open. Found moves to the success state. After 5 minutes it switches to We can't see your code yet. The storefront password is sent once for the check and never stored.
+A5 switches
+Turning a switch on shows the status pill at once as Waiting for data, then the real status after the first check, and reveals See it on your store, which opens the store in a new tab. Once any switch is on, the heading changes from Turn on what you want to On your store. Nothing shows to shoppers while both are off.
+A6 Store check
+Run check now disables the button, shows Checking and replaces the rows with skeletons for 5 to 20 seconds. The check time at the top is the only time shown. Rows are ordered Not working, then Needs attention; optional items sit in More you can add; healthy items collapse under Working well. Install steps expands the same collapsed steps as the just-connected state.
+A6 Today card
+Shows one status per product and View store check, which opens Your store. On phone, Your store also opens from the menu; the bottom bar is unchanged and highlights nothing on this page.
+A7 emails
+Sent only when something turns Not working, at most one per problem, with one follow-up when it works again. The button deep-links to the matching row.
+A8 Connect EasyOrders
+Connect opens EasyOrders in a new tab and the card shows Finish in the EasyOrders tab. I've approved it rechecks at once. Disconnect asks inline inside the card, never in a modal.
+Arabic
+Layout uses logical start and end, so everything mirrors. Arrows and chevrons mirror; logos, code, addresses, emails and pairing codes stay left-to-right. Western digits are used in both languages.
+Motion and focus
+With reduced motion the waiting dot and skeletons are static. Every control has a visible focus ring (3px, ring colour at 50%). Touch targets are at least 44px.
+5. Departures from the brief
+Own page
+Install and Store check moved out of Store Chat into a page called Your store, after Store Chat in the sidebar. Asked for in review.
+Two-part journey
+Connect your store with one code, then turn on Try-On and Store Chat with separate switches. The A1 title and subtitle changed to match. Asked for in review.
+One card per product
+The success screen and Store check are the same page in two states. Each product card carries its switch, status and sentence. There is no single overall status. Asked for in review.
+Store check grouping
+What to fix, More you can add, Working well. Check time shown once. No Your code version row; a feature that needs newer code says so on its own card. Asked for in review.
+Fifth status word
+The brief has four status words. In preview is added as a neutral pill for the preview variant, so the card never claims Working well while shoppers can't see it.
+WooCommerce wording
+WooCommerce says Add the plugin and One plugin runs everything, and has its own detected state A1.4b. Asked for in review.
+Google Tag Manager
+Offered only where a pasted code works: not on Shopify or WooCommerce. Asked for in review.
+A5 buttons
+See it on your store sits on each product card once it is on. Try-On settings is not on this page; it stays under Try-On in the sidebar.
+A8.1
+The not-connected Connect EasyOrders card is shown on the A3 EasyOrders board, below the steps, as the brief places it.
+Dark mode scope
+Dark boards are made for A1, A2, A5 and A6 in English. Arabic dark uses the same tokens and was not drawn.
+Dark sidebar
+The selected sidebar item uses the border colour as its fill in dark mode, because the muted surface and the shell colour are almost the same there.
+Logos in dark
+Logos are never recoloured, so the black Squarespace mark is low contrast on dark surfaces. A light tile behind logos in dark mode would fix it.
+Placeholders
+The website code, the Shopify code, the pairing code, the verify tag, lulusfashion.com, dev@lulusfashion.com, alerts@grindctrl.cloud and all [TBC] steps are placeholders until the real ones are supplied.
+Arabic terms to confirm
+Try-On is القياس الافتراضي, Store Chat is محادثة المتجر, a look is إطلالة, a pill is شارة. The EasyOrders and WordPress menu names in Arabic are best guesses.
+2. Every string, English and Arabic
+Keyed by the screen and state where the string first appears. Text in single braces is a value filled in at run time. Brand names, addresses, codes and platform names are not translated.
+Shell
+Today
+اليوم
+Shell
+Inbox
+الرسائل
+Shell
+Try-On
+القياس الافتراضي
+Shell
+Store Chat
+محادثة المتجر
+Shell
+Your store
+متجرك
+Shell
+Plan
+الباقة
+Shell
+Chat
+المحادثة
+Shell
+Try-On looks
+إطلالات القياس
+Shell
+{looks} left
+متبقي {looks}
+Shell
+This month
+هذا الشهر
+Shell
+Top up
+أضف إطلالات
+Shell
+Lulu's Fashion
+أزياء لولو للملابس الجاهزة والإكسسوارات
+Shell
+Not connected yet
+لم يُربط بعد
+Shell
+Main (label or placeholder)
+القائمة الرئيسية
+Shell
+Menu (label or placeholder)
+القائمة
+Shell
+Tabs (label or placeholder)
+التبويبات
+Status
+Working well
+يعمل جيدًا
+Status
+Needs attention
+يحتاج انتباهك
+Status
+Not working
+لا يعمل
+Status
+Waiting for data
+في انتظار البيانات
+Status
+In preview
+في المعاينة
+A1
+Connect your store
+اربط متجرك
+A1
+One code runs everything.
+كود واحد يشغّل كل شيء.
+A1 WooCommerce
+One plugin runs everything.
+إضافة واحدة تشغّل كل شيء.
+A1
+Your store address
+عنوان متجرك
+A1
+Continue
+متابعة
+A1
+Paste one code
+الصق كودًا واحدًا
+A1 WooCommerce
+Add the plugin
+أضف الإضافة
+A1
+Check it's live
+تأكد أنه يعمل
+A1
+Steps (label or placeholder)
+الخطوات
+A1.3
+Looking at your store…
+نفحص متجرك…
+A1.4
+Beta
+تجريبي
+A1.4
+We found an EasyOrders store
+وجدنا متجر EasyOrders
+A1.4
+Change
+تغيير
+A1.4b
+We found a WooCommerce store
+وجدنا متجر WooCommerce
+A1.5
+Any website
+أي موقع
+A1.5
+We'll use the steps that work on any website.
+سنستخدم الخطوات المناسبة لأي موقع.
+A1.6
+We couldn't open lulus-fashon.myeasyorders.com.
+لم نتمكن من فتح lulus-fashon.myeasyorders.com.
+A1.6
+Check the address, or continue anyway.
+راجع العنوان، أو تابع على أي حال.
+A1.6
+Try again
+حاول مرة أخرى
+A1.6
+Continue anyway
+تابع على أي حال
+A1.7
+This store is already connected to another GRINDCTRL account.
+هذا المتجر مربوط بحساب GRINDCTRL آخر.
+A1.7
+If it's yours, show us and we'll move it here.
+إن كان متجرك، أثبت ذلك وسننقله إلى حسابك.
+A1.7
+Prove it's yours
+أثبت أنه متجرك
+A1.7
+Option 1. Add a meta tag
+الطريقة 1. أضف وسم meta
+A1.7
+Paste this in the head of your home page.
+الصق هذا في قسم head بالصفحة الرئيسية.
+A1.7
+Option 2. Add a DNS record
+الطريقة 2. أضف سجل DNS
+A1.7
+Add this TXT record where you manage your domain.
+أضف سجل TXT هذا من لوحة إدارة النطاق.
+A1.7
+Copy
+نسخ
+A1.7
+Check
+تحقق
+A1.8
+You typed my-store. We added .myshopify.com for you.
+كتبت my-store وأكملناه إلى my-store.myshopify.com
+A1.8
+We found a Shopify store
+وجدنا متجر Shopify
+A2
+Your platform
+منصة متجرك
+A2
+Your platform (label or placeholder)
+منصة متجرك
+A2
+Detected
+تم اكتشافها
+A2
+Any other website
+أي موقع آخر
+A2
+Done
+تم
+A3
+Show the steps
+اعرض الخطوات
+A3
+Copy your code
+انسخ الكود
+A3
+Copy code
+نسخ الكود
+A3
+Copied
+تم النسخ
+A3
+Done (label or placeholder)
+تم
+A3
+Any website (label or placeholder)
+أي موقع
+A3 Shopify
+Show full code
+اعرض الكود كاملًا
+A3 Shopify
+Paste it in your theme
+الصقه في القالب
+A3 Shopify
+Paste
+الصق
+A3 Shopify
+Save
+احفظ
+A3 Shopify
+Open theme editor
+افتح محرر القالب
+A3 WooCommerce
+Download the plugin
+نزّل الإضافة
+A3 WooCommerce
+Download plugin (.zip)
+تنزيل ملف الإضافة zip
+A3 WooCommerce
+Upload it
+ارفعها
+A3 WooCommerce
+in WordPress (label or placeholder)
+في ووردبريس
+A3 WooCommerce
+Plugins
+إضافات
+A3 WooCommerce
+Add New
+أضف جديد
+A3 WooCommerce
+Upload
+رفع إضافة
+A3 WooCommerce
+Enter your pairing code
+أدخل كود الربط
+A3 EasyOrders
+Paste it in EasyOrders
+الصقه في EasyOrders
+A3 EasyOrders
+Store Management
+إدارة المتجر
+A3 EasyOrders
+Add Custom Code to the Header
+إضافة كود مخصص للهيدر
+A3 EasyOrders
+Open EasyOrders header code
+افتح كود الهيدر في EasyOrders
+A3 [TBC] platforms
+Paste it in {name}
+الصقه في {name}
+A3 [TBC] platforms
+[TBC] Open the custom code setting in {name}.
+[TBC] افتح إعداد الكود المخصص في {name}.
+A3 [TBC] platforms
+[TBC] Paste your code in the footer or body code box.
+[TBC] الصق الكود في خانة كود التذييل أو body.
+A3 [TBC] platforms
+[TBC] Save and publish.
+[TBC] احفظ وانشر.
+A3 Any website
+Paste it just before
+الصقه مباشرة قبل
+A3 Any website
+on every page
+في كل صفحة
+A3 options
+Use Google Tag Manager
+استخدم Google Tag Manager
+A3 options
+Send to my developer
+أرسله إلى المطوّر
+A3 options
+We install it for you
+نركّبه لك
+A3 GTM
+Open Google Tag Manager and choose your container.
+افتح Google Tag Manager واختر الحاوية (container).
+A3 GTM
+Add a new tag and pick Custom HTML.
+أضف وسمًا جديدًا واختر Custom HTML.
+A3 GTM
+Paste your code.
+الصق الكود.
+A3 GTM
+Set the trigger to All Pages, then Submit.
+اجعل المشغّل All Pages ثم اضغط Submit.
+A3 developer
+Their email
+بريد المطوّر
+A3 developer
+Note
+ملاحظة
+A3 developer
+(optional)
+(اختياري)
+A3 developer
+Anything they should know (label or placeholder)
+أي شيء يجب أن يعرفه
+A3 developer
+They'll get your code and these exact steps.
+سيصله الكود وهذه الخطوات نفسها.
+A3 developer
+Send
+إرسال
+A3 developer sent
+Sent to dev@lulusfashion.com
+أُرسل إلى dev@lulusfashion.com
+A3 we install
+Free.
+مجانًا.
+A3 we install
+Store address
+عنوان المتجر
+A3 we install
+How can we get in?
+كيف ندخل إلى متجرك؟
+A3 we install
+A staff invite or collaborator code
+دعوة موظف أو كود متعاون
+A3 we install
+I'll send details on WhatsApp
+سأرسل البيانات على واتساب
+A3 we install
+Anything we should know (label or placeholder)
+أي شيء يجب أن نعرفه
+A3 we install
+Ask us to install it
+اطلب التركيب
+A3 tracker
+Requested
+تم الطلب
+A3 tracker
+In progress
+جارٍ التنفيذ
+A3 tracker
+Live
+يعمل
+A3 tracker
+We're on it. We'll email you when your store is live.
+نعمل عليه الآن. سنراسلك بالبريد عندما يعمل على متجرك.
+A4.1
+Waiting for your store
+في انتظار متجرك
+A4.1
+Open a page on your store. This updates by itself.
+افتح أي صفحة في متجرك. تتحدث هذه الشاشة تلقائيًا.
+A4.1
+Open my store
+افتح متجري
+A4.2
+Your store has a password page, so we need the password to look.
+متجرك محمي بصفحة كلمة مرور، ونحتاجها لنفحصه.
+A4.2
+Storefront password
+كلمة مرور واجهة المتجر
+A4.2
+We use it once for this check and never keep it.
+نستخدمها مرة واحدة لهذا الفحص ولا نحتفظ بها.
+A4.2
+Check my store
+افحص متجري
+A4.3
+Your code is working on {domain}
+الكود يعمل على {domain}
+A4.4
+We can't see your code yet
+لم نرَ الكود بعد
+A4.4
+Pasted in the wrong place
+لُصق في مكان غير صحيح
+A4.4
+Paste it in the spot shown in step 2.
+الصقه في المكان الموضّح في الخطوة 2.
+A4.4
+Not saved or published
+لم يُحفظ أو لم يُنشر
+A4.4
+Press Save or Publish in your store.
+اضغط حفظ أو نشر في متجرك.
+A4.4
+Your site or cache still shows the old page
+موقعك أو الكاش ما زال يعرض الصفحة القديمة
+A4.4
+Clear your site cache, or wait a few minutes.
+امسح كاش الموقع، أو انتظر بضع دقائق.
+A4.4
+Check again
+افحص مرة أخرى
+A4.5
+This code belongs to a different store
+هذا الكود يخص متجرًا آخر
+A4.5
+We found GRINDCTRL code on your store, but it was made for another account. Swap it for your code from step 2 and we'll check again.
+وجدنا كود GRINDCTRL على متجرك، لكنه صُنع لحساب آخر. استبدله بالكود من الخطوة 2 وسنفحص من جديد.
+A4.5
+Copy my code
+انسخ الكود الخاص بي
+A5.1
+Your code is working on lulus-fashion.myeasyorders.com
+الكود يعمل على lulus-fashion.myeasyorders.com
+A5.1
+Shoppers see nothing yet. Turn on what you want below.
+لا يظهر شيء للمتسوقين بعد. شغّل ما تريده من الأسفل.
+A5.1
+Show the install steps
+اعرض خطوات التركيب
+A5.1
+Turn on what you want
+شغّل ما تريد
+A5.1
+Off
+متوقف
+A5.1
+Shoppers see a Try-On button on your product pages.
+يرى المتسوقون زر القياس الافتراضي في صفحات منتجاتك.
+A5.1
+Shoppers see Store Chat on every page.
+يرى المتسوقون محادثة المتجر في كل صفحة.
+A5.1
+New features appear here.
+المزايا الجديدة تظهر هنا.
+A5.1
+Try-On (label or placeholder)
+القياس الافتراضي
+A5.1
+Store Chat (label or placeholder)
+محادثة المتجر
+A5.2
+On your store
+على متجرك
+A5.2
+On
+مفعّل
+A5.2
+{tLooks} looks left this month
+متبقي {tLooks} إطلالة هذا الشهر
+A5.2
+See it on your store
+شاهده على متجرك
+A5.3
+Only you can see it while you're in preview.
+أنت فقط تراها ما دمت في وضع المعاينة.
+A6
+Store check
+فحص المتجر
+A6
+Checked today at 2:14 PM
+آخر فحص اليوم 2:14 م
+A6
+Run check now
+افحص الآن
+A6
+What to fix
+ما يحتاج إصلاحًا
+A6
+What to fix (label or placeholder)
+ما يحتاج إصلاحًا
+A6
+More you can add
+يمكنك إضافة المزيد
+A6
+More you can add (label or placeholder)
+يمكنك إضافة المزيد
+A6
+Working well (label or placeholder)
+يعمل جيدًا
+A6
+Your store (label or placeholder)
+متجرك
+A6.1
+Shoppers can't see the Try-On button right now.
+لا يرى المتسوقون زر القياس الافتراضي الآن.
+A6.1
+Try-On availability
+رصيد القياس الافتراضي
+A6.1
+Out of looks. The button is hidden from shoppers until you top up.
+انتهت الإطلالات. الزر مخفي عن المتسوقين حتى تضيف رصيدًا.
+A6.1
+Product pages
+صفحات المنتجات
+A6.1
+Showing as a floating button. Pick a spot?
+يظهر كزر عائم. هل تختار له مكانًا؟
+A6.1
+Pick a spot
+اختر المكان
+A6.1
+Collection pages
+صفحات المجموعات
+A6.1
+Show a Try-On pill on your collection pages. Needs Connect EasyOrders.
+اعرض شارة القياس الافتراضي في صفحات المجموعات. يحتاج إلى ربط EasyOrders.
+A6.1
+Code on your store
+الكود على متجرك
+A6.1
+Seen 3 minutes ago
+شوهد منذ 3 دقائق
+A6.1
+Install steps
+خطوات التركيب
+A6.1
+Product photos
+صور المنتجات
+A6.1
+Ready for Try-On
+جاهزة للقياس الافتراضي
+A6.1
+Addresses
+العناوين
+A6.1
+1 of 1 live
+1 من 1 يعمل
+A6.2
+Next to "Add to cart" on 12 of 12 pages
+بجوار «أضف للسلة» في 12 من 12 صفحة
+A6.2
+Try on pills on 24 products
+شارات القياس على 24 منتجًا
+A6.2
+15 looks left this month
+متبقي 15 إطلالة هذا الشهر
+A6.2
+EasyOrders connection
+ربط EasyOrders
+A6.2
+Connected
+مربوط
+A6.3
+We'll check your store as soon as your code is live.
+سنفحص متجرك فور أن يعمل الكود.
+A6.4
+Checking…
+جارٍ الفحص…
+A6.4
+Checking your store (label or placeholder)
+جارٍ فحص متجرك
+A6.5
+We haven't seen your code since Monday. Usually a theme change removed it.
+لم نرَ الكود منذ يوم الاثنين. غالبًا حذفه تغيير في القالب.
+A6.5
+Reinstall in 1 minute
+أعد التركيب في دقيقة
+A6.5
+Shoppers can't see Store Chat right now.
+لا يرى المتسوقون محادثة المتجر الآن.
+A6.6
+Collection pills need your updated code. Everything else keeps working.
+شارات صفحات المجموعات تحتاج الكود المحدّث. كل شيء آخر يعمل كما هو.
+A6.6
+Get my updated code
+احصل على الكود المحدّث
+A6.6
+Store Chat is live, but it can't answer order questions right now.
+محادثة المتجر تعمل، لكنها لا تستطيع الإجابة عن أسئلة الطلبات الآن.
+A6.6
+We can't find product details on your product pages. Add one line, or
+لا نجد بيانات المنتج في صفحات منتجاتك. أضف سطرًا واحدًا، أو
+A6.6
+ask us
+اطلب منا
+A6.6
+Add one line
+أضف سطرًا واحدًا
+A6.6
+We can't use your product photos from cdn.example.com. Contact us, we'll add it.
+لا نستطيع استخدام صور منتجاتك من cdn.example.com. تواصل معنا وسنضيفه.
+A6.6
+Contact us
+تواصل معنا
+A6.6
+3 looks left this month.
+متبقي 3 إطلالات هذا الشهر.
+A6.6
+Waiting
+في الانتظار
+A6.6
+Needs proof
+يحتاج إثباتًا
+A6.6
+Pills are off.
+الشارات متوقفة.
+A6.6
+Turn on pills
+شغّل الشارات
+A6 Today card
+View store check
+اعرض فحص المتجر
+A7.1
+From GRINDCTRL <alerts@grindctrl.cloud>
+من GRINDCTRL <alerts@grindctrl.cloud>
+A7.1
+Try-On stopped showing on lulus-fashion.myeasyorders.com
+توقف ظهور القياس الافتراضي على lulus-fashion.myeasyorders.com
+A7.1
+Hi Lulu's Fashion, shoppers can't see the Try-On button on your store since Monday.
+مرحبًا أزياء لولو، لا يرى المتسوقون زر القياس الافتراضي على متجرك منذ يوم الاثنين.
+A7.1
+Usually a theme change removed your code.
+غالبًا حذف تغييرٌ في القالب الكود.
+A7.1
+Putting it back takes about a minute.
+إعادته تأخذ نحو دقيقة.
+A7.1
+Fix it in 1 minute
+أصلحه في دقيقة
+A7.1
+You get this email only when something stops working.
+تصلك هذه الرسالة فقط عندما يتوقف شيء عن العمل.
+A7.1
+Manage alerts
+إدارة التنبيهات
+A7.2
+It's working again on lulus-fashion.myeasyorders.com
+عاد يعمل على lulus-fashion.myeasyorders.com
+A7.2
+Hi Lulu's Fashion, Try-On is showing on your store again.
+مرحبًا أزياء لولو، عاد القياس الافتراضي للظهور على متجرك.
+A7.2
+We saw your code a few minutes ago.
+رأينا الكود قبل دقائق.
+A7.2
+There is nothing else to do.
+لا يلزمك فعل أي شيء.
+A8.1
+Connect EasyOrders
+اربط EasyOrders
+A8.1
+Connect EasyOrders (label or placeholder)
+اربط EasyOrders
+A8.1
+Store Chat answers "Where's my order?"
+محادثة المتجر تجيب عن «أين طلبي؟»
+A8.1
+It learns your products and prices.
+تتعرف على منتجاتك وأسعارك.
+A8.1
+Read-only. We never change your store.
+للقراءة فقط. لا نغيّر شيئًا في متجرك.
+A8.2
+Finish in the EasyOrders tab
+أكمل في تبويب EasyOrders
+A8.2
+I've approved it
+وافقت
+A8.2
+Start again
+ابدأ من جديد
+A8.3
+Connected 2 Nov. Last update 5 minutes ago.
+تم الربط 2 نوفمبر. آخر تحديث منذ 5 دقائق.
+A8.3
+Disconnect
+افصل الربط
+A8.4
+EasyOrders stopped answering.
+توقف EasyOrders عن الاستجابة.
+A8.4
+Reconnect
+أعد الربط
+A8.5
+Store Chat will stop answering order questions.
+ستتوقف محادثة المتجر عن الإجابة عن أسئلة الطلبات.
+A8.5
+Keep connected
+أبقِ الربط
