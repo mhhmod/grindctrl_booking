@@ -6,13 +6,13 @@ import { normalizeTenantKey } from '@/lib/tenancy/tenant-key';
 import { LAUNCH_STATES, type LaunchState, type StoreLaunch } from './audience';
 
 /* The launch state per tenant, a Shopify store or a `site:<id>` WooCommerce store (supabase/store_launch.sql), read by
-   both config routes and cached for 60 seconds like the flags. No row, a
+   both config routes and cached for five seconds like the flags. No row, a
    missing table or a failed read all mean live: a database hiccup must not
    hide GrindCTRL from a live store's shoppers. */
 
 export const HOLDOUT_DEFAULT_SHARE = 0.5;
 export const HOLDOUT_DEFAULT_DAYS = 14;
-const CACHE_TTL_MS = 60_000;
+const CACHE_TTL_MS = 5_000;
 
 const cache = new Map<string, { launch: StoreLaunch | null; expiresAt: number }>();
 

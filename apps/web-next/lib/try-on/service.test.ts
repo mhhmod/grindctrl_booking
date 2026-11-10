@@ -437,6 +437,15 @@ describe('try-on service', () => {
         expect(finalizeTryOnJobMock).toHaveBeenCalledTimes(1);
       });
 
+      it.each(['woocommerce', 'paste-website', 'paste-shopify'] as const)('reserves only signed product metadata for %s', async (platform) => {
+        const auth = storefrontAuthorization({ platform, shop: 'site:123e4567-e89b-42d3-a456-426614174000',
+          title: 'Signed store title', canonicalGarmentUrl: 'https://store.example/garment.jpg' });
+        await generateTryOn(auth, 'upload', 'data:image/png;base64,AAAA', auth.canonicalGarmentUrl!, 'Unsigned title');
+        expect(beginTryOnJobMock).toHaveBeenCalledWith(expect.objectContaining({ productInfo: {
+          title: 'Signed store title', imageUrl: 'https://store.example/garment.jpg',
+        } }));
+      });
+
       it('bills a session without the test claim as before', async () => {
         await generateTryOn(storefrontAuthorization(), 'upload', 'data:image/png;base64,AAAA');
         expect(beginTryOnJobMock).toHaveBeenCalledTimes(1);

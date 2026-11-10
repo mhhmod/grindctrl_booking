@@ -25,6 +25,7 @@ import {
   TryOnResultSchemaNotReadyError,
   TryOnResultUnavailableError,
 } from './result-errors';
+import { missingProductInfo } from './product-info';
 import { withoutTestLooks } from '@/lib/try-on/test-looks';
 
 const RESULT_BUCKET = 'tryon-results';
@@ -633,11 +634,11 @@ export async function sweepOrphanedTryOnResults(
   };
 }
 
-export async function persistTryOnJob(job: TryOnJob, durationMs?: number): Promise<void> {
+export async function persistTryOnJob(job: TryOnJob, durationMs?: number, authorization?: VerifiedTryOnSession): Promise<void> {
   const supabase = getServiceClient();
   if (!supabase) return;
 
-  const { error } = await supabase.from('tryon_jobs').insert({
+  const row = {
     id: job.jobId,
     session_id: job.sessionId,
     product_id: job.productId,
@@ -647,8 +648,12 @@ export async function persistTryOnJob(job: TryOnJob, durationMs?: number): Promi
     cost_usd: job.meta.costEstimate,
     duration_ms: durationMs ?? null,
     message: job.message ?? null,
-  });
-
+  };
+  const signed = authorization?.purpose === 'storefront' && authorization.platform &&
+    authorization.shop === job.shop && authorization.sessionId === job.sessionId && authorization.productId === job.productId;
+  const info = signed ? { product_title: authorization.title ?? null, product_image_url: authorization.canonicalGarmentUrl } : {};
+  let { error } = await supabase.from('tryon_jobs').insert({ ...row, ...info });
+  if (signed && missingProductInfo(error)) ({ error } = await supabase.from('tryon_jobs').insert(row));
   if (error) {
     console.error('tryon_jobs insert failed:', error.message);
   }
@@ -697,6 +702,28 @@ export async function completePublicDemoTryOnJob(
   if (error || !data) throw persistenceError(job.jobId, error ?? new Error('public job unavailable'));
 }
 
+type ProductReservationInfo = { productInfo?: { title?: string; imageUrl: string | null } };
+
+async function attachProductInfo(input: {
+  shop: string; jobId: string; sessionId: string; productId: string; requestKey: string;
+} & ProductReservationInfo, reservation: CreditReservation): Promise<CreditReservation> {
+  if (!reservation.created || !input.productInfo) return reservation;
+  try {
+    const client = getServiceClient();
+    if (!client) return reservation;
+    const { error } = await client.from('tryon_jobs').update({
+      product_title: input.productInfo.title?.trim().slice(0, 200) || null,
+      product_image_url: input.productInfo.imageUrl,
+    }).eq('id', reservation.jobId).eq('shop', normalizeTenantKey(input.shop))
+      .eq('session_id', input.sessionId).eq('product_id', input.productId).eq('request_key', input.requestKey);
+    // The reservation RPC owns the insert. Optional metadata must never lose a look.
+    if (error && !missingProductInfo(error)) console.error('[try-on] product info write failed', { code: error.code });
+  } catch {
+    console.error('[try-on] product info write failed');
+  }
+  return reservation;
+}
+
 export async function beginTryOnJob(input: {
   shop: string;
   jobId: string;
@@ -704,8 +731,8 @@ export async function beginTryOnJob(input: {
   modelKey: string;
   sessionId: string;
   productId: string;
-}): Promise<CreditReservation> {
-  return reserveCredit(input);
+} & ProductReservationInfo): Promise<CreditReservation> {
+  return attachProductInfo(input, await reserveCredit(input));
 }
 
 /** The owner's test look from the preview link (N5): never billed. */
@@ -715,8 +742,8 @@ export async function beginTestTryOnJob(input: {
   requestKey: string;
   sessionId: string;
   productId: string;
-}): Promise<CreditReservation> {
-  return reserveTestLook(input);
+} & ProductReservationInfo): Promise<CreditReservation> {
+  return attachProductInfo(input, await reserveTestLook(input));
 }
 
 export async function finalizeTryOnJob(job: TryOnJob, durationMs: number): Promise<void> {

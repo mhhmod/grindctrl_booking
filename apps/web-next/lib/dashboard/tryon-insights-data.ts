@@ -5,10 +5,11 @@ import { adminGraphql } from '@/lib/shopify/admin';
 import { getShopToken } from '@/lib/shopify/tokens';
 import { getShopEntitlement } from '@/lib/try-on/entitlement';
 import { readTryOnShowButton } from '@/lib/try-on/settings';
+import { missingProductInfo } from '@/lib/try-on/product-info';
 import { withoutTestLooks } from '@/lib/try-on/test-looks';
 import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
 import type { ResultsPeriod } from './tryon-insights-copy';
-import { RECENT_LOOKS, TOP_PRODUCTS, type ProductInfo, type ResultsJob, type TryOnResultsFacts } from './tryon-insights-model';
+import { RECENT_LOOKS, TOP_PRODUCTS, titleFromHandle, type ProductInfo, type ResultsJob, type TryOnResultsFacts } from './tryon-insights-model';
 
 const DAY = 86_400_000;
 /** A shop's handles are letters, digits and dashes (Arabic letters too). */
@@ -44,18 +45,20 @@ type TitlesResponse = {
 async function storeLooks(shop: string, period: ResultsPeriod, now: number): Promise<ResultsJob[]> {
   const supabase = getMessengerServiceClient();
   const since = new Date(now - 2 * period * DAY).toISOString();
-  const result = await withoutTestLooks((excludeTestLooks) => {
+  const read = (withProductInfo: boolean) => withoutTestLooks((excludeTestLooks) => {
     const query = supabase
       .from('tryon_jobs')
-      .select('product_id, status, duration_ms, message, created_at')
+      .select(withProductInfo ? 'product_id, status, duration_ms, message, created_at, product_title, product_image_url' : 'product_id, status, duration_ms, message, created_at')
       .eq('shop', shop)
       .gte('created_at', since)
       .order('created_at', { ascending: false })
       .limit(20_000);
     return excludeTestLooks ? query.eq('is_test', false) : query;
   });
+  let result = await read(isSiteTenantKey(shop));
+  if (missingProductInfo(result.error)) result = await read(false);
   if (result.error) throw new Error(result.error.message);
-  return (result.data ?? []) as ResultsJob[];
+  return (result.data ?? []) as unknown as ResultsJob[];
 }
 
 /** The handles the page names: the top products of the period and the
@@ -105,14 +108,28 @@ export async function getTryOnResultsFacts({
     // The header must not say live while the merchant has the button switched off.
     readTryOnShowButton(shop).catch(() => true),
   ]);
-  /* A WooCommerce store has no Admin API to name products from, and its
-     jobs carry no title, so its products show as their handle, as when a
-     title cannot be read. Nothing is invented. */
   const products = isSiteTenantKey(shop)
-    ? {}
+    ? storedProductInfo(jobs)
     : await productTitles(shop, handlesToName(jobs, period, now)).catch((error) => {
         console.error('[try-on results] product titles failed:', error instanceof Error ? error.message : error);
         return {};
       });
   return { now, period, live: entitlement ? entitlement.available && showButton : null, jobs, products };
+}
+
+/** Newest stored snapshot per product. Legacy rows must not mask a signed snapshot. */
+export function storedProductInfo(jobs: ResultsJob[]): Record<string, ProductInfo> {
+  const products: Record<string, ProductInfo> = Object.create(null);
+  const titles = new Map<string, string>();
+  const images = new Map<string, string>();
+  for (const job of [...jobs].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))) {
+    const title = job.product_title?.trim();
+    const imageUrl = job.product_image_url?.startsWith('https://') ? job.product_image_url : null;
+    if (title && !titles.has(job.product_id)) titles.set(job.product_id, title);
+    if (imageUrl && !images.has(job.product_id)) images.set(job.product_id, imageUrl);
+    if (title || imageUrl) products[job.product_id] = {
+      title: titles.get(job.product_id) ?? titleFromHandle(job.product_id), imageUrl: images.get(job.product_id) ?? null,
+    };
+  }
+  return products;
 }

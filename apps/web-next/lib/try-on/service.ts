@@ -179,11 +179,14 @@ export async function generateTryOn(
          is recorded but no look is spent, and a daily cap applies instead.
          The flag is signed into the session, so a shopper cannot set it. */
       const reservationStarted = performance.now();
+      const productInfo = authorization.platform ? { productInfo: {
+        title: authorization.title, imageUrl: authorization.canonicalGarmentUrl,
+      } } : {};
       let reservation: Awaited<ReturnType<typeof beginTryOnJob>>;
       try {
         reservation =
           authorization.test === true
-            ? await beginTestTryOnJob({ shop, jobId: reservedJobId, requestKey, sessionId, productId })
+            ? await beginTestTryOnJob({ shop, jobId: reservedJobId, requestKey, sessionId, productId, ...productInfo })
             : await beginTryOnJob({
                 shop,
                 jobId: reservedJobId,
@@ -191,6 +194,7 @@ export async function generateTryOn(
                 modelKey,
                 sessionId,
                 productId,
+                ...productInfo,
               });
       } finally {
         timings.reservation_ms = performance.now() - reservationStarted;
@@ -452,7 +456,7 @@ export async function generateTryOn(
         });
       } else {
         storeJob(completed);
-        await persistTryOnJob(completed, Date.now() - startedAt).catch(() => {});
+        await persistTryOnJob(completed, Date.now() - startedAt, authorization).catch(() => {});
       }
       timings.persistence_ms = performance.now() - persistenceStarted;
       await finishTimings(completed);
@@ -479,7 +483,7 @@ export async function generateTryOn(
   }
   storeJob(job);
   if (mode === 'live' && !billableLiveJob) {
-    await persistTryOnJob(job, Date.now() - startedAt).catch(() => {});
+    await persistTryOnJob(job, Date.now() - startedAt, authorization).catch(() => {});
   }
   return job;
 }
