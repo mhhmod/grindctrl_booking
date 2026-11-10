@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Check, ChevronLeft, CircleAlert, ShieldCheck, Trash2, User } from 'lucide-react';
+import { Check, ChevronLeft, CircleAlert, ShieldCheck, Trash2, User, Loader2 } from 'lucide-react';
 import { checkPhoto, type PhotoCheck } from '@/lib/try-on/photo-check';
 import type { SheetCopy } from '@/lib/try-on/sheet-copy';
 
@@ -156,9 +156,15 @@ export function SheetCheckStep({
         </p>
       </div>
       <div className="sticky bottom-0 shrink-0 border-t bg-background pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <button type="button" onClick={onTryOn} disabled={busy || check === 'checking'} className={PRIMARY}>
-          <User className="size-5" aria-hidden="true" />
-          {firstTime ? copy.agreeAndTry : copy.tryItOn}
+        {/* While the photo is checked the button keeps its full colour and says
+            so, instead of fading into something that looks switched off. */}
+        <button type="button" onClick={onTryOn} disabled={busy || check === 'checking'} aria-busy={busy || check === 'checking'} className={`${PRIMARY} disabled:opacity-100 disabled:cursor-progress`}>
+          {busy || check === 'checking' ? (
+            <Loader2 className="size-5 motion-safe:animate-spin" aria-hidden="true" />
+          ) : (
+            <User className="size-5" aria-hidden="true" />
+          )}
+          {check === 'checking' ? copy.checking : firstTime ? copy.agreeAndTry : copy.tryItOn}
         </button>
       </div>
     </div>
