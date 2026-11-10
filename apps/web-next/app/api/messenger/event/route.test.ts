@@ -86,6 +86,17 @@ describe('POST /api/messenger/event config failures', () => {
     await POST(post('loader_initialized', 'https://maisonnoor.com'));
     expect(mocks.signal).not.toHaveBeenCalled();
   });
+
+  it('counts a heartbeat while Store Chat is off, and never for a disabled site', async () => {
+    mocks.originAllowed.mockReturnValue(true);
+    mocks.loadSiteByDomain.mockResolvedValue({ id: 'site-1', status: 'draft' });
+    await POST(post('loader_initialized', 'https://maisonnoor.com'));
+    expect(mocks.signal).toHaveBeenCalledExactlyOnceWith('site-1', 'https://maisonnoor.com');
+    mocks.signal.mockClear();
+    mocks.loadSiteByDomain.mockResolvedValue({ id: 'site-1', status: 'disabled' });
+    await POST(post('loader_initialized', 'https://maisonnoor.com'));
+    expect(mocks.signal).not.toHaveBeenCalled();
+  });
 });
 
 describe('configFailurePayload', () => {

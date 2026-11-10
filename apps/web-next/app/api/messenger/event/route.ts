@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
 
     if (!allowed) return NextResponse.json({ ok: false }, { status: 403 });
 
-    if (name === 'loader_initialized' && originTrusted && origin && site.status === 'active') {
+    if (name === 'loader_initialized' && originTrusted && origin && site.status !== 'disabled') {
       // An unverified domain earns nothing from this; our server checks its page.
       if (await recordPasteSignal(site.id, origin) === 'unverified' && URL.canParse(origin)) {
         schedulePasteDomainCheck(site.id, new URL(origin).hostname);
