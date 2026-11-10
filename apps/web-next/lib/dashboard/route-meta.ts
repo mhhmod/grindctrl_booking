@@ -48,6 +48,11 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
     description: 'The chat box on your storefront: appearance, AI, behaviour, installation.',
   },
   {
+    pathname: '/dashboard/store',
+    title: 'Your store',
+    description: 'How GRINDCTRL runs on your store, and what to fix.',
+  },
+  {
     pathname: '/dashboard/install',
     title: 'Widget / Embed',
     description: 'Install snippet, verification concept, and widget preview panel.',

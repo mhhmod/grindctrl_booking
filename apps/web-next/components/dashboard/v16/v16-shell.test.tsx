@@ -49,7 +49,7 @@ describe('V16Shell', () => {
     render(<V16Shell {...props()} />);
     const nav = screen.getByRole('navigation', { name: 'GrindCTRL' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Store Chat', 'Plan', 'Settings']);
+    expect(links.map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Store Chat', 'Your store', 'Plan', 'Settings']);
     expect(within(nav).getByRole('link', { name: 'Try-On' })).toHaveAttribute('aria-current', 'page');
     expect(within(nav).getByRole('link', { name: 'Today' })).not.toHaveAttribute('aria-current');
   });
@@ -59,9 +59,9 @@ describe('V16Shell', () => {
      owner and which opens Plan; Settings is for owners and admins. On
      phones Plan is a tab and Settings is in the menu (Owner-Phone). */
   it.each([
-    ['owner', ['Today', 'Inbox', 'Try-On', 'Store Chat', 'Plan', 'Settings'], ['Today', 'Inbox', 'Try-On', 'Chat', 'Plan']],
-    ['admin', ['Today', 'Inbox', 'Try-On', 'Store Chat', 'Settings'], ['Today', 'Inbox', 'Try-On', 'Chat']],
-    ['member', ['Today', 'Inbox', 'Try-On', 'Store Chat'], ['Today', 'Inbox', 'Try-On', 'Chat']],
+    ['owner', ['Today', 'Inbox', 'Try-On', 'Store Chat', 'Your store', 'Plan', 'Settings'], ['Today', 'Inbox', 'Try-On', 'Chat', 'Plan']],
+    ['admin', ['Today', 'Inbox', 'Try-On', 'Store Chat', 'Your store', 'Settings'], ['Today', 'Inbox', 'Try-On', 'Chat']],
+    ['member', ['Today', 'Inbox', 'Try-On', 'Store Chat', 'Your store'], ['Today', 'Inbox', 'Try-On', 'Chat']],
   ] as const)('shows a %s their nav, and Plan and the meter only to the owner', (role, sidebar, tabs) => {
     const owner = role === 'owner';
     render(
@@ -86,7 +86,7 @@ describe('V16Shell', () => {
   it('leaves Plan out of the sidebar and the phone tabs when the active store has no Shopify or WooCommerce tenant', () => {
     render(<V16Shell {...props({ hasTenant: false })} />);
     const nav = screen.getByRole('navigation', { name: 'GrindCTRL' });
-    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Store Chat', 'Settings']);
+    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Store Chat', 'Your store', 'Settings']);
     expect(within(screen.getByRole('navigation', { name: 'Main' })).getAllByRole('link').map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Chat']);
   });
 
@@ -101,6 +101,20 @@ describe('V16Shell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
     const menu = screen.getByRole('dialog', { name: 'Menu' });
     expect(within(menu).getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/dashboard/settings');
+  });
+
+  /* Your store sits after Store Chat in the sidebar and opens from the phone
+     menu; the bottom bar is unchanged and highlights nothing on its page. */
+  it('opens Your store from the phone menu, never from the bottom bar', () => {
+    pathname = '/dashboard/store';
+    render(<V16Shell {...props({ locale: 'ar' })} />);
+    const tabs = screen.getByRole('navigation', { name: 'القائمة الرئيسية' });
+    expect(within(tabs).queryByRole('link', { name: 'متجرك' })).toBeNull();
+    expect(within(tabs).queryAllByRole('link').filter((link) => link.getAttribute('aria-current') === 'page')).toHaveLength(0);
+    expect(within(screen.getByRole('navigation', { name: 'GrindCTRL' })).getByRole('link', { name: 'متجرك' })).toHaveAttribute('aria-current', 'page');
+    fireEvent.click(screen.getByRole('button', { name: 'القائمة' }));
+    expect(within(screen.getByRole('dialog', { name: 'القائمة' })).getByRole('link', { name: 'متجرك' })).toHaveAttribute('href', '/dashboard/store');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('متجرك');
   });
 
   it('opens Plan from the meter for the owner, and keeps it a plain meter for anyone else', () => {
@@ -187,6 +201,7 @@ describe('V16Shell', () => {
       'الرسائل',
       'التجربة الافتراضية',
       'دردشة المتجر',
+      'متجرك',
       'الباقة',
       'الإعدادات',
     ]);
@@ -201,5 +216,8 @@ describe('isV16NavActive', () => {
     expect(isV16NavActive('/dashboard', '/dashboard')).toBe(true);
     expect(isV16NavActive('/dashboard/try-on', '/dashboard')).toBe(false);
     expect(isV16NavActive('/dashboard/store-chat/x', '/dashboard/store-chat')).toBe(true);
+    // Your store and Store Chat share a prefix but never light up together.
+    expect(isV16NavActive('/dashboard/store-chat', '/dashboard/store')).toBe(false);
+    expect(isV16NavActive('/dashboard/store', '/dashboard/store-chat')).toBe(false);
   });
 });

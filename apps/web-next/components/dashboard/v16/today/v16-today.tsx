@@ -124,11 +124,21 @@ function LastWeek({ tiles, copy }: { tiles: TodayView['tiles']; copy: TodayCopy 
   );
 }
 
-export function V16Today({ view, locale }: { view: TodayView; locale: SiteLocale }) {
+export function V16Today({
+  view,
+  locale,
+  storeCard,
+}: {
+  view: TodayView;
+  locale: SiteLocale;
+  /** The Your store card, first on the page when the store has one. */
+  storeCard?: React.ReactNode;
+}) {
   const copy = getTodayCopy(locale);
   const [detailsOpen, setDetailsOpen] = React.useState(false);
   return (
     <div className={classes.page}>
+      {storeCard}
       <HealthStrip view={view} copy={copy} onDetails={() => setDetailsOpen(true)} />
       {view.needsYou ? <NeedsYou needs={view.needsYou} copy={copy} /> : view.calm && <Calm calm={view.calm} copy={copy} />}
       <LastWeek tiles={view.tiles} copy={copy} />

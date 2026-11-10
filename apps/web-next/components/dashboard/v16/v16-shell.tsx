@@ -24,7 +24,7 @@ import classes from './v16-shell.module.css';
 
 export type V16NavItem = {
   href: string;
-  key: 'today' | 'inbox' | 'tryOn' | 'storeChat' | 'plan' | 'settings';
+  key: 'today' | 'inbox' | 'tryOn' | 'storeChat' | 'yourStore' | 'plan' | 'settings';
   icon: GcIconName;
   /** Who sees it (item 12): Plan joins for owners only, Settings for owners and admins. */
   permission: DashboardPermissionKey;
@@ -40,6 +40,8 @@ export const V16_NAV: readonly V16NavItem[] = [
   { href: '/dashboard/inbox', key: 'inbox', icon: 'inbox', permission: 'canViewStoreChat', tab: true },
   { href: '/dashboard/try-on', key: 'tryOn', icon: 'shirt', permission: 'canViewTryOn', tab: true },
   { href: '/dashboard/store-chat', key: 'storeChat', icon: 'chat', permission: 'canViewStoreChat', tab: true },
+  // Whoever sees Store Chat and Try-On sees their install and status; on phones it opens from the menu.
+  { href: '/dashboard/store', key: 'yourStore', icon: 'store', permission: 'canViewStoreChat', tab: false },
   { href: '/dashboard/plan', key: 'plan', icon: 'gauge', permission: 'canViewPlan', tab: true, needsTenant: true },
   { href: '/dashboard/settings', key: 'settings', icon: 'gear', permission: 'canViewSettings', tab: false },
 ];
