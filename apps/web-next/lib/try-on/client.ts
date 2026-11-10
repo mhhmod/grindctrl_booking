@@ -50,6 +50,12 @@ function wait(delayMs: number, signal?: AbortSignal): Promise<void> {
   });
 }
 
+/** An error whose message is already written for a shopper, in their
+ *  language: our own copy or a job's classified failure sentence. Anything
+ *  else that is thrown (a network failure, a parse error, a route's
+ *  technical text) must be shown as the generic message instead. */
+export class ShopperMessageError extends Error {}
+
 export async function pollTryOnJob(
   jobId: string,
   signedSession: string,
@@ -87,19 +93,19 @@ export async function pollTryOnJob(
     const data: TryOnJobApiResponse = await response.json();
 
     if (!response.ok || !data.ok) {
-      throw new Error(data.message || data.error || fallbackError);
+      throw new ShopperMessageError(data.message || fallbackError);
     }
     if (data.status === 'failed') {
-      throw new Error(data.message || fallbackError);
+      throw new ShopperMessageError(data.message || fallbackError);
     }
     if (data.status === 'completed') {
       if (!data.resultImageUrl) {
-        throw new Error(data.message || fallbackError);
+        throw new ShopperMessageError(data.message || fallbackError);
       }
       return data;
     }
     if (data.status !== 'queued' && data.status !== 'processing') {
-      throw new Error(fallbackError);
+      throw new ShopperMessageError(fallbackError);
     }
     options.onProgress?.(data);
 
@@ -108,7 +114,7 @@ export async function pollTryOnJob(
     await wait(Math.min(remaining, Math.max(tryOnPollDelayMs(requestCount), serverDelay)), signal);
   }
 
-  throw new Error(fallbackError);
+  throw new ShopperMessageError(fallbackError);
 }
 
 /* ─── Taking the look off our server (phase zero item 2) ─── */

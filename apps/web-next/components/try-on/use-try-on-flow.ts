@@ -22,6 +22,7 @@ import {
   fetchWithOneRetry,
   keepTryOnResultInPage,
   pollTryOnJob,
+  ShopperMessageError,
 } from '@/lib/try-on/client';
 import { PHONE_KEEP_MS, phoneStore, type KeptLook } from '@/lib/try-on/phone-store';
 import type { TryOnTranslator } from '@/lib/try-on/i18n';
@@ -181,7 +182,7 @@ export function useTryOnFlow({
         if (sessionRes.status === 400 || sessionRes.status === 401) {
           clearPendingStorefrontProof();
         }
-        throw new Error(sessionData.error || t.genericError);
+        throw new ShopperMessageError(t.genericError);
       }
       clearPendingStorefrontProof();
       setSession(sessionData.data);
@@ -190,7 +191,7 @@ export function useTryOnFlow({
       setSession(null);
       setSessionState('error');
       setSessionError(
-        shopProduct ? t.storefrontProofError : err instanceof Error ? err.message : t.genericError,
+        shopProduct ? t.storefrontProofError : err instanceof ShopperMessageError ? err.message : t.genericError,
       );
     }
   }, [displayShop, product.id, shopProduct, t.genericError, t.storefrontProofError, variantId]);
@@ -232,7 +233,7 @@ export function useTryOnFlow({
 
     try {
       if (!session) {
-        throw new Error(shopProduct ? t.storefrontProofError : t.genericError);
+        throw new ShopperMessageError(shopProduct ? t.storefrontProofError : t.genericError);
       }
 
       // 1. Mint one idempotent attempt for this explicit user action.
@@ -252,7 +253,7 @@ export function useTryOnFlow({
       const attemptData: TryOnApiResponse<TryOnAttempt> = await attemptRes.json();
 
       if (!attemptRes.ok || !attemptData.ok || !attemptData.data) {
-        throw new Error(attemptData.error || t.genericError);
+        throw new ShopperMessageError(t.genericError);
       }
 
       setGenerationPhase('session-created');
@@ -263,7 +264,7 @@ export function useTryOnFlow({
       try { turnstileToken = await attemptTurnstileToken(attemptData.data.turnstile); }
       catch (challengeError) {
         if (challengeError instanceof TurnstileChallengeError) setChallengeFailed(true);
-        throw new Error(t.genericError);
+        throw new ShopperMessageError(t.genericError);
       }
 
       // 2. Generate try-on
@@ -318,12 +319,12 @@ export function useTryOnFlow({
          Arabic reads this store's language instead. */
       if (genData.code === 'TRYON_UNAVAILABLE' || genData.code === 'test_looks_cap') {
         setUnavailable(true);
-        throw new Error(t.tryOnUnavailable);
+        throw new ShopperMessageError(t.tryOnUnavailable);
       }
       // The server could not verify the check's token: a fresh check may pass.
       if (genData.code === 'turnstile_failed' || genData.code === 'turnstile_required') {
         setChallengeFailed(true);
-        throw new Error(t.genericError);
+        throw new ShopperMessageError(t.genericError);
       }
       if (
         !genData.ok ||
@@ -334,7 +335,7 @@ export function useTryOnFlow({
         genData.status === 'failed' ||
         !genData.resultImageUrl
       ) {
-        throw new Error(genData.message || genData.error || t.genericError);
+        throw new ShopperMessageError(genData.message || t.genericError);
       }
 
       /* The look now lives in this page; the server's copy is deleted. */
@@ -373,7 +374,7 @@ export function useTryOnFlow({
       setStep('result');
       notifyLook('ready', restoredLook.current?.expiresAt);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t.genericError);
+      setError(err instanceof ShopperMessageError ? err.message : t.genericError);
       setStep('error');
     }
   }, [photoDataUrl, product.id, product.name, session, shopProduct, notifyLook, t]);
