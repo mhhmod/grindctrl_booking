@@ -29,6 +29,8 @@ permissions:
 
 jobs:
   gate:
+    # workflow_dispatch can target any branch; only main may reach production.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -37,7 +39,7 @@ jobs:
     outputs:
       verified: ${{ steps.tree.outputs.verified }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         continue-on-error: true
       - name: Match the deployed tree to successful PR checks
         id: tree
@@ -115,11 +117,11 @@ jobs:
       image: ${{ steps.image.outputs.name }}
       digest: ${{ steps.build.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -135,7 +137,7 @@ jobs:
       # 20-60 minutes. GHA's own layer cache (cache-from/to: type=gha)
       # also means unchanged dependency/source layers are skipped on
       # repeat builds, not just cached npm packages.
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         id: build
         with:
           context: .
@@ -171,8 +173,8 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -185,11 +187,18 @@ jobs:
 
   deploy:
     needs: promote
+    # Branch policy on this environment allows main only (repo settings).
+    environment: production
     # Without this, a skipped release-checks (the verified fast path) skips
     # deploy too: implicit success() looks at every upstream job.
     if: ${{ always() && needs.promote.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # Full checkout: a sparse one trips over the stale .audit-main
+          # gitlink at the repo root ("No url found for submodule path").
+          persist-credentials: false
       # This key is restricted server-side (authorized_keys `command=`)
       # to only run /root/grindctrl-next/deploy-next.sh — it cannot run
       # arbitrary commands even if this secret ever leaked.
@@ -213,23 +222,19 @@ jobs:
       - name: Pull the built image and restart the container
         id: deploy_attempt
         continue-on-error: true
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          command_timeout: 15m
-          script: /root/grindctrl-next/deploy-next.sh
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: .github/scripts/deploy-ssh.sh
 
       - name: Retry the deploy once (SSH to this VPS times out intermittently)
         if: steps.deploy_attempt.outcome == 'failure'
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          command_timeout: 15m
-          script: /root/grindctrl-next/deploy-next.sh
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: .github/scripts/deploy-ssh.sh
 
       # Added after a deploy reported success while production kept serving the
       # previous build. Every smoke-checked route answers 200 from the OLD

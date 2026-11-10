@@ -32,4 +32,17 @@ describe('studio controls and real progress', () => {
     expect(container.textContent).not.toContain(t.pageProgressRemaining(0));
     expect(screen.getByText(t.pageProgressStages[1])).toBeInTheDocument();
   });
+
+  it.each(['en', 'ar'] as const)('offers sign-up, not a retry or an error, once the demo looks are used in %s', (locale) => {
+    const t = getDictionary(locale);
+    const uploaded = studioReducer(INITIAL_STATE, { type: 'setUpload', dataUrl: 'data:image/jpeg;base64,YQ==' });
+    const creating = studioReducer(uploaded, { type: 'create' });
+    const failed = studioReducer(creating, { type: 'failed', request: creating.request, failure: { kind: 'demo_limit' } });
+    render(<LookCard t={t} state={failed} look={null} progress={makingProgress({ elapsedMs: 0, estimateSeconds: 30, stage: null, stepCount: 3 })} status="later" failureMessage={t.pageDemoLimit} limitReached retryLocked={false} onRetry={vi.fn()} onUseSample={vi.fn()} onView={vi.fn()} cardRef={null} />);
+    expect(screen.getByRole('status')).toHaveTextContent(t.pageDemoLimit);
+    expect(screen.getByRole('link', { name: t.pageDemoLimitCta })).toHaveAttribute('href', '/sign-up');
+    expect(screen.queryByRole('button', { name: t.tryAgain })).toBeNull();
+    expect(screen.queryByText(t.errorTitle)).toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
 });

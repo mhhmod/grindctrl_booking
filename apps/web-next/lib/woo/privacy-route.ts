@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { readLimitedText } from '@/lib/http/read-limited-body';
 import { publicApiRatelimit } from '@/lib/ratelimit';
 import {
   RequestRateLimitError,
@@ -24,19 +25,9 @@ export type PrivacyCall =
  * and nonce, per-site rate limit, then validation. The limiter runs only
  * after the signature so unsigned callers cannot spend a site's budget. */
 export async function readPrivacyCall(request: NextRequest, label: string): Promise<PrivacyCall> {
-  const declared = Number(request.headers.get('content-length') ?? '0');
-  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
-    return { ok: false, response: privacyJson({ error: 'invalid_request' }, 413) };
-  }
-  let rawBody: string;
-  try {
-    rawBody = await request.text();
-  } catch {
-    return { ok: false, response: privacyJson({ error: 'invalid_request' }, 400) };
-  }
-  if (Buffer.byteLength(rawBody, 'utf8') > MAX_BODY_BYTES) {
-    return { ok: false, response: privacyJson({ error: 'invalid_request' }, 413) };
-  }
+  const read = await readLimitedText(request, MAX_BODY_BYTES);
+  if (!read.ok) return { ok: false, response: privacyJson({ error: 'invalid_request' }, read.status) };
+  const rawBody = read.text;
 
   const verified = await verifyWooSignedRequest(request, rawBody);
   if (!verified.ok) {

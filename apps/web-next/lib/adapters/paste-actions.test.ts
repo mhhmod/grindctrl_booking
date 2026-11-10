@@ -1,17 +1,20 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const m = vi.hoisted(() => ({ auth: vi.fn(), access: vi.fn(), limit: vi.fn(), enable: vi.fn(), add: vi.fn(), remove: vi.fn(), prove: vi.fn(), proveMeta: vi.fn(), rotate: vi.fn(),
-  connection: vi.fn(), status: vi.fn(), invalidate: vi.fn(), check: vi.fn() }));
+  connection: vi.fn(), status: vi.fn(), invalidate: vi.fn(), check: vi.fn(), fingerprint: vi.fn(), domainCheck: vi.fn(), grant: vi.fn(), list: vi.fn() }));
+vi.mock('@/lib/paste/platform-check', () => ({ schedulePasteDomainPlatformCheck: m.fingerprint }));
+vi.mock('@/lib/paste/domain-check', () => ({ checkPasteDomain: m.domainCheck }));
 vi.mock('@clerk/nextjs/server', () => ({ auth: m.auth }));
 vi.mock('@/lib/messenger/provisioning', async (original) => ({ ...await original<object>(), requireSiteAccess: m.access }));
 vi.mock('@/lib/request-rate-limit', async (original) => ({ ...await original<object>(), requireMerchantRateLimit: m.limit }));
 vi.mock('@/lib/paste/store', async (original) => ({ pasteTrust: (await original<typeof import('@/lib/paste/store')>()).pasteTrust,
   enablePasteInstall: m.enable, addPasteDomain: m.add, removePasteDomain: m.remove,
-  provePasteDomain: m.prove, provePasteDomainMeta: m.proveMeta, rotatePasteSecret: m.rotate, getPasteConnection: m.connection }));
+  provePasteDomain: m.prove, provePasteDomainMeta: m.proveMeta, rotatePasteSecret: m.rotate, getPasteConnection: m.connection,
+  grantPasteDomainPlan: m.grant, listPasteDomains: m.list }));
 vi.mock('@/lib/paste/status', () => ({ readPasteInstallStatus: m.status }));
 vi.mock('@/lib/paste/shop-proof', () => ({ checkPasteShop: m.check }));
 vi.mock('@/lib/shopify/proxy-config-cache', () => ({ invalidateProxyConfig: m.invalidate }));
-import { enablePasteInstallAction, addPasteDomainAction, removePasteDomainAction, provePasteDomainAction, provePasteDomainMetaAction, rotatePasteSecretAction, getPasteSnippetAction, getPasteInstallStatusAction, provePasteShopAction } from '@/app/dashboard/store-chat/paste-actions';
+import { enablePasteInstallAction, addPasteDomainAction, removePasteDomainAction, provePasteDomainAction, provePasteDomainMetaAction, rotatePasteSecretAction, getPasteSnippetAction, getPasteInstallStatusAction, provePasteShopAction, checkPasteDomainAction } from '@/app/dashboard/store-chat/paste-actions';
 import { PasteError } from '@/lib/paste/types';
 import { UnauthorizedError } from '@/lib/messenger/provisioning';
 import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
@@ -24,6 +27,7 @@ beforeEach(() => {
   m.connection.mockResolvedValue({ widget_site_id: SITE, platform: 'shopify', shop_domain: 'merchant.myshopify.com', secret_version: 1, status: 'active',
     shop_proven_at: '2026-11-08T00:00:00Z', app_installed: false });
   m.rotate.mockResolvedValue({ version: 2, overlapUntil: '2026-11-08T15:15:00Z' });
+  m.add.mockResolvedValue({ id: 'domain-a', domain: 'merchant.example', state: 'claimed' });
 });
 afterEach(() => vi.unstubAllEnvs());
 describe('owner-authorized paste plumbing actions', () => {
@@ -41,13 +45,15 @@ describe('owner-authorized paste plumbing actions', () => {
     ['proof', () => provePasteDomainAction(SITE, 'domain-a')], ['rotate', () => rotatePasteSecretAction(SITE)],
     ['meta proof', () => provePasteDomainMetaAction(SITE, 'domain-a')],
     ['snippet', () => getPasteSnippetAction(SITE)], ['status', () => getPasteInstallStatusAction(SITE)],
-    ['shop proof', () => provePasteShopAction(SITE, 'pw')],
+    ['shop proof', () => provePasteShopAction(SITE, 'pw')], ['domain check', () => checkPasteDomainAction(SITE, 'domain-a')],
   ] as const)('rejects unauthenticated and foreign site %s before any service mutation/read', async (_name, action) => {
     m.auth.mockResolvedValue({ userId: null }); expect(await action()).toEqual({ ok: false, code: 'forbidden' });
     expect(m.access).not.toHaveBeenCalled();
     m.auth.mockResolvedValue({ userId: 'other' }); m.access.mockRejectedValue(new UnauthorizedError());
     expect(await action()).toEqual({ ok: false, code: 'forbidden' });
-    for (const method of [m.add, m.remove, m.prove, m.proveMeta, m.rotate, m.connection, m.status, m.check]) expect(method).not.toHaveBeenCalled();
+    for (const method of [m.add, m.remove, m.prove, m.proveMeta, m.rotate, m.connection, m.status, m.check, m.domainCheck, m.list, m.grant]) {
+      expect(method).not.toHaveBeenCalled();
+    }
   });
   it('keeps secrets/snippets owner-only, even for admins who may manage settings', async () => {
     m.access.mockImplementation(async (_user, _site, capability) => {
@@ -59,6 +65,44 @@ describe('owner-authorized paste plumbing actions', () => {
     expect(m.check).not.toHaveBeenCalled();
     expect((await addPasteDomainAction(SITE, 'merchant.example')).ok).toBe(true);
     expect(m.connection).not.toHaveBeenCalled();
+  });
+  it('looks for the code as soon as a domain is added, and still adds it when the check cannot run', async () => {
+    const added = { id: 'domain-a', domain: 'merchant.example', state: 'trusted', domainVerified: false };
+    const confirmed = { ...added, domainVerified: true };
+    m.add.mockResolvedValue(added);
+    m.domainCheck.mockResolvedValue({ domain: confirmed, outcome: 'verified', retryAfterSeconds: null });
+    expect(await addPasteDomainAction(SITE, 'merchant.example')).toEqual({ ok: true, data: confirmed });
+    expect(m.domainCheck).toHaveBeenCalledExactlyOnceWith({ id: SITE, embedKey: site.embed_key }, added, 'added');
+    m.domainCheck.mockRejectedValue(new PasteError('unavailable'));
+    expect(await addPasteDomainAction(SITE, 'merchant.example')).toEqual({ ok: true, data: added });
+    // A host another site proved stays the owner's call: no check on add.
+    m.domainCheck.mockClear(); m.add.mockResolvedValue({ ...added, state: 'disputed' });
+    await addPasteDomainAction(SITE, 'merchant.example');
+    expect(m.domainCheck).not.toHaveBeenCalled();
+    // No fingerprint or plan from merely adding: the check does both once it finds the code.
+    expect(m.fingerprint).not.toHaveBeenCalled(); expect(m.grant).not.toHaveBeenCalled();
+  });
+  it('checks one domain for the owner, reusing a confirmed result, and refuses another site\'s domain', async () => {
+    const waiting = { id: 'domain-a', domain: 'merchant.example', state: 'trusted', domainVerified: false };
+    m.list.mockResolvedValue([waiting]);
+    m.domainCheck.mockResolvedValue({ domain: waiting, outcome: 'not_found', retryAfterSeconds: null });
+    expect(await checkPasteDomainAction(SITE, 'domain-a')).toEqual({ ok: true, data: { domain: waiting, outcome: 'not_found', retryAfterSeconds: null } });
+    expect(m.domainCheck).toHaveBeenCalledWith({ id: SITE, embedKey: site.embed_key }, waiting, 'owner');
+    expect(m.access).toHaveBeenCalledWith('owner', SITE, 'settings');
+    expect(await checkPasteDomainAction(SITE, 'domain-b')).toEqual({ ok: false, code: 'not_found' });
+    m.domainCheck.mockClear(); m.list.mockResolvedValue([{ ...waiting, domainVerified: true }]);
+    expect(await checkPasteDomainAction(SITE, 'domain-a')).toMatchObject({ ok: true, data: { outcome: 'verified' } });
+    expect(m.domainCheck).not.toHaveBeenCalled();
+  });
+  it('claims the plan and fingerprints a domain proven by DNS or meta tag, never a failed proof', async () => {
+    const domain = (state: string) => ({ id: 'domain-a', domain: 'merchant.example', state, domainVerified: state === 'trusted' });
+    m.prove.mockResolvedValue(domain('trusted')); m.proveMeta.mockResolvedValue(domain('trusted'));
+    await provePasteDomainAction(SITE, 'domain-a'); await provePasteDomainMetaAction(SITE, 'domain-a');
+    expect(m.fingerprint).toHaveBeenCalledTimes(2);
+    expect(m.grant).toHaveBeenCalledWith(SITE, 'merchant.example');
+    m.prove.mockRejectedValue(new PasteError('proof_failed'));
+    expect(await provePasteDomainAction(SITE, 'domain-a')).toEqual({ ok: false, code: 'proof_failed' });
+    expect(m.fingerprint).toHaveBeenCalledTimes(2); expect(m.grant).toHaveBeenCalledTimes(2);
   });
   it('returns rotation metadata and no secret, with the same authorized site scope', async () => {
     const result = await rotatePasteSecretAction(SITE);

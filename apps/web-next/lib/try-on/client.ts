@@ -5,6 +5,7 @@
 import { classifyTryOnFailure, type TryOnFailureKind } from './shopper-errors';
 import { retryAfterDelayMs, TRYON_ASYNC_POLL_TIMEOUT_MS, TRYON_POLL_INITIAL_DELAY_MS, TRYON_POLL_TIMEOUT_MS, tryOnPollDelayMs } from './poll-policy';
 import { recordTryOnPhase } from './performance';
+import { attemptTurnstileToken, TurnstileChallengeError } from './turnstile-client';
 import type { TryOnApiResponse, TryOnAttempt, TryOnJobApiResponse, TryOnSession } from './types';
 
 export function createAttemptNonce(): string {
@@ -193,7 +194,11 @@ export type PublicTryOnFailure =
   /** The service is not configured here (503), or credits ran out. */
   | { kind: 'unavailable' }
   /** Too many requests: wait before trying again. */
-  | { kind: 'rate_limited'; retryAfterMs: number };
+  | { kind: 'rate_limited'; retryAfterMs: number }
+  /** Today's free demo looks are used, for this visitor or for everyone. */
+  | { kind: 'demo_limit' }
+  /** The bot check did not finish or was refused; a fresh one may pass. */
+  | { kind: 'challenge' };
 
 export type PublicTryOnResult =
   | { ok: true; jobId: string; resultImageUrl: string }
@@ -268,6 +273,15 @@ export async function runPublicTryOn({
       throw stopFor(attemptRes, attemptData?.error);
     }
 
+    // Live demo looks carry a binding: a fresh check for this attempt, reused
+    // unchanged by the one automatic retry below.
+    let turnstileToken: string | undefined;
+    try {
+      turnstileToken = await attemptTurnstileToken(attemptData.data.turnstile);
+    } catch (error) {
+      throw new TryOnStop(error instanceof TurnstileChallengeError ? { kind: 'challenge' } : { kind: 'unavailable' });
+    }
+
     const uploadStartedAt = performance.now();
     const generateRes = await fetchWithOneRetry('/api/try-on/generate', {
       method: 'POST',
@@ -279,6 +293,7 @@ export async function runPublicTryOn({
         photoSource: 'upload',
         photoReference: 'uploaded-photo',
         photoData: photoDataUrl,
+        turnstileToken,
       }),
       signal,
     });
@@ -289,6 +304,8 @@ export async function runPublicTryOn({
     if (generateRes.status === 202) recordTryOnPhase('upload', performance.now() - uploadStartedAt);
     const waitStartedAt = performance.now();
     if (!job) throw stopFor(generateRes);
+    if (job.code === 'demo_limit') throw new TryOnStop({ kind: 'demo_limit' });
+    if (job.code === 'turnstile_failed' || job.code === 'turnstile_required') throw new TryOnStop({ kind: 'challenge' });
     // A capped day of the owner's test looks (N5) reads the same: try-on is
     // not available right now.
     if (job.code === 'TRYON_UNAVAILABLE' || job.code === 'test_looks_cap') throw new TryOnStop({ kind: 'unavailable' });

@@ -24,7 +24,8 @@ export function parsePageProduct(raw: unknown): PageProduct | null {
   const handle = text(p.handle, 255);
   const title = text(p.title, 200);
   const variantId = text(p.variantId, 20);
-  if (!handle || !title || !/^\d{1,20}$/.test(variantId)) return null;
+  // A website product without numeric variants (any stack but Shopify and WooCommerce) sends none.
+  if (!handle || !title || (variantId !== '' && !/^\d{1,20}$/.test(variantId))) return null;
   const imageUrl = text(p.imageUrl, 2000);
   return {
     handle,

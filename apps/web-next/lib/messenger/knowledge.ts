@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { auth } from '@clerk/nextjs/server';
-import { isPrivateIp } from '@/lib/pricing/geo';
+import { fetchPublicPage } from '@/lib/paste/storefront-scan';
 import { getMessengerServiceClient } from './db';
 import { recordAudit } from './conversations';
 import type { MessengerSiteView } from './provisioning';
@@ -20,7 +20,6 @@ export interface KnowledgeEntry {
 }
 
 export const KNOWLEDGE_MAX_ENTRIES_PER_SITE = 50;
-const FETCH_TIMEOUT_MS = 12_000;
 const FETCH_MAX_BYTES = 400_000;
 
 function mapEntry(row: Record<string, unknown>): KnowledgeEntry {
@@ -117,60 +116,41 @@ export function extractReadableText(html: string): string {
 }
 
 /* This fetch is merchant-triggered but runs from our server with our network
-   position, so it is an SSRF primitive unless the destination is checked —
-   and checking only the submitted URL is not enough, since a public host can
-   redirect into the private range. Every hop is validated. */
-const MAX_REDIRECTS = 3;
+   position, so it is an SSRF primitive unless the destination is checked.
+   Checking the host name's text is not enough: a public-looking name can
+   resolve to a private address, or change its answer between our check and
+   the connection (DNS rebinding), and a public host can redirect into the
+   private range. fetchPublicPage resolves every hop, refuses any non-public
+   answer, pins the socket to the address it checked, and stops reading at
+   FETCH_MAX_BYTES. */
+const UNREACHABLE = 'Could not reach that page. Check the URL and try again.';
 
-function assertPublicTarget(parsed: URL): void {
-  if (parsed.protocol !== 'https:') throw new Error('Only https:// URLs are supported.');
-  const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, '');
-  if (
-    host === 'localhost' ||
-    host.endsWith('.localhost') ||
-    host.endsWith('.local') ||
-    host.endsWith('.internal') ||
-    isPrivateIp(host)
-  ) {
-    throw new Error('That address is not reachable from the public internet.');
-  }
-}
-
-export async function fetchUrlKnowledge(url: string): Promise<{ title: string; content: string }> {
+export async function fetchUrlKnowledge(
+  url: string,
+  options: Pick<Parameters<typeof fetchPublicPage>[1], 'transport' | 'lookup'> = {},
+): Promise<{ title: string; content: string }> {
   let parsed: URL;
   try {
     parsed = new URL(url);
   } catch {
     throw new Error('Enter a valid https:// URL.');
   }
-  assertPublicTarget(parsed);
+  if (parsed.protocol !== 'https:') throw new Error('Only https:// URLs are supported.');
 
-  let res: Response | null = null;
-  for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
-    res = await fetch(parsed.toString(), {
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      headers: { accept: 'text/html' },
-      redirect: 'manual',
-    }).catch(() => null);
-    if (!res) break;
-    if (res.status < 300 || res.status > 399) break;
-    const location = res.headers.get('location');
-    if (!location) break;
-    parsed = new URL(location, parsed);
-    assertPublicTarget(parsed);
-    res = null;
+  const page = await fetchPublicPage(url, { maxBytes: FETCH_MAX_BYTES, accept: 'text/html', ...options });
+  if ('failure' in page) {
+    if (page.failure === 'private_address') throw new Error('That address is not reachable from the public internet.');
+    if (page.failure === 'bad_url') throw new Error('Enter a public https:// address without a port or a login.');
+    throw new Error(UNREACHABLE);
   }
-  if (!res || !res.ok) throw new Error('Could not reach that page. Check the URL and try again.');
-  const contentType = res.headers.get('content-type') ?? '';
-  if (!contentType.includes('html') && !contentType.includes('text')) {
+  if (!page.contentType.includes('html') && !page.contentType.includes('text')) {
     throw new Error('That link does not look like a readable page.');
   }
-  const buffer = await res.arrayBuffer();
-  const html = new TextDecoder('utf-8', { fatal: false }).decode(buffer.slice(0, FETCH_MAX_BYTES));
+  const html = new TextDecoder('utf-8', { fatal: false }).decode(page.body);
   const content = extractReadableText(html);
   if (content.length < 40) throw new Error('That page had almost no readable text.');
   const titleMatch = html.match(/<title[^>]*>([^<]{1,200})<\/title>/i);
-  return { title: (titleMatch?.[1] ?? parsed.hostname).trim(), content };
+  return { title: (titleMatch?.[1] ?? new URL(page.url).hostname).trim(), content };
 }
 
 export async function addUrlKnowledge(input: {

@@ -182,6 +182,18 @@ describe('POST /api/woo/heartbeat', () => {
 
     expect(response.status).toBe(413);
     expect(mocks.verify).not.toHaveBeenCalled();
+
+    // No Content-Length, endless body: cut off at the limit plus one chunk.
+    let pulled = 0;
+    const endless = new ReadableStream<Uint8Array>({
+      pull(controller) { pulled += 1024; controller.enqueue(new Uint8Array(1024).fill(0x20)); },
+    }, { highWaterMark: 0 });
+    const streamed = await POST(new NextRequest('https://grindctrl.cloud/api/woo/heartbeat', {
+      method: 'POST', body: endless, duplex: 'half',
+    } as ConstructorParameters<typeof NextRequest>[1]));
+    expect(streamed.status).toBe(413);
+    expect(pulled).toBeLessThanOrEqual(16 * 1024 + 1024);
+    expect(mocks.verify).not.toHaveBeenCalled();
   });
 
   it('refuses a site that was disconnected between verification and the write', async () => {

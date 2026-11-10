@@ -53,7 +53,7 @@ export function recordedStorefrontEvidence(connection: PasteConnection, nowMs: n
 
 export type StorefrontScanOutcome =Exclude<PasteShopCheckOutcome, 'proven' | 'awaiting_visit'>;
 /** Why a check was `unreachable`, for logs only. */
-export type StorefrontFailure = 'dns' | 'private_address' | 'foreign_redirect' | 'bad_redirect' | 'too_many_redirects'
+export type StorefrontFailure = 'bad_url' | 'dns' | 'private_address' | 'foreign_redirect' | 'bad_redirect' | 'too_many_redirects'
   | 'status' | 'not_html' | 'too_large' | 'timeout' | 'network' | 'password_form';
 export type StorefrontScan =
   | { outcome: 'found'; evidence: StorefrontEvidence; host: string }
@@ -62,8 +62,17 @@ export type StorefrontScan =
 export type StorefrontRequest = {
   url: URL; address: string; family: 4 | 6; method: 'GET' | 'POST';
   headers: Record<string, string>; body?: string; signal: AbortSignal;
+  /** Read at most this many decoded bytes and stop, keeping what was read,
+   *  instead of refusing a body over STOREFRONT_MAX_BODY_BYTES. */
+  truncateAt?: number;
 };
-export type StorefrontResponse = { status: number; location: string | null; contentType: string; setCookie: string[]; body: Buffer };
+export type StorefrontResponse = {
+  status: number; location: string | null; contentType: string; setCookie: string[]; body: Buffer;
+  /** Only FINGERPRINT_HEADERS, lowercased and capped. */
+  headers?: Record<string, string>;
+};
+/** Response headers a platform fingerprint may use (platform-detect.ts). */
+const FINGERPRINT_HEADERS = ['server', 'x-powered-by', 'powered-by', 'x-wix-request-id', 'x-shopid', 'x-shopify-stage'];
 /** Resolves with the response, or rejects (timeout, network, oversize). */
 export type StorefrontTransport = (request: StorefrontRequest) => Promise<StorefrontResponse>;
 export type StorefrontLookup = (hostname: string) => Promise<Array<{ address: string; family: number }>>;
@@ -91,6 +100,21 @@ export async function readCapped(stream: Readable, max: number): Promise<Buffer>
   return Buffer.concat(chunks);
 }
 
+/** Reads the first `max` bytes and stops the stream there. */
+export async function readPrefix(stream: Readable, max: number): Promise<Buffer> {
+  const chunks: Buffer[] = [];
+  let total = 0;
+  for await (const chunk of stream) {
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as string);
+    const room = max - total;
+    chunks.push(buffer.length > room ? buffer.subarray(0, room) : buffer);
+    total += Math.min(buffer.length, room);
+    if (total >= max) break;
+  }
+  stream.destroy();
+  return Buffer.concat(chunks);
+}
+
 /** HTTPS to a pre-checked address. The TLS name stays the URL host, the
  *  socket goes only to `address`, nothing is followed automatically and
  *  the decoded body is capped. Errors never include the request body. */
@@ -114,16 +138,23 @@ export const pinnedStorefrontTransport: StorefrontTransport = (input) => new Pro
       status, location: header('location') ?? null,
       contentType: String(header('content-type') ?? '').split(';')[0].trim().toLowerCase(),
       setCookie: response.headers['set-cookie'] ?? [],
+      headers: Object.fromEntries(FINGERPRINT_HEADERS.flatMap((name) => {
+        const value = header(name);
+        return value ? [[name, String(value).slice(0, 256)]] : [];
+      })),
     };
     if (status >= 300 && status < 400) { response.resume(); resolve({ ...meta, body: Buffer.alloc(0) }); return; }
-    if (Number(header('content-length')) > STOREFRONT_MAX_BODY_BYTES) { request.destroy(); reject(new StorefrontTooLargeError()); return; }
+    if (!input.truncateAt && Number(header('content-length')) > STOREFRONT_MAX_BODY_BYTES) { request.destroy(); reject(new StorefrontTooLargeError()); return; }
     const encoding = String(header('content-encoding') ?? 'identity').trim().toLowerCase();
     const decoder = encoding === 'gzip' || encoding === 'x-gzip' ? createGunzip() : encoding === 'br' ? createBrotliDecompress()
       : encoding === 'deflate' ? createInflate() : null;
     if (!decoder && encoding !== 'identity' && encoding !== '') { request.destroy(); reject(new Error('storefront_encoding')); return; }
     const source: Readable = decoder ? response.pipe(decoder) : response;
     if (decoder) response.once('error', (error) => decoder.destroy(error));
-    readCapped(source, STOREFRONT_MAX_BODY_BYTES).then((body) => resolve({ ...meta, body }), (error) => {
+    const read = input.truncateAt
+      ? readPrefix(source, Math.min(input.truncateAt, STOREFRONT_MAX_BODY_BYTES)).finally(() => request.destroy())
+      : readCapped(source, STOREFRONT_MAX_BODY_BYTES);
+    read.then((body) => resolve({ ...meta, body }), (error) => {
       request.destroy(); reject(error);
     });
   });
@@ -284,6 +315,141 @@ class CookieJar {
 }
 
 function twin(host: string): string { return host.startsWith('www.') ? host.slice(4) : `www.${host}`; }
+
+export type StorefrontPage = { url: string; html: string; headers: Record<string, string> };
+
+/** GETs a trusted website domain's home page for the platform fingerprint,
+ *  through the same pinned, capped transport as the shop scan. The URL is
+ *  built from the stored domain, never taken from a caller, and redirects
+ *  may only move between the domain and its www twin. No cookies or
+ *  credentials are sent. */
+export async function fetchStorefrontPage(domain: string, options: {
+  transport?: StorefrontTransport; lookup?: StorefrontLookup;
+} = {}): Promise<StorefrontPage | { failure: StorefrontFailure }> {
+  const transport = options.transport ?? pinnedStorefrontTransport;
+  const lookup = options.lookup ?? defaultLookup;
+  const signal = AbortSignal.timeout(STOREFRONT_TOTAL_TIMEOUT_MS);
+  const allowed = new Set([domain, twin(domain)]);
+  let url = new URL(`https://${domain}/`);
+  try {
+    if (!safeUrl(url)) throw new ScanStop('bad_redirect');
+    for (let redirects = 0; ; redirects++) {
+      const target = await resolvePublic(url.hostname, lookup);
+      let response: StorefrontResponse;
+      try {
+        response = await transport({ url, ...target, method: 'GET', signal,
+          headers: { 'user-agent': USER_AGENT, accept: 'text/html,application/xhtml+xml', 'accept-language': 'en' } });
+      } catch (error) {
+        throw new ScanStop(error instanceof StorefrontTooLargeError ? 'too_large' : signal.aborted
+          || (error instanceof Error && /timeout|abort/i.test(error.message + error.name)) ? 'timeout' : 'network');
+      }
+      if (response.status >= 300 && response.status < 400) {
+        if (redirects >= STOREFRONT_MAX_REDIRECTS) throw new ScanStop('too_many_redirects');
+        if (!response.location || response.location.length > 2048 || !URL.canParse(response.location, url)) throw new ScanStop('bad_redirect');
+        const next = new URL(response.location, url);
+        if (!safeUrl(next)) throw new ScanStop('bad_redirect');
+        if (!allowed.has(next.hostname)) throw new ScanStop('foreign_redirect');
+        url = next;
+        continue;
+      }
+      if (response.status !== 200) throw new ScanStop('status');
+      if (response.body.length > STOREFRONT_MAX_BODY_BYTES) throw new ScanStop('too_large');
+      if (response.contentType !== 'text/html') throw new ScanStop('not_html');
+      return { url: url.toString(), html: response.body.toString('utf8'), headers: response.headers ?? {} };
+    }
+  } catch (error) {
+    return { failure: error instanceof ScanStop ? error.failure : 'network' };
+  }
+}
+
+export type PublicPage = { url: string; contentType: string; body: Buffer };
+
+/** GETs a merchant-supplied https page (a Store Chat knowledge URL) through
+ *  the same pinned transport: every hop's host resolved and refused if any
+ *  answer is non-public, the socket held to the checked address, redirects
+ *  to any public host (each one checked again), no cookies or credentials,
+ *  and the decoded body cut at `maxBytes` rather than read whole. */
+export async function fetchPublicPage(raw: string, options: {
+  maxBytes: number; accept: string; transport?: StorefrontTransport; lookup?: StorefrontLookup;
+}): Promise<PublicPage | { failure: StorefrontFailure }> {
+  const transport = options.transport ?? pinnedStorefrontTransport;
+  const lookup = options.lookup ?? defaultLookup;
+  const signal = AbortSignal.timeout(STOREFRONT_TOTAL_TIMEOUT_MS);
+  try {
+    if (raw.length > 2048 || !URL.canParse(raw)) throw new ScanStop('bad_url');
+    let url = new URL(raw);
+    if (!safeUrl(url)) throw new ScanStop('bad_url');
+    for (let redirects = 0; ; redirects++) {
+      const target = await resolvePublic(url.hostname, lookup);
+      let response: StorefrontResponse;
+      try {
+        response = await transport({ url, ...target, method: 'GET', signal, truncateAt: options.maxBytes,
+          headers: { 'user-agent': USER_AGENT, accept: options.accept, 'accept-language': 'en' } });
+      } catch (error) {
+        throw new ScanStop(signal.aborted || (error instanceof Error && /timeout|abort/i.test(error.message + error.name)) ? 'timeout' : 'network');
+      }
+      if (response.status >= 300 && response.status < 400) {
+        if (redirects >= STOREFRONT_MAX_REDIRECTS) throw new ScanStop('too_many_redirects');
+        if (!response.location || response.location.length > 2048 || !URL.canParse(response.location, url)) throw new ScanStop('bad_redirect');
+        const next = new URL(response.location, url);
+        if (!safeUrl(next)) throw new ScanStop('bad_redirect');
+        url = next;
+        continue;
+      }
+      if (response.status < 200 || response.status > 299) throw new ScanStop('status');
+      return { url: url.toString(), contentType: response.contentType, body: response.body.subarray(0, options.maxBytes) };
+    }
+  } catch (error) {
+    return { failure: error instanceof ScanStop ? error.failure : 'network' };
+  }
+}
+
+declare const domainEvidenceBrand: unique symbol;
+/** Produced only by scanDomainSnippet, from this site's snippet found on the
+ *  domain's own home page by our server. verifyPasteDomain requires it. */
+export type DomainSnippetEvidence = { readonly [domainEvidenceBrand]: true; readonly siteId: string; readonly domainId: string };
+
+/** Hosts our loader is served from: production, and this deployment's own. */
+function loaderHosts(): Set<string> {
+  const hosts = new Set(['grindctrl.cloud']);
+  const app = process.env.NEXT_PUBLIC_APP_URL;
+  if (app && URL.canParse(app)) hosts.add(new URL(app).hostname.toLowerCase());
+  return hosts;
+}
+
+/** Whether the page carries this site's snippet: a real script element
+ *  loading our messenger.js over HTTPS with this site's embed key. Tags
+ *  inside comments, JSON, templates or escaped text never count. */
+export function findSiteSnippet(html: string, embedKey: string): 'found' | 'wrong_site' | 'not_found' {
+  const hosts = loaderHosts();
+  const loaders = startTags(html).filter((tag) => {
+    if (tag.name !== 'script') return false;
+    const src = tag.attrs.get('src') ?? '';
+    if (!URL.canParse(src)) return false;
+    const url = new URL(src);
+    return url.protocol === 'https:' && !url.port && hosts.has(url.hostname.toLowerCase()) && url.pathname === '/widget/v1/messenger.js';
+  }).slice(0, MAX_TAGS);
+  if (loaders.some((tag) => tag.attrs.get('data-key') === embedKey)) return 'found';
+  return loaders.length ? 'wrong_site' : 'not_found';
+}
+
+export type DomainSnippetScan =
+  | { outcome: 'verified'; evidence: DomainSnippetEvidence; page: StorefrontPage }
+  | { outcome: 'not_found' | 'wrong_site' | 'unreachable'; failure?: StorefrontFailure };
+
+/** Fetches a paste domain's home page (fetchStorefrontPage: pinned public
+ *  address, HTTPS only, capped body, redirects only to the www twin) and
+ *  looks for this site's snippet. The URL is built from the stored domain,
+ *  never from a caller. */
+export async function scanDomainSnippet(site: { id: string; embedKey: string }, domain: { id: string; domain: string }, options: {
+  transport?: StorefrontTransport; lookup?: StorefrontLookup;
+} = {}): Promise<DomainSnippetScan> {
+  const page = await fetchStorefrontPage(domain.domain, options);
+  if ('failure' in page) return { outcome: 'unreachable', failure: page.failure };
+  const found = findSiteSnippet(page.html, site.embedKey);
+  if (found !== 'found') return { outcome: found };
+  return { outcome: 'verified', page, evidence: { siteId: site.id, domainId: domain.id } as DomainSnippetEvidence };
+}
 
 /** Fetches the pending shop's storefront and reports what it shows for
  *  this site. Never throws for storefront behavior; throws PasteError only

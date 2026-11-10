@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { readLimitedText } from '@/lib/http/read-limited-body';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import {
   WOO_MIN_PLUGIN_VERSION,
@@ -96,20 +97,9 @@ function reject(failure: WooSignedRequestFailure) {
 }
 
 export async function POST(request: NextRequest) {
-  const declaredLength = Number(request.headers.get('content-length') ?? '0');
-  if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
-    return json({ error: 'invalid_request' }, 413);
-  }
-
-  let rawBody: string;
-  try {
-    rawBody = await request.text();
-  } catch {
-    return json({ error: 'invalid_request' }, 400);
-  }
-  if (Buffer.byteLength(rawBody, 'utf8') > MAX_BODY_BYTES) {
-    return json({ error: 'invalid_request' }, 413);
-  }
+  const read = await readLimitedText(request, MAX_BODY_BYTES);
+  if (!read.ok) return json({ error: 'invalid_request' }, read.status);
+  const rawBody = read.text;
 
   const verified = await verifyWooSignedRequest(request, rawBody);
   if (!verified.ok) return reject(verified);

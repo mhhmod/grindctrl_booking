@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- Imitates: a Zid theme product page in Arabic: dir=rtl, a JSON-LD
+     ProductGroup with size variants (hasVariant), size radios the shopper
+     picks, and an "أضف للسلة" button next to the quantity picker in a
+     flex row. The picked size is followed as the selected variant. -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="gc-fixture-path" content="/products/qamees-katan">
+  <meta name="gc-fixture-expect" content="after">
+  <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"ProductGroup","productGroupID":"qamees-katan","name":"قميص كتان",
+     "image":"https://media.zid.store/a1b2/qamees-katan.jpg","variesBy":["https://schema.org/size"],
+     "hasVariant":[
+       {"@type":"Product","sku":"QK-M","name":"قميص كتان - M","size":"M","image":"https://media.zid.store/a1b2/qamees-katan.jpg","offers":{"@type":"Offer","price":"220","priceCurrency":"SAR"}},
+       {"@type":"Product","sku":"QK-L","name":"قميص كتان - L","size":"L","image":"https://media.zid.store/a1b2/qamees-katan-l.jpg","offers":{"@type":"Offer","price":"230","priceCurrency":"SAR"}}
+     ]}
+  </script>
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+</head>
+<body>
+  <nav class="navbar"><a href="/">مَتجر الخيّاط</a><a href="/cart" class="cart-link">السلة</a></nav>
+  <div class="container product-page"><div class="row">
+    <div class="col-md-6 product-images"><div class="main-image"><img src="https://media.zid.store/a1b2/qamees-katan.jpg" width="1000" height="1000" alt=""></div></div>
+    <div class="col-md-6 product-details">
+      <h1 class="product-title">قميص كتان</h1>
+      <div class="product-price"><span class="price">220 ر.س</span></div>
+      <div class="product-options">
+        <label><input type="radio" name="size" value="M" checked> M</label>
+        <label><input type="radio" name="size" value="L"> L</label>
+      </div>
+      <div class="product-actions d-flex" style="display:flex" data-gc-expect="after">
+        <div class="quantity-input"><input type="number" value="1" aria-label="الكمية"></div>
+        <button type="button" class="btn btn-primary btn-add-to-cart">أضف للسلة</button>
+      </div>
+    </div>
+  </div></div>
+</body>
+</html>

@@ -68,6 +68,10 @@ interface TryOnDict {
   genericError: string;
   /** The store has no looks left (or its plan lapsed) mid-session. */
   tryOnUnavailable: string;
+  /** The website store's quick bot check did not finish; retrying keeps the photo. */
+  challengeFailedTitle: string;
+  challengeFailedBody: string;
+  challengeRetry: string;
 
   photoLabel: string;
   uploadAria: string;
@@ -138,6 +142,9 @@ interface TryOnDict {
   pageStoreTitle: string;
   pageStoreBadge: string;
   pageOpenStore: string;
+  /** Today's free demo looks are used; shown with a sign-up link, never a code. */
+  pageDemoLimit: string;
+  pageDemoLimitCta: string;
   pagePickerNote: string;
   pageCompareTitle: string;
   pageErrType: string;
@@ -208,6 +215,9 @@ const en: TryOnDict = {
   tryAgain: 'Try again',
   genericError: 'Something went wrong.',
   tryOnUnavailable: 'Try it on isn’t available on this store right now.',
+  challengeFailedTitle: 'Quick check didn’t finish',
+  challengeFailedBody: 'We couldn’t confirm the request. Check your connection, then try again.',
+  challengeRetry: 'Try again',
 
   photoLabel: 'Your photo',
   uploadAria: 'Upload your photo',
@@ -280,6 +290,8 @@ const en: TryOnDict = {
   pageStoreTitle: 'The same try-on, inside a real store.',
   pageStoreBadge: 'Try it on with AI on every product',
   pageOpenStore: 'Open the demo store',
+  pageDemoLimit: 'You’ve reached today’s free demo looks. Install GRINDCTRL on your store to keep going.',
+  pageDemoLimitCta: 'Create your account',
   pagePickerNote: 'Demo pieces with sample looks. Your photo stays as it is.',
   pageCompareTitle: 'Your looks side by side',
   pageErrType: 'Unsupported file type. Please upload a JPG, PNG or WebP image.',
@@ -355,6 +367,9 @@ const ar: TryOnDict = {
   tryAgain: 'حاول مرة أخرى',
   genericError: 'حدث خطأ ما.',
   tryOnUnavailable: 'التجربة غير متاحة في هذا المتجر الآن.',
+  challengeFailedTitle: 'لم يكتمل التحقق السريع',
+  challengeFailedBody: 'تعذّر تأكيد الطلب. تحقّق من اتصالك ثم حاول مرة أخرى.',
+  challengeRetry: 'حاول مرة أخرى',
 
   photoLabel: 'صورتك',
   uploadAria: 'ارفع صورتك',
@@ -426,6 +441,8 @@ const ar: TryOnDict = {
   pageStoreTitle: 'التجربة نفسها، داخل متجر حقيقي.',
   pageStoreBadge: 'زر جرّبها بالذكاء الاصطناعي على كل منتج',
   pageOpenStore: 'افتح المتجر التجريبي',
+  pageDemoLimit: 'وصلت لحد التجارب المجانية اليوم. ثبّت GRINDCTRL على متجرك لتكمل.',
+  pageDemoLimitCta: 'أنشئ حسابك',
   pagePickerNote: 'قطع تجريبية بإطلالات نموذجية. تبقى صورتك كما هي.',
   pageCompareTitle: 'إطلالاتك جنبًا إلى جنب',
   pageErrType: 'نوع الملف غير مدعوم. يرجى رفع صورة JPG أو PNG أو WebP.',

@@ -54,6 +54,56 @@ describe('paste Turnstile generation handoff', () => {
     expect(renderChallenge).toHaveBeenCalledTimes(website ? 1 : 0);
   });
 
+  it('offers a fresh check, with the same photo, when the challenge does not finish', async () => {
+    window.history.replaceState({}, '', '/embed/try-on');
+    let outcome: 'fail' | 'pass' = 'fail';
+    let options: Parameters<NonNullable<Window['turnstile']>['render']>[1] | null = null;
+    window.turnstile = {
+      render: (_element, given) => { options = given; return 'widget'; },
+      execute: () => (outcome === 'fail' ? options!['timeout-callback']() : options!.callback('fresh-token')),
+      remove: () => {},
+    };
+    const response = (body: unknown) => ({ ok: true, status: 200, headers: new Headers(), json: async () => body }) as Response;
+    const attempt = response({ ok: true, data: { attemptId: 'attempt', turnstile: { siteKey: 'key', action: 'paste_tryon', cData: 'bound' } } });
+    vi.mocked(fetch).mockResolvedValue(response({ ok: true }))
+      .mockResolvedValueOnce(response({ ok: true, data: session }))
+      .mockResolvedValueOnce(attempt)
+      .mockResolvedValueOnce(attempt)
+      .mockResolvedValueOnce(response({ ok: true, jobId: 'fresh', status: 'completed', productId: product.id, resultImageUrl: LOOK,
+        meta: { runtime: 'live', provider: 'test', costEstimate: null } }));
+    const { result } = renderHook(() => useTryOnFlow(props));
+    await waitFor(() => expect(result.current.sessionState).toBe('ready'));
+    act(() => result.current.selectPhoto(PHOTO));
+    await act(() => result.current.generate());
+    expect(result.current.step).toBe('error');
+    expect(result.current.challengeFailed).toBe(true);
+    expect(result.current.photoDataUrl).toBe(PHOTO);
+    expect(vi.mocked(fetch).mock.calls.some(([url]) => url === '/api/try-on/generate')).toBe(false);
+
+    outcome = 'pass';
+    await act(() => result.current.generate());
+    expect(result.current.challengeFailed).toBe(false);
+    expect(result.current.step).toBe('result');
+    const sent = vi.mocked(fetch).mock.calls.find(([url]) => url === '/api/try-on/generate');
+    expect(JSON.parse(String(sent?.[1]?.body))).toMatchObject({ turnstileToken: 'fresh-token', photoData: PHOTO });
+  });
+
+  it('offers a fresh check when the server could not verify the token', async () => {
+    window.history.replaceState({}, '', '/embed/try-on');
+    let options: Parameters<NonNullable<Window['turnstile']>['render']>[1] | null = null;
+    window.turnstile = { render: (_element, given) => { options = given; return 'widget'; }, execute: () => options!.callback('token'), remove: () => {} };
+    const response = (body: unknown, status = 200) => ({ ok: status < 400, status, headers: new Headers(), json: async () => body }) as Response;
+    vi.mocked(fetch).mockResolvedValue(response({ ok: false, code: 'turnstile_failed', error: 'turnstile_failed' }, 403))
+      .mockResolvedValueOnce(response({ ok: true, data: session }))
+      .mockResolvedValueOnce(response({ ok: true, data: { attemptId: 'attempt', turnstile: { siteKey: 'key', action: 'paste_tryon', cData: 'bound' } } }));
+    const { result } = renderHook(() => useTryOnFlow(props));
+    await waitFor(() => expect(result.current.sessionState).toBe('ready'));
+    act(() => result.current.selectPhoto(PHOTO));
+    await act(() => result.current.generate());
+    expect(result.current.step).toBe('error');
+    expect(result.current.challengeFailed).toBe(true);
+  });
+
   it('uses the existing generic error and sends no generate request when the site key is missing', async () => {
     const response = (body: unknown) => ({ ok: true, status: 200, json: async () => body }) as Response;
     vi.mocked(fetch).mockResolvedValueOnce(response({ ok: true, data: session }))
@@ -64,6 +114,7 @@ describe('paste Turnstile generation handoff', () => {
     await act(() => result.current.generate());
     expect(result.current.step).toBe('error');
     expect(result.current.error).toBe(props.t.genericError);
+    expect(result.current.challengeFailed).toBe(false);
     expect(vi.mocked(fetch).mock.calls.some(([url]) => url === '/api/try-on/generate')).toBe(false);
   });
 });

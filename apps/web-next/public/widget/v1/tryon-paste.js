@@ -1,11 +1,22 @@
 /**
- * GRINDCTRL Try-On paste adapters v1.3.0 (website and Shopify paste installs).
+ * GRINDCTRL Try-On paste adapters v1.4.0 (website and Shopify paste installs).
  *
- * Loaded by messenger.js on product pages of a `data-gc-install="paste"`
- * snippet, and on Shopify product listings whose snippet printed signed
- * product cards, then mounted on the hosted engine (tryon-engine.js).
- * Everything read from the page is display or cart data; the signed context
- * minted by /api/try-on/paste-context is the only authority for a look.
+ * Loaded by messenger.js on pages of a `data-gc-install="paste"` snippet
+ * that show a product or product cards, then mounted on the hosted engine
+ * (tryon-engine.js). Everything read from the page is display or cart data;
+ * the context minted by /api/try-on/paste-context is the only authority for
+ * a look.
+ *
+ * Website pages (any stack) read the product from, first hit wins: JSON-LD
+ * Product or ProductGroup, schema.org microdata, Open Graph product tags,
+ * then the merchant's own tag, which is also where the button goes:
+ *   <div data-grindctrl-tryon data-product-id="linen-dress"
+ *        data-title="Linen dress" data-image="https://example.com/dress.jpg"></div>
+ * Product cards on website listings come from JSON-LD ItemList entries
+ * matched to the page's own product links, or from the merchant's card tag:
+ *   <div data-grindctrl-card data-product-id="linen-dress" data-title="Linen dress"
+ *        data-image="https://example.com/dress.jpg" data-url="/shop/linen-dress">...</div>
+ *   data-product-id may be left out when data-url is given (its last path segment is used).
  *
  * Adapter contract (consumed by tryon-engine.js):
  *   detectProduct(button?)  -> { id, variantId, title, imageUrl, price, currency } | null
@@ -14,10 +25,13 @@
  *                              start a look; error.scope 'product' when only this
  *                              product cannot (its card pill goes, the rest stay)
  *   addToCart(variant, qty, state) -> Promise<{ ok, message?, variantTitle? } | 'unsupported'>
- *   placementTarget()       -> Element the injected button goes after | null
+ *   placement()             -> { node, mode } where the injected button goes: after node,
+ *                              or mode 'float' (a fixed pill, node null) | null
+ *   placementTarget()       -> placement().node, for older callers
  *   injectButton            -> the product page button (after prepare)
  *   buttonSettings          -> its owner's look from /api/try-on/paste-config, null when unread
- *   injectCards, cardSettings, findCards(rescan) -> product card pills (after prepare)
+ *   injectCards, cardSettings, findCards(rescan), cardTrigger -> product card pills (after prepare)
+ *   followsPage, refresh()  -> website only: re-read the page after a client-side change
  */
 (function () {
   'use strict';
@@ -40,15 +54,51 @@
   var CARD = 'li, .grid__item, .card-wrapper, .product-card, [class*="product-item"]';
   // Re-reading this listing for cards the first render did not sign (filters, sorting).
   var MAX_CARD_REFRESHES = 3;
+  // A page image smaller than this is an icon, a swatch or a tracking pixel, never the garment.
+  var MIN_IMAGE_PX = 200;
+  // Nothing in these is the product page's own purchase area or gallery.
+  var NOT_PRODUCT_AREA = 'header, nav, footer, [role="navigation"], [role="banner"], [role="contentinfo"], dialog, ' +
+    '[role="dialog"], [aria-modal="true"], cart-drawer, [class*="cart-drawer"], [class*="cart_drawer"], [id*="cart-drawer"], ' +
+    '[id*="CartDrawer"], [class*="mini-cart"], [class*="minicart"], [class*="side-cart"], .gc-tryon-sheet';
+  // (Not "ProductItem": Squarespace names its product page that.)
+  var PRODUCT_CARD = '[data-grindctrl-card], .product-card, .product-item, [class*="product-card"], [class*="product-item"], ' +
+    '[class*="ProductCard"], .card-wrapper, .grid__item';
+  // Purchase buttons named by their markup on common stacks (WooCommerce, Shopify themes, Wix, Webflow, Squarespace).
+  var BUY_MARKUP = 'button[name="add-to-cart"], button[name="add"], [data-add-to-cart], [data-hook="add-to-cart"], ' +
+    '.add-to-cart, .add_to_cart, .single_add_to_cart_button, .product-form__submit, .btn-addtocart, .buy-now, ' +
+    '.sqs-add-to-cart-button, .w-commerce-commerceaddtocartbutton';
+  var BUY_CONTROLS = 'button, input[type="submit"], input[type="button"], [role="button"], a[href]';
+  // Matched against a control's text, value, aria-label or name, normalized by buyText().
+  var BUY_WORDS = ['add to cart', 'add to bag', 'add to basket', 'buy now', 'order now', 'أضف إلى السلة', 'اضف الى السلة',
+    'أضف للسلة', 'اشتري الآن', 'اشتر الآن', 'اطلب الآن', 'اطلب الان', 'شراء الآن', 'اضغط هنا للشراء', 'للشراء'];
+  // Only on a page that shows a product, and only when nothing better is there.
+  var WEAK_BUY_WORDS = ['shop now'];
 
-  function image(value) {
-    if (Array.isArray(value)) value = value[0];
-    if (value && typeof value === 'object') value = value.url || value.contentUrl;
+  function httpsUrl(value) {
     if (typeof value !== 'string' || !value) return '';
     try {
       var url = new URL(value, window.location.href);
       return url.protocol === 'https:' && !url.username && !url.password ? url.href : '';
     } catch (_) { return ''; }
+  }
+  function imageCandidates(value) {
+    return [].concat(value == null ? [] : value).map(function (entry) {
+      if (entry && typeof entry === 'object') entry = entry.url || entry.contentUrl;
+      return httpsUrl(entry);
+    }).filter(Boolean);
+  }
+  // The server accepts garment images on the store's own domains; prefer one there when the data lists several.
+  function pickImage(value) {
+    var candidates = imageCandidates(value);
+    var site = window.location.hostname.replace(/^www\./, '');
+    for (var i = 0; i < candidates.length; i++) {
+      var host = new URL(candidates[i]).hostname;
+      if (host === site || host.slice(-(site.length + 1)) === '.' + site) return candidates[i];
+    }
+    return candidates[0] || '';
+  }
+  function image(value) {
+    return imageCandidates(value)[0] || '';
   }
   function productId(value) {
     var id = String(value == null ? '' : value).trim().toLowerCase();
@@ -59,6 +109,17 @@
     return node ? node.content : '';
   }
   function pathSlug() {
+    // Hosted stores may omit every identifier in Product JSON-LD. Prefer
+    // their canonical product URL, falling back to the current SPA route.
+    var canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) {
+      try {
+        var url = new URL(canonical.getAttribute('href'), window.location.href);
+        if (url.origin === window.location.origin && /^\/products\/[^/]+\/?$/.test(url.pathname)) {
+          return decodeURIComponent(url.pathname.split('/').filter(Boolean).pop());
+        }
+      } catch (_) { /* invalid canonical: read the actual page */ }
+    }
     try { return decodeURIComponent(window.location.pathname.split('/').filter(Boolean).pop() || ''); } catch (_) { return ''; }
   }
   // The snippet HTML-escapes every card string before JSON encoding it (Liquid's escape filter).
@@ -73,18 +134,185 @@
     try { return decodeURIComponent(match[1]).toLowerCase(); } catch (_) { return ''; }
   }
 
-  /* JSON-LD Product (arrays, @graph, mainEntity, ProductGroup.hasVariant),
-     then Open Graph product:*, then the explicit tag. */
-  function websiteProduct() {
+  /* ── Reading any website ─────────────────────────────────────────────── */
+
+  // Case, spacing, separators and Arabic letter forms do not change what a label says.
+  function buyText(value) {
+    return String(value == null ? '' : value).replace(/[ً-ْٰـ]/g, '').replace(/[أإآ]/g, 'ا')
+      .replace(/ى/g, 'ي').replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  }
+  var STRONG = BUY_WORDS.map(buyText);
+  var WEAK = WEAK_BUY_WORDS.map(buyText);
+
+  function jsonLdNodes() {
+    var nodes = [];
+    var scripts = document.querySelectorAll('script[type="application/ld+json"]');
+    for (var i = 0; i < scripts.length; i++) {
+      try { nodes.push(JSON.parse(scripts[i].textContent)); } catch (_) { /* one broken block does not hide the rest */ }
+    }
+    return nodes;
+  }
+  function typed(node, pattern) {
+    return [].concat(node['@type'] || []).some(function (type) { return pattern.test(String(type)); });
+  }
+  function offersOf(node) {
+    var offers = node && node.offers;
+    if (offers && !Array.isArray(offers) && Array.isArray(offers.offers)) offers = offers.offers;
+    return [].concat(offers || []).filter(function (offer) { return offer && typeof offer === 'object'; });
+  }
+  function variantParam(url) {
+    // No address is no variant (an empty one would resolve to this page's own).
+    if (typeof url !== 'string' || !url) return '';
+    try { return new URL(url, window.location.href).searchParams.get('variant') || ''; } catch (_) { return ''; }
+  }
+  // Display data only (the sheet's selected variant, a prewarm key): never sent as a signed claim.
+  function variantKey(node) {
+    var value = String(node.sku || node.productID || variantParam(node.url) || '').trim();
+    return /^[A-Za-z0-9._:-]{1,100}$/.test(value) ? value : '';
+  }
+
+  function visible(element) {
+    for (var node = element; node && node.nodeType === 1; node = node.parentElement) {
+      if (node.hidden) return false;
+      var style = window.getComputedStyle(node);
+      if (style.display === 'none' || style.visibility === 'hidden') return false;
+    }
+    var box = element.getBoundingClientRect();
+    return box.width > 0 && box.height > 0;
+  }
+  // A fixed or sticky bar (a sticky buy bar, a chat bubble) is not a place in the page's flow.
+  function pinned(element) {
+    for (var node = element; node && node.nodeType === 1 && node !== document.body; node = node.parentElement) {
+      var position = window.getComputedStyle(node).position;
+      if (position === 'fixed' || position === 'sticky') return true;
+    }
+    return false;
+  }
+  function imageSize(img) {
+    var width = img.naturalWidth || Number(img.getAttribute('width')) || 0;
+    var height = img.naturalHeight || Number(img.getAttribute('height')) || 0;
+    return width >= MIN_IMAGE_PX && height >= MIN_IMAGE_PX ? width * height : 0;
+  }
+  function firstTitle() {
+    var titles = document.querySelectorAll('h1');
+    for (var i = 0; i < titles.length; i++) {
+      if (!titles[i].closest(NOT_PRODUCT_AREA + ', ' + PRODUCT_CARD) && visible(titles[i])) return titles[i];
+    }
+    return null;
+  }
+  // Where this product's gallery and purchase controls live.
+  function productArea() {
+    var scoped = document.querySelector('[itemscope][itemtype*="schema.org/Product"]');
+    if (scoped) return scoped;
+    var title = firstTitle();
+    for (var node = title && title.parentElement, depth = 0; node && depth < 5; node = node.parentElement, depth++) {
+      if (node === document.body) break;
+      if (node.querySelector('img')) return node;
+    }
+    return document.querySelector('main, [role="main"]') || document.body;
+  }
+  // og:image first, then the largest real image in the product area.
+  function pageImage() {
+    var og = httpsUrl(meta('og:image'));
+    if (og) return og;
+    var best = '';
+    var bestSize = 0;
+    var images = productArea().querySelectorAll('img');
+    for (var i = 0; i < images.length; i++) {
+      var img = images[i];
+      if (img.closest(NOT_PRODUCT_AREA + ', ' + PRODUCT_CARD)) continue;
+      var size = imageSize(img);
+      var src = httpsUrl(img.currentSrc || img.getAttribute('src'));
+      if (size > bestSize && src && visible(img)) { best = src; bestSize = size; }
+    }
+    return best;
+  }
+
+  /* The options the shopper picked on the page (selects, radios, pressed
+     swatches), to follow a variant the structured data lists. */
+  function chosenOptions() {
+    var area = productArea();
+    var values = [];
+    function add(value) { value = buyText(value); if (value) values.push(value); }
+    Array.prototype.forEach.call(area.querySelectorAll('select'), function (select) {
+      var option = select.options[select.selectedIndex];
+      if (option && option.value) { add(option.value); add(option.textContent); }
+    });
+    Array.prototype.forEach.call(area.querySelectorAll('input[type="radio"]:checked'), function (input) {
+      add(input.value);
+      if (input.labels && input.labels[0]) add(input.labels[0].textContent);
+    });
+    Array.prototype.forEach.call(area.querySelectorAll('[aria-checked="true"], [aria-pressed="true"]'), function (node) {
+      add(node.getAttribute('data-value'));
+      add(node.textContent);
+    });
+    return values;
+  }
+  function optionValues(node) {
+    var values = [];
+    ['color', 'size', 'material', 'pattern'].forEach(function (name) {
+      if (typeof node[name] === 'string' && node[name].trim()) values.push(buyText(node[name]));
+    });
+    [].concat(node.additionalProperty || []).forEach(function (property) {
+      if (property && typeof property.value === 'string' && property.value.trim()) values.push(buyText(property.value));
+    });
+    return values;
+  }
+  /* The variant the page has selected: its ?variant= address, else the one
+     variant whose options all match the shopper's choices. Null otherwise. */
+  function selectedVariant(variants) {
+    var wanted = variantParam(window.location.search);
+    if (wanted) {
+      for (var i = 0; i < variants.length; i++) {
+        var node = variants[i];
+        var offer = offersOf(node)[0] || {};
+        if ([node.sku, node.productID, variantParam(node.url), variantParam(offer.url), offer.sku]
+          .some(function (value) { return value != null && String(value) === wanted; })) return node;
+      }
+    }
+    var chosen = chosenOptions();
+    if (!chosen.length) return null;
+    var matches = variants.filter(function (node) {
+      var values = optionValues(node);
+      return values.length > 0 && values.every(function (value) { return chosen.indexOf(value) !== -1; });
+    });
+    return matches.length === 1 ? matches[0] : null;
+  }
+
+  function productFrom(node, selected) {
+    var source = selected || node;
+    var offer = offersOf(source)[0] || offersOf(node)[0] || {};
+    // A stable SKU or the page slug. Never an array index.
+    var id = productId(node.productGroupID || node.productID || node.sku || node.mpn) || productId(pathSlug());
+    if (!id) return null;
+    var photo = pickImage(source.image) || pickImage(node.image) || pageImage();
+    if (!photo) return null;
+    var price = offer.price != null ? offer.price : offer.lowPrice;
+    var heading = firstTitle();
+    var title = String(node.name || source.name || meta('og:title') || (heading && heading.textContent) || '').replace(/\s+/g, ' ').trim();
+    return { id: id, variantId: selected ? variantKey(selected) || null : null, title: title.slice(0, 200), imageUrl: photo,
+      price: price != null && price !== '' ? price : null, currency: offer.priceCurrency || null };
+  }
+
+  /* JSON-LD: arrays, @graph, mainEntity, ProductGroup.hasVariant and
+     per-variant offers. A group's own id stays the product id. */
+  function jsonLdProduct() {
+    function fromGroup(node) {
+      var variants = [].concat(node.hasVariant || []).filter(function (entry) { return entry && typeof entry === 'object'; });
+      if (!variants.length) return productFrom(node, null);
+      var selected = selectedVariant(variants);
+      var base = selected || variants[0];
+      // The group's id, else its first variant's: the same id whichever variant is picked.
+      var merged = { productGroupID: node.productGroupID || node.sku || node.productID ||
+          variants[0].productID || variants[0].sku || variants[0].mpn,
+        name: node.name || base.name, image: [].concat(selected ? selected.image || [] : [], node.image || [], base.image || []),
+        offers: offersOf(base).length ? offersOf(base) : offersOf(node) };
+      return productFrom(merged, selected);
+    }
     function fromProduct(node) {
-      var offer = Array.isArray(node.offers) ? node.offers[0] : node.offers || {};
-      // A stable SKU or the page slug. Never an array index.
-      var id = productId(node.productID || node.sku || node.mpn) || productId(pathSlug());
-      var photo = image(node.image);
-      if (!id || !photo) return null;
-      var price = offer && (offer.price != null ? offer.price : offer.lowPrice);
-      return { id: id, variantId: null, title: String(node.name || '').trim().slice(0, 200), imageUrl: photo,
-        price: price != null && price !== '' ? price : null, currency: (offer && offer.priceCurrency) || null };
+      var withSku = offersOf(node).filter(function (offer) { return offer.sku || variantParam(offer.url); });
+      var selected = withSku.length > 1 ? selectedVariant(withSku) : null;
+      return productFrom(node, selected);
     }
     function walk(node, depth) {
       if (!node || typeof node !== 'object' || depth > 6) return null;
@@ -92,24 +320,214 @@
         for (var i = 0; i < node.length; i++) { var found = walk(node[i], depth + 1); if (found) return found; }
         return null;
       }
-      var types = [].concat(node['@type'] || []);
-      if (types.some(function (type) { return /(^|[/#])Product$/.test(String(type)); })) {
-        var product = fromProduct(node);
-        if (product) return product;
+      var product = typed(node, /(^|[/#])ProductGroup$/) ? fromGroup(node) : typed(node, /(^|[/#])Product$/) ? fromProduct(node) : null;
+      return product || walk(node['@graph'], depth + 1) || walk(node.mainEntity, depth + 1) || walk(node.hasVariant, depth + 1);
+    }
+    return walk(jsonLdNodes(), 0);
+  }
+
+  /* schema.org microdata: an itemscope Product and its own itemprops, with
+     nested Offer scopes for the price. */
+  function microdataProduct() {
+    function value(element) {
+      if (element.hasAttribute('content')) return element.getAttribute('content');
+      var tag = element.tagName;
+      if (tag === 'IMG' || tag === 'SOURCE') return element.getAttribute('src') || '';
+      if (tag === 'A' || tag === 'LINK') return element.getAttribute('href') || '';
+      if (tag === 'DATA' || tag === 'METER') return element.getAttribute('value') || '';
+      return element.textContent || '';
+    }
+    function props(scope) {
+      var out = {};
+      var nodes = scope.querySelectorAll('[itemprop]');
+      for (var i = 0; i < nodes.length; i++) {
+        var element = nodes[i];
+        if ((element.parentElement && element.parentElement.closest('[itemscope]')) !== scope) continue;
+        var read = element.hasAttribute('itemscope') ? props(element) : String(value(element)).trim();
+        element.getAttribute('itemprop').split(/\s+/).forEach(function (name) {
+          if (name) (out[name] = out[name] || []).push(read);
+        });
       }
-      return walk(node['@graph'], depth + 1) || walk(node.mainEntity, depth + 1) || walk(node.hasVariant, depth + 1);
+      return out;
     }
-    var scripts = document.querySelectorAll('script[type="application/ld+json"]');
-    for (var i = 0; i < scripts.length; i++) {
-      try { var product = walk(JSON.parse(scripts[i].textContent), 0); if (product) return product; } catch (_) { /* next source */ }
+    var scopes = document.querySelectorAll('[itemscope][itemtype]');
+    for (var i = 0; i < scopes.length; i++) {
+      if (!/schema\.org\/Product(\s|$)/.test(scopes[i].getAttribute('itemtype'))) continue;
+      var p = props(scopes[i]);
+      var first = function (name) { var list = p[name] || []; return typeof list[0] === 'string' ? list[0] : ''; };
+      var product = productFrom({ name: first('name'), sku: first('sku'), productID: first('productID'), mpn: first('mpn'),
+        image: (p.image || []).filter(function (entry) { return typeof entry === 'string'; }),
+        offers: (p.offers || []).filter(function (offer) { return offer && typeof offer === 'object'; }).map(function (offer) {
+          return { price: (offer.price || [])[0], lowPrice: (offer.lowPrice || [])[0], priceCurrency: (offer.priceCurrency || [])[0] };
+        }) }, null);
+      if (product) return product;
     }
-    if (meta('product:retailer_item_id') || meta('product:price:amount') || /^(product|og:product)$/.test(meta('og:type'))) {
-      var og = fromProduct({ productID: meta('product:retailer_item_id'), name: meta('og:title'), image: meta('og:image'),
-        offers: { price: meta('product:price:amount'), priceCurrency: meta('product:price:currency') } });
-      if (og) return og;
+    return null;
+  }
+
+  function openGraphProduct() {
+    if (!meta('product:retailer_item_id') && !meta('product:price:amount') && !/^(product|og:product)$/.test(meta('og:type'))) return null;
+    return productFrom({ productID: meta('product:retailer_item_id'), name: meta('og:title'), image: meta('og:image'),
+      offers: { price: meta('product:price:amount'), priceCurrency: meta('product:price:currency') } }, null);
+  }
+
+  function tagProduct() {
+    var tag = document.querySelector('[data-grindctrl-tryon][data-product-id]');
+    return tag ? productFrom({ productID: tag.dataset.productId, name: tag.dataset.title, image: tag.dataset.image }, null) : null;
+  }
+
+  function websiteProduct() {
+    return jsonLdProduct() || microdataProduct() || openGraphProduct() || tagProduct();
+  }
+
+  /* ── Where the website button goes ───────────────────────────────────── */
+
+  function manualSpot() {
+    var tag = document.querySelector('body [data-grindctrl-tryon]');
+    if (!tag) return null;
+    var style = window.getComputedStyle(tag);
+    return tag.hidden || style.display === 'none' || style.visibility === 'hidden' ? null : tag;
+  }
+  function buyScore(control) {
+    var labels = [control.textContent, control.value, control.getAttribute('aria-label'), control.getAttribute('name')];
+    var weak = false;
+    for (var i = 0; i < labels.length; i++) {
+      var label = buyText(labels[i]);
+      if (!label || label.length > 60) continue;
+      // "Order" alone is too broad on links and generic clickable cards.
+      if (control.tagName === 'BUTTON' && label === buyText('اطلب')) return 0;
+      if (STRONG.some(function (word) { return label.indexOf(word) !== -1; })) return 0;
+      if (WEAK.some(function (word) { return label.indexOf(word) !== -1; })) weak = true;
     }
-    var tag = document.querySelector('[data-grindctrl-tryon][data-product-id][data-title][data-image]');
-    return tag ? fromProduct({ productID: tag.dataset.productId, name: tag.dataset.title, image: tag.dataset.image }) : null;
+    // A plain link says "shop now" everywhere; only a button-like one counts.
+    return weak && !(control.tagName === 'A' && !control.matches('[role="button"]')) ? 1 : -1;
+  }
+  function purchaseControl() {
+    var best = null;
+    var bestScore = 2;
+    function consider(control, score) {
+      if (score < 0 || score >= bestScore || control.closest(NOT_PRODUCT_AREA + ', ' + PRODUCT_CARD) ||
+          pinned(control) || !visible(control)) return;
+      best = control;
+      bestScore = score;
+    }
+    var named = document.querySelectorAll(BUY_MARKUP);
+    for (var i = 0; i < named.length && bestScore > 0; i++) consider(named[i], 0);
+    var forms = document.querySelectorAll('form[action*="/cart"]');
+    for (var j = 0; j < forms.length && bestScore > 0; j++) {
+      consider(forms[j].querySelector('button[type="submit"], button:not([type]), input[type="submit"]') || forms[j], 0);
+    }
+    var controls = document.querySelectorAll(BUY_CONTROLS);
+    for (var k = 0; k < controls.length && bestScore > 0; k++) consider(controls[k], buyScore(controls[k]));
+    return best;
+  }
+  /* After the purchase button's nearest block-level wrapper (its row with
+     the quantity picker, its form), or right after the button when that
+     wrapper is the whole product section. */
+  function afterPurchase(control) {
+    var node = control.parentElement;
+    while (node && node !== document.body && /^(inline|contents)/.test(window.getComputedStyle(node).display)) node = node.parentElement;
+    if (!node || node === document.body || node.matches('main, [role="main"]') || node.querySelector('h1, img')) return control;
+    return node;
+  }
+  // After the product title, or after a price right below it.
+  function titleSpot() {
+    var title = firstTitle();
+    if (!title) return null;
+    var next = title.nextElementSibling;
+    for (var i = 0; next && i < 3; i++, next = next.nextElementSibling) {
+      if (next.matches('[itemprop="price"], [itemprop="offers"], [class*="price"], [class*="Price"], [data-price]') ||
+          next.querySelector('[itemprop="price"]')) return next;
+    }
+    return title;
+  }
+  function websitePlacement() {
+    var tag = manualSpot();
+    if (tag) return { node: tag, mode: 'tag' };
+    var control = purchaseControl();
+    if (control) return { node: afterPurchase(control), mode: 'purchase' };
+    var title = titleSpot();
+    if (title) return { node: title, mode: 'title' };
+    return { node: null, mode: 'float' };
+  }
+
+  /* ── Website product cards ───────────────────────────────────────────── */
+
+  // Same-origin page address without query or hash, the key a card link and an ItemList entry share.
+  function pageKey(href) {
+    try {
+      var url = new URL(String(href || ''), window.location.href);
+      if (url.origin !== window.location.origin) return '';
+      return url.origin + (url.pathname.replace(/\/+$/, '') || '/');
+    } catch (_) { return ''; }
+  }
+  function slugOf(key) {
+    try { return decodeURIComponent(new URL(key).pathname.split('/').filter(Boolean).pop() || ''); } catch (_) { return ''; }
+  }
+  function itemListEntries() {
+    // EasyOrders' onClick-only collection cards have no links or ItemList.
+    // Leave them without pills; its server product-list adapter will supply cards later.
+    var entries = [];
+    var seen = {};
+    function add(element) {
+      if (!element || typeof element !== 'object' || entries.length >= CARD_LIMIT) return;
+      var item = element.item && typeof element.item === 'object' ? element.item : element;
+      var key = pageKey(element.url || item.url || (typeof element.item === 'string' ? element.item : ''));
+      if (!key || seen[key]) return;
+      var id = productId(item.sku || item.productID) || productId(slugOf(key));
+      if (!id) return;
+      seen[key] = true;
+      entries.push({ id: id, key: key, title: String(item.name || element.name || '').trim().slice(0, 200),
+        imageUrl: pickImage(item.image || element.image) });
+    }
+    function walk(node, depth) {
+      if (!node || typeof node !== 'object' || depth > 6) return;
+      if (Array.isArray(node)) { node.forEach(function (entry) { walk(entry, depth + 1); }); return; }
+      if (typed(node, /(^|[/#])ItemList$/) && Array.isArray(node.itemListElement)) node.itemListElement.forEach(add);
+      walk(node['@graph'], depth + 1);
+      walk(node.mainEntity, depth + 1);
+    }
+    walk(jsonLdNodes(), 0);
+    return entries;
+  }
+  function cardPhoto(card) {
+    var best = '';
+    var bestSize = 0;
+    var images = card.querySelectorAll('img');
+    for (var i = 0; i < images.length; i++) {
+      var size = imageSize(images[i]);
+      var src = httpsUrl(images[i].currentSrc || images[i].getAttribute('src'));
+      if (size > bestSize && src) { best = src; bestSize = size; }
+    }
+    return best;
+  }
+  /* The card around a product link: its nearest ancestor that also holds an
+     image, unless that ancestor already holds another listed product (the
+     grid). A link around the image is the card only when nothing above it
+     is, so the pill can sit beside the link rather than inside it. */
+  function cardAround(link, entriesByKey, key) {
+    var imageLink = null;
+    for (var node = link, depth = 0; node && depth < 8; node = node.parentElement, depth++) {
+      if (node === document.body || node.matches('main, [role="main"]')) return imageLink;
+      if (!node.querySelector('img')) continue;
+      var links = node.querySelectorAll('a[href]');
+      for (var i = 0; i < links.length; i++) {
+        var other = pageKey(links[i].getAttribute('href'));
+        if (other && other !== key && entriesByKey[other]) return imageLink;
+      }
+      if (node.tagName !== 'A') return node;
+      imageLink = node;
+    }
+    return imageLink;
+  }
+  // The pill sits over the card image, outside a link around it where there is one.
+  function pillHost(card) {
+    var img = card.querySelector('img');
+    if (!img) return card;
+    var imageLink = img.closest('a');
+    var host = imageLink && imageLink !== card && card.contains(imageLink) ? imageLink.parentElement : img.parentElement;
+    if (host && host.tagName === 'PICTURE') host = host.parentElement;
+    return host && card.contains(host) ? host : card;
   }
 
   function shopifyForm() { return document.querySelector('form[action*="/cart/add"]'); }
@@ -172,7 +590,6 @@
     var codeVersion = Number(script.dataset.gcV);
     if (!(codeVersion >= 1 && codeVersion <= 99 && codeVersion % 1 === 0)) codeVersion = 1;
     var productJson = null;
-    var initialProduct = null;
     var context = null;
     var pending = null;
     // Product cards (Shopify listings): signed entries by product id and by handle.
@@ -184,6 +601,10 @@
     var cardRefreshes = 0;
     var cardRefreshedUrls = {};
     var cardRefreshing = false;
+    // Website pages: the config read at prepare, and one context per product and garment image.
+    var websiteConfig;
+    var websiteContexts = {};
+    var websitePending = {};
 
     /* A Liquid render is single use per visitor and fresh for 15 minutes.
        When one was used or went stale, read a new render of a product page;
@@ -362,6 +783,63 @@
       });
     }
 
+    /* Website cards: the merchant's card tags, then JSON-LD ItemList entries
+       matched to the page's own product links. Unsigned, like the website
+       product button: paste-context checks the page origin and the garment
+       image host for both. */
+    function websiteCards() {
+      var found = [];
+      var claimed = [];
+      function remember(card) {
+        if (!cardsById[card.id] && Object.keys(cardsById).length >= CARD_LIMIT) return false;
+        cardsById[card.id] = card;
+        return true;
+      }
+      var tagged = document.querySelectorAll('[data-grindctrl-card]');
+      for (var i = 0; i < tagged.length && found.length < CARD_LIMIT; i++) {
+        var node = tagged[i];
+        if (node.closest('.gc-tryon-sheet') || node.querySelector('.gc-tryon-pill')) continue;
+        var key = pageKey(node.dataset.url);
+        var id = productId(node.dataset.productId) || (key ? productId(slugOf(key)) : '');
+        var photo = pickImage(node.dataset.image) || cardPhoto(node);
+        if (!id || !photo || !remember({ id: id, title: String(node.dataset.title || '').trim().slice(0, 200), imageUrl: photo })) continue;
+        claimed.push(node);
+        found.push({ host: pillHost(node), productId: id, title: cardsById[id].title });
+      }
+      var entries = itemListEntries();
+      if (!entries.length) return found;
+      var byKey = {};
+      entries.forEach(function (entry) { byKey[entry.key] = entry; });
+      var links = document.querySelectorAll('a[href]');
+      for (var j = 0; j < links.length && found.length < CARD_LIMIT; j++) {
+        var link = links[j];
+        var linkKey = pageKey(link.getAttribute('href'));
+        var entry = linkKey && byKey[linkKey];
+        if (!entry || link.closest(NOT_PRODUCT_AREA)) continue;
+        var card = cardAround(link, byKey, linkKey);
+        if (!card || claimed.some(function (other) { return other === card || other.contains(card) || card.contains(other); }) ||
+            card.querySelector('.gc-tryon-pill, .gc-cat-btn')) continue;
+        var cardImage = entry.imageUrl || cardPhoto(card);
+        var title = entry.title || String(link.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+        if (!cardImage || !remember({ id: entry.id, title: title, imageUrl: cardImage })) continue;
+        claimed.push(card);
+        found.push({ host: pillHost(card), productId: entry.id, title: title });
+      }
+      return found;
+    }
+    function hasWebsiteCards() {
+      return !!document.querySelector('[data-grindctrl-card]') || itemListEntries().length > 0;
+    }
+    function websiteContext(product) {
+      var key = (product.card ? 'card:' : 'page:') + product.id + '|' + product.imageUrl;
+      if (usable(websiteContexts[key])) return Promise.resolve(displayContext(websiteContexts[key], product));
+      if (!websitePending[key]) {
+        websitePending[key] = requestContext(product, null, null, false).then(function (data) { websiteContexts[key] = data; return data; });
+        websitePending[key].then(function () { delete websitePending[key]; }, function () { delete websitePending[key]; });
+      }
+      return websitePending[key].then(function (data) { return displayContext(data, product); });
+    }
+
     /* The product button, as the Shopify app block: nothing until the config
        answers, nothing when it says hidden, the owner's look from the first
        paint when it says live. A config that cannot be read keeps the
@@ -388,11 +866,19 @@
       cardLabel: options.locale === 'ar' ? 'جرّب' : 'Try on',
       lookKey: function (button) { return 'paste:' + script.dataset.key + ':' + button.dataset.productId; },
       messageProductId: function (product) { return String(product.id); },
+      // Website pages change under client-side routers; messenger.js calls refresh() and the engine re-places.
+      followsPage: platform === 'website',
+      // New markup that may bring cards for the pill observer to look at.
+      cardTrigger: platform === 'website' ? 'a[href], [data-grindctrl-card]' : 'a[href*="/products/"]',
 
       prepare: function () {
         if (platform === 'website') {
-          initialProduct = websiteProduct();
-          return initialProduct ? prepareButton(true) : Promise.resolve(false);
+          // Nothing is asked of the server on a page with no product and no cards.
+          if (!websiteProduct() && !hasWebsiteCards()) return Promise.resolve(false);
+          return readPasteConfig().then(function (config) {
+            websiteConfig = config;
+            return adapter.refresh();
+          });
         }
         var match = window.location.pathname.match(/\/products\/([^/]+)/);
         if (!match || !shopifyForm()) return prepareCards();
@@ -410,16 +896,39 @@
         }).catch(function () { return false; }));
       },
 
+      /* Website: whether this page shows a product (the button) or, failing
+         that, product cards (pills, when their switch is on). The config read
+         at prepare decides; one that could not be read keeps the default
+         button, as on Shopify, and adds no pills. */
+      refresh: function () {
+        if (platform !== 'website') return adapter.injectButton || adapter.injectCards;
+        if (websiteConfig === undefined) return false;
+        var live = !websiteConfig || websiteConfig.tryOn === 'live';
+        var product = live ? websiteProduct() : null;
+        adapter.buttonSettings = websiteConfig;
+        adapter.injectButton = !!product;
+        adapter.injectCards = !product && !!websiteConfig && websiteConfig.tryOn === 'live' && websiteConfig.showCardPill === true && hasWebsiteCards();
+        adapter.cardSettings = adapter.injectCards ? websiteConfig : null;
+        return adapter.injectButton || adapter.injectCards;
+      },
+
+      placement: function () {
+        if (platform === 'shopify') {
+          var form = shopifyForm();
+          return form ? { node: form, mode: 'form' } : null;
+        }
+        return websitePlacement();
+      },
       placementTarget: function () {
-        if (platform === 'shopify') return shopifyForm();
-        return document.querySelector('button[name="add-to-cart"],button[name="add"],[data-add-to-cart],.single_add_to_cart_button') ||
-          document.querySelector('[data-grindctrl-tryon]');
+        var spot = adapter.placement();
+        return spot ? spot.node : null;
       },
 
       /* Product cards that link to a signed product and have no pill yet:
          { host, productId, title }. The pill goes in the image's container,
          outside the product link, as in the Shopify app's catalog embed. */
       findCards: function (rescan) {
+        if (platform === 'website') return websiteCards();
         var found = [];
         var claimed = [];
         var unsigned = false;
@@ -447,10 +956,14 @@
       detectProduct: function (button) {
         if (button && button.dataset && button.dataset.gcCard === '1') {
           var card = cardsById[button.dataset.productId];
+          if (card && platform === 'website') {
+            return { id: card.id, variantId: null, title: card.title, imageUrl: card.imageUrl, price: null, currency: null, card: true };
+          }
           return card ? { id: card.id, variantId: card.signed.variantId, title: card.title, imageUrl: card.imageUrl,
             price: null, currency: shopifyCurrency(), handle: card.handle, card: true } : null;
         }
-        if (platform === 'website') return initialProduct;
+        // Read again at every call: the page's own variant picker, or a client-side route, may have changed it.
+        if (platform === 'website') return websiteProduct();
         if (!productJson) return null;
         var form = shopifyForm();
         var field = form && form.querySelector('[name="id"]');
@@ -464,6 +977,7 @@
       },
 
       getContext: function (product) {
+        if (platform === 'website') return websiteContext(product);
         if (product.card) {
           var card = cardsById[product.id];
           if (!card) return Promise.reject(new Error('context_invalid'));
@@ -487,6 +1001,7 @@
       },
 
       getProduct: function (product) {
+        if (platform === 'website') return Promise.resolve(null);
         if (product && product.card) {
           var card = cardsById[product.id];
           return card ? cardProductJson(card).then(function (json) { return json ? productOptions(json) : null; }) : Promise.resolve(null);
@@ -528,5 +1043,5 @@
     return adapter;
   }
 
-  window.GRINDCTRL_TRYON_PASTE = { version: '1.3.0', create: create, detectWebsiteProduct: websiteProduct };
+  window.GRINDCTRL_TRYON_PASTE = { version: '1.4.0', create: create, detectWebsiteProduct: websiteProduct };
 })();

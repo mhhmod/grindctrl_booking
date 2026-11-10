@@ -18,10 +18,42 @@ export class PasteError extends Error {
   constructor(readonly code: PasteErrorCode) { super(code); this.name = 'PasteError'; }
 }
 
+/** What our server's last check of a domain's home page found.
+ *  `verified`: this site's snippet (messenger.js with its embed key) is on it,
+ *    or the DNS/meta proof passed. Try-On and the free plan need this.
+ *  `not_found`: the page loaded without our code (not pasted or not saved yet,
+ *    or added by a tag manager after the page loads).
+ *  `wrong_site`: the page carries another GRINDCTRL site's code.
+ *  `unreachable`: the home page did not answer with a page we can read
+ *    (timeout, error status, bot challenge, redirect to another host). */
+export type PasteDomainCheckOutcome = 'verified' | 'not_found' | 'wrong_site' | 'unreachable';
+
+/** Data for the dashboard's copy, not the copy itself.
+ *  `awaiting_code`: no check has found the code yet; we confirm by ourselves
+ *    once the code is live ("We'll confirm automatically once your code is live").
+ *  `code_not_found`: the last check loaded the page without the code.
+ *  `wrong_site`: the page carries another account's code.
+ *  `unreachable`: we could not open the home page (blocked, error, redirect).
+ *  `held_elsewhere`: another account uses this address; finding this site's
+ *    code on it moves it here.
+ *  `proven_elsewhere`: another account proved this address after this one. */
+export type PasteDomainVerificationReason =
+  | 'awaiting_code' | 'code_not_found' | 'wrong_site' | 'unreachable' | 'held_elsewhere' | 'proven_elsewhere';
+
 export type PasteDomain = {
   id: string;
   domain: string;
+  /** `trusted`: Store Chat may load here now. `claimed`: another site holds
+   *  the host until this site's snippet (or DNS/meta proof) moves it here. */
   state: 'trusted' | 'claimed' | 'disputed';
+  /** Our server confirmed this site's code on this domain. Trusted but not
+   *  verified: chat loads, Try-On and the free looks wait for the check. */
+  domainVerified: boolean;
+  verifiedAt: string | null;
+  /** Why the domain is not verified yet, for the dashboard; null once it is. */
+  verificationReason: PasteDomainVerificationReason | null;
+  /** The last check of this domain; null before the first one. */
+  check: { outcome: PasteDomainCheckOutcome; checkedAt: string } | null;
   firstSeenAt: string | null;
   lastSeenAt: string | null;
   proof: { txtName: string; txtValue: string; meta: { name: 'grindctrl-verification'; content: string } };
@@ -83,6 +115,16 @@ export type PasteShopProof = {
   retryAfterSeconds: number | null;
 };
 
+/** The result of a domain snippet check ("Check my store" on a website
+ *  domain, or the check that runs when a domain is added). */
+export type PasteDomainCheck = {
+  domain: PasteDomain;
+  /** `rate_limited` is never stored: no check ran this time. */
+  outcome: PasteDomainCheckOutcome | 'rate_limited';
+  /** Seconds until another check can run; null when one can run now. */
+  retryAfterSeconds: number | null;
+};
+
 /** Why a connection is (not) trusted for origins, signals and Try-On. */
 export type PasteTrust = 'trusted' | 'not_connected' | 'shop_proof_pending' | 'shopify_app_installed';
 
@@ -136,5 +178,8 @@ export type PasteContextFailure = {
     /** A pending shop's render verified, but the storefront proof is not complete. */
     | 'shop_proof_pending' | 'shopify_app_installed'
     | 'preview' | 'holdout' | 'garment_unsafe' | 'out_of_looks' | 'paused' | 'not_installed' | 'plan_inactive';
+  /** With `garment_unsafe` only. `garment_host_untrusted`: the image is not
+   *  on the site's trusted domains nor its detected platform's image servers. */
+  reason?: 'garment_host_untrusted' | 'garment_unsafe';
 };
 export type PasteContextResult = PasteContextResponse | PasteContextFailure;

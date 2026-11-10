@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { resolveShopperSession } from '@/lib/messenger/public-session';
 import { appendMessage, recordAudit, recordEvent, updateConversationMetadata } from '@/lib/messenger/conversations';
 import { ORDER_LOOKUP_LIFETIME_LIMIT } from '@/lib/messenger/orders';
 import { resolveOrderProvider } from '@/lib/messenger/order-provider';
-import { orderLookupLimiter, orderNumberLimiter } from '@/lib/messenger/order-limits';
+import { spendOrderLookupBudget, type OrderLookupGate } from '@/lib/messenger/order-limits';
+import { networkKey } from '@/lib/http/network-key';
 import { maskEmail, normalizeOrderNumber, ORDER_CONTACT_EMAIL_RE } from '@/lib/messenger/order-card';
 import { ORDER_DENIED, ORDER_UNAVAILABLE, orderFoundLine } from '@/lib/messenger/order-copy';
 import { boundCustomerId, resolveVerifiedCustomer } from '@/lib/messenger/verified-customer';
@@ -35,8 +37,10 @@ function toWire(m: MessageRecord) {
   };
 }
 
+const BODY_LIMIT_BYTES = 32 * 1024;
+
 export async function POST(request: NextRequest) {
-  const ip = clientIp(request) ?? 'unknown';
+  const ip = networkKey(clientIp(request));
   try {
     await requireRateLimit(publicApiRatelimit, `mol:${ip}`);
   } catch (error) {
@@ -44,12 +48,12 @@ export async function POST(request: NextRequest) {
     throw error;
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = (await request.json()) as Record<string, unknown>;
-  } catch {
-    return NextResponse.json({ ok: false, error: 'bad_json' }, { status: 400 });
+  const parsed = await readLimitedJson(request, BODY_LIMIT_BYTES);
+  if (!parsed.ok || !isJsonObject(parsed.value)) {
+    const tooLarge = !parsed.ok && parsed.status === 413;
+    return NextResponse.json({ ok: false, error: tooLarge ? 'too_large' : 'bad_json' }, { status: tooLarge ? 413 : 400 });
   }
+  const body = parsed.value;
   /* mode "customer" is the Track my order chip for a verified shopper: no
      number or email, the newest order of the customer the request proves. */
   const customerMode = body.mode === 'customer';
@@ -104,15 +108,8 @@ export async function POST(request: NextRequest) {
       const attempts = (conversation.metadata.order_lookup_attempts ?? 0) + 1;
       conversation.metadata.order_lookup_attempts = attempts;
       await updateConversationMetadata(conversation.id, conversation.metadata).catch(() => {});
-      let allowed = attempts <= ORDER_LOOKUP_LIFETIME_LIMIT;
-      if (allowed) {
-        try {
-          await requireRateLimit(orderLookupLimiter, `${site.id}:${ip}`);
-        } catch (error) {
-          if (!(error instanceof RequestRateLimitError)) throw error;
-          allowed = false;
-        }
-      }
+      const allowed = attempts <= ORDER_LOOKUP_LIFETIME_LIMIT
+        && (await spendOrderLookupBudget({ siteId: site.id, network: ip })) === 'open';
       const found = allowed
         ? await provider.lookupCustomerCard({
             customerId,
@@ -160,19 +157,12 @@ export async function POST(request: NextRequest) {
     conversation.metadata.order_lookup_attempts = attempts;
     await updateConversationMetadata(conversation.id, conversation.metadata).catch(() => {});
 
-    let gate: 'open' | 'spent' | 'unavailable' = attempts <= ORDER_LOOKUP_LIFETIME_LIMIT ? 'open' : 'spent';
-    if (gate === 'open') {
-      try {
-        await requireRateLimit(orderLookupLimiter, `${site.id}:${ip}`);
-        await requireRateLimit(orderNumberLimiter, `${site.id}:${orderNumber}`);
-      } catch (error) {
-        if (!(error instanceof RequestRateLimitError)) throw error;
-        /* A spent budget answers like a wrong guess. Limits that cannot be
-           enforced refuse too, as unavailable, which says nothing about
-           the order either. */
-        gate = error.status === 429 ? 'spent' : 'unavailable';
-      }
-    }
+    /* A spent budget answers like a wrong guess. Limits that cannot be
+       enforced refuse too, as unavailable, which says nothing about the
+       order either. */
+    const gate: OrderLookupGate = attempts <= ORDER_LOOKUP_LIFETIME_LIMIT
+      ? await spendOrderLookupBudget({ siteId: site.id, network: ip, orderNumber })
+      : 'spent';
 
     const outcome =
       gate === 'open'

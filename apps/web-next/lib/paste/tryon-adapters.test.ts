@@ -109,9 +109,13 @@ describe('website product discovery', () => {
     expect(await a.addToCart('42', 1)).toBe('unsupported');
     expect(pageFetch).not.toHaveBeenCalled();
   });
-  it("places the button after the page's own add-to-cart button when there is one", () => {
+  it("places the button at the merchant's tag first, else after the page's own add-to-cart button", () => {
+    // jsdom has no layout; a browser gives these controls a size.
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ width: 120, height: 40 } as DOMRect);
     document.body.innerHTML = '<div data-grindctrl-tryon data-product-id="42" data-title="T" data-image="https://images.example/t.jpg"></div><form><button name="add-to-cart">Add</button></form>';
-    expect(adapter().placementTarget()).toBe(document.querySelector('button[name="add-to-cart"]'));
+    expect(adapter().placementTarget()).toBe(document.querySelector('[data-grindctrl-tryon]'));
+    (document.querySelector('[data-grindctrl-tryon]') as HTMLElement).style.display = 'none';
+    expect(adapter().placementTarget()).toBe(document.querySelector('form'));
   });
   it('keeps non-product and unsafe image pages inactive', () => {
     document.body.innerHTML = '<meta property="og:image" content="https://images.example/blog.jpg">';
@@ -452,7 +456,7 @@ describe('messenger paste loading', () => {
     (0, eval)(source('messenger'));
     document.dispatchEvent(new Event('DOMContentLoaded'));
     const scripts = [...document.querySelectorAll<HTMLScriptElement>('script[src*="tryon-"]')].map((node) => node.src);
-    expect(scripts).toEqual([`${APP}/widget/v1/tryon-paste.js?v=1.3.0`]);
+    expect(scripts).toEqual([`${APP}/widget/v1/tryon-paste.js?v=1.4.1`]);
     expect(pageFetch.mock.calls.some(([url]) => String(url).startsWith(`${APP}/api/messenger/config?key=embed-key`))).toBe(true);
   });
   it('chat boots even when product adapter loading fails', async () => {

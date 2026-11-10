@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
+import { networkKey } from '@/lib/http/network-key';
 import { resolveShopperSession } from '@/lib/messenger/public-session';
 import { appendMessage, getConversationForVisitor, patchConversationMetadata, recordEvent } from '@/lib/messenger/conversations';
 import { shouldAskForContact } from '@/lib/messenger/contact';
@@ -17,20 +19,22 @@ import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
    message goes to the team through the same alert flow as any handoff
    (phase zero item 6), and the panel learns whether someone was alerted. */
 
+const BODY_LIMIT_BYTES = 32 * 1024;
+
 export async function POST(request: NextRequest) {
   try {
-    await requireRateLimit(publicApiRatelimit, `mh:${clientIp(request) ?? 'unknown'}`);
+    await requireRateLimit(publicApiRatelimit, `mh:${networkKey(clientIp(request))}`);
   } catch (error) {
     if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
     throw error;
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = (await request.json()) as Record<string, unknown>;
-  } catch {
-    return NextResponse.json({ ok: false, error: 'bad_json' }, { status: 400 });
+  const parsed = await readLimitedJson(request, BODY_LIMIT_BYTES);
+  if (!parsed.ok || !isJsonObject(parsed.value)) {
+    const tooLarge = !parsed.ok && parsed.status === 413;
+    return NextResponse.json({ ok: false, error: tooLarge ? 'too_large' : 'bad_json' }, { status: tooLarge ? 413 : 400 });
   }
+  const body = parsed.value;
   if (body.reason !== 'assistant_unavailable') {
     return NextResponse.json({ ok: false, error: 'bad_reason' }, { status: 400 });
   }
@@ -71,7 +75,11 @@ export async function POST(request: NextRequest) {
         locale: 'en',
         notifications: site.config.notifications,
       },
-      team && !team.open ? { deferUntil: team.opensAtIso } : {},
+      {
+        ...(team && !team.open ? { deferUntil: team.opensAtIso } : {}),
+        // One shopper cannot flood the team's inbox with alert emails.
+        visitor: { id: visitor.id, network: networkKey(clientIp(request)) },
+      },
     );
     if (!escalation) {
       const current = await getConversationForVisitor(conversation.id, visitor.id);

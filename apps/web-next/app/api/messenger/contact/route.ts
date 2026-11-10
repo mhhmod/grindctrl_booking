@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { resolveShopperSession } from '@/lib/messenger/public-session';
 import {
@@ -19,6 +20,8 @@ import { normalizeContactEmail } from '@/lib/messenger/contact';
    the argument the shopper supplies in that turn and matches it against the
    order, never against this. */
 
+const BODY_LIMIT_BYTES = 32 * 1024;
+
 export async function POST(request: NextRequest) {
   try {
     await requireRateLimit(publicApiRatelimit, `mc:${clientIp(request) ?? 'unknown'}`);
@@ -27,12 +30,11 @@ export async function POST(request: NextRequest) {
     throw error;
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = (await request.json()) as Record<string, unknown>;
-  } catch {
-    return NextResponse.json({ ok: false }, { status: 400 });
+  const parsed = await readLimitedJson(request, BODY_LIMIT_BYTES);
+  if (!parsed.ok || !isJsonObject(parsed.value)) {
+    return NextResponse.json({ ok: false }, { status: !parsed.ok && parsed.status === 413 ? 413 : 400 });
   }
+  const body = parsed.value;
 
   const email = normalizeContactEmail(body.email);
   if (!email) return NextResponse.json({ ok: false, error: 'bad_email' }, { status: 400 });

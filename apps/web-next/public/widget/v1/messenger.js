@@ -1,5 +1,5 @@
 /**
- * GRINDCTRL Support Messenger — storefront loader.
+ * GRINDCTRL Support Messenger v1.2.0 — storefront loader.
  *
  * Design contract:
  * - Guest, never resident: one tiny script tag, one small launcher button in
@@ -7,13 +7,23 @@
  *   The messenger itself is an iframe on grindctrl.cloud loaded on first
  *   open (perfect CSS/JS isolation from the merchant theme).
  * - Fails quiet: any error here must never affect the store page.
+ * - One copy per page: the tag pasted twice, or added again by a tag
+ *   manager, leaves the page to the first copy.
  * - Public API: window.GRINDCTRL_MESSENGER.open/close/toggle/identify/logout
  *   callable before init (queued), after init, repeatedly, safely.
  */
 (function () {
   'use strict';
 
-  var SCRIPT = document.currentScript;
+  /* document.currentScript is null for some tag-manager and dynamically
+     created scripts: then the tag is found by its address and attributes. */
+  function findScript() {
+    var current = document.currentScript;
+    if (current && (current.getAttribute('data-key') || current.getAttribute('data-shop'))) return current;
+    var tags = document.querySelectorAll('script[src*="/widget/v1/messenger.js"][data-key],script[src*="/widget/v1/messenger.js"][data-shop]');
+    return tags.length ? tags[tags.length - 1] : current;
+  }
+  var SCRIPT = findScript();
   var PROXY_PATH = (SCRIPT && SCRIPT.getAttribute('data-proxy-path')) || '/apps/grindctrl';
   if (!/^\/(apps|a|community|tools)\/[A-Za-z0-9_-]{1,30}$/.test(PROXY_PATH)) return;
   var SHOP = SCRIPT && SCRIPT.getAttribute('data-shop');
@@ -31,6 +41,13 @@
   if (!KEY && !SHOP) return;
 
   var GLOBAL = 'GRINDCTRL_MESSENGER';
+  /* Claimed synchronously, before boot: two copies in <head> both run before
+     DOMContentLoaded, so the public API (set at boot) cannot be the marker.
+     The queue array keeps working as the public queue. */
+  var claimed = window[GLOBAL];
+  if (claimed && (claimed._version || claimed.__gcClaimed)) return;
+  if (!Array.isArray(claimed)) claimed = window[GLOBAL] = [];
+  try { Object.defineProperty(claimed, '__gcClaimed', { value: true }); } catch (e) { return; }
   var ORIGIN = window.location.origin;
   var APP_ORIGIN = (SCRIPT && SCRIPT.getAttribute('data-app-origin')) || new URL(SCRIPT.src).origin;
   /* Paste installs (data-gc-install="paste"): on product pages, and on
@@ -45,36 +62,135 @@
     var lang = String(document.documentElement.lang || '').toLowerCase().split(/[-_]/)[0];
     return lang === 'ar' || lang === 'en' ? lang : detectLocale();
   }
+  var widgetLoads = {};
+  function loadWidget(name, global) {
+    if (window[global]) return Promise.resolve();
+    if (widgetLoads[name]) return widgetLoads[name];
+    widgetLoads[name] = new Promise(function (resolve, reject) {
+      var script = document.createElement('script');
+      script.async = true;
+      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=1.4.1';
+      script.onload = resolve;
+      script.onerror = function () { delete widgetLoads[name]; reject(new Error('widget_unavailable')); };
+      document.head.appendChild(script);
+    });
+    return widgetLoads[name];
+  }
+
+  /* A product or product cards described on this page, by any of the
+     sources tryon-paste.js reads. A cheap look before loading it. */
+  function websiteSignals() {
+    if (document.querySelector('[data-grindctrl-tryon][data-product-id],[data-grindctrl-card],meta[property^="product:"],' +
+        'meta[property="og:type"][content="product"],[itemscope][itemtype*="schema.org/Product"]')) return true;
+    return Array.prototype.some.call(document.querySelectorAll('script[type="application/ld+json"]'), function (node) {
+      try { return /"(?:https?:\/\/schema.org\/)?(?:Product|ProductGroup|ItemList)"/.test(JSON.stringify(JSON.parse(node.textContent))); } catch (_) { return false; }
+    });
+  }
+
+  /* Client-side navigation and re-renders on a website: history changes,
+     back and forward, and page markup changing (not our own button, pill,
+     note or chat). Followers run once per quiet 300 ms. */
+  var OWN_NODES = '.gc-tryon-btn,.gc-tryon-pill,.gc-tryon-note,.gc-tryon-live,.gc-tryon-sheet,[data-gc-chat-launcher],#gc-tryon-woo-css';
+  var followers = [];
+  function followPage(callback) {
+    followers.push(callback);
+    if (followers.length > 1) return;
+    var timer = null;
+    function changed() {
+      if (timer) return;
+      timer = setTimeout(function () {
+        timer = null;
+        for (var i = 0; i < followers.length; i++) { try { followers[i](); } catch (e) {} }
+      }, 300);
+    }
+    // One wrapper per page whichever copy installed it; every listener hears its event.
+    ['pushState', 'replaceState'].forEach(function (name) {
+      var original = window.history[name];
+      if (typeof original !== 'function' || original.__gcWrapped) return;
+      var wrapped = function () {
+        var result = original.apply(this, arguments);
+        try { window.dispatchEvent(new Event('gc:locationchange')); } catch (e) {}
+        return result;
+      };
+      wrapped.__gcWrapped = true;
+      try { window.history[name] = wrapped; } catch (e) {}
+    });
+    window.addEventListener('gc:locationchange', changed);
+    window.addEventListener('popstate', changed);
+    window.addEventListener('hashchange', changed);
+    if (!window.MutationObserver || !document.body) return;
+    function foreign(node) {
+      if (node.nodeType === 3) return true;
+      if (node.nodeType !== 1 || node.matches(OWN_NODES)) return false;
+      return !(node.tagName === 'SCRIPT' && /\/widget\/v1\//.test(node.src || '')) &&
+        !(node.tagName === 'IFRAME' && /\/embed\/messenger/.test(node.src || ''));
+    }
+    new MutationObserver(function (records) {
+      for (var i = 0; i < records.length; i++) {
+        var record = records[i];
+        var target = record.target.nodeType === 1 ? record.target : record.target.parentElement;
+        if (target && target.closest('.gc-tryon-btn,.gc-tryon-pill,.gc-tryon-sheet,[data-gc-chat-launcher]')) continue;
+        if (Array.prototype.some.call(record.addedNodes, foreign) ||
+            // Our own button taken away by a re-render counts: it may need putting back.
+            Array.prototype.some.call(record.removedNodes, function (node) { return foreign(node) || (node.nodeType === 1 && node.matches('.gc-tryon-btn')); })) {
+          changed();
+          return;
+        }
+      }
+    }).observe(document.body, { childList: true, subtree: true });
+  }
+
+  /* Website paste: the button for the product a page shows, or pills on
+     its product cards, followed through client-side navigation. The adapter
+     and engine load once; a page with nothing to show loads neither. */
+  var website = { adapter: null, handle: null, busy: false, again: false };
+  function syncWebsiteTryOn() {
+    if (website.busy) { website.again = true; return; }
+    if (website.handle) {
+      website.adapter.refresh();
+      website.handle.refresh();
+      return;
+    }
+    if (!website.adapter && !websiteSignals()) return;
+    website.busy = true;
+    loadWidget('tryon-paste.js', 'GRINDCTRL_TRYON_PASTE').then(function () {
+      if (!website.adapter) {
+        website.adapter = window.GRINDCTRL_TRYON_PASTE.create({ script: SCRIPT, appOrigin: APP_ORIGIN,
+          locale: pasteLocale(), visitorId: launchVisitorId(), preview: previewToken() });
+      }
+      return website.adapter.prepare().then(function (found) {
+        if (!found) return;
+        return loadWidget('tryon-engine.js', 'GRINDCTRL_TRYON_ENGINE').then(function () {
+          website.handle = window.GRINDCTRL_TRYON_ENGINE.mount(website.adapter) || null;
+        });
+      });
+    }).catch(function () { /* Store Chat remains available. */ }).then(function () {
+      website.busy = false;
+      if (website.again) { website.again = false; syncWebsiteTryOn(); }
+    });
+  }
+
   function bootPasteTryOn() {
     if (!SCRIPT || SCRIPT.dataset.gcInstall !== 'paste' || window.__gcPasteTryOn) return;
     var platform = SCRIPT.dataset.gcPlatform;
-    var productPage = platform === 'shopify'
-      ? /^\d+$/.test(SCRIPT.dataset.gcProduct || '') && /\/products\/[^/]+/.test(location.pathname) && !!document.querySelector('form[action*="/cart/add"]')
-      : platform === 'website' && (!!document.querySelector('[data-grindctrl-tryon][data-product-id],meta[property^="product:"],meta[property="og:type"][content="product"]') ||
-        Array.prototype.some.call(document.querySelectorAll('script[type="application/ld+json"]'), function (node) {
-          try { return /"(?:https?:\/\/schema.org\/)?Product"/.test(JSON.stringify(JSON.parse(node.textContent))); } catch (_) { return false; }
-        }));
+    if (platform === 'website') {
+      window.__gcPasteTryOn = true;
+      followPage(syncWebsiteTryOn);
+      syncWebsiteTryOn();
+      return;
+    }
+    var productPage = platform === 'shopify' &&
+      /^\d+$/.test(SCRIPT.dataset.gcProduct || '') && /\/products\/[^/]+/.test(location.pathname) && !!document.querySelector('form[action*="/cart/add"]');
     var listing = platform === 'shopify' && !productPage &&
       !!document.querySelector('script[type="application/json"][data-gc-cards]');
     if (!productPage && !listing) return;
     window.__gcPasteTryOn = true;
-    function load(name, global) {
-      if (window[global]) return Promise.resolve();
-      return new Promise(function (resolve, reject) {
-        var script = document.createElement('script');
-        script.async = true;
-        script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=1.3.0';
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
-    }
-    load('tryon-paste.js', 'GRINDCTRL_TRYON_PASTE').then(function () {
+    loadWidget('tryon-paste.js', 'GRINDCTRL_TRYON_PASTE').then(function () {
       var adapter = window.GRINDCTRL_TRYON_PASTE.create({ script: SCRIPT, appOrigin: APP_ORIGIN,
         locale: pasteLocale(), visitorId: launchVisitorId(), preview: previewToken() });
       return adapter.prepare().then(function (found) {
         if (!found || (adapter.injectButton && !adapter.placementTarget())) return;
-        return load('tryon-engine.js', 'GRINDCTRL_TRYON_ENGINE').then(function () { window.GRINDCTRL_TRYON_ENGINE.mount(adapter); });
+        return loadWidget('tryon-engine.js', 'GRINDCTRL_TRYON_ENGINE').then(function () { window.GRINDCTRL_TRYON_ENGINE.mount(adapter); });
       });
     }).catch(function () { /* Store Chat remains available. */ });
   }
@@ -322,6 +438,8 @@
   function buildLauncher() {
     var hostEl = document.createElement('div');
     hostEl.className = 'pos-' + (state.config.appearance.position === 'bottom-left' ? 'bl' : 'br');
+    // Lets a floating Try-On pill take the other corner (tryon-engine.js).
+    hostEl.setAttribute('data-gc-chat-launcher', '');
     // Themes such as Dawn hide div:empty, and a shadow host has no light-DOM
     // children, so the display must be explicit or the launcher renders 0x0.
     hostEl.style.cssText = 'display:block!important;position:fixed;inset:auto;bottom:' + (20 + state.lift) + 'px;z-index:2147482000;' +
@@ -361,6 +479,7 @@
     state.teaserHost = root;
     document.body.appendChild(hostEl);
     applyAccent(btn);
+    try { window.dispatchEvent(new Event('gc:chat-launcher')); } catch (e) {}
   }
 
   function offset(axis) {
@@ -429,10 +548,12 @@
     var params = '?key=' + encodeURIComponent(effectiveKey) +
       '&locale=' + encodeURIComponent(LOCALE_HINT || state.locale) +
       '&origin=' + encodeURIComponent(ORIGIN) +
-      '&anonId=' + encodeURIComponent(ensureAnonId());
-    // The token itself never goes in the address, where logs and referrers
-    // keep it. The panel is told one is coming, asks for it once it is
-    // listening, and waits for it before loading the conversation.
+      // The shopper's anonId comes over postMessage (sendSession), like the
+      // token: never in the address, where logs and referrers keep it.
+      '&session=1';
+    // The token itself never goes in the address either. The panel is told
+    // one is coming, asks for it once it is listening, and waits for it
+    // before loading the conversation.
     if (currentToken() || state.identityPending) params += '&identity=1';
     var frame = document.createElement('iframe');
     frame.src = APP_ORIGIN + '/embed/messenger' + params;
@@ -660,6 +781,7 @@
     var data = event.data;
     if (data && data.type === 'grindctrl-messenger:close') close();
     if (data && data.type === 'grindctrl-messenger:identity-request') {
+      sendSession();
       var token = currentToken();
       // While the proxy is still answering, identify() sends the token when
       // it lands; otherwise the panel learns there is none and stops waiting.
@@ -747,7 +869,30 @@
     if (!match) return '';
     try { return decodeURIComponent(match[1]); } catch (e) { return ''; }
   }
+  // Any other website: no Shopify or WooCommerce data to read.
+  function genericSite() { return !SHOP && !woo() && !window.Shopify; }
+  /* The same reading of JSON-LD, microdata, Open Graph and the merchant's
+     tag as the website Try-On button (tryon-paste.js), never a copy of it.
+     Read fresh each time: a client-side route may have changed the product. */
+  function websitePageProduct() {
+    if (!websiteSignals()) return Promise.resolve(null);
+    return loadWidget('tryon-paste.js', 'GRINDCTRL_TRYON_PASTE').then(function () {
+      var found = window.GRINDCTRL_TRYON_PASTE.detectWebsiteProduct();
+      if (!found || !found.title) return null;
+      var currency = typeof found.currency === 'string' && /^[A-Z]{3}$/.test(found.currency) ? found.currency : '';
+      return {
+        handle: found.id,
+        title: found.title,
+        imageUrl: found.imageUrl,
+        currency: currency,
+        // The chat panel takes a numeric variant id or none.
+        variants: [{ id: /^\d{1,20}$/.test(String(found.variantId || '')) ? String(found.variantId) : '', title: '',
+          price: currency ? decimalToMinor(found.price, currency) : null }]
+      };
+    }).catch(function () { return null; });
+  }
   function loadPageProduct() {
+    if (genericSite()) return websitePageProduct();
     if (pageProduct) return pageProduct;
     var w = woo();
     if (w) return (pageProduct = Promise.resolve(wooPageProduct(w)));
@@ -772,10 +917,20 @@
     if (input && /^\d+$/.test(input.value)) return input.value;
     try { return new URLSearchParams(window.location.search).get('variant') || ''; } catch (e) { return ''; }
   }
-  function sendPageProduct() {
+  var sentPageProduct = '';
+  // onlyChanged: after a page change, post only when the product shown is a different one.
+  function sendPageProduct(onlyChanged) {
     if (!v16Chat() || !state.iframe || !state.iframe.contentWindow) return;
     loadPageProduct().then(function (product) {
-      if (!product || !state.iframe || !state.iframe.contentWindow) return;
+      if (!state.iframe || !state.iframe.contentWindow) return;
+      var sent = product ? product.handle + '|' + product.imageUrl + '|' + pickedVariantId() : '';
+      if (onlyChanged === true && sent === sentPageProduct) return;
+      sentPageProduct = sent;
+      if (!product) {
+        // A client-side route away from a product: the panel stops showing it.
+        if (onlyChanged === true) state.iframe.contentWindow.postMessage({ type: 'grindctrl-messenger:page-product', product: null }, APP_ORIGIN);
+        return;
+      }
       var wanted = pickedVariantId();
       var variant = product.variants[0];
       for (var i = 0; i < product.variants.length; i++) {
@@ -947,6 +1102,12 @@
     return saved.t;
   }
 
+  function sendSession() {
+    if (state.iframe && state.iframe.contentWindow) {
+      state.iframe.contentWindow.postMessage({ type: 'grindctrl-messenger:session', anonId: ensureAnonId() }, APP_ORIGIN);
+    }
+  }
+
   function sendIdentity(token) {
     if (state.iframe && state.iframe.contentWindow) {
       state.iframe.contentWindow.postMessage({ type: 'grindctrl-messenger:identify', token: token || null }, APP_ORIGIN);
@@ -1035,7 +1196,7 @@
       if (state.iframe) { state.iframe.parentNode.removeChild(state.iframe); state.iframe = null; state.booted = false; }
       state.open = false;
     },
-    _version: '1.0.0'
+    _version: '1.1.0'
   };
 
   function drainQueue() {
@@ -1065,6 +1226,8 @@
       if (!config || !config.active || pageExcluded(config) || launchHidden(config)) return;
       state.locale = resolveLocale(config);
       if (v16Chat()) state.lift = stickyCartLift();
+      // A website's client-side routes change the piece the panel shows.
+      if (v16Chat() && genericSite()) followPage(function () { sendPageProduct(true); });
       buildLauncher();
       attachShopperToken();
       track('loader_initialized', {});

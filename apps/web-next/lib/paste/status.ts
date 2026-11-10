@@ -70,6 +70,10 @@ export type PasteInstallStatus = {
   /** Our code is trusted on this site's hosts: origins, signals, Try-On. */
   trusted: boolean;
   connectionReason: PasteConnectionReason | null;
+  /** Each with `domainVerified` (our server found this site's code on the
+   *  domain's page, or its DNS/meta proof passed) and, until then, a
+   *  `verificationReason` the dashboard explains. Store Chat loads on a
+   *  trusted domain at once; Try-On and the free looks wait for it. */
   domains: PasteDomain[];
   /** Our code ran on a trusted domain or the shop host within the active
    *  install window, whatever the launch mode. This is "installed". */
@@ -132,9 +136,12 @@ export async function readPasteInstallStatus(site: { id: string; status: string 
   const mode = features.includes('n5_preview_mode') ? launchView(launch, now).state : 'live';
   const code = connected && connection?.platform === 'shopify' ? seenCode : null;
   const turnstileConfigured = Boolean(process.env.TURNSTILE_SECRET_KEY?.trim() && pasteTurnstileSiteKey());
+  // Website Try-On needs a domain our server confirmed the code on; a
+  // Shopify store runs on its proven shop host meanwhile.
   const reason = connectionReason ?? (!trustedDomains.length && !shopHost ? 'no_trusted_domain'
+    : !shopHost && !trustedDomains.some((domain) => domain.domainVerified) ? 'domain_unverified'
     : !pasteCapabilitySecret(site.id) ? 'unavailable' : mode === 'setup' || mode === 'preview' ? 'preview'
-    : connection?.platform === 'website' && !turnstileConfigured ? 'turnstile_not_configured' : entitlement.reason);
+    : !turnstileConfigured ? 'turnstile_not_configured' : entitlement.reason);
   return {
     siteId: site.id, tenantKey, platform: connection?.platform ?? null, shopDomain: connection?.shop_domain ?? null,
     shopProof: shop ? (shop.status === 'active' && shop.shop_proven_at ? 'proven' : 'pending') : null,

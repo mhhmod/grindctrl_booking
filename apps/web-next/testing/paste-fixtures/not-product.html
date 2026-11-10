@@ -1,0 +1,24 @@
+<!doctype html>
+<!-- Imitates: a store home page: a hero with "Shop now", a featured grid of
+     product links and images, Open Graph type website, an Organization
+     JSON-LD block and no Product or ItemList data. No button, no pills. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="gc-fixture-path" content="/">
+  <meta name="gc-fixture-expect" content="none">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://cdn.ateliernour.example/hero.jpg">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Atelier Nour","url":"https://ateliernour.example"}</script>
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+</head>
+<body>
+  <main>
+    <section class="hero"><img src="https://cdn.ateliernour.example/hero.jpg" width="1600" height="900" alt=""><h1>New season</h1><button type="button" class="btn">Shop now</button></section>
+    <section class="featured">
+      <div class="tile"><a href="/shop/linen-wrap-dress"><img src="https://cdn.ateliernour.example/products/lwd-204-front.jpg" width="400" height="500" alt=""></a><a href="/shop/linen-wrap-dress">Linen wrap dress</a><button type="button">Add to cart</button></div>
+    </section>
+  </main>
+</body>
+</html>

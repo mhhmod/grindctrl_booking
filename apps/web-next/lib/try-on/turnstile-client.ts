@@ -12,6 +12,15 @@ type Turnstile = {
 };
 declare global { interface Window { turnstile?: Turnstile } }
 
+/** The challenge itself did not finish (script blocked or offline, rejected,
+ *  expired or timed out). Retrying can help, unlike a missing site key. */
+export class TurnstileChallengeError extends Error {
+  constructor() {
+    super('turnstile_challenge_failed');
+    this.name = 'TurnstileChallengeError';
+  }
+}
+
 let loading: Promise<Turnstile> | undefined;
 function load(): Promise<Turnstile> {
   if (window.turnstile) return Promise.resolve(window.turnstile);
@@ -32,19 +41,24 @@ function load(): Promise<Turnstile> {
   return loading;
 }
 
-/** Only the server's website-paste attempt carries a binding. Never preload for
- * Shopify/Woo/demo or trust a query parameter to decide challenge exemptions.
- * siteKey is read at runtime on the server (TURNSTILE_SITE_KEY) and returned by the attempt route. */
+/* Each action runs only on the page our server verifies it for. */
+const ACTION_PAGES: Record<Binding['action'], string> = { paste_tryon: '/embed/try-on', demo_tryon: '/try-on' };
+
+/** Only the server's pasted-install and public-demo attempts carry a binding.
+ * Never preload for the Shopify app/Woo or trust a query parameter to decide
+ * challenge exemptions. siteKey is read at runtime on the server
+ * (TURNSTILE_SITE_KEY) and returned by the attempt route. */
 export async function attemptTurnstileToken(binding: TryOnAttempt['turnstile']): Promise<string | undefined> {
   if (!binding) return undefined;
-  if (!binding.siteKey || binding.action !== 'paste_tryon' || !binding.cData || window.location.pathname !== '/embed/try-on') {
+  if (!binding.siteKey || !Object.hasOwn(ACTION_PAGES, binding.action) || !binding.cData
+    || window.location.pathname !== ACTION_PAGES[binding.action]) {
     throw new Error('turnstile_unavailable');
   }
   return token(binding);
 }
 
 async function token(binding: Binding): Promise<string> {
-  const api = await load();
+  const api = await load().catch(() => { throw new TurnstileChallengeError(); });
   const container = document.createElement('div');
   // Inside our embed. Interaction-only widgets must be allowed to become visible.
   (document.querySelector('main') ?? document.body).appendChild(container);
@@ -54,7 +68,7 @@ async function token(binding: Binding): Promise<string> {
       clearTimeout(timer);
       if (widget !== undefined) api.remove(widget);
       container.remove();
-      if (value) resolve(value); else reject(new Error('turnstile_unavailable'));
+      if (value) resolve(value); else reject(new TurnstileChallengeError());
     };
     const timer = window.setTimeout(() => finish(), 120000);
     try {

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { pasteTurnstileConfig, pasteTurnstileBinding, verifyPasteTurnstile } from '@/lib/paste/turnstile';
+import { pasteTurnstileConfig, pasteTurnstileBinding, pasteTurnstileRequired, verifyPasteTurnstile } from '@/lib/paste/turnstile';
 import type { VerifiedTryOnSession } from './storefront-context';
 
 // Cloudflare documented dummy keys. Every siteverify call here is mocked.
@@ -54,10 +54,20 @@ describe('paid website look Turnstile gate', () => {
     else fetcher.mockRejectedValue(new Error(kind));
     expect(await verifyPasteTurnstile({ token, authorization }, fetcher)).toEqual({ ok: false, code: 'turnstile_unavailable' });
   });
-  it.each(['paste-shopify', 'woocommerce', undefined] as const)('leaves %s generation unchanged without a Turnstile secret', async (platform) => {
+  it.each(['woocommerce', undefined] as const)('leaves %s generation (the Shopify app when undefined) unchanged without a Turnstile secret', async (platform) => {
     vi.stubEnv('TURNSTILE_SECRET_KEY', '');
     expect(await verifyPasteTurnstile({ token: null, authorization: { ...authorization, platform } }, fetcher)).toEqual({ ok: true });
     expect(fetcher).not.toHaveBeenCalled();
+  });
+  it('requires the challenge for a paid pasted Shopify look, like a website one', async () => {
+    const shopify = { ...authorization, platform: 'paste-shopify' as const };
+    expect(pasteTurnstileRequired(shopify)).toBe(true);
+    expect(await verifyPasteTurnstile({ token: null, authorization: shopify }, fetcher)).toEqual({ ok: false, code: 'turnstile_required' });
+    expect(await verifyPasteTurnstile({ token, authorization: { ...shopify } }, fetcher)).toEqual({ ok: true });
+    vi.stubEnv('TURNSTILE_SECRET_KEY', '');
+    expect(await verifyPasteTurnstile({ token, authorization: shopify }, fetcher)).toEqual({ ok: false, code: 'turnstile_not_configured' });
+    // The owner's signed test look stays exempt.
+    expect(pasteTurnstileRequired({ ...shopify, test: true })).toBe(false);
   });
   it('exempts only the signed test-look flag and binds a different paid attempt differently', async () => {
     vi.stubEnv('TURNSTILE_SECRET_KEY', '');

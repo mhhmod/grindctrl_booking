@@ -16,6 +16,15 @@ import { resolveOrderProvider } from '@/lib/messenger/order-provider';
 import { normalizeTenantKey } from '@/lib/tenancy/tenant-key';
 import { isActiveTenant } from '@/lib/shopify/tokens';
 import { recordPasteSignal } from '@/lib/paste/store';
+import { schedulePasteDomainCheck } from '@/lib/paste/domain-check';
+import type { ResolvedPublicSite } from '@/lib/messenger/public-api';
+
+/** A paste domain this site added while another site held the host. */
+function claimedPasteHost(site: ResolvedPublicSite, host: string): boolean {
+  const name = host.toLowerCase().replace(/\.$/, '').replace(/^www\./, '');
+  return site.patterns.some((row) => row.verification_method === 'paste_dns_txt' && row.verification_status === 'pending'
+    && row.pattern.replace(/^www\./, '') === name);
+}
 
 /* GET /api/messenger/config?key=<embed_key>&origin=<page origin>
    Public, cacheable, fail-quiet: the loader keeps its last-known-good copy
@@ -65,14 +74,24 @@ export async function GET(request: NextRequest) {
     if (!site) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
     if (!originAllowed(site, origin, { trusted: headerOrigin !== null })) {
+      // This site's own paste claim on a host another site holds: its code
+      // may be live there now, so ask our server to look (rate limited; the
+      // header only asks, the page decides).
+      const host = headerOrigin && URL.canParse(headerOrigin) ? new URL(headerOrigin).hostname : null;
+      if (host && site.status === 'active' && claimedPasteHost(site, host)) schedulePasteDomainCheck(site.id, host);
       // Do not reveal whether the key exists on foreign origins.
       return NextResponse.json({ error: 'origin_not_allowed' }, { status: 403 });
     }
 
     const flagStore = flagStoreForSite(site);
     // A typed/query origin is not an install signal. This path is reached
-    // only after the browser header passed this site's origin policy.
-    if (headerOrigin && site.status === 'active') await recordPasteSignal(site.id, headerOrigin);
+    // only after the browser header passed this site's origin policy. Any
+    // client can set that header, so an unverified domain earns nothing
+    // here: it only schedules our own check of the domain's page.
+    if (headerOrigin && site.status === 'active') {
+      const signal = await recordPasteSignal(site.id, headerOrigin);
+      if (signal === 'unverified') schedulePasteDomainCheck(site.id, new URL(headerOrigin).hostname);
+    }
     const features = await storeFlags(flagStore);
     const now = new Date();
     const payload = features.includes('v16_chat')

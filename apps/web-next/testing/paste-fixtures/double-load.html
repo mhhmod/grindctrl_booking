@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- Imitates: a site where the snippet was pasted twice (theme header and a
+     page block) and Google Tag Manager injects it a third time from a Custom
+     HTML tag (document.currentScript can be null there). Expect one Store
+     Chat launcher and one Try-On button. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="gc-fixture-path" content="/products/cropped-blazer">
+  <meta name="gc-fixture-expect" content="after">
+  <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"Product","sku":"CB-9","name":"Cropped blazer","image":"https://cdn.blazers.example/cropped-blazer.jpg",
+     "offers":{"@type":"Offer","price":"150","priceCurrency":"USD"}}
+  </script>
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+</head>
+<body>
+  <main>
+    <div class="product">
+      <img src="https://cdn.blazers.example/cropped-blazer.jpg" width="900" height="1100" alt="">
+      <h1>Cropped blazer</h1>
+      <div class="buy" data-gc-expect="after"><button type="button" class="btn add_to_cart">Add to cart</button></div>
+    </div>
+  </main>
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+  <script data-fixture-gtm>
+    (function () {
+      var tag = document.createElement('script');
+      tag.async = true;
+      tag.src = 'http://localhost:3000/widget/v1/messenger.js';
+      tag.setAttribute('data-key', 'REPLACE_WITH_EMBED_KEY');
+      tag.setAttribute('data-gc-install', 'paste');
+      tag.setAttribute('data-gc-platform', 'website');
+      tag.setAttribute('data-gc-v', '2');
+      document.body.appendChild(tag);
+    })();
+  </script>
+</body>
+</html>

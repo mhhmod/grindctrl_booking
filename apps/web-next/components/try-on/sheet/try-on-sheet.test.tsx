@@ -11,12 +11,13 @@ import { TryOnSheet } from './try-on-sheet';
 /* The sheet's photo, check and consent steps (02-try-on.md) over the same
    flow today's embed uses. The flow itself is covered by try-on-demo's
    tests; here it records what the sheet asks of it. */
-const flow = vi.hoisted(() => ({ generated: 0, selected: [] as string[], finish: false, serverStage: 'received' as 'received' | 'making' | 'finishing' }));
+const flow = vi.hoisted(() => ({ generated: 0, selected: [] as string[], finish: false, challenge: false, serverStage: 'received' as 'received' | 'making' | 'finishing' }));
 vi.mock('../use-try-on-flow', async () => {
   const { useCallback, useState } = await import('react');
   return {
     useTryOnFlow: () => {
-      const [step, setStep] = useState<'upload' | 'consent' | 'generating' | 'result'>('upload');
+      const [step, setStep] = useState<'upload' | 'consent' | 'generating' | 'result' | 'error'>('upload');
+      const [challengeFailed, setChallengeFailed] = useState(false);
       const [job, setJob] = useState<Record<string, unknown> | null>(null);
       const [photoDataUrl, setPhoto] = useState<string | null>(null);
       const [generationStartedAt, setStartedAt] = useState<number | null>(null);
@@ -37,6 +38,7 @@ vi.mock('../use-try-on-flow', async () => {
         job,
         error: null,
         unavailable: false,
+        challengeFailed,
         selectPhoto,
         clearPhoto: () => {
           setPhoto(null);
@@ -45,6 +47,11 @@ vi.mock('../use-try-on-flow', async () => {
         generate: async () => {
           flow.generated += 1;
           setStartedAt(Date.now());
+          setChallengeFailed(flow.challenge);
+          if (flow.challenge) {
+            setStep('error');
+            return;
+          }
           if (flow.finish) {
             setSeconds(14);
             setJob({ jobId: 'job-1', productId: 'layla-abaya', resultImageUrl: 'data:image/png;base64,bG9vaw==', meta: { runtime: 'live' } });
@@ -118,6 +125,7 @@ beforeEach(async () => {
   flow.generated = 0;
   flow.selected = [];
   flow.finish = false;
+  flow.challenge = false;
   flow.serverStage = 'received';
 });
 
@@ -132,6 +140,22 @@ describe('the v16 try-on sheet', () => {
     expect(screen.getByText('Layla Embroidered Abaya')).toBeInTheDocument();
     expect(screen.getByText('Black · M')).toBeInTheDocument();
     await screen.findByRole('heading', { name: 'See it on you' });
+  });
+
+  it('explains a quick check that did not finish and runs a fresh one with the same photo', async () => {
+    flow.challenge = true;
+    renderSheet();
+    await pickPhoto();
+    fireEvent.click(screen.getByRole('button', { name: 'Agree and try it on' }));
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Quick check didn’t finish');
+    expect(alert).toHaveTextContent('We couldn’t confirm the request. Check your connection, then try again.');
+    const picked = flow.selected.length;
+    flow.challenge = false;
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    await waitFor(() => expect(flow.generated).toBe(2));
+    expect(flow.selected).toHaveLength(picked);
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('shows the product alone when it has no variants', async () => {

@@ -257,10 +257,19 @@ export function MessengerPanel({
      one that arrives after the iframe already loaded. shopperTokenRef is a
      ref, not state: a late top-up must reach the next send() call without
      forcing a re-bootstrap. */
+  /* Loaders from before v1.2.0 put the anonId in the iframe address; newer
+     ones keep it out of the address (logs, Referer) and send it over
+     postMessage, saying so with `session=1`. */
   const urlAnonId = useMemo(() => {
     if (typeof window === 'undefined') return null;
     return new URLSearchParams(window.location.search).get('anonId');
   }, []);
+  const loaderAnonRef = useRef<string | null>(urlAnonId);
+  const sessionExpected = useMemo(
+    () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('session') === '1',
+    [],
+  );
+  const sessionArrived = useRef<(() => void) | null>(null);
   const shopperTokenRef = useRef<string | null>(
     // Only loaders cached from before the handshake below still put it here.
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('shopperToken') : null,
@@ -303,23 +312,29 @@ export function MessengerPanel({
       try {
         const storedAnon = localStorage.getItem(ANON_KEY(config.key));
         const storedConv = localStorage.getItem(CONV_KEY(config.key));
+        const framed = window.parent !== window;
+        const waits: Promise<void>[] = [];
+        const waitFor = (slot: { current: (() => void) | null }) => new Promise<void>((resolve) => {
+          const timer = window.setTimeout(resolve, IDENTITY_WAIT_MS);
+          slot.current = () => {
+            window.clearTimeout(timer);
+            resolve();
+          };
+        });
+        if (framed && identityExpected && !shopperTokenRef.current) waits.push(waitFor(identityArrived));
+        if (framed && sessionExpected && !loaderAnonRef.current) waits.push(waitFor(sessionArrived));
+        if (waits.length > 0) {
+          // No secret in the request; the answers come back only to our origin.
+          window.parent.postMessage({ type: 'grindctrl-messenger:identity-request' }, '*');
+          await Promise.all(waits);
+          identityArrived.current = null;
+          sessionArrived.current = null;
+          if (cancelled) return;
+        }
         // The loader's anonId is what a verified shopper token is bound to
         // (see lib/messenger/identity.ts's sid claim) -- adopt it over our
         // own independently-generated one whenever the loader supplied it.
-        const anonymousId = urlAnonId ?? storedAnon ?? undefined;
-        if (identityExpected && !shopperTokenRef.current && window.parent !== window) {
-          await new Promise<void>((resolve) => {
-            const timer = window.setTimeout(resolve, IDENTITY_WAIT_MS);
-            identityArrived.current = () => {
-              window.clearTimeout(timer);
-              resolve();
-            };
-            // No secret in the request; the token comes back only to our origin.
-            window.parent.postMessage({ type: 'grindctrl-messenger:identity-request' }, '*');
-          });
-          identityArrived.current = null;
-          if (cancelled) return;
-        }
+        const anonymousId = loaderAnonRef.current ?? storedAnon ?? undefined;
         const res = await fetch('/api/messenger/bootstrap', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
@@ -361,20 +376,26 @@ export function MessengerPanel({
     return () => {
       cancelled = true;
     };
-  }, [config.key, effectiveOrigin, identityExpected, originToken, urlAnonId, variant]);
+  }, [config.key, effectiveOrigin, identityExpected, originToken, sessionExpected, variant]);
 
   /* Reconnect sync on focus/visible — cheap recovery after sleep/offline. */
   useEffect(() => {
     function sync() {
       if (document.visibilityState !== 'visible' || !conversationId || !anonId) return;
       const last = messages.filter((message) => !message.pending && !message.failed && !message.queued).at(-1)?.createdAt;
-      fetch(
-        `/api/messenger/sync?key=${encodeURIComponent(config.key)}&origin=${encodeURIComponent(
-          effectiveOrigin ?? '',
-        )}&originToken=${encodeURIComponent(originToken ?? '')}&anonId=${anonId}&conversationId=${conversationId}${
-          last ? `&after=${encodeURIComponent(last)}` : ''
-        }`,
-      )
+      // The shopper's ids go in the body, never the address (logs, Referer).
+      fetch('/api/messenger/sync', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          key: config.key,
+          origin: effectiveOrigin ?? '',
+          originToken: originToken ?? '',
+          anonymousId: anonId,
+          conversationId,
+          after: last ?? undefined,
+        }),
+      })
         .then((r) => (r.ok ? r.json() : null))
         .then((data) => {
           if (typeof data?.staffTyping === 'boolean') setStaffTyping(data.staffTyping);
@@ -433,6 +454,14 @@ export function MessengerPanel({
         if (typeof data.token === 'string') shopperTokenRef.current = data.token;
         // Bootstrap may be waiting for it; null means none is coming.
         identityArrived.current?.();
+        return;
+      }
+      // The loader's anonId, from a loader that keeps it out of our address.
+      if (data?.type === 'grindctrl-messenger:session') {
+        if (typeof data.anonId === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(data.anonId) && !loaderAnonRef.current) {
+          loaderAnonRef.current = data.anonId;
+        }
+        sessionArrived.current?.();
         return;
       }
       if (data?.type === 'grindctrl-messenger:cart') {

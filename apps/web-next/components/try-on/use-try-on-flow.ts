@@ -11,7 +11,7 @@ import type {
 } from '@/lib/try-on/types';
 import { retryAfterDelayMs, TRYON_ASYNC_POLL_TIMEOUT_MS, TRYON_POLL_INITIAL_DELAY_MS } from '@/lib/try-on/poll-policy';
 import { recordTryOnOpen, recordTryOnPhase } from '@/lib/try-on/performance';
-import { attemptTurnstileToken } from '@/lib/try-on/turnstile-client';
+import { attemptTurnstileToken, TurnstileChallengeError } from '@/lib/try-on/turnstile-client';
 import {
   bootstrapStorefrontProof,
   clearPendingStorefrontProof,
@@ -74,6 +74,10 @@ export function useTryOnFlow({
   /* Set when the store cannot make looks right now (out of looks, plan
      lapsed): retrying cannot help, so the error offers no retry. */
   const [unavailable, setUnavailable] = useState(false);
+  /* Set when the website store's bot check (Turnstile) did not finish or was
+     refused: the error offers a retry that runs a fresh check with the same
+     photo and garment. */
+  const [challengeFailed, setChallengeFailed] = useState(false);
   const [session, setSession] = useState<TryOnSession | null>(null);
   const [sessionState, setSessionState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [sessionError, setSessionError] = useState<string | null>(null);
@@ -224,6 +228,7 @@ export function useTryOnFlow({
     setGenerationPhase('session-requested');
     setIsSlowGeneration(false);
     setError(null);
+    setChallengeFailed(false);
 
     try {
       if (!session) {
@@ -252,11 +257,14 @@ export function useTryOnFlow({
 
       setGenerationPhase('session-created');
 
-      // A binding is present only for website paste. A fresh token is obtained
+      // A binding is present only for paid pasted looks. A fresh token is obtained
       // for this attempt; retries below reuse the exact same generation body.
       let turnstileToken: string | undefined;
       try { turnstileToken = await attemptTurnstileToken(attemptData.data.turnstile); }
-      catch { throw new Error(t.genericError); }
+      catch (challengeError) {
+        if (challengeError instanceof TurnstileChallengeError) setChallengeFailed(true);
+        throw new Error(t.genericError);
+      }
 
       // 2. Generate try-on
       const generationBody = JSON.stringify({
@@ -311,6 +319,11 @@ export function useTryOnFlow({
       if (genData.code === 'TRYON_UNAVAILABLE' || genData.code === 'test_looks_cap') {
         setUnavailable(true);
         throw new Error(t.tryOnUnavailable);
+      }
+      // The server could not verify the check's token: a fresh check may pass.
+      if (genData.code === 'turnstile_failed' || genData.code === 'turnstile_required') {
+        setChallengeFailed(true);
+        throw new Error(t.genericError);
       }
       if (
         !genData.ok ||
@@ -385,6 +398,7 @@ export function useTryOnFlow({
     setJob(null);
     setError(null);
     setUnavailable(false);
+    setChallengeFailed(false);
     setGenerationPhase('session-requested');
     setIsSlowGeneration(false);
     setGenerationStartedAt(null);
@@ -416,6 +430,7 @@ export function useTryOnFlow({
     job,
     error,
     unavailable,
+    challengeFailed,
     session,
     sessionState,
     sessionError,

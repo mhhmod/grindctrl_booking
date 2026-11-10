@@ -4,8 +4,12 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { setMessengerServiceClientForTests } from './db';
 import { escalateAndNotify } from './escalate';
 
-const mocks = vi.hoisted(() => ({ notify: vi.fn() }));
+const mocks = vi.hoisted(() => ({ notify: vi.fn(), visitorLimit: vi.fn(), networkLimit: vi.fn() }));
 vi.mock('./notify', () => ({ notifyHandoff: mocks.notify }));
+vi.mock('@/lib/ratelimit', () => ({
+  handoffAlertVisitorRatelimit: { configured: true, limit: mocks.visitorLimit },
+  handoffAlertNetworkRatelimit: { configured: true, limit: mocks.networkLimit },
+}));
 
 const SITE = {
   id: 'site-1', name: 'Maison', workspace_id: 'ws-1', locale: 'en' as const,
@@ -66,5 +70,37 @@ describe('assistant failure escalation', () => {
 
     expect(results.filter(Boolean)).toHaveLength(1);
     expect(mocks.notify).toHaveBeenCalledOnce();
+  });
+});
+
+describe('G13: alert caps per visitor and network', () => {
+  const visitor = { id: 'visitor-1', network: '2001:db8:1:2::/64' };
+  beforeEach(() => {
+    mocks.notify.mockReset().mockResolvedValue(ALERT);
+    mocks.visitorLimit.mockReset().mockResolvedValue({ success: true, reset: Date.now() + 60_000 });
+    mocks.networkLimit.mockReset().mockResolvedValue({ success: true, reset: Date.now() + 60_000 });
+  });
+  afterEach(() => setMessengerServiceClientForTests(null));
+
+  it('alerts as usual within both caps', async () => {
+    conversationClient();
+    const escalation = await escalateAndNotify('conv-1', 'shopper_requested_human', 'Wants a person.', SITE, { visitor });
+    expect(escalation?.alert.status).toBe('sent');
+    expect(mocks.visitorLimit).toHaveBeenCalledWith('site-1:visitor-1');
+    expect(mocks.networkLimit).toHaveBeenCalledWith('site-1:2001:db8:1:2::/64');
+  });
+
+  it.each([
+    ['the visitor', () => mocks.visitorLimit.mockResolvedValue({ success: false, reset: Date.now() + 60_000 })],
+    ['the network', () => mocks.networkLimit.mockResolvedValue({ success: false, reset: Date.now() + 60_000 })],
+    ['an unavailable limiter', () => mocks.visitorLimit.mockRejectedValue(new Error('redis down'))],
+  ])('still hands off past %s cap, leaving the alert for the digest', async (_label, arrange) => {
+    arrange();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    conversationClient();
+    const escalation = await escalateAndNotify('conv-1', 'shopper_requested_human', 'Wants a person.', SITE, { visitor });
+    expect(escalation?.conversation.status).toBe('handoff_requested');
+    expect(escalation?.alert).toMatchObject({ status: 'pending', reason: 'throttled', digest: true });
+    expect(mocks.notify).not.toHaveBeenCalled();
   });
 });

@@ -39,7 +39,7 @@ vi.mock('@/components/try-on/embed-frame-bridge', () => ({ EmbedFrameBridge: () 
 const hosts = vi.hoisted(() => ({ list: ['shop.example.com'] as string[] }));
 vi.mock('@/lib/woo/garment-url', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/woo/garment-url')>()),
-  verifiedSiteHosts: async () => hosts.list,
+  siteGarmentHosts: async () => hosts.list,
 }));
 
 import EmbedTryOnPage from './page';

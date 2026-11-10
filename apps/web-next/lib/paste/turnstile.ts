@@ -22,10 +22,44 @@ export function pasteTurnstileBinding(authorization: Pick<VerifiedTryOnSession, 
   return createHash('sha256').update(`paste-look-v1:${authorization.shop}:${authorization.requestKey}`).digest('hex');
 }
 
+/** Every paid look on a pasted install, website or Shopify: a pasted
+ *  Shopify render is public HTML that anyone can replay, so its signature
+ *  alone does not show a person asked for the look. The Shopify app (no
+ *  platform claim) and the owner's signed test looks are exempt. */
+export function pasteTurnstileRequired(authorization: Pick<VerifiedTryOnSession, 'platform' | 'test'>): boolean {
+  return (authorization.platform === 'paste-website' || authorization.platform === 'paste-shopify') && authorization.test !== true;
+}
+
 export async function verifyPasteTurnstile(input: {
   token: unknown; authorization: VerifiedTryOnSession; remoteIp?: string | null;
 }, fetcher: typeof fetch = fetch): Promise<TurnstileResult> {
-  if (input.authorization.platform !== 'paste-website' || input.authorization.test === true) return { ok: true };
+  if (!pasteTurnstileRequired(input.authorization)) return { ok: true };
+  return siteverify({ token: input.token, action: PASTE_TURNSTILE_ACTION, cData: pasteTurnstileBinding(input.authorization),
+    idempotencyKey: input.authorization.requestKey, remoteIp: input.remoteIp }, fetcher);
+}
+
+/* The public /try-on demo on our own site: the same check under its own
+   action, bound to one generation attempt. The widget runs on grindctrl.cloud. */
+export const DEMO_TURNSTILE_ACTION = 'demo_tryon' as const;
+
+export function demoTurnstileBinding(requestKey: string): string {
+  return createHash('sha256').update(`demo-look-v1:${requestKey}`).digest('hex');
+}
+
+export function demoTurnstileConfig(requestKey: string) {
+  return { siteKey: pasteTurnstileSiteKey(), action: DEMO_TURNSTILE_ACTION, cData: demoTurnstileBinding(requestKey) };
+}
+
+export async function verifyDemoTurnstile(input: {
+  token: unknown; requestKey: string; remoteIp?: string | null;
+}, fetcher: typeof fetch = fetch): Promise<TurnstileResult> {
+  return siteverify({ token: input.token, action: DEMO_TURNSTILE_ACTION, cData: demoTurnstileBinding(input.requestKey),
+    idempotencyKey: input.requestKey, remoteIp: input.remoteIp }, fetcher);
+}
+
+async function siteverify(input: {
+  token: unknown; action: string; cData: string; idempotencyKey: string; remoteIp?: string | null;
+}, fetcher: typeof fetch): Promise<TurnstileResult> {
   const secret = process.env.TURNSTILE_SECRET_KEY?.trim();
   if (!secret) return { ok: false, code: 'turnstile_not_configured' };
   if (typeof input.token !== 'string' || !input.token || input.token.length > 2048) return { ok: false, code: 'turnstile_required' };
@@ -34,7 +68,7 @@ export async function verifyPasteTurnstile(input: {
       method: 'POST', cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(5000),
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ secret, response: input.token,
-        idempotency_key: input.authorization.requestKey,
+        idempotency_key: input.idempotencyKey,
         ...(input.remoteIp ? { remoteip: input.remoteIp } : {}) }),
     });
     if (!response.ok) return { ok: false, code: 'turnstile_unavailable' };
@@ -44,8 +78,8 @@ export async function verifyPasteTurnstile(input: {
     const appHost = new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://grindctrl.cloud').hostname;
     // No test-key bypass in application code. Mocks return the documented
     // shape with our hostname, action and per-attempt cData.
-    if (result.success !== true || result.hostname !== appHost || result.action !== PASTE_TURNSTILE_ACTION
-      || result.cdata !== pasteTurnstileBinding(input.authorization)) return { ok: false, code: 'turnstile_failed' };
+    if (result.success !== true || result.hostname !== appHost || result.action !== input.action
+      || result.cdata !== input.cData) return { ok: false, code: 'turnstile_failed' };
     return { ok: true };
   } catch { return { ok: false, code: 'turnstile_unavailable' }; }
 }

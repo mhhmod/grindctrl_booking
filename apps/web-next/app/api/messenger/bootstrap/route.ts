@@ -1,6 +1,7 @@
 import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
 import {
@@ -26,6 +27,8 @@ import type { MessengerLocale } from '@/lib/messenger/types';
 const ANON_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const LOCALES: MessengerLocale[] = ['en', 'ar'];
 
+const BODY_LIMIT_BYTES = 32 * 1024;
+
 function bad(code: string, status = 400) {
   return NextResponse.json({ error: code }, { status });
 }
@@ -38,12 +41,10 @@ export async function POST(request: NextRequest) {
     throw error;
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = (await request.json()) as Record<string, unknown>;
-  } catch {
-    return bad('bad_json');
-  }
+  const parsed = await readLimitedJson(request, BODY_LIMIT_BYTES);
+  if (!parsed.ok) return parsed.status === 413 ? bad('too_large', 413) : bad('bad_json');
+  if (!isJsonObject(parsed.value)) return bad('bad_json');
+  const body = parsed.value;
 
   const key = typeof body.key === 'string' ? body.key : '';
   const { origin, trusted: originTrusted } = provenOrigin(

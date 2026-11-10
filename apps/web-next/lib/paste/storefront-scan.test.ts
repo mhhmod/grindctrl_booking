@@ -4,7 +4,7 @@ import { Readable } from 'node:stream';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { liquidSignedMessage, pasteLiquidSecret } from './signing';
 import {
-  readCapped, recordedStorefrontEvidence, scanShopStorefront, StorefrontTooLargeError, STOREFRONT_MAX_BODY_BYTES,
+  fetchStorefrontPage, readCapped, recordedStorefrontEvidence, scanShopStorefront, StorefrontTooLargeError, STOREFRONT_MAX_BODY_BYTES,
   type StorefrontLookup, type StorefrontRequest, type StorefrontResponse,
 } from './storefront-scan';
 import type { PasteConnection } from './types';
@@ -251,5 +251,32 @@ describe('a recorded storefront finding', () => {
     expect(recordedStorefrontEvidence({ ...pending, shop_check_outcome: 'awaiting_visit', shop_checked_at: at(16 * 60) }, NOW * 1000)).toBeNull();
     expect(recordedStorefrontEvidence({ ...pending, shop_check_outcome: 'not_found', shop_checked_at: at(60) }, NOW * 1000)).toBeNull();
     expect(recordedStorefrontEvidence({ ...pending, shop_check_outcome: 'awaiting_visit', shop_checked_at: null }, NOW * 1000)).toBeNull();
+  });
+});
+
+describe('a trusted domain home page, for the platform fingerprint', () => {
+  const fetchPage = (routes: Record<string, Route>, lookup: StorefrontLookup = publicLookup) => {
+    const fake = storefront(routes);
+    return { fake, result: fetchStorefrontPage('shop.example', { transport: fake.transport, lookup }) };
+  };
+
+  it('reads the page and its fingerprint headers, following the www twin only', async () => {
+    const { fake, result } = fetchPage({
+      'GET https://shop.example/': redirect('https://www.shop.example/'),
+      'GET https://www.shop.example/': html('<html>wix</html>', { headers: { 'x-wix-request-id': '1712' } }),
+    });
+    expect(await result).toEqual({ url: 'https://www.shop.example/', html: '<html>wix</html>', headers: { 'x-wix-request-id': '1712' } });
+    expect(fake.calls.map((call) => [call.method, call.address, call.headers.cookie])).toEqual([
+      ['GET', '23.227.38.65', undefined], ['GET', '23.227.38.65', undefined]]);
+  });
+
+  it('refuses foreign redirects, private addresses, errors and non-HTML', async () => {
+    expect(await fetchPage({ 'GET https://shop.example/': redirect('https://files.easy-orders.net/') }).result).toEqual({ failure: 'foreign_redirect' });
+    expect(await fetchPage({ 'GET https://shop.example/': redirect('http://www.shop.example/') }).result).toEqual({ failure: 'bad_redirect' });
+    const blocked = fetchPage({}, async () => [{ address: '169.254.169.254', family: 4 }]);
+    expect(await blocked.result).toEqual({ failure: 'private_address' });
+    expect(blocked.fake.transport).not.toHaveBeenCalled();
+    expect(await fetchPage({ 'GET https://shop.example/': html('nope', { status: 503 }) }).result).toEqual({ failure: 'status' });
+    expect(await fetchPage({ 'GET https://shop.example/': html('{}', { contentType: 'application/json' }) }).result).toEqual({ failure: 'not_html' });
   });
 });

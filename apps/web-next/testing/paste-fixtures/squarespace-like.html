@@ -1,0 +1,48 @@
+<!doctype html>
+<!-- Imitates: a Squarespace Commerce product page. JSON-LD Product with an
+     image list, ProductItem-* blocks, and the add-to-cart control as a
+     div[role=button] inside its own wrapper (not a <button>). -->
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="gc-fixture-path" content="/shop/p/pleated-midi-skirt">
+  <meta name="gc-fixture-expect" content="after">
+  <meta property="og:type" content="website">
+  <script type="application/ld+json">
+    {"url":"https://www.maisonrue.example/shop/p/pleated-midi-skirt","name":"Pleated midi skirt","@context":"http://schema.org","@type":"Product",
+     "image":"https://images.squarespace-cdn.com/content/v1/5f1/pleated-skirt.jpg","sku":"SQ8125440",
+     "offers":{"price":"95.00","priceCurrency":"USD","url":"https://www.maisonrue.example/shop/p/pleated-midi-skirt","@type":"Offer","availability":"InStock"}}
+  </script>
+  <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
+</head>
+<body class="view-item collection-type-products">
+  <div id="siteWrapper" class="clearfix site-wrapper">
+    <header id="header" class="header theme-col--primary"><div class="header-inner"><a href="/">Maison Rue</a><a href="/cart" class="header-actions-action--cart">Cart</a></div></header>
+    <main id="page" class="container" role="main">
+      <article class="sections" id="sections"><section class="page-section"><div class="content-wrapper"><div class="content">
+        <div class="ProductItem" data-item-id="5f1">
+          <section class="ProductItem-gallery"><div class="ProductItem-gallery-slides"><div class="ProductItem-gallery-slides-item">
+            <img src="https://images.squarespace-cdn.com/content/v1/5f1/pleated-skirt.jpg?format=1000w" width="1000" height="1333" alt="">
+          </div></div></section>
+          <section class="ProductItem-details">
+            <h1 class="ProductItem-details-title">Pleated midi skirt</h1>
+            <div class="product-price">$95.00</div>
+            <div class="ProductItem-details-checkout">
+              <div class="product-variants"><div class="variant-option"><select aria-label="Size"><option>Select Size</option><option>XS</option><option>S</option></select></div></div>
+              <div class="product-quantity-input"><input type="number" value="1" aria-label="Quantity"></div>
+              <div class="sqs-add-to-cart-button-wrapper" data-animation-role="button" data-gc-expect="after">
+                <div class="sqs-add-to-cart-button sqs-suppress-edit-mode sqs-editable-button sqs-button-element--primary" role="button" tabindex="0" data-original-label="Add To Cart">
+                  <div class="sqs-add-to-cart-button-inner">Add To Cart</div>
+                </div>
+              </div>
+            </div>
+            <div class="ProductItem-details-excerpt"><p>Fully lined crepe.</p></div>
+          </section>
+        </div>
+      </div></div></section></article>
+    </main>
+    <footer class="sections" id="footer-sections"><a href="/shop">Shop now</a></footer>
+  </div>
+</body>
+</html>

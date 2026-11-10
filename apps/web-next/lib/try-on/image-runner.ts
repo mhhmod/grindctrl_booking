@@ -13,9 +13,10 @@ import type { TryOnJob } from './types';
 import { getProduct } from './products';
 import { readProviderBody } from '@/lib/provider-http';
 import { decodeRasterDataUrl, TRYON_RESULT_MAX_BYTES } from './image-data';
+import { sanitizeShopperPhoto } from './photo-sanitize';
 import { toShopperFailureMessage } from './shopper-errors';
 import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
-import { fetchSiteGarment } from '@/lib/woo/garment-url';
+import { fetchSiteGarment, garmentRefusalReason, UnsafeGarmentUrlError } from '@/lib/woo/garment-url';
 import type { TryOnJobTimings } from './job-timings';
 
 const OPENROUTER_IMAGES_URL = 'https://openrouter.ai/api/v1/images';
@@ -73,11 +74,12 @@ export async function prepareGarmentImage(
   garmentUrl?: string,
   shop?: string | null,
   signal?: AbortSignal,
+  pageOrigin?: string,
 ): Promise<PreparedGarment> {
   signal?.throwIfAborted();
   if (garmentUrl && shop && isSiteTenantKey(shop)) {
     // WooCommerce and WordPress sites: resolve, pin, no redirects.
-    const { mime, bytes } = await fetchSiteGarment(shop.slice('site:'.length), garmentUrl);
+    const { mime, bytes } = await fetchSiteGarment(shop.slice('site:'.length), garmentUrl, { pageOrigin });
     // The pinned Woo fetch retains every safety check. Its bounded response
     // is discarded if authorization/reservation ended while it was fetching.
     signal?.throwIfAborted();
@@ -115,6 +117,7 @@ export async function prepareGarmentImage(
 }
 
 export type ImageGenerationOptions = {
+  pageOrigin?: string;
   garment?: Promise<{ value: PreparedGarment } | { error: unknown }>;
   timings?: TryOnJobTimings;
 };
@@ -156,7 +159,10 @@ export async function runImageGeneration(
     return fail('provider_not_configured', 503);
   }
 
-  if (!parsePhotoDataUrl(photoData)) {
+  // Decoded and re-encoded with no metadata (EXIF GPS included) before the
+  // provider sees it, on every path: lib/try-on/photo-sanitize.ts.
+  const providerPhoto = await sanitizeShopperPhoto(photoData);
+  if (!providerPhoto) {
     return fail('Photo must be a jpeg, png, or webp image.');
   }
 
@@ -168,15 +174,15 @@ export async function runImageGeneration(
     try {
       const prepared = options.garment
         ? await options.garment
-        : { value: await prepareGarmentImage(productId, garmentUrl, shop) };
+        : { value: await prepareGarmentImage(productId, garmentUrl, shop, undefined, options.pageOrigin) };
       if ('error' in prepared) throw prepared.error;
       garmentDataUrl = prepared.value.dataUrl;
       if (options.timings) options.timings.input_bytes.garment = prepared.value.byteLength;
     } finally {
       if (options.timings && !options.garment) options.timings.garment_ms = performance.now() - started;
     }
-  } catch {
-    return fail('garment_unavailable');
+  } catch (error) {
+    return fail(error instanceof UnsafeGarmentUrlError ? garmentRefusalReason(error) : 'garment_unavailable');
   }
 
   costEstimate = null; // An attempted/ambiguous call is not proven free.
@@ -192,7 +198,7 @@ export async function runImageGeneration(
         "realistic wrinkles, and correct fit for the person's build. " +
         'No beautification, no body reshaping, no background changes, no added props. Photorealistic, indistinguishable from a real photo.',
       input_references: [
-        { type: 'image_url', image_url: { url: photoData } },
+        { type: 'image_url', image_url: { url: providerPhoto } },
         { type: 'image_url', image_url: { url: garmentDataUrl } },
       ],
       n: 1,

@@ -1,5 +1,5 @@
 /**
- * GRINDCTRL Try-On hosted engine v1.3.0.
+ * GRINDCTRL Try-On hosted engine v1.4.0.
  *
  * One storefront lifecycle for every platform: the button, its animated icon
  * and ready badge, the "Try on" pills on product cards, prewarm on view (skipped on
@@ -13,11 +13,15 @@
  *                                     pill, every pill unless error.scope is 'product')
  *   getProduct(product)            -> Promise<{ options, variants, currency } | null>  for the sheet's size picker
  *   addToCart(variant, qty, state) -> Promise<{ ok, message?, variantTitle? } | 'unsupported'>
- *   placementTarget()              -> Element the injected button follows (injectButton adapters only)
+ *   placement()                    -> { node, mode } the injected button follows, or mode 'float'
+ *                                     for a fixed pill (injectButton adapters; placementTarget() for older ones)
  *   findCards(rescan)              -> [{ host, productId, title }] cards to give a pill (injectCards adapters only);
- *                                     cardSettings carries the catalog label, sizes and colors
+ *                                     cardSettings carries the catalog label, sizes and colors; cardTrigger?
+ *                                     the selector of new markup worth a rescan
  *   lookKey(button), messageProductId(product), checkout(), locale, embedOrigin?, buttonLabel?, cardLabel?
  *   buttonSettings?                -> the owner's button look, applied before an injected button is shown
+ *   followsPage?                   -> mount() returns { refresh() } to call after the page changed
+ *                                     client-side: one button for the product now shown, pills to match
  *
  * Platform data is display and cart data only; the signed context is the
  * authority for a look. Fails quiet: nothing here may break the store page.
@@ -27,19 +31,22 @@
   if (window.GRINDCTRL_TRYON_ENGINE) return;
   // Per page, across mounts: every icon's clipPath needs its own id.
   var iconCount = 0;
-  window.GRINDCTRL_TRYON_ENGINE = { version: '1.3.0', mount: function (adapter) {
+  window.GRINDCTRL_TRYON_ENGINE = { version: '1.4.0', mount: function (adapter) {
   var BUTTON = '.gc-tryon-btn[data-product-id]';
   var PILL = '.gc-tryon-pill[data-product-id]';
   // Pills one page may hold; the observer stops once there are this many.
   var MAX_PILLS = 200;
+  // Times one address may put back a button its page re-rendered away.
+  var MAX_REMOUNTS = 3;
   // A plugin-printed button belongs to its plugin's mount; an injected one,
   // or a card pill, to its own.
   var injected = null;
   function isPill(button) { return button.hasAttribute('data-gc-card'); }
   function owns(button) {
     if (isPill(button)) return !!adapter.injectCards;
+    if (adapter.injectButton || button === injected) return button === injected;
     if (adapter.injectCards) return false;
-    return adapter.injectButton ? button === injected : !button.hasAttribute('data-gc-paste');
+    return !button.hasAttribute('data-gc-paste');
   }
   var locale = String(adapter.locale || document.documentElement.lang || '').toLowerCase().split(/[-_]/)[0] === 'ar' ? 'ar' : 'en';
   var COPY = {
@@ -134,7 +141,8 @@
         live.textContent = badge.hidden ? '' : copy.ready;
       },
       seen: function () { badge.hidden = true; live.textContent = ''; },
-      relabel: function (text) { if (original) original = text; else label.textContent = text; }
+      relabel: function (text) { if (original) original = text; else label.textContent = text; },
+      remove: function () { live.remove(); }
     };
   }
 
@@ -220,6 +228,21 @@
       '.gc-tryon-btn--card{margin-block:.25rem;padding-block:.45rem;padding-inline:.9rem;font-size:.875rem}',
       '.gc-tryon-btn--preview{display:none}',
       '.gc-tryon-btn{flex-wrap:wrap}',
+      /* Website pages: full width under the purchase button on phones, or a
+         fixed pill at the bottom inline start when the page has no place for
+         it (the Store Chat bubble sits at the other corner; --float-end swaps
+         when the bubble is on this side). Hidden under an open sheet. */
+      '@media (max-width:640px){.gc-tryon-btn--wide{display:flex;inline-size:100%;box-sizing:border-box}}',
+      '.gc-tryon-btn--float{position:fixed;z-index:2147481999;inset-block-end:calc(16px + env(safe-area-inset-bottom,0px));',
+      'inset-inline-start:16px;inset-inline-end:auto;margin:0;max-inline-size:calc(100vw - 120px);box-sizing:border-box;',
+      'box-shadow:0 6px 24px rgba(0,0,0,.22);animation:gc-float-in .25s ease-out}',
+      '.gc-tryon-btn--float-end{inset-inline-start:auto;inset-inline-end:16px}',
+      '.gc-tryon-open .gc-tryon-btn--float{visibility:hidden}',
+      '.gc-tryon-btn--float+.gc-tryon-note{position:fixed;z-index:2147481999;inset-inline:16px;',
+      'inset-block-end:calc(80px + env(safe-area-inset-bottom,0px));margin:0;padding:.5rem .75rem;border-radius:12px;',
+      'background:#fff;color:#1f1d1a;box-shadow:0 4px 16px rgba(0,0,0,.2)}',
+      '@keyframes gc-float-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}',
+      '@media (prefers-reduced-motion:reduce){.gc-tryon-btn--float{animation:none}}',
       /* The icon: the Shopify app block's tryon.css, scoped to the button. */
       '.gc-tryon-btn .gc-tryon-ic{position:relative;display:inline-flex;align-items:center;justify-content:center;',
       'width:var(--gc-ic-size,28px)!important;height:var(--gc-ic-size,28px)!important;margin-inline-end:10px;flex:none;',
@@ -378,6 +401,7 @@
       sheet.hidden = false;
       previousOverflow = document.documentElement.style.overflow;
       document.documentElement.style.overflow = 'hidden';
+      document.documentElement.classList.add('gc-tryon-open');
       for (var i = 0; i < document.body.children.length; i++) {
         var child = document.body.children[i];
         if (child !== sheet && !child.inert) { child.inert = true; inerted.push(child); }
@@ -397,6 +421,7 @@
       sheet.hidden = true;
       panel.style.transform = '';
       document.documentElement.style.overflow = previousOverflow;
+      document.documentElement.classList.remove('gc-tryon-open');
       while (inerted.length) inerted.pop().inert = false;
       document.removeEventListener('keydown', onKey);
       if (pushed) {
@@ -573,6 +598,12 @@
         // every pill goes unless only this product cannot start a look.
         clearNote(button);
         if (isPill(button) && error.scope !== 'product') { stopPills(); return; }
+        // Not put back by a later refresh: for this product, or for any when the store cannot start looks.
+        if (button === injected) {
+          if (error.scope === 'product') blocked[button.dataset.productId] = true; else buttonStopped = true;
+          dropInjected();
+          return;
+        }
         button.remove();
         return;
       }
@@ -602,12 +633,16 @@
     '<g clip-path="url(#gc-tryon-bust)"><rect class="gc-tryon-scan" x="2" y="1" width="20" height="2.4" rx="1.2"/></g></svg>';
   var pillsStopped = false;
   var pillObserver = null;
+  var schedulePills = null;
 
+  function removePills() {
+    document.querySelectorAll(PILL).forEach(function (pill) { clearNote(pill); pill.remove(); });
+  }
   // The store cannot start looks any more: take every pill away.
   function stopPills() {
     pillsStopped = true;
     if (pillObserver) pillObserver.disconnect();
-    document.querySelectorAll(PILL).forEach(function (pill) { clearNote(pill); pill.remove(); });
+    removePills();
   }
 
   /* The owner's catalog label, sizes, colors and radius: the same settings
@@ -664,11 +699,14 @@
     // A store that also runs the Shopify app's catalog embed keeps its pills.
     if (document.getElementById('gc-cat-styles') || document.querySelector('.gc-cat-btn')) return;
     var look = pillLook(adapter.cardSettings);
+    var trigger = adapter.cardTrigger || 'a[href*="/products/"]';
     var count = 0;
     var timer = null;
     function scan() {
       timer = null;
-      if (pillsStopped) return;
+      if (pillsStopped || !adapter.injectCards) return;
+      // Pills a client-side route took away no longer count.
+      count = document.querySelectorAll(PILL).length;
       var cards = adapter.findCards(schedule);
       for (var i = 0; i < cards.length && count < MAX_PILLS; i++) {
         try { addPill(cards[i], look); count++; } catch (_) { /* one odd card must not stop the rest */ }
@@ -676,6 +714,7 @@
       if (count >= MAX_PILLS && pillObserver) pillObserver.disconnect();
     }
     function schedule() { if (!pillsStopped && !timer) timer = setTimeout(scan, 300); }
+    schedulePills = schedule;
     scan();
     if (!window.MutationObserver || count >= MAX_PILLS) return;
     // Cards added later (infinite scroll, filters, quick views): look again,
@@ -686,11 +725,16 @@
         for (var j = 0; j < added.length; j++) {
           var node = added[j];
           if (node.nodeType === 1 && !node.closest('.gc-tryon-sheet') &&
-              (node.matches('a[href*="/products/"]') || node.querySelector('a[href*="/products/"]'))) { schedule(); return; }
+              (node.matches(trigger) || node.querySelector(trigger))) { schedule(); return; }
         }
       }
     });
     pillObserver.observe(document.body, { childList: true, subtree: true });
+  }
+  // After a client-side change: pills where the page now lists products, none where it shows one.
+  function syncPills() {
+    if (!adapter.injectCards) { removePills(); return; }
+    if (schedulePills) schedulePills(); else mountPills();
   }
 
   /* Themes cover cards with stretched-link overlays, so a tap on a pill can
@@ -713,7 +757,7 @@
     return null;
   }
 
-  if (adapter.injectCards) {
+  if (adapter.injectCards || adapter.followsPage) {
     document.addEventListener('click', function (event) {
       var pill = pillFromEvent(event);
       if (!pill || !owns(pill)) return;
@@ -725,28 +769,84 @@
     }, true);
   }
 
+  /* ── The injected product button ────────────────────────────────────── */
+
+  var blocked = {};
+  var buttonStopped = false;
+  var remounts = {};
+
+  function dropInjected() {
+    if (!injected) return;
+    var old = injected;
+    injected = null;
+    // A look the shopper has open stays open; an unopened prewarm goes with its button.
+    var session = sessions.get(old);
+    if (session && !session.sheet.isOpen()) {
+      session.sheet.destroy();
+      if (session.dispose) session.dispose();
+      sessions.delete(old);
+    }
+    var indicator = indicators.get(old);
+    if (indicator) indicator.remove();
+    clearNote(old);
+    old.remove();
+  }
+
+  /* The Store Chat bubble is placed left or right whatever the page's
+     direction: the floating pill takes the other bottom corner. */
+  function settleFloat() {
+    if (!injected || !injected.classList.contains('gc-tryon-btn--float')) return;
+    var chat = document.querySelector('[data-gc-chat-launcher]');
+    var dirHolder = injected.closest('[dir]');
+    var rtl = dirHolder ? dirHolder.getAttribute('dir').toLowerCase() === 'rtl' : window.getComputedStyle(injected).direction === 'rtl';
+    var chatLeft = !!chat && chat.classList.contains('pos-bl');
+    injected.classList.toggle('gc-tryon-btn--float-end', !!chat && chatLeft !== rtl);
+  }
+
+  /* One button, for the product the page shows now. Put back after the
+     page re-renders it away, at most MAX_REMOUNTS times per address, and
+     never after the store said this product, or any, cannot start a look. */
+  function placeButton() {
+    if (!adapter.injectButton || buttonStopped) { dropInjected(); return; }
+    // A store that also runs the Shopify app block or the Woo plugin keeps that one button.
+    if (document.querySelector('.gc-tryon-root') ||
+        Array.prototype.some.call(document.querySelectorAll('.gc-tryon-btn'), function (button) { return button !== injected; })) return;
+    var detected = adapter.detectProduct();
+    if (!detected || blocked[detected.id]) { dropInjected(); return; }
+    if (injected && injected.dataset.productId === detected.id) {
+      if (injected.isConnected) return;
+      var href = window.location.href;
+      remounts[href] = (remounts[href] || 0) + 1;
+      if (remounts[href] > MAX_REMOUNTS) return;
+    }
+    var spot = adapter.placement ? adapter.placement() : { node: adapter.placementTarget(), mode: 'after' };
+    var float = !!spot && spot.mode === 'float';
+    if (!spot || (!float && !(spot.node && spot.node.parentNode))) return;
+    if (!injected || injected.dataset.productId !== detected.id) prewarmed = false;
+    dropInjected();
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'gc-tryon-btn' + (float ? ' gc-tryon-btn--float' : spot.mode === 'purchase' ? ' gc-tryon-btn--wide' : '');
+    button.dataset.productId = detected.id;
+    button.dataset.gcPaste = '1';
+    var label = document.createElement('span');
+    label.className = 'gc-tryon-label';
+    label.textContent = adapter.buttonLabel;
+    button.appendChild(label);
+    addIcon(button);
+    // The owner's design from its first paint; the context settings later find it styled.
+    applySettings(button, adapter.buttonSettings, null);
+    if (float) document.body.appendChild(button); else spot.node.insertAdjacentElement('afterend', button);
+    injected = button;
+    settleFloat();
+    indicatorFor(button);
+    observeForPrewarm(button, function () { if (button === injected) openTryOn(button, true); });
+  }
+
   injectStyles();
   if (adapter.injectCards) mountPills();
-  if (adapter.injectButton) {
-    // A store that also runs the Shopify app block or the Woo plugin keeps that one button.
-    if (document.querySelector('.gc-tryon-btn, .gc-tryon-root')) return;
-    var placement = adapter.placementTarget();
-    var detected = adapter.detectProduct();
-    if (!placement || !placement.parentNode || !detected) return;
-    injected = document.createElement('button');
-    injected.type = 'button';
-    injected.className = 'gc-tryon-btn';
-    injected.dataset.productId = detected.id;
-    injected.dataset.gcPaste = '1';
-    var injectedLabel = document.createElement('span');
-    injectedLabel.className = 'gc-tryon-label';
-    injectedLabel.textContent = adapter.buttonLabel;
-    injected.appendChild(injectedLabel);
-    addIcon(injected);
-    // The owner's design from its first paint; the context settings later find it styled.
-    applySettings(injected, adapter.buttonSettings, null);
-    placement.insertAdjacentElement('afterend', injected);
-  }
+  placeButton();
+  window.addEventListener('gc:chat-launcher', settleFloat);
   // An exhausted store stays hidden to shoppers. Only a preview token reveals
   // its test entry; the context route is still the authority for test looks.
   if (!adapter.injectButton && previewToken()) {
@@ -756,7 +856,7 @@
     });
   }
   document.querySelectorAll(BUTTON).forEach(function (button) {
-    if (!owns(button)) return;
+    if (button === injected || !owns(button)) return;
     // Buttons a plugin printed as text only (WooCommerce plugin 0.3.3 and older).
     addIcon(button);
     indicatorFor(button);
@@ -764,5 +864,12 @@
       observeForPrewarm(button, function () { openTryOn(button, true); });
     }
   });
+  return {
+    refresh: function () {
+      if (!adapter.followsPage) return;
+      placeButton();
+      syncPills();
+    }
+  };
   } };
 })();
