@@ -26,6 +26,8 @@ const NO_LIMITERS = {
   proxyShopMint: null,
   pasteShopCheckSite: null,
   pasteShopCheckShop: null,
+  easyOrdersWebhookIp: null,
+  easyOrdersWebhookConnection: null,
   pastePlatformCheck: null,
   pasteDomainCheckAuto: null,
   pasteDomainCheckOwner: null,
@@ -44,6 +46,8 @@ function createRatelimiters(): {
   proxyShopMint: Ratelimit | null;
   pasteShopCheckSite: Ratelimit | null;
   pasteShopCheckShop: Ratelimit | null;
+  easyOrdersWebhookIp: Ratelimit | null;
+  easyOrdersWebhookConnection: Ratelimit | null;
   pastePlatformCheck: Ratelimit | null;
   pasteDomainCheckAuto: Ratelimit | null;
   pasteDomainCheckOwner: Ratelimit | null;
@@ -134,6 +138,25 @@ function createRatelimiters(): {
         prefix: 'gc-ratelimit:paste-shop-check-shop',
         analytics: false,
       }),
+      /* EasyOrders webhooks (app/api/easyorders/webhook/[token]). Admission
+         is per network BEFORE the token lookup, so guessing tokens cannot
+         reach the database freely. EasyOrders delivers every merchant's
+         events from its own servers, so this ceiling is shared by all
+         connected stores and sits well above one store's; the per-connection
+         budget, keyed by the authenticated site, is the one a single store's
+         traffic meets. */
+      easyOrdersWebhookIp: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(600, '60 s'),
+        prefix: 'gc-ratelimit:easyorders-webhook-ip',
+        analytics: false,
+      }),
+      easyOrdersWebhookConnection: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(120, '60 s'),
+        prefix: 'gc-ratelimit:easyorders-webhook-connection',
+        analytics: false,
+      }),
       /* Our server fetching a trusted website domain's home page for its
          store platform (lib/paste/platform-check.ts). Per domain, whoever
          triggers it: the owner's domain actions or a refused garment. */
@@ -213,6 +236,8 @@ export const proxyShopReadRatelimit = limiterFacade(limiters.proxyShopRead);
 export const proxyShopMintRatelimit = limiterFacade(limiters.proxyShopMint);
 export const pasteShopCheckSiteRatelimit = limiterFacade(limiters.pasteShopCheckSite);
 export const pasteShopCheckShopRatelimit = limiterFacade(limiters.pasteShopCheckShop);
+export const easyOrdersWebhookIpRatelimit = limiterFacade(limiters.easyOrdersWebhookIp);
+export const easyOrdersWebhookConnectionRatelimit = limiterFacade(limiters.easyOrdersWebhookConnection);
 export const pastePlatformCheckRatelimit = limiterFacade(limiters.pastePlatformCheck);
 export const pasteDomainCheckAutoRatelimit = limiterFacade(limiters.pasteDomainCheckAuto);
 export const pasteDomainCheckOwnerRatelimit = limiterFacade(limiters.pasteDomainCheckOwner);

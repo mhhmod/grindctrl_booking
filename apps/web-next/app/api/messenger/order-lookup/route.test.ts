@@ -17,6 +17,8 @@ const mocks = vi.hoisted(() => ({
   plugin: vi.fn(),
   wooLimit: vi.fn(),
   verifyWoo: vi.fn(),
+  easy: vi.fn(),
+  easyLookup: vi.fn(),
 }));
 
 vi.mock('@/lib/ratelimit', () => ({
@@ -38,6 +40,11 @@ vi.mock('@/lib/woo/identity-token', async (original) => ({
   verifyWooIdentityToken: mocks.verifyWoo,
 }));
 vi.mock('@/lib/woo/active-connection', () => ({ loadActiveWooConnection: mocks.woo }));
+vi.mock('@/lib/easyorders/store', () => ({ loadEasyOrdersConnection: mocks.easy }));
+vi.mock('@/lib/easyorders/order-provider', () => ({ EasyOrdersOrderProvider: class {
+  platform = 'easyorders';
+  lookupGuestCard = mocks.easyLookup;
+} }));
 vi.mock('@/lib/woo/plugin-client', () => ({
   callWooPlugin: mocks.plugin,
   WOO_PLUGIN_ORDER_LOOKUP_PATH: '/wp-json/grindctrl/v1/order-lookup',
@@ -203,6 +210,36 @@ describe('POST /api/messenger/order-lookup (Chat-More, N48)', () => {
     expect((await post({ ...BODY, orderNumber: '10x27' })).status).toBe(400);
     expect((await post({ ...BODY, contact: 'not-an-email' })).status).toBe(400);
     expect(mocks.session).not.toHaveBeenCalled();
+  });
+  describe('EasyOrders guest phone proof', () => {
+    beforeEach(() => {
+      mocks.session.mockImplementation(async () => ({ ok: true, site: { ...SITE, domain: 'merchant.easy-orders.net' }, visitor: { id: 'v1' }, conversation }));
+      mocks.woo.mockResolvedValue(null);
+      mocks.easy.mockResolvedValue({ status: 'active', api_key: { ciphertext: 'secured' } });
+      mocks.easyLookup.mockResolvedValue({ ok: true, card: { ...CARD, carrier: null, trackingUrl: null } });
+    });
+    it('passes normalized phone to the registered provider, masks it and shares Woo lookup budgets', async () => {
+      const data = await (await post({ ...BODY, contact: '+20 101-234-5678' })).json();
+      expect(data.ok).toBe(true);
+      expect(data.maskedContact).toBe('***78');
+      expect(mocks.easyLookup).toHaveBeenCalledWith({ orderNumber: '1027', email: '', phone: '1012345678', withAmounts: false });
+      expect(mocks.orderLimit).toHaveBeenCalledWith('site-1:203.0.113.7');
+      expect(mocks.numberLimit).toHaveBeenCalledWith('site-1:1027');
+      expect(JSON.stringify(mocks.append.mock.calls)).not.toMatch(/1012345678|101-234-5678/);
+    });
+    it('never calls the provider once the session budget or shared limiter is exhausted', async () => {
+      conversation.metadata = { order_lookup_attempts: 5 };
+      expect((await (await post({ ...BODY, contact: '01012345678' })).json()).error).toBe('not_found');
+      expect(mocks.easyLookup).not.toHaveBeenCalled();
+      conversation.metadata = {};
+      mocks.orderLimit.mockRejectedValue(new Error('redis unavailable'));
+      expect((await (await post({ ...BODY, contact: '01012345678' })).json()).error).toBe('unavailable');
+      expect(mocks.easyLookup).not.toHaveBeenCalled();
+    });
+  });
+  it('keeps phone proof disabled for Shopify', async () => {
+    expect((await post({ ...BODY, contact: '01012345678' })).status).toBe(400);
+    expect(mocks.lookup).not.toHaveBeenCalled();
   });
 
   it('finds the order: the masked line, one sentence from its own data, and the card', async () => {

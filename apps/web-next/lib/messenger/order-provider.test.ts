@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   lookupOrder: vi.fn(),
   lookupGuestOrderCard: vi.fn(),
   loadActiveWooConnection: vi.fn(),
+  loadEasyOrdersConnection: vi.fn(),
 }));
 
 vi.mock('@/lib/woo/plugin-client', () => ({
@@ -19,8 +20,11 @@ vi.mock('@/lib/request-rate-limit', () => ({ requireRateLimit: mocks.requireRate
 vi.mock('./order-limits', () => ({ wooSiteOrderLimiter: {} }));
 vi.mock('./orders', () => ({ lookupOrder: mocks.lookupOrder, lookupGuestOrderCard: mocks.lookupGuestOrderCard }));
 vi.mock('@/lib/woo/active-connection', () => ({ loadActiveWooConnection: mocks.loadActiveWooConnection }));
+vi.mock('@/lib/easyorders/store', () => ({ loadEasyOrdersConnection: mocks.loadEasyOrdersConnection }));
 
 import { orderProviderFor, resolveOrderProvider, ShopifyOrderProvider, WooOrderProvider } from './order-provider';
+import { EasyOrdersOrderProvider } from '@/lib/easyorders/order-provider';
+import { connection as easyConnection } from '@/lib/easyorders/test-fixtures';
 
 const SITE = '123e4567-e89b-12d3-a456-426614174000';
 const connection = { siteId: SITE, homeUrl: 'https://shop.example.com/', secretVersion: 1, pluginVersion: '0.3.0' };
@@ -42,9 +46,24 @@ const wooOrder = {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.requireRateLimit.mockResolvedValue(undefined);
+  mocks.loadEasyOrdersConnection.mockResolvedValue(null);
 });
 
 describe('orderProviderFor', () => {
+  it('selects only an active EasyOrders connection and keeps Shopify/Woo precedence', async () => {
+    const easy = easyConnection();
+    expect(orderProviderFor({ domain: null }, null, easy)).toBeInstanceOf(EasyOrdersOrderProvider);
+    for (const status of ['pending','disconnected','error'] as const) {
+      expect(orderProviderFor({ domain: null }, null, { ...easy, status })).toBeNull();
+    }
+    expect(orderProviderFor({}, null, { ...easy, api_key: null })).toBeNull();
+    expect(orderProviderFor({ domain: 'a.myshopify.com' }, connection, easy)).toBeInstanceOf(ShopifyOrderProvider);
+    expect(orderProviderFor({}, connection, easy)).toBeInstanceOf(WooOrderProvider);
+    mocks.loadActiveWooConnection.mockResolvedValue(null);
+    mocks.loadEasyOrdersConnection.mockResolvedValue(easy);
+    expect(await resolveOrderProvider({ id: SITE })).toBeInstanceOf(EasyOrdersOrderProvider);
+    expect(mocks.loadEasyOrdersConnection).toHaveBeenCalledWith(SITE);
+  });
   it('picks Shopify for a myshopify domain, whatever else is paired', () => {
     expect(orderProviderFor({ domain: 'maison.myshopify.com' }, connection)).toBeInstanceOf(ShopifyOrderProvider);
   });

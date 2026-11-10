@@ -21,7 +21,7 @@ import {
 } from '@/lib/messenger/conversations';
 import { parseModelTurn } from '@/lib/messenger/actions';
 import { ORDER_LOOKUP_LIFETIME_LIMIT } from '@/lib/messenger/orders';
-import { orderProviderFor, wooConnectionFor } from '@/lib/messenger/order-provider';
+import { resolveOrderProvider, wooConnectionFor } from '@/lib/messenger/order-provider';
 import { boundCustomerId, resolveVerifiedCustomer } from '@/lib/messenger/verified-customer';
 import { spendOrderLookupBudget } from '@/lib/messenger/order-limits';
 import { networkKey } from '@/lib/http/network-key';
@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
        neither simply does not get the capability, and the model is never
        told it exists, so it cannot offer what we would refuse. */
     const wooConnection = await wooConnectionFor(site);
-    const orderProvider = site.config.orderLookup.enabled ? orderProviderFor(site, wooConnection) : null;
+    const orderProvider = site.config.orderLookup.enabled ? await resolveOrderProvider(site, wooConnection) : null;
     const orderLookupAvailable = Boolean(orderProvider);
 
     /* "Where should we reply?" is offered at most once per conversation, and
@@ -288,7 +288,7 @@ export async function POST(request: NextRequest) {
     });
     const identityName = proof.name;
     const verifiedAppClientId = proof.appClientId;
-    const verifiedCustomer = proof.verified;
+    const verifiedCustomer = proof.verified && orderProvider?.platform !== 'easyorders';
 
     // 1) Persist the shopper's turn first (idempotent).
     const { message: userMessage, replayed } = await appendMessage({
@@ -454,6 +454,7 @@ export async function POST(request: NextRequest) {
                 }
               : undefined,
           orderLookupEnabled: orderLookupAvailable,
+          orderLookupPhone: orderProvider?.platform === 'easyorders',
           franco: locale === 'ar' && isFrancoArabic(text),
           query: text,
           handoffRules: handoffRulesOn ? rules : null,
@@ -589,6 +590,7 @@ export async function POST(request: NextRequest) {
           : await orderProvider.lookupByEmailAndNumber({
               orderNumber: turn.action.orderNumber,
               email: turn.action.email,
+              ...(orderProvider.platform === 'easyorders' ? { phone: turn.action.phone } : {}),
               appClientId,
             });
 
