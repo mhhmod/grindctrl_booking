@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
       // may be live there now, so ask our server to look (rate limited; the
       // header only asks, the page decides).
       const host = headerOrigin && URL.canParse(headerOrigin) ? new URL(headerOrigin).hostname : null;
-      if (host && site.status === 'active' && claimedPasteHost(site, host)) schedulePasteDomainCheck(site.id, host);
+      if (host && site.status !== 'disabled' && claimedPasteHost(site, host)) schedulePasteDomainCheck(site.id, host);
       // Do not reveal whether the key exists on foreign origins.
       return NextResponse.json({ error: 'origin_not_allowed' }, { status: 403 });
     }
@@ -88,7 +88,9 @@ export async function GET(request: NextRequest) {
     // only after the browser header passed this site's origin policy. Any
     // client can set that header, so an unverified domain earns nothing
     // here: it only schedules our own check of the domain's page.
-    if (headerOrigin && site.status === 'active') {
+    // Store Chat off leaves the site in `draft`; the pasted code still runs
+    // Try-On there, so only an operator-disabled site is left out.
+    if (headerOrigin && site.status !== 'disabled') {
       const signal = await recordPasteSignal(site.id, headerOrigin);
       if (signal === 'unverified') schedulePasteDomainCheck(site.id, new URL(headerOrigin).hostname);
     }

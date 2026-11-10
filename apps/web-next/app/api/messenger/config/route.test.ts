@@ -303,6 +303,19 @@ describe('GET /api/messenger/config', () => {
     await GET(new NextRequest('https://app.example.com/api/messenger/config?key=gc_test_key', { headers: { origin: 'https://evil.example' } }));
     expect(mocks.signal).not.toHaveBeenCalled();
   });
+
+  /* Store Chat off leaves the site in `draft`, but the pasted code still runs
+     Try-On there. Found on a real store: the dashboard kept saying "Waiting
+     for your store" until a shopper pressed the Try-On button. */
+  it('records the install signal while Store Chat is off, and never for a disabled site', async () => {
+    mocks.loadPublicSite.mockResolvedValue({ ...SITE, status: 'draft', patterns: [] });
+    await GET(new NextRequest('https://app.example.com/api/messenger/config?key=gc_test_key', { headers: { origin: 'https://merchant.example' } }));
+    expect(mocks.signal).toHaveBeenCalledExactlyOnceWith(SITE.id, 'https://merchant.example');
+    mocks.signal.mockClear();
+    mocks.loadPublicSite.mockResolvedValue({ ...SITE, status: 'disabled', patterns: [] });
+    await GET(new NextRequest('https://app.example.com/api/messenger/config?key=gc_test_key', { headers: { origin: 'https://merchant.example' } }));
+    expect(mocks.signal).not.toHaveBeenCalled();
+  });
 });
 
 /* Phase zero item 9: who sees Store Chat on a Shopify store. */
