@@ -14,7 +14,7 @@ const tryon = read('includes/tryon.php');
 describe('GRINDCTRL Store Chat plugin source', () => {
   it('declares one version in the header, the constant and the readme', () => {
     const header = /\* Version:\s+(\S+)/.exec(main)?.[1];
-    expect(header).toBe('0.3.5');
+    expect(header).toBe('0.3.6');
     expect(main).toContain(`define( 'GRINDCTRL_SC_VERSION', '${header}' );`);
     expect(read('readme.txt')).toMatch(new RegExp(`Stable tag: ${header}\\b`));
     expect(read('readme.txt')).toContain(`= ${header} =`);

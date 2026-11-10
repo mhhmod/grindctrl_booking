@@ -146,6 +146,7 @@ function ProductCard({
 const DOMAIN_ICON: Record<DomainLine['state'], GcIconName> = { live: 'check', waiting: 'clock', needs_proof: 'warn' };
 
 function FixRowItem({ row, copy }: { row: FixRow; copy: YourStoreCopy }) {
+  const hostAt = row.host ? row.sentence.indexOf(row.host) : -1;
   return (
     <li className={classes.fixRow}>
       <div className={classes.fixPill}>
@@ -168,7 +169,9 @@ function FixRowItem({ row, copy }: { row: FixRow; copy: YourStoreCopy }) {
             ))}
           </ul>
         ) : (
-          <p className={classes.rowSentence}>{row.sentence}</p>
+          <p className={classes.rowSentence}>
+            {hostAt < 0 ? row.sentence : <>{row.sentence.slice(0, hostAt)}<bdi dir="ltr">{row.host}</bdi>{row.sentence.slice(hostAt + row.host!.length)}</>}
+          </p>
         )}
       </div>
       {row.action && (
@@ -187,13 +190,15 @@ function FixRowItem({ row, copy }: { row: FixRow; copy: YourStoreCopy }) {
   );
 }
 
-function WellLineItem({ line }: { line: WellLine }) {
+function WellLineItem({ line, mode = 'well' }: { line: WellLine; mode?: 'well' | 'waiting' | 'more' }) {
   return (
-    <li className={classes.wellLine}>
-      <GcIcon name="check" size={16} strokeWidth={2.25} className={classes.wellTick} />
+    <li className={`${classes.wellLine} ${mode === 'more' ? classes.optionalRow : ''}`}>
+      {mode !== 'more' && <GcIcon name={mode === 'waiting' ? 'clock' : 'check'} size={16} strokeWidth={2.25} className={mode === 'well' ? classes.wellTick : undefined} />}
       <span className={classes.wellTitle}>{line.title}</span>
       <span className={classes.wellSentence}>{line.sentence}</span>
-      {line.link && (
+      {line.link && mode === 'more' ? (
+        <Button component={Link} href={line.link.href} variant="default" radius="pill" h={44} className={classes.optionalAction}>{line.link.label}</Button>
+      ) : line.link && (
         <Link href={line.link.href} className={classes.quietLink}>
           {line.link.label}
         </Link>
@@ -282,6 +287,17 @@ function StoreCheck({
                   <FixRowItem key={row.key} row={row} copy={copy} />
                 ))}
               </ul>
+            </section>
+          )}
+          {check.more.length > 0 && (
+            <section aria-label={copy.check.moreYouCanAdd} className={`${classes.card} ${classes.group} ${classes.optionalGroup}`}>
+              <h3 className={classes.groupTitle}>{copy.check.moreYouCanAdd}</h3>
+              <ul className={classes.list}>{check.more.map((line) => <WellLineItem key={line.key} line={line} mode="more" />)}</ul>
+            </section>
+          )}
+          {check.pending.length > 0 && (
+            <section aria-label={copy.pill.waiting} className={`${classes.card} ${classes.group}`}>
+              <ul className={classes.list}>{check.pending.map((line) => <WellLineItem key={line.key} line={line} mode="waiting" />)}</ul>
             </section>
           )}
           {check.well.length > 0 && (

@@ -1,3 +1,4 @@
+import { recordPhotoHealth } from '@/lib/store-health/signals';
 import { NextRequest, NextResponse } from 'next/server';
 import { readLimitedText } from '@/lib/http/read-limited-body';
 import { proxyShopMintRatelimit, proxyVisitorRatelimit } from '@/lib/ratelimit';
@@ -181,6 +182,7 @@ export async function POST(request: NextRequest) {
       garment = await assertSafeGarmentUrl(input.imageUrl, hosts);
     } catch (error) {
       if (error instanceof UnsafeGarmentUrlError) {
+        await recordPhotoHealth(siteId, input.imageUrl, false);
         console.warn('[woo] tryon-context unsafe garment', { siteId, reason: error.code });
         return json({ error: 'garment_unsafe' }, 422);
       }

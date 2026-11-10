@@ -5,7 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const m = vi.hoisted(() => ({ network: vi.fn(), visitor: vi.fn(), siteLimit: vi.fn(), site: vi.fn(), connection: vi.fn(),
   hosts: vi.fn(), proofHosts: vi.fn(), prove: vi.fn(), signal: vi.fn(), signature: vi.fn(), active: vi.fn(), flags: vi.fn(),
   launch: vi.fn(), storeLaunch: vi.fn(), lookup: vi.fn(), codeVersion: vi.fn(), platforms: vi.fn(), fingerprint: vi.fn(),
-  tryOnHosts: vi.fn(), domainCheck: vi.fn() }));
+  tryOnHosts: vi.fn(), domainCheck: vi.fn(), photo: vi.fn() }));
+vi.mock('@/lib/store-health/signals', () => ({ recordPhotoHealth: m.photo }));
 vi.mock('@/lib/ratelimit', () => ({ clientIp: () => '203.0.113.5', publicApiRatelimit: { limit: m.network },
   proxyVisitorRatelimit: { limit: m.visitor }, proxyShopMintRatelimit: { limit: m.siteLimit } }));
 vi.mock('@/lib/messenger/public-api', async (original) => ({ ...await original<object>(), loadPublicSite: m.site }));
@@ -190,6 +191,7 @@ describe('garment photos on a platform image server', () => {
     const response = await post({ imageUrl });
     expect(response.status).toBe(422);
     expect(await response.json()).toEqual({ error: 'garment_unsafe', reason });
+    expect(m.photo).toHaveBeenLastCalledWith(SITE, imageUrl, false);
   };
 
   it.each([

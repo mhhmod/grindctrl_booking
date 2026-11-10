@@ -451,3 +451,13 @@ describe('tryon-woo.js on the shared hosted engine', () => {
     expect(calls).toHaveLength(0);
   });
 });
+
+it('passes the public plugin key to the shared engine health reporter', async () => {
+  const beacon = vi.fn(() => true);
+  vi.stubGlobal('navigator', Object.create(navigator, { sendBeacon: { value: beacon } }));
+  page('simple');
+  load({ embedKey: 'public-plugin-key' });
+  await tick();
+  expect(beacon).toHaveBeenCalledWith('https://grindctrl.cloud/api/store/signals', JSON.stringify({ kind: 'product_page', productDetected: true, placement: 'inline', key: 'public-plugin-key' }));
+  expect(PLUGIN_SOURCE).toContain("'embedKey'      => grindctrl_sc_key()");
+});

@@ -162,6 +162,7 @@ function grindctrl_sc_tryon_enqueue() {
 
 	$nonce = wp_create_nonce( 'wc_store_api' );
 	$page  = array(
+		'embedKey'      => grindctrl_sc_key(),
 		'restUrl'       => esc_url_raw( rest_url( 'grindctrl/v1/' ) ),
 		'storeApi'      => esc_url_raw( rest_url( 'wc/store/v1/' ) ),
 		'storeApiNonce' => $nonce,

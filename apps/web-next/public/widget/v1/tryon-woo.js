@@ -153,7 +153,10 @@
     }).catch(function () { return null; });
   }
 
+  var chatScript = document.querySelector('script[src*="/widget/v1/messenger.js"][data-key]');
   var adapter = {
+    signalKey: CFG.embedKey || (chatScript && chatScript.getAttribute('data-key')),
+    embedOrigin: new URL(document.currentScript ? document.currentScript.src : 'https://grindctrl.cloud/widget/v1/tryon-woo.js').origin,
     locale: CFG.locale,
     placementTarget: function (button) { return button; },
     detectProduct: function (button) {
@@ -187,7 +190,7 @@
   if (window.GRINDCTRL_TRYON_ENGINE) { start(); return; }
   // The engine is served beside this file, from the same versioned directory.
   var script = document.createElement('script');
-  script.src = new URL('tryon-engine.js?v=d6687c263081', document.currentScript ? document.currentScript.src : 'https://grindctrl.cloud/widget/v1/tryon-woo.js').href;
+  script.src = new URL('tryon-engine.js?v=bec19d0ae3d6', document.currentScript ? document.currentScript.src : 'https://grindctrl.cloud/widget/v1/tryon-woo.js').href;
   script.async = true;
   script.onload = start;
   // Without the engine a button would do nothing: take them away instead.

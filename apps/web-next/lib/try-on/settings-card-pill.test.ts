@@ -38,7 +38,7 @@ vi.mock('@supabase/supabase-js', () => ({
 }));
 vi.mock('@/lib/shopify/proxy-config-cache', () => ({ invalidateProxyConfig: vi.fn() }));
 
-import { DEFAULT_SETTINGS, getTryOnSettings, getTryOnSettingsForEdit, mergeSettings, readTryOnShowButton, saveTryOnSettings,
+import { DEFAULT_SETTINGS, getTryOnSettings, getTryOnSettingsForEdit, mergeSettings, readTryOnShowButton, readTryOnShowCardPill, saveTryOnSettings,
   TryOnShowButtonUnavailableError, TryOnShowCardPillUnavailableError, TryOnSwitchUnavailableError } from './settings';
 import { cardPillsOn } from './card-pill';
 
@@ -120,4 +120,15 @@ describe('cardPillsOn, the one rule every storefront config applies', () => {
   ])('showButton %s and showCardPill %s show pills: %s', (showButton, showCardPill, shown) => {
     expect(cardPillsOn({ showButton, showCardPill })).toBe(shown);
   });
+});
+
+it('reads the pill switch strictly for Store check, with shop overrides and migration fallback', async () => {
+  db.rows.set('default', { shop: 'default', show_card_pill: false });
+  expect(await readTryOnShowCardPill(SHOP)).toBe(false);
+  db.rows.set(SHOP, { shop: SHOP, show_card_pill: true });
+  expect(await readTryOnShowCardPill(SHOP)).toBe(true);
+  expect(db.selects.every((columns) => columns === 'shop, show_card_pill')).toBe(true);
+  db.missing.add('show_card_pill');
+  expect(await readTryOnShowCardPill(SHOP)).toBe(true);
+  expect(db.upserts).toEqual([]);
 });

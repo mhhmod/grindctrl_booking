@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Camera, ChevronRight, ExternalLink, Image as ImageIcon, Info, Lock, PersonStanding, Shirt, Sun } from 'lucide-react';
+import { Camera, ExternalLink, Image as ImageIcon, Info, Lock, PersonStanding, Shirt, Sun } from 'lucide-react';
 import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
 import { androidIntentUrl, type InAppBrowser } from '@/lib/try-on/in-app-browser';
 import { photoFileError, readPhotoAsDataUrl } from '@/lib/try-on/photo-file';
@@ -78,7 +78,7 @@ export function SheetPhotoStep({
   ];
 
   return (
-    <div className="flex min-h-full flex-col gap-5">
+    <div className="flex min-h-full flex-col gap-5 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-200">
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">{copy.photoTitle}</h2>
         <p className="text-base leading-relaxed text-muted-foreground">
@@ -87,11 +87,15 @@ export function SheetPhotoStep({
         </p>
       </div>
 
-      <ul className="grid grid-cols-3 gap-2">
+      {/* One checklist, each tip on its own line: icons line up and no label
+          wraps against a narrow tile, in both languages. */}
+      <ul className="divide-y rounded-2xl border bg-muted/30">
         {tips.map(({ icon: Icon, label }) => (
-          <li key={label} className="flex flex-col items-center gap-2 rounded-xl bg-muted/50 px-2 py-3 text-center text-xs font-medium text-foreground">
-            <Icon className="size-6" aria-hidden="true" />
-            <span>{label}</span>
+          <li key={label} className="flex min-h-12 items-center gap-3 px-4 py-2.5 text-sm font-medium text-foreground">
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-background text-foreground shadow-xs">
+              <Icon className="size-4" aria-hidden="true" />
+            </span>
+            <span className="min-w-0">{label}</span>
           </li>
         ))}
       </ul>
@@ -214,23 +218,22 @@ function ChoiceButton({
   primary?: boolean;
   onClick: () => void;
 }) {
+  /* The main way in is a filled button in the store's colour, so the next
+     step is never a guess; the other way is an outlined button below it. */
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex w-full items-center gap-4 rounded-2xl border px-4 py-4 text-start transition-colors hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-    >
-      <span
-        className={`grid size-12 shrink-0 place-items-center rounded-xl ${primary ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}
+    <div className="space-y-1.5">
+      <button
+        type="button"
+        onClick={onClick}
+        className={`flex min-h-13 w-full items-center justify-center gap-2.5 rounded-xl px-4 py-3 text-base font-semibold transition-[background-color,transform] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-safe:active:scale-[0.99] ${
+          primary ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'border bg-background text-foreground hover:bg-muted/50'
+        }`}
       >
         {icon}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-base font-semibold text-foreground">{title}</span>
-        <span className="block text-sm text-muted-foreground">{hint}</span>
-      </span>
-      <ChevronRight className="size-5 shrink-0 text-muted-foreground rtl:-scale-x-100" aria-hidden="true" />
-    </button>
+        {title}
+      </button>
+      <p className="text-center text-xs text-muted-foreground">{hint}</p>
+    </div>
   );
 }
 

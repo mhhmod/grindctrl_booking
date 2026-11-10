@@ -48,5 +48,5 @@ export const config = {
      — two different prefixes, both needed. The exact, secret-free health
      endpoint must remain available even when Clerk is unconfigured/down.
      `api/woo` uses pairing codes or per-site HMAC signatures, not cookies. */
-  matcher: ['/((?!_next|embed|shopify|api/try-on|api/shopify|api/woo|api/health$|.*\\..*).*)', '/'],
+  matcher: ['/((?!_next|embed|shopify|api/try-on|api/shopify|api/woo|api/store/signals$|api/health$|.*\\..*).*)', '/'],
 };
