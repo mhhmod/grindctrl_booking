@@ -24,10 +24,8 @@ import { toPublicPayload } from '@/lib/messenger/public-api';
 import { MessengerTabs } from '@/components/dashboard/messenger/messenger-tabs';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import * as messengerActions from './actions';
-import { isTryOnPlatformOperator } from '@/lib/shopify/platform-operator';
-import { flagStoreForSite, storeFlagRows, storeFlags } from '@/lib/flags/store-flags';
+import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
 import { getShopTimezone } from '@/lib/shopify/shop-timezone';
-import { StoreFlagsCard } from '@/components/dashboard/store-flags-card';
 import { roleCan } from '@/lib/rbac/dashboard-policy';
 import { getChatKnowsCopy } from '@/lib/dashboard/chat-knows-copy';
 import { buildChatHead, buildPagesAndNotes } from '@/lib/dashboard/chat-knows-model';
@@ -40,6 +38,8 @@ import { V16BackToSetUp, V16StoreTaken } from '@/components/dashboard/v16/states
 import { getWooSiteConnection } from '@/lib/woo/connection';
 import { createWooPairingCodeAction } from './woo-actions';
 import * as pasteActions from './paste-actions';
+import { readPasteDomainPlatforms } from '@/lib/paste/store';
+import { StoreConnect } from '@/components/dashboard/v16/store-setup/store-connect';
 
 /* The editors on /dashboard/store-chat/setup/more, the ones Set up does not
    cover yet (see v16-chat-studio.tsx, More settings). */
@@ -57,12 +57,13 @@ export async function StoreChatPage({
   tab: route,
 }: {
   params: { site?: string; tab?: string; section?: string; orders?: string };
-  tab: 'knows' | 'setup' | 'more';
+  /** install: only the Connect your store card, drawn on Store setup. */
+  tab: 'knows' | 'setup' | 'more' | 'install';
 }) {
   const userId = await requireDashboardUser(
-    route === 'setup' ? '/dashboard/store-chat/setup' : route === 'more' ? MORE_SETTINGS : '/dashboard/store-chat',
+    route === 'setup' ? '/dashboard/store-chat/setup' : route === 'more' ? MORE_SETTINGS : route === 'install' ? '/dashboard/store' : '/dashboard/store-chat',
   );
-  const legacy = route === 'more' ? null : legacyStoreChatHref(params);
+  const legacy = route === 'more' || route === 'install' ? null : legacyStoreChatHref(params);
   if (legacy) redirect(legacy);
   const locale = await getRequestLocale();
 
@@ -202,23 +203,72 @@ export async function StoreChatPage({
     );
   }
 
+  /* Connect your store on Store setup (owner decision 2026-11-10): the same
+     site, store lookup and rights as Set up, drawn as its own card. People
+     who cannot change settings see the status without the steps. */
+  if (route === 'install') {
+    const [detectedRead, wooConnectionRead, platformsRead] = await Promise.allSettled([
+      getWidgetLastSeenAt(selected.id),
+      selected.domain?.endsWith('.myshopify.com') ? Promise.resolve(null) : getWooSiteConnection(selected.id),
+      selected.domain?.endsWith('.myshopify.com') ? Promise.resolve(null) : readPasteDomainPlatforms(selected.id),
+    ]);
+    for (const failed of [detectedRead, wooConnectionRead, platformsRead]) {
+      if (failed.status === 'rejected') console.error('[store setup] connect failed:', failed.reason);
+    }
+    const platforms = platformsRead.status === 'fulfilled' ? platformsRead.value ?? [] : [];
+    return (
+      <StoreConnect
+        locale={locale}
+        siteId={selected.id}
+        meta={{
+          domain: selected.domain ?? platforms[0]?.domain ?? null,
+          embedKey: selected.embed_key,
+          lastSeenMinutes: minutesSince(detectedRead.status === 'fulfilled' ? detectedRead.value : null, new Date().getTime()),
+          wooConnection: wooConnectionRead.status === 'fulfilled' ? wooConnectionRead.value : null,
+          platformDetected: platforms.find((row) => row.platform)?.platform ?? null,
+        }}
+        actions={
+          canSetUp
+            ? {
+                createWooPairingCodeAction,
+                listDomainsAction: messengerActions.listDomainsAction,
+                addDomainAction: messengerActions.addDomainAction,
+                checkDomainAction: messengerActions.checkDomainAction,
+                removeDomainAction: messengerActions.removeDomainAction,
+                paste: {
+                  enable: pasteActions.enablePasteInstallAction,
+                  addDomain: pasteActions.addPasteDomainAction,
+                  removeDomain: pasteActions.removePasteDomainAction,
+                  proveDns: pasteActions.provePasteDomainAction,
+                  proveMeta: pasteActions.provePasteDomainMetaAction,
+                  rotate: pasteActions.rotatePasteSecretAction,
+                  snippet: pasteActions.getPasteSnippetAction,
+                  status: pasteActions.getPasteInstallStatusAction,
+                  proveShop: pasteActions.provePasteShopAction,
+                  checkDomain: pasteActions.checkPasteDomainAction,
+                },
+              }
+            : undefined
+        }
+      />
+    );
+  }
+
   /* Set up is ChatStudio, on the same draft and publish. */
   if (route === 'setup') {
     if (!canSetUp) redirect('/dashboard/store-chat');
-    const [statsRead, detectedRead, ordersRead, flagRows, wooConnectionRead] = await Promise.allSettled([
+    const [statsRead, detectedRead, ordersRead, wooConnectionRead] = await Promise.allSettled([
       getOverviewStats(selected.id),
       getWidgetLastSeenAt(selected.id),
       selected.domain ? hasShopOrderAccess(selected.domain) : Promise.resolve(false),
-      isTryOnPlatformOperator().then((operator) => (operator ? storeFlagRows(flagStore) : null)),
       selected.domain?.endsWith('.myshopify.com')
         ? Promise.resolve(null)
         : getWooSiteConnection(selected.id),
     ]);
-    for (const failed of [statsRead, detectedRead, ordersRead, flagRows, wooConnectionRead]) {
+    for (const failed of [statsRead, detectedRead, ordersRead, wooConnectionRead]) {
       if (failed.status === 'rejected') console.error('[store chat] set up failed:', failed.reason);
     }
     const stats = statsRead.status === 'fulfilled' ? statsRead.value : null;
-    const operatorFlags = flagRows.status === 'fulfilled' ? flagRows.value : null;
     const lastSeenMinutes = minutesSince(detectedRead.status === 'fulfilled' ? detectedRead.value : null, new Date().getTime());
     return (
       <V16ChatFrame
@@ -281,14 +331,6 @@ export async function StoreChatPage({
             },
           }}
         />
-        {operatorFlags && (
-          <StoreFlagsCard
-            kind={'shopDomain' in flagStore ? 'shop' : 'site'}
-            storeKey={'shopDomain' in flagStore ? flagStore.shopDomain : flagStore.widgetSiteId}
-            storeLabel={selected.domain ?? selected.name}
-            rows={operatorFlags}
-          />
-        )}
       </V16ChatFrame>
     );
   }

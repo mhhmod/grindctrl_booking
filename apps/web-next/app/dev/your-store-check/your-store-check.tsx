@@ -7,6 +7,8 @@ import {
   V16YourStoreTodayCard,
 } from '@/components/dashboard/v16/your-store/v16-your-store';
 import { getYourStoreCopy } from '@/lib/dashboard/your-store-copy';
+import { StoreConnect } from '@/components/dashboard/v16/store-setup/store-connect';
+import type { PasteInstallStatus } from '@/lib/paste/status';
 import { buildTodayStoreCard, buildYourStoreView, type YourStoreFacts } from '@/lib/dashboard/your-store-model';
 
 const NOW = Date.parse('2026-11-10T12:14:00.000Z');
@@ -28,6 +30,44 @@ const BASE: YourStoreFacts = {
   chat: { siteId: 'demo', enabled: true },
   domains: [{ id: 'd1', domain: ADDRESS, verified: true, state: 'trusted', reason: null }],
 };
+
+/* Connect your store with sample data: a pasted WooCommerce site that was
+   seen, and (state "new") a store that never was. */
+const pasteStatus = (seen: boolean): PasteInstallStatus => ({
+  siteId: 'demo', tenantKey: 'site:demo', platform: 'website', shopDomain: null, shopProof: null, shopProvenAt: null,
+  shopCheck: null, shopFirstSeenAt: null, shopLastSeenAt: null, connected: true, trusted: true, connectionReason: null,
+  domains: seen ? [{ id: 'd1', domain: ADDRESS, state: 'trusted', firstSeenAt: ago(90), lastSeenAt: ago(34), domainVerified: true,
+    proof: { txtName: '', txtValue: '', meta: { name: '', content: '' } } }] as unknown as PasteInstallStatus['domains'] : [],
+  seen: false, seenHost: null, chatLive: true, tryOnReady: true, tryOnReason: null, showButton: true,
+  plan: { totalCreditsRemaining: 13 } as PasteInstallStatus['plan'], mode: 'live', secretVersion: 1, rotationOverlapUntil: null,
+  turnstileConfigured: true,
+} as unknown as PasteInstallStatus);
+function connectFor(state: string, member: boolean, locale: 'en' | 'ar') {
+  const seen = state !== 'new';
+  const ok = async <T,>(data: T) => ({ ok: true as const, data });
+  return (
+    <StoreConnect
+      locale={locale}
+      siteId="demo"
+      meta={{ domain: seen ? ADDRESS : null, embedKey: 'gc_demo', lastSeenMinutes: seen ? 34 : null, wooConnection: null, platformDetected: seen ? 'woocommerce' : null }}
+      actions={member ? undefined : {
+        createWooPairingCodeAction: async () => ({ ok: false, error: 'demo' }) as never,
+        paste: {
+          enable: async () => ok({ tenantKey: 'site:demo' }),
+          addDomain: async () => ({ ok: false, code: 'invalid_domain' }) as never,
+          removeDomain: async () => ok(null),
+          proveDns: async () => ({ ok: false, code: 'proof_failed' }) as never,
+          proveMeta: async () => ({ ok: false, code: 'proof_failed' }) as never,
+          rotate: async () => ok({ version: 2, overlapUntil: new Date(NOW).toISOString() }),
+          snippet: async () => ok({ platform: 'website' as const, snippet: '<script async src="https://grindctrl.cloud/widget/v1/messenger.js" data-key="gc_demo" data-gc-install="paste" data-gc-platform="website"></script>', steps: [{ kind: 'save' as const }], contextEndpoint: '/api/try-on/paste-context' as const }),
+          status: async () => ok(pasteStatus(seen)),
+          proveShop: async () => ({ ok: false, code: 'unavailable' }) as never,
+          checkDomain: async () => ok(null) as never,
+        } as never,
+      }}
+    />
+  );
+}
 
 const STATES: Record<string, YourStoreFacts> = {
   connected: { ...BASE, tryOn: { ...BASE.tryOn!, showButton: false }, chat: { siteId: 'demo', enabled: false } },
@@ -63,6 +103,7 @@ export function YourStoreCheck({ state, locale, member }: { state: string; local
               view={buildYourStoreView(facts, copy, locale)}
               canChange={!member}
               locale={locale}
+              connect={connectFor(state, member, locale)}
               actions={{
                 setTryOnButton: async () => ({ ok: state !== 'well' }),
                 setStoreChat: async () => ({ ok: true }),
@@ -71,7 +112,7 @@ export function YourStoreCheck({ state, locale, member }: { state: string; local
             />
           </>
         ) : (
-          <V16YourStoreNotConnected locale={locale} canChange={!member} />
+          state === 'new' ? connectFor(state, member, locale) : <V16YourStoreNotConnected locale={locale} canChange={!member} />
         )}
       </main>
     </MantineUiProvider>

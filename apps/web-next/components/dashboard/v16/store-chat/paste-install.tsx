@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { Alert, Badge, Button, Code, CopyButton, Group, PasswordInput, Radio, Stack, Text, TextInput } from '@mantine/core';
-import { ShopifyLogo, WooCommerceLogo } from '@/components/brand-marks';
+import { ShopifyLogo, WooCommerceLogo, WordPressMark } from '@/components/brand-marks';
 import { GcIcon } from '@/components/icons';
 import type { InstallPlatform, PasteInstallCopy } from '@/lib/dashboard/paste-install-copy';
 import type { PasteInstallStatus } from '@/lib/paste/status';
@@ -134,7 +134,11 @@ export function PasteInstall({
     || status?.tryOnReason === 'domain_unverified';
   /* Our server confirms an address by itself once the code is live. */
   const confirming = Boolean(status?.domains.some((d) => !d.domainVerified && d.state !== 'disputed'));
-  const waiting = Boolean(snippet) && (!status?.seen || confirming || (!status.tryOnReady && settling));
+  /* Installed once our code has ever run on the store. "seen" alone means the
+     last 30 minutes, which a quiet store falls out of while it is working. */
+  const everSeen = Boolean(status?.seen || status?.shopLastSeenAt
+    || status?.domains.some((d) => d.state === 'trusted' && d.lastSeenAt));
+  const waiting = Boolean(snippet) && (!everSeen || confirming || (!status?.tryOnReady && settling));
   React.useEffect(() => {
     if (!waiting) return;
     const timer = window.setInterval(() => {
@@ -196,10 +200,13 @@ export function PasteInstall({
 
   const liveDomain = domains.find((d) => d.state === 'trusted' && d.lastSeenAt && now - Date.parse(d.lastSeenAt) <= LIVE_WINDOW_MS);
   const shopifyDomain = connectedAs === 'shopify' ? status?.shopDomain ?? undefined : undefined;
-  const storeHost = status?.seenHost ?? liveDomain?.domain ?? domains.find((d) => d.state === 'trusted')?.domain ?? shopifyDomain;
+  const lastSeenDomain = domains.filter((d) => d.state === 'trusted' && d.lastSeenAt)
+    .sort((a, b) => Date.parse(b.lastSeenAt!) - Date.parse(a.lastSeenAt!))[0];
+  const storeHost = status?.seenHost ?? liveDomain?.domain ?? lastSeenDomain?.domain ?? domains.find((d) => d.state === 'trusted')?.domain ?? shopifyDomain;
+  const lastSeenAt = lastSeenDomain?.lastSeenAt ?? status?.shopLastSeenAt ?? null;
   const storeUrl = `https://${storeHost ?? ''}`;
   /* Our code has run on the store: the install part is done. */
-  const installed = Boolean(status?.seen) && status?.connectionReason !== 'shopify_app_installed';
+  const installed = everSeen && status?.connectionReason !== 'shopify_app_installed';
 
   return (
     <Stack gap="lg" className={classes.root}>
@@ -253,7 +260,7 @@ export function PasteInstall({
                 <Radio.Indicator mt={2} />
                 <div className={classes.platformText}>
                   <span className={classes.logo} aria-hidden="true">
-                    {key === 'shopify' ? <ShopifyLogo size={20} /> : key === 'woocommerce' ? <WooCommerceLogo size={14} /> : <GcIcon name="store" size={20} />}
+                    {key === 'shopify' ? <ShopifyLogo size={20} /> : key === 'woocommerce' ? <><WordPressMark className={classes.wpMark} decorative /><WooCommerceLogo size={14} /></> : <GcIcon name="store" size={20} />}
                   </span>
                   <Text fw={600} size="sm">{copy.platforms[key].name}</Text>
                   <Text size="xs" c="dimmed">{copy.platforms[key].body}</Text>
@@ -477,12 +484,15 @@ export function PasteInstall({
               </form>
             ) : null}
             {/* Installed is independent of preview or live; Try-On says which. */}
-            {status?.seen ? (
+            {status && everSeen ? (
               <Stack gap={6}>
                 <Group gap="xs" wrap="nowrap">
                   <GcIcon name="check" size={18} />
                   <Text size="sm">{copy.chatLive(status.seenHost ?? storeHost ?? '')}</Text>
                 </Group>
+                {lastSeenAt && now ? (
+                  <Text size="xs" c="dimmed">{copy.domainState.live(ago(minutesSince(lastSeenAt, now) ?? 0))}</Text>
+                ) : null}
                 <Group gap="xs" wrap="nowrap">
                   <GcIcon name={status.tryOnReady ? 'check' : 'info'} size={18} />
                   <Text size="sm">{status.tryOnReady ? copy.tryOnLive : copy.tryOnReason(status.tryOnReason)}</Text>

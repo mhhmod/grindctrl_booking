@@ -93,6 +93,8 @@ export interface ChatStudioCopy {
   hoursAfter: string;
   change: string;
   installation: string;
+  installMoved: string;
+  openStoreSetup: string;
   lastCheck: (ago: string) => string;
   neverChecked: string;
   ago: (minutes: number) => string;
@@ -260,6 +262,8 @@ const en: ChatStudioCopy = {
   hoursAfter: 'Outside them the assistant keeps answering and asks where the team should reply.',
   change: 'Change',
   installation: 'Installation',
+  installMoved: 'Installing and checking your store now live in Store setup.',
+  openStoreSetup: 'Open Store setup',
   lastCheck: (ago) => `Last storefront check ${ago}.`,
   neverChecked: 'Not seen on your storefront yet.',
   ago: (minutes) =>
@@ -437,6 +441,8 @@ const ar: ChatStudioCopy = {
   hoursAfter: 'خارج هذه الساعات يواصل المساعد الرد، ويسأل أين يرد الفريق.',
   change: 'تغيير',
   installation: 'التثبيت',
+  installMoved: 'التركيب وفحص المتجر أصبحا في «إعداد المتجر».',
+  openStoreSetup: 'افتح إعداد المتجر',
   lastCheck: (ago) => `آخر فحص لواجهة المتجر ${ago}.`,
   neverChecked: 'لم تُرصد في واجهة متجرك بعد.',
   ago: (minutes) =>
