@@ -144,6 +144,7 @@ export async function POST(request: NextRequest) {
       productName?: string;
       useMockPhoto?: boolean;
       turnstileToken?: unknown;
+      clientTimings?: unknown;
     };
 
     const sessionId = body.sessionId ?? '';
@@ -443,7 +444,7 @@ export async function POST(request: NextRequest) {
           ? authorization.canonicalGarmentUrl ?? undefined
           : undefined,
         productName,
-        options.background ? { background: options.background } : {},
+        { ...(options.background ? { background: options.background } : {}), clientTimings: body.clientTimings },
       );
     } finally {
       options.settle?.();

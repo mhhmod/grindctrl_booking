@@ -1,5 +1,5 @@
 /**
- * GRINDCTRL Try-On paste adapters v1.4.0 (website and Shopify paste installs).
+ * GRINDCTRL Try-On paste adapters v1.5.0 (website and Shopify paste installs).
  *
  * Loaded by messenger.js on pages of a `data-gc-install="paste"` snippet
  * that show a product or product cards, then mounted on the hosted engine
@@ -380,6 +380,84 @@
     return jsonLdProduct() || microdataProduct() || openGraphProduct() || tagProduct();
   }
 
+  /* Woo's own page markers, never its address. The page's cart form owns
+     the allowed product/variation ids, just as in the plugin adapter. */
+  function wooProduct(product) {
+    if (!product || product.card) return null;
+    var form = document.querySelector('form.cart');
+    if (!form || !(window.woocommerce_params || window.wc_add_to_cart_params ||
+        form.matches('.variations_form') || form.querySelector('.single_add_to_cart_button'))) return null;
+    var page = websiteProduct();
+    if (!page || page.id !== product.id) return null;
+    var field = form.querySelector('[name="product_id"], [name="add-to-cart"]');
+    var id = form.getAttribute('data-product_id') || (field && field.value);
+    if (!/^[1-9]\d{0,15}$/.test(String(id || ''))) return null;
+    var selected = form.querySelector('[name="variation_id"]');
+    var attributes = [];
+    Array.prototype.forEach.call(form.querySelectorAll('[name^="attribute_"]'), function (input) {
+      if (input.value) attributes.push({ attribute: input.name.replace(/^attribute_/, ''), value: input.value });
+    });
+    var variations = [];
+    try { variations = JSON.parse(form.getAttribute('data-product_variations') || '[]'); } catch (_) {}
+    if (!Array.isArray(variations)) variations = [];
+    var variable = form.matches('.variations_form');
+    var variants = variations.filter(function (v) { return v && /^[1-9]\d{0,15}$/.test(String(v.variation_id)); }).map(function (v) {
+      var attrs = Object.keys(v.attributes || {}).map(function (key) {
+        var name = key.replace(/^attribute_/, '');
+        var current = attributes.filter(function (a) { return a.attribute === name; })[0];
+        return { attribute: name, value: v.attributes[key] || (current && current.value) || '' };
+      });
+      return { id: String(v.variation_id), title: attrs.map(function (a) { return a.value; }).join(' / '),
+        options: attrs.map(function (a) { return a.value; }), attributes: attrs, available: v.is_in_stock !== false && v.is_purchasable !== false,
+        price: typeof v.display_price === 'number' ? Math.round(v.display_price * 100) : null };
+    });
+    var picked = selected && /^[1-9]\d{0,15}$/.test(selected.value) ? selected.value : null;
+    // Large variable products use Woo's AJAX picker instead of a printed list.
+    if (variable && !variants.length && picked) variants.push({ id: picked, title: attributes.map(function (a) { return a.value; }).join(' / '),
+      options: attributes.map(function (a) { return a.value; }), attributes: attributes, available: true, price: null });
+    if (!variable) variants = [{ id: String(id), title: 'Default Title', options: [], attributes: [], available: true, price: null }];
+    return { id: String(id), variantId: variable ? picked : String(id), variants: variants, options: attributes.map(function (a) { return a.attribute; }), currency: page.currency };
+  }
+
+  var wooNonce = '';
+  function wooApi(path, body) {
+    var link = document.querySelector('link[rel="https://api.w.org/"]');
+    var root = (window.wpApiSettings && window.wpApiSettings.root) || (link && link.href) || '/wp-json/';
+    var url = new URL(root, window.location.href);
+    if (url.origin !== window.location.origin) return Promise.reject(new Error('cart_origin'));
+    if (url.searchParams.has('rest_route')) url.searchParams.set('rest_route', '/wc/store/v1/' + path);
+    else url = new URL('wc/store/v1/' + path, url);
+    var headers = { Accept: 'application/json' };
+    if (wooNonce) headers.Nonce = wooNonce;
+    if (body) headers['Content-Type'] = 'application/json';
+    return fetch(url.href, { method: body ? 'POST' : 'GET', credentials: 'same-origin', headers: headers, body: body }).then(function (res) {
+      var nonce = res.headers.get('Nonce');
+      if (nonce) wooNonce = nonce;
+      return res;
+    });
+  }
+
+  function wooAdd(variant, qty, state) {
+    var product = wooProduct(state && state.product);
+    if (!product) return Promise.resolve('unsupported');
+    if (typeof qty !== 'number' || qty % 1 !== 0 || qty < 1 || qty > 99) return Promise.resolve({ ok: false });
+    var chosen = product.variants.filter(function (v) { return v.id === String(variant); })[0];
+    if (!chosen || !chosen.available || chosen.attributes.some(function (a) { return !a.value; })) return Promise.resolve({ ok: false });
+    var payload = { id: Number(chosen.id), quantity: qty };
+    if (chosen.attributes.length) payload.variation = chosen.attributes;
+    function add() { return wooApi('cart/add-item', JSON.stringify(payload)); }
+    return (wooNonce ? Promise.resolve() : wooApi('cart')).then(add).then(function (res) {
+      return res.status === 401 || res.status === 403 ? wooApi('cart').then(add) : res;
+    }).then(function (res) {
+      if (!res.ok) return { ok: false };
+      try {
+        if (window.jQuery) window.jQuery(document.body).trigger('wc_fragment_refresh');
+        document.body.dispatchEvent(new CustomEvent('wc-blocks_added_to_cart', { bubbles: true, detail: { preserveCartData: false } }));
+      } catch (_) {}
+      return { ok: true, variantTitle: chosen.title };
+    });
+  }
+
   /* ── Where the website button goes ───────────────────────────────────── */
 
   function manualSpot() {
@@ -675,7 +753,7 @@
     // Presentation only: the shopper's selection never replaces the signed variant.
     function displayContext(data, product) {
       var url = new URL(data.embedUrl);
-      if (platform === 'website') url.searchParams.set('cart', 'unsupported');
+      if (platform === 'website' && !wooProduct(product)) url.searchParams.set('cart', 'unsupported');
       if (product.variantId) url.searchParams.set('selectedVariant', product.variantId);
       var selected = findVariantIn(product.card ? cardJson[product.handle] : productJson, product.variantId);
       if (selected && selected.title) url.searchParams.set('variantTitle', selected.title);
@@ -963,7 +1041,12 @@
             price: null, currency: shopifyCurrency(), handle: card.handle, card: true } : null;
         }
         // Read again at every call: the page's own variant picker, or a client-side route, may have changed it.
-        if (platform === 'website') return websiteProduct();
+        if (platform === 'website') {
+          var page = websiteProduct();
+          var woo = wooProduct(page);
+          if (woo) page.variantId = woo.variantId;
+          return page;
+        }
         if (!productJson) return null;
         var form = shopifyForm();
         var field = form && form.querySelector('[name="id"]');
@@ -1001,7 +1084,10 @@
       },
 
       getProduct: function (product) {
-        if (platform === 'website') return Promise.resolve(null);
+        if (platform === 'website') {
+          var woo = wooProduct(product);
+          return Promise.resolve(woo ? { options: woo.options, variants: woo.variants, currency: woo.currency } : null);
+        }
         if (product && product.card) {
           var card = cardsById[product.id];
           return card ? cardProductJson(card).then(function (json) { return json ? productOptions(json) : null; }) : Promise.resolve(null);
@@ -1010,7 +1096,7 @@
       },
 
       addToCart: function (variant, qty, state) {
-        if (platform !== 'shopify') return Promise.resolve('unsupported');
+        if (platform !== 'shopify') return wooAdd(variant, qty, state);
         if (!Number.isInteger(qty) || qty < 1 || qty > 99) return Promise.resolve({ ok: false });
         var product = state && state.product;
         var card = product && product.card ? cardsById[product.id] : null;
@@ -1038,10 +1124,19 @@
       },
 
       // Only from the sheet's explicit Checkout tap.
-      checkout: function () { if (platform === 'shopify') window.location.href = shopifyRoot() + 'cart'; }
+      checkout: function () {
+        if (platform === 'shopify') { window.location.href = shopifyRoot() + 'cart'; return; }
+        if (!wooProduct(websiteProduct())) return;
+        var params = window.wc_add_to_cart_params || window.woocommerce_params || {};
+        var cart = params.cart_url || (document.querySelector('a.cart-contents') || {}).href;
+        if (cart) {
+          var url = new URL(cart, window.location.href);
+          if (url.origin === window.location.origin) window.location.href = url.href;
+        }
+      }
     };
     return adapter;
   }
 
-  window.GRINDCTRL_TRYON_PASTE = { version: '1.4.0', create: create, detectWebsiteProduct: websiteProduct };
+  window.GRINDCTRL_TRYON_PASTE = { version: '1.5.0', create: create, detectWebsiteProduct: websiteProduct };
 })();

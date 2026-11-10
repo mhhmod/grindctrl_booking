@@ -160,14 +160,14 @@ export function SheetResultStep({
         )}
       </div>
     ) : (
-      <div className="relative mx-auto w-full max-w-sm overflow-hidden rounded-2xl border bg-muted/30">
+      <div className="relative mx-auto w-fit max-w-full overflow-hidden rounded-2xl border bg-muted/30">
         {view === 'look' ? (
           // The look lives in this page as a data or blob URL.
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={job.resultImageUrl ?? ''} alt={copy.lookAlt(productName)} onError={onImageError} className="aspect-[3/4] w-full object-cover" />
+          <img src={job.resultImageUrl ?? ''} alt={copy.lookAlt(productName)} onError={onImageError} className="block aspect-[3/4] h-[clamp(10rem,calc(100dvh-24rem),24rem)] w-auto max-w-full object-cover" />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photoDataUrl ?? ''} alt={copy.originalPhotoAlt} className="aspect-[3/4] w-full object-cover" />
+          <img src={photoDataUrl ?? ''} alt={copy.originalPhotoAlt} className="block aspect-[3/4] h-[clamp(10rem,calc(100dvh-24rem),24rem)] w-auto max-w-full object-cover" />
         )}
 
         <div role="group" aria-label={copy.compare} className="absolute end-3 top-3 flex rounded-full bg-background/90 p-1 text-sm shadow-sm backdrop-blur">
@@ -178,7 +178,7 @@ export function SheetResultStep({
               aria-pressed={view === option}
               onClick={() => setView(option)}
               disabled={option === 'photo' && !photoDataUrl}
-              className={`min-h-9 rounded-full px-3 font-medium focus-visible:outline-2 focus-visible:outline-ring ${view === option ? 'bg-foreground text-background' : 'text-foreground'}`}
+              className={`min-h-11 rounded-full px-3 font-medium focus-visible:outline-2 focus-visible:outline-ring ${view === option ? 'bg-foreground text-background' : 'text-foreground'}`}
             >
               {option === 'look' ? copy.viewLook : copy.yourPhoto}
             </button>
@@ -206,7 +206,7 @@ export function SheetResultStep({
       </div>
     );
 
-  const details = (
+  const options = (
     <>
       {tried && (otherOptions.length > 0 || sizes.variants.length > 0) && (
         <div className="space-y-4">
@@ -245,6 +245,10 @@ export function SheetResultStep({
         </div>
       )}
 
+    </>
+  );
+  const details = (
+    <>
       {show.addToCart && (
         <div className="space-y-2">
           <button
@@ -270,7 +274,7 @@ export function SheetResultStep({
               <button
                 type="button"
                 onClick={() => window.parent.postMessage({ type: 'grindctrl-tryon:checkout' }, '*')}
-                className="min-h-9 shrink-0 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                className="min-h-11 shrink-0 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground focus-visible:outline-2 focus-visible:outline-ring"
               >
                 {t.checkout}
               </button>
@@ -309,18 +313,24 @@ export function SheetResultStep({
 
   // Desktop (TryOn-Desktop): the slider beside the details.
   return wide ? (
-    <div className="grid grid-cols-2 items-start gap-8">
+    <div className="grid grid-cols-2 items-start gap-8 overflow-y-auto">
       {visual}
       <div className="flex flex-col gap-5">
         {heading}
+        {options}
         {details}
       </div>
     </div>
   ) : (
-    <div className="flex flex-col gap-5">
-      {heading}
-      {visual}
-      {details}
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto">
+        {heading}
+        {visual}
+        {options}
+      </div>
+      <div className="sticky bottom-0 shrink-0 space-y-2 border-t bg-background pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        {details}
+      </div>
     </div>
   );
 }

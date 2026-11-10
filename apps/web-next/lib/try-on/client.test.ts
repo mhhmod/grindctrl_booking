@@ -33,7 +33,7 @@ describe('keepTryOnResultInPage', () => {
 
   it('reads a signed link into the page first, then releases it', async () => {
     fetchMock.mockImplementation(async (input: string, init?: RequestInit) => {
-      if (init?.method === 'DELETE') return new Response(null, { status: 204 });
+      if ((init?.method === 'DELETE' || init?.method === 'PATCH')) return new Response(null, { status: 204 });
       return new Response(new Uint8Array([82, 69, 83]), { headers: { 'content-type': 'image/png' } });
     });
 
@@ -202,7 +202,7 @@ describe('public studio async generation', () => {
     let polls = 0;
     vi.stubGlobal('fetch', vi.fn(async (input: string, init?: RequestInit) => {
       const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
-      if (init?.method === 'DELETE') return new Response(null, { status: 204 });
+      if ((init?.method === 'DELETE' || init?.method === 'PATCH')) return new Response(null, { status: 204 });
       if (input.endsWith('/session')) return json({ ok: true, data: { sessionId: 'signed-session' } });
       if (input.endsWith('/attempt')) return json({ ok: true, data: { attemptId: 'signed-attempt' } });
       if (input.endsWith('/generate')) return json({ ok: true, jobId: 'tryon_real', status: 'processing', stage: 'received' }, 202);
@@ -220,7 +220,7 @@ describe('public studio async generation', () => {
   it('recovers the same job when synchronous fallback reports finalization pending', async () => {
     const fetchMock = vi.fn(async (input: string, init?: RequestInit) => {
       const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
-      if (init?.method === 'DELETE') return new Response(null, { status: 204 });
+      if ((init?.method === 'DELETE' || init?.method === 'PATCH')) return new Response(null, { status: 204 });
       if (input.endsWith('/session')) return json({ ok: true, data: { sessionId: 'signed-session' } });
       if (input.endsWith('/attempt')) return json({ ok: true, data: { attemptId: 'same-signed-attempt' } });
       if (input.endsWith('/generate')) return json({ ok: false, code: 'TRYON_FINALIZATION_PENDING', jobId: 'tryon_same' }, 503);
@@ -239,7 +239,7 @@ describe('public studio async generation', () => {
     let polls = 0;
     const fetchMock = vi.fn(async (input: string, init?: RequestInit) => {
       const json = (data: unknown, status = 200, headers = {}) => new Response(JSON.stringify(data), { status, headers });
-      if (init?.method === 'DELETE') return new Response(null, { status: 204 });
+      if ((init?.method === 'DELETE' || init?.method === 'PATCH')) return new Response(null, { status: 204 });
       if (input.endsWith('/session')) return json({ ok: true, data: { sessionId: 'signed-session' } });
       if (input.endsWith('/attempt')) return json({ ok: true, data: { attemptId: 'same-signed-attempt' } });
       if (input.endsWith('/generate')) {

@@ -48,36 +48,61 @@ const ACTION_PAGES: Record<Binding['action'], string> = { paste_tryon: '/embed/t
  * Never preload for the Shopify app/Woo or trust a query parameter to decide
  * challenge exemptions. siteKey is read at runtime on the server
  * (TURNSTILE_SITE_KEY) and returned by the attempt route. */
-export async function attemptTurnstileToken(binding: TryOnAttempt['turnstile']): Promise<string | undefined> {
+export function preloadTurnstile(): void {
+  if (!document.querySelector('link[data-gc-turnstile]')) {
+    const link = document.createElement('link');
+    link.rel = 'preconnect'; link.href = 'https://challenges.cloudflare.com';
+    link.dataset.gcTurnstile = 'true'; document.head.appendChild(link);
+  }
+  void load().catch(() => {});
+}
+
+export async function attemptTurnstileToken(binding: TryOnAttempt['turnstile'], options: { signal?: AbortSignal; background?: boolean } = {}): Promise<string | undefined> {
   if (!binding) return undefined;
   if (!binding.siteKey || !Object.hasOwn(ACTION_PAGES, binding.action) || !binding.cData
     || window.location.pathname !== ACTION_PAGES[binding.action]) {
     throw new Error('turnstile_unavailable');
   }
-  return token(binding);
+  return token(binding, options);
 }
 
-async function token(binding: Binding): Promise<string> {
+async function token(binding: Binding, { signal, background }: { signal?: AbortSignal; background?: boolean }): Promise<string> {
+  if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
   const api = await load().catch(() => { throw new TurnstileChallengeError(); });
+  if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
   const container = document.createElement('div');
+  if (background) {
+    container.style.visibility = 'hidden';
+    container.style.position = 'fixed';
+  }
   // Inside our embed. Interaction-only widgets must be allowed to become visible.
   (document.querySelector('main') ?? document.body).appendChild(container);
   return new Promise<string>((resolve, reject) => {
     let widget: string | undefined;
+    let settled = false;
     const finish = (value?: string) => {
+      if (settled) return;
+      settled = true;
       clearTimeout(timer);
+      signal?.removeEventListener('abort', onAbort);
       if (widget !== undefined) api.remove(widget);
       container.remove();
       if (value) resolve(value); else reject(new TurnstileChallengeError());
     };
+    const onAbort = () => finish();
     const timer = window.setTimeout(() => finish(), 120000);
+    signal?.addEventListener('abort', onAbort, { once: true });
     try {
       widget = api.render(container, { sitekey: binding.siteKey!, action: binding.action, cData: binding.cData,
         appearance: 'interaction-only', execution: 'execute', callback: finish,
         'error-callback': () => finish(), 'expired-callback': () => finish(), 'timeout-callback': () => finish(),
         // Rare: Cloudflare needs the shopper. Bring the challenge into view in the sheet.
-        'before-interactive-callback': () => container.scrollIntoView?.({ block: 'center' }) });
-      api.execute(widget);
+        'before-interactive-callback': () => {
+          if (background) finish();
+          else container.scrollIntoView?.({ block: 'center' });
+        } });
+      if (settled) api.remove(widget);
+      else api.execute(widget);
     } catch { finish(); }
   });
 }

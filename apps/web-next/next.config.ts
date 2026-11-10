@@ -70,6 +70,15 @@ const nextConfig: NextConfig = {
         headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }],
       },
       {
+        source: '/widget/v1/messenger.js',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=300, stale-while-revalidate=86400' }],
+      },
+      ...['tryon-paste.js', 'tryon-engine.js'].map((script) => ({
+        source: `/widget/v1/${script}`,
+        has: [{ type: 'query' as const, key: 'v' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=3600, stale-while-revalidate=604800' }],
+      })),
+      {
         /* The marketing pages' images are served as files, not through the
            image optimizer, so let browsers keep them for a day and reuse
            them for a week while they check for a new copy. */

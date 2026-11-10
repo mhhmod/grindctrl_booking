@@ -225,6 +225,9 @@
       'line-height:1.2;cursor:pointer;text-decoration:none}',
       '.gc-tryon-btn:focus-visible{outline:3px solid currentColor;outline-offset:3px}',
       '.gc-tryon-btn[disabled]{opacity:.6;cursor:progress}',
+      '.gc-tryon-btn[data-gc-paste="1"]{animation:gc-tryon-enter 150ms ease-out}',
+      '@keyframes gc-tryon-enter{from{opacity:0}to{opacity:1}}',
+      '@media(prefers-reduced-motion:reduce){.gc-tryon-btn[data-gc-paste="1"]{animation:none}}',
       '.gc-tryon-btn--card{margin-block:.25rem;padding-block:.45rem;padding-inline:.9rem;font-size:.875rem}',
       '.gc-tryon-btn--preview{display:none}',
       '.gc-tryon-btn{flex-wrap:wrap}',
@@ -264,8 +267,18 @@
       '.gc-tryon-ready{font-size:.75em;padding:.2em .5em;border:1px solid currentColor;border-radius:999px}',
       '.gc-tryon-ready[hidden],.gc-tryon-loading[hidden]{display:none}',
       '.gc-tryon-live{position:absolute;inline-size:1px;block-size:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}',
-      '.gc-tryon-loading{position:absolute;inset-block:44px 0;inset-inline:0;z-index:1;display:grid;place-content:center;gap:1rem;background:inherit;color:inherit;font:inherit}',
-      '.gc-tryon-loading::before{content:"";display:block;inline-size:min(15rem,65vw);block-size:12rem;border-radius:1rem;background:currentColor;opacity:.08}',
+      '.gc-tryon-loading{position:absolute;inset-block:44px 0;inset-inline:0;z-index:1;padding-block:8px 24px;padding-inline:16px;background:inherit;color:inherit;font:inherit;box-sizing:border-box}',
+      '.gc-tryon-skeleton{display:flex;flex-direction:column;gap:20px}',
+      '.gc-tryon-skeleton span{display:block;background:currentColor;opacity:.08;border-radius:12px}',
+      '.gc-tryon-skeleton__product{display:flex;align-items:center;gap:12px}',
+      '.gc-tryon-skeleton .gc-tryon-skeleton__thumb{inline-size:56px;block-size:56px;border-radius:50%;flex-shrink:0}',
+      '.gc-tryon-skeleton__name{inline-size:50%;block-size:16px}',
+      '.gc-tryon-skeleton__heading{inline-size:75%;block-size:28px}',
+      '.gc-tryon-skeleton__body{inline-size:90%;block-size:18px}',
+      '.gc-tryon-skeleton__tips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}',
+      '.gc-tryon-skeleton__tips span{block-size:84px}',
+      '.gc-tryon-skeleton__button{inline-size:100%;block-size:64px}',
+      '@media(min-width:640px){.gc-tryon-loading{padding-inline:32px}}',
       '.gc-tryon-note{margin-block:.25rem;font-size:.875rem;line-height:1.4}',
       '.gc-tryon-note button{margin-inline-start:.5rem;min-block-size:44px;padding-inline:.75rem;font:inherit;cursor:pointer}',
       '.gc-tryon-sheet{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:flex-end;justify-content:center}',
@@ -284,6 +297,7 @@
       '.gc-tryon-sheet__close:focus-visible{outline:3px solid currentColor;outline-offset:-3px}',
       '.gc-tryon-frame{flex:1 1 auto;inline-size:100%;min-block-size:0;border:0;background:transparent}',
       '@media (min-width:640px){.gc-tryon-sheet{align-items:center}',
+      '.gc-tryon-sheet__handle{display:none}',
       '.gc-tryon-sheet__panel{inline-size:min(520px,calc(100vw - 2rem));border-radius:20px;transform:translateY(24px);opacity:0;',
       'transition:transform .25s ease,opacity .2s}',
       '.gc-tryon-sheet--open .gc-tryon-sheet__panel{opacity:1}}',
@@ -374,7 +388,14 @@
     var loading = document.createElement('div');
     loading.className = 'gc-tryon-loading';
     loading.setAttribute('role', 'status');
-    loading.textContent = t.loading;
+    loading.innerHTML = '<div class="gc-tryon-skeleton" aria-hidden="true">' +
+      '<div class="gc-tryon-skeleton__product"><span class="gc-tryon-skeleton__thumb"></span><span class="gc-tryon-skeleton__name"></span></div>' +
+      '<span class="gc-tryon-skeleton__heading"></span><span class="gc-tryon-skeleton__body"></span>' +
+      '<div class="gc-tryon-skeleton__tips"><span></span><span></span><span></span></div><span class="gc-tryon-skeleton__button"></span></div>';
+    var opening = document.createElement('span');
+    opening.className = 'gc-tryon-live';
+    opening.textContent = t.loading;
+    loading.appendChild(opening);
     panel.appendChild(loading);
     panel.appendChild(frame);
     frame.addEventListener('load', function () {
@@ -527,7 +548,7 @@
     var indicator = indicatorFor(button);
     var frame = document.createElement('iframe');
     frame.className = 'gc-tryon-frame';
-    frame.title = 'GRINDCTRL Try-On';
+    frame.setAttribute('aria-label', 'GRINDCTRL Try-On');
     frame.setAttribute('allow', 'camera; clipboard-write');
     var sheet = createSheet(button, frame);
     var session = { sheet: sheet, frame: frame, opened: !warm, expiresAt: Date.now() + 90000, variationId: picked.id };

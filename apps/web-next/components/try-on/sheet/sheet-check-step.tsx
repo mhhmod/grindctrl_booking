@@ -19,6 +19,7 @@ export function SheetCheckStep({
   onDifferentPhoto,
   onTryOn,
   onShowPrivacy,
+  onAccepted,
 }: {
   copy: SheetCopy;
   photoDataUrl: string;
@@ -31,6 +32,7 @@ export function SheetCheckStep({
   onDifferentPhoto: () => void;
   onTryOn: () => void;
   onShowPrivacy: () => void;
+  onAccepted?: () => void;
 }) {
   // Both are kept with the photo they belong to, so a new photo starts unchecked.
   const [checked, setChecked] = useState<{ src: string; result: PhotoCheck | null } | null>(null);
@@ -49,6 +51,9 @@ export function SheetCheckStep({
   const check = checked?.src === photoDataUrl ? checked.result : 'checking';
   const overridden = overriddenFor === photoDataUrl;
   const result = check === 'checking' ? null : check;
+  useEffect(() => {
+    if (check !== 'checking' && (!result?.issue || overridden)) onAccepted?.();
+  }, [check, result, overridden, onAccepted]);
 
   if (result && result.issue && !overridden) {
     const fix = result.issue === 'dark' ? copy.fixDark : result.issue === 'bright' ? copy.fixBright : copy.fixBlurry;
@@ -81,7 +86,8 @@ export function SheetCheckStep({
   }
 
   return (
-    <div className="flex min-h-full flex-col gap-5">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pb-4">
       <StepHeader copy={copy} onBack={onDifferentPhoto} />
       <div className="flex gap-4">
         <Photo src={photoDataUrl} alt={copy.yourPhotoAlt} />
@@ -96,7 +102,7 @@ export function SheetCheckStep({
               <CheckLine ok label={copy.checkBrightSharp} />
             </div>
           ) : null}
-          <button type="button" onClick={onDifferentPhoto} className="text-sm font-medium text-foreground underline underline-offset-2">
+          <button type="button" onClick={onDifferentPhoto} className="min-h-11 text-sm font-medium text-foreground underline underline-offset-2">
             {copy.useDifferent}
           </button>
         </div>
@@ -142,18 +148,18 @@ export function SheetCheckStep({
         </span>
       </label>
 
-      <div className="mt-auto space-y-2 border-t pt-4">
+        <p className="text-center text-xs text-muted-foreground">
+          {copy.agreeNote}{' '}
+          <button type="button" onClick={onShowPrivacy} className="min-h-11 underline underline-offset-2">
+            {copy.privacyNoticeLink}
+          </button>.
+        </p>
+      </div>
+      <div className="sticky bottom-0 shrink-0 border-t bg-background pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <button type="button" onClick={onTryOn} disabled={busy || check === 'checking'} className={PRIMARY}>
           <User className="size-5" aria-hidden="true" />
           {firstTime ? copy.agreeAndTry : copy.tryItOn}
         </button>
-        <p className="text-center text-xs text-muted-foreground">
-          {copy.agreeNote}{' '}
-          <button type="button" onClick={onShowPrivacy} className="underline underline-offset-2">
-            {copy.privacyNoticeLink}
-          </button>
-          .
-        </p>
       </div>
     </div>
   );

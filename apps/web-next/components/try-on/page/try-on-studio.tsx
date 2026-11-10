@@ -20,7 +20,7 @@ import { SkipLink } from '@/components/site/skip-link';
 import { useTryOnLocale } from '@/components/try-on/locale-provider';
 import { trackClick, trackMarketingEvent } from '@/lib/analytics';
 import { BOOKING_URL } from '@/lib/booking';
-import { runPublicTryOn, type PublicTryOnFailure } from '@/lib/try-on/client';
+import { preparePublicLook, runPublicTryOn, type PublicLookPreparation, type PublicTryOnFailure } from '@/lib/try-on/client';
 import { shopperFailureMessage } from '@/lib/try-on/shopper-errors';
 import { readPhotoAsDataUrl } from '@/lib/try-on/photo-file';
 import { recordTryOnOpen } from '@/lib/try-on/performance';
@@ -81,7 +81,7 @@ export function TryOnStudio({ typicalSeconds = null }: { typicalSeconds?: number
   React.useEffect(() => { recordTryOnOpen(); }, []);
   const { t, locale, toggleLocale } = useTryOnLocale();
   const [state, dispatch] = React.useReducer(studioReducer, INITIAL_STATE);
-  const [progress, setProgress] = React.useState<{ request: number; stage: TryOnStage | null; elapsedMs: number }>({ request: -1, stage: null, elapsedMs: 0 });
+  const [progress, setProgress] = React.useState<{ request: number; stage: TryOnStage | null; elapsedMs: number; acceptedElapsedMs: number | null }>({ request: -1, stage: null, elapsedMs: 0, acceptedElapsedMs: null });
   const [pickerOpen, setPickerOpen] = React.useState(false);
   const [compareOpen, setCompareOpen] = React.useState(false);
   /* Set when a 429 arrives; clears itself once its Retry-After has passed. */
@@ -89,6 +89,22 @@ export function TryOnStudio({ typicalSeconds = null }: { typicalSeconds?: number
   const [pieceSwaps, setPieceSwaps] = React.useState(0);
   const lookCardRef = React.useRef<HTMLElement>(null);
   const startedAt = React.useRef(0);
+  const acceptedAt = React.useRef<number | null>(null);
+  const preparedLook = React.useRef<PublicLookPreparation | undefined>(undefined);
+  const preparationController = React.useRef<AbortController | null>(null);
+
+  // Starts script loading on entry; only an accepted upload runs the check.
+  React.useEffect(() => {
+    const controller = new AbortController();
+    preparationController.current = controller;
+    preparedLook.current = undefined;
+    void preparePublicLook(PIECES[state.piece].productId, controller.signal).then((prepared) => {
+      if (controller.signal.aborted) return;
+      preparedLook.current = prepared;
+      if (state.photo?.kind === 'upload') prepared.preparation.warm();
+    }).catch(() => {});
+    return () => { controller.abort(); preparedLook.current = undefined; };
+  }, [state.piece, state.photo]);
 
   const look = currentLook(state);
   const journey = journeyStep(state);
@@ -102,6 +118,7 @@ export function TryOnStudio({ typicalSeconds = null }: { typicalSeconds?: number
         request,
         stage: current.request === request ? current.stage : null,
         elapsedMs: Math.max(0, performance.now() - startedAt.current),
+        acceptedElapsedMs: acceptedAt.current === null ? null : Math.max(0, performance.now() - acceptedAt.current),
       }));
     }, 250);
     return () => window.clearInterval(timer);
@@ -117,9 +134,11 @@ export function TryOnStudio({ typicalSeconds = null }: { typicalSeconds?: number
       productId: PIECES[state.piece].productId,
       photoDataUrl: state.photo.dataUrl,
       signal: controller.signal,
+      prepared: preparedLook.current,
       onProgress: (job) => {
-        if (!controller.signal.aborted && job.stage) {
-          setProgress({ request, stage: job.stage, elapsedMs: Math.max(0, performance.now() - startedAt.current) });
+        if (!controller.signal.aborted) {
+          if (acceptedAt.current === null) acceptedAt.current = performance.now();
+          setProgress({ request, stage: job.stage ?? 'received', elapsedMs: Math.max(0, performance.now() - startedAt.current), acceptedElapsedMs: Math.max(0, performance.now() - acceptedAt.current) });
         }
       },
     })
@@ -159,7 +178,9 @@ export function TryOnStudio({ typicalSeconds = null }: { typicalSeconds?: number
   }, [state.stage, state.showing]);
 
   const onCreate = () => {
+    if (!preparedLook.current) preparationController.current?.abort();
     startedAt.current = performance.now();
+    acceptedAt.current = null;
     trackMarketingEvent({ name: 'storefront.demo_started', properties: { demo: 'try_on' } });
     const sample = state.photo?.kind === 'sample';
     dispatch({ type: 'create' });
@@ -197,6 +218,7 @@ export function TryOnStudio({ typicalSeconds = null }: { typicalSeconds?: number
   const waiting = makingProgress({
     elapsedMs: progress.request === state.request ? progress.elapsedMs : 0,
     estimateSeconds: typicalSeconds,
+    acceptedElapsedMs: progress.request === state.request ? progress.acceptedElapsedMs : null,
     stepCount: t.pageProgressStages.length,
     stage: progress.request === state.request ? progress.stage : null,
   });

@@ -11,7 +11,8 @@ import type {
 } from '@/lib/try-on/types';
 import { retryAfterDelayMs, TRYON_ASYNC_POLL_TIMEOUT_MS, TRYON_POLL_INITIAL_DELAY_MS } from '@/lib/try-on/poll-policy';
 import { recordTryOnOpen, recordTryOnPhase } from '@/lib/try-on/performance';
-import { attemptTurnstileToken, TurnstileChallengeError } from '@/lib/try-on/turnstile-client';
+import { preloadTurnstile, TurnstileChallengeError } from '@/lib/try-on/turnstile-client';
+import { LookPreparation } from '@/lib/try-on/look-preparation';
 import {
   bootstrapStorefrontProof,
   clearPendingStorefrontProof,
@@ -23,6 +24,7 @@ import {
   keepTryOnResultInPage,
   pollTryOnJob,
   ShopperMessageError,
+  reportClientLookTimings,
 } from '@/lib/try-on/client';
 import { PHONE_KEEP_MS, phoneStore, type KeptLook } from '@/lib/try-on/phone-store';
 import type { TryOnTranslator } from '@/lib/try-on/i18n';
@@ -68,6 +70,7 @@ export function useTryOnFlow({
   const [generationStartedAt, setGenerationStartedAt] = useState<number | null>(null);
   /** The server's own stage, for a store whose looks are made after the answer (N38). */
   const [serverStage, setServerStage] = useState<TryOnStage | null>(null);
+  const [acceptedAt, setAcceptedAt] = useState<number | null>(null);
   /** How long the look took, from the tap to the look in this page. */
   const [generationSeconds, setGenerationSeconds] = useState<number | null>(null);
   const [job, setJob] = useState<TryOnJob | null>(null);
@@ -84,6 +87,49 @@ export function useTryOnFlow({
   const [sessionError, setSessionError] = useState<string | null>(null);
   const sessionInitStarted = useRef(false);
   const restoredLook = useRef<KeptLook | null>(null);
+  const prepared = useRef<LookPreparation | null>(null);
+  const active = useRef<AbortController | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(true);
+  const prepareLook = useCallback(() => new LookPreparation(async (signal) => {
+    if (!session) throw new ShopperMessageError(t.genericError);
+    const response = await fetchWithOneRetry('/api/try-on/attempt', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, signal,
+      body: JSON.stringify({ sessionId: session.sessionId, productId: product.id,
+        storefrontNonce: shopProduct ? session.nonce : undefined,
+        variantId: shopProduct ? session.variantId : undefined, attemptNonce: createAttemptNonce() }),
+    });
+    const data: TryOnApiResponse<TryOnAttempt> = await response.json();
+    if (!response.ok || !data.ok || !data.data) throw new ShopperMessageError(t.genericError);
+    return data.data;
+  }), [session, product.id, shopProduct, t.genericError]);
+
+  useEffect(() => () => {
+    prepared.current?.abort(); prepared.current = null;
+    active.current?.abort();
+  }, [session?.sessionId, product.id, variantId]);
+
+  useEffect(() => {
+    if (session?.humanCheck && sheetOpen) preloadTurnstile();
+  }, [session, sheetOpen]);
+
+  // Photo review calls this only after its local quality check is accepted.
+  const acceptPhoto = useCallback(() => {
+    if (!session || !photoDataUrl || !sheetOpen || prepared.current) return;
+    prepared.current = prepareLook();
+    prepared.current.warm();
+  }, [session, photoDataUrl, sheetOpen, prepareLook]);
+
+  useEffect(() => {
+    const close = () => { prepared.current?.abort(); prepared.current = null; active.current?.abort(); };
+    const visibility = (event: MessageEvent) => {
+      if (event.source !== window.parent || event.data?.type !== 'grindctrl-tryon:visibility') return;
+      setSheetOpen(!!event.data.open);
+      if (!event.data.open) close();
+    };
+    window.addEventListener('message', visibility);
+    window.addEventListener('pagehide', close);
+    return () => { close(); window.removeEventListener('message', visibility); window.removeEventListener('pagehide', close); };
+  }, []);
   useEffect(() => { recordTryOnOpen(); }, []);
 
   const notifyLook = useCallback((state: 'ready' | 'stored' | 'cleared', expiresAt?: number, all?: boolean) => {
@@ -209,23 +255,30 @@ export function useTryOnFlow({
 
   const selectPhoto = useCallback((dataUrl: string) => {
     if (restoredLook.current) return;
+    prepared.current?.abort(); prepared.current = null;
     setPhotoDataUrl(dataUrl);
     setStep((current) => current === 'result' || current === 'generating' ? current : 'consent');
     setError(null);
   }, []);
 
   const clearPhoto = useCallback(() => {
+    prepared.current?.abort(); prepared.current = null;
     setPhotoDataUrl(null);
     setStep('upload');
     setError(null);
   }, []);
 
   const generate = useCallback(async () => {
+    if (active.current && !active.current.signal.aborted) return;
+    const controller = new AbortController();
+    active.current = controller;
+    const signal = controller.signal;
     const startedAt = Date.now();
     setStep('generating');
     setGenerationStartedAt(startedAt);
     setGenerationSeconds(null);
     setServerStage(null);
+    setAcceptedAt(null);
     setGenerationPhase('session-requested');
     setIsSlowGeneration(false);
     setError(null);
@@ -236,41 +289,20 @@ export function useTryOnFlow({
         throw new ShopperMessageError(shopProduct ? t.storefrontProofError : t.genericError);
       }
 
-      // 1. Mint one idempotent attempt for this explicit user action.
-      const attemptNonce = createAttemptNonce();
-      const attemptBody = JSON.stringify({
-        sessionId: session.sessionId,
-        productId: product.id,
-        storefrontNonce: shopProduct ? session.nonce : undefined,
-        variantId: shopProduct ? session.variantId : undefined,
-        attemptNonce,
-      });
-      const attemptRes = await fetchWithOneRetry('/api/try-on/attempt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: attemptBody,
-      });
-      const attemptData: TryOnApiResponse<TryOnAttempt> = await attemptRes.json();
-
-      if (!attemptRes.ok || !attemptData.ok || !attemptData.data) {
-        throw new ShopperMessageError(t.genericError);
-      }
-
-      setGenerationPhase('session-created');
-
-      // A binding is present only for paid pasted looks. A fresh token is obtained
-      // for this attempt; retries below reuse the exact same generation body.
-      let turnstileToken: string | undefined;
-      try { turnstileToken = await attemptTurnstileToken(attemptData.data.turnstile); }
+      const preparation = prepared.current ?? prepareLook();
+      prepared.current = null;
+      let look;
+      try { look = await preparation.take(signal); }
       catch (challengeError) {
         if (challengeError instanceof TurnstileChallengeError) setChallengeFailed(true);
         throw new ShopperMessageError(t.genericError);
       }
+      setGenerationPhase('session-created');
 
       // 2. Generate try-on
       const generationBody = JSON.stringify({
         sessionId: session.sessionId,
-        attemptId: attemptData.data.attemptId,
+        attemptId: look.attempt.attemptId,
         productId: product.id,
         storefrontNonce: shopProduct ? session.nonce : undefined,
         variantId: shopProduct ? session.variantId : undefined,
@@ -279,18 +311,25 @@ export function useTryOnFlow({
         photoData: photoDataUrl ?? undefined,
         garmentUrl: shopProduct ? session.garmentUrl ?? undefined : undefined,
         productName: shopProduct?.name,
-        turnstileToken,
+        turnstileToken: look.token,
+        clientTimings: look.timings,
       });
       const uploadStartedAt = performance.now();
       const generationRequest = fetchWithOneRetry('/api/try-on/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: generationBody,
+        signal,
       });
       setGenerationPhase('generation-requested');
 
       const genRes = await generationRequest;
       let genData: TryOnJobApiResponse = await genRes.json();
+      const uploadMs = performance.now() - uploadStartedAt;
+      if (genData.ok && genData.jobId) {
+        setAcceptedAt(Date.now());
+        reportClientLookTimings(genData.jobId, session.sessionId, { ...look.timings, upload_ms: uploadMs });
+      }
       // Submission-to-acknowledgment; sync fallback contains provider time
       // and cannot provide an honest split through fetch alone.
       if (genRes.status === 202) recordTryOnPhase('upload', performance.now() - uploadStartedAt);
@@ -300,7 +339,7 @@ export function useTryOnFlow({
         /* The look is made after the answer (N38): follow its stages for
            as long as the server may take. */
         setServerStage(genData.stage ?? 'received');
-        genData = await pollTryOnJob(genData.jobId, session.sessionId, t.genericError, undefined, {
+        genData = await pollTryOnJob(genData.jobId, session.sessionId, t.genericError, signal, {
           timeoutMs: TRYON_ASYNC_POLL_TIMEOUT_MS,
           initialDelayMs: Math.max(TRYON_POLL_INITIAL_DELAY_MS, retryAfterDelayMs(genRes.headers.get('Retry-After')) ?? 0),
           onProgress: (progress) => {
@@ -312,7 +351,8 @@ export function useTryOnFlow({
         ((genData.ok && (genData.status === 'queued' || genData.status === 'processing')) ||
           genData.code === 'TRYON_FINALIZATION_PENDING')
       ) {
-        genData = await pollTryOnJob(genData.jobId, session.sessionId, t.genericError);
+        setServerStage('making');
+        genData = await pollTryOnJob(genData.jobId, session.sessionId, t.genericError, signal);
       }
 
       /* The server's TRYON_UNAVAILABLE sentence is English; a shopper in
@@ -343,6 +383,7 @@ export function useTryOnFlow({
         genData.jobId,
         session.sessionId,
         genData.resultImageUrl,
+        signal,
       );
       if (genRes.status === 202) recordTryOnPhase('wait_to_result', performance.now() - waitStartedAt);
 
@@ -374,10 +415,13 @@ export function useTryOnFlow({
       setStep('result');
       notifyLook('ready', restoredLook.current?.expiresAt);
     } catch (err) {
+      if (signal.aborted) { setStep('consent'); return; }
       setError(err instanceof ShopperMessageError ? err.message : t.genericError);
       setStep('error');
+    } finally {
+      if (active.current === controller) active.current = null;
     }
-  }, [photoDataUrl, product.id, product.name, session, shopProduct, notifyLook, t]);
+  }, [photoDataUrl, product.id, product.name, session, shopProduct, notifyLook, t, prepareLook]);
 
   const retrySession = useCallback(() => {
     if (!shopProduct) {
@@ -394,6 +438,8 @@ export function useTryOnFlow({
   }, [initializeSession, shopProduct]);
 
   const reset = useCallback(() => {
+    prepared.current?.abort(); prepared.current = null;
+    active.current?.abort();
     restoredLook.current = null;
     setPhotoDataUrl(null);
     setJob(null);
@@ -428,6 +474,8 @@ export function useTryOnFlow({
     generationStartedAt,
     generationSeconds,
     serverStage,
+    acceptedAt,
+    acceptPhoto,
     job,
     error,
     unavailable,

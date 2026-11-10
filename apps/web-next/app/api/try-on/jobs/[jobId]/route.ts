@@ -4,6 +4,8 @@ import { forgetJob, getJob } from '@/lib/try-on/service';
 import { clientIp, tryOnPollRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { verifyTryOnSession } from '@/lib/try-on/storefront-context';
+import { persistJobTimings, validClientTimings } from '@/lib/try-on/job-timings';
+import { readLimitedJson, isJsonObject } from '@/lib/http/read-limited-body';
 import {
   loadAuthorizedDurableTryOnJob,
   releaseDurableTryOnResult,
@@ -29,6 +31,25 @@ function toJobResponse(job: TryOnJob): TryOnJobApiResponse {
     meta: job.meta,
     ...(job.stage ? { stage: job.stage } : {}),
   };
+}
+
+/** Diagnostic acknowledgment only. Reuse GET's rate limit and exact
+ * session/product/tenant authorization before accepting any write. */
+export async function PATCH(request: NextRequest, context: { params: Promise<{ jobId: string }> }) {
+  const authorized = await GET(request, context);
+  if (!authorized.ok) return authorized;
+  const body = await readLimitedJson(request, 1024);
+  if (!body.ok) return NextResponse.json({ ok: false }, { status: body.status });
+  const timings = validClientTimings(isJsonObject(body.value) ? body.value.clientTimings : undefined);
+  if (timings) {
+    const data = await authorized.json() as TryOnJobApiResponse;
+    const token = (request.headers.get('authorization') ?? '').replace(/^bearer\s+/i, '');
+    const resolved = await resolveAnyTryOnSessionKey(token, (secret) => verifyTryOnSession(secret, token));
+    if (!resolved) return NextResponse.json({ ok: false }, { status: 401 });
+    const { sessionId, productId, shop } = resolved.value;
+    await persistJobTimings({ jobId: data.jobId!, sessionId, productId, shop }, { client: timings });
+  }
+  return new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
 }
 
 /**

@@ -33,6 +33,7 @@ vi.mock('../use-try-on-flow', async () => {
         generationStartedAt,
         generationSeconds,
         serverStage: flow.serverStage,
+        acceptedAt: flow.serverStage === 'received' ? null : generationStartedAt,
         sessionState: 'ready',
         sessionError: null,
         job,
@@ -222,14 +223,14 @@ describe('the v16 try-on sheet', () => {
     await act(async () => {});
 
     expect(await screen.findByRole('heading', { name: 'Making your look' })).toBeInTheDocument();
-    expect(screen.getByText('About 12 seconds left')).toBeInTheDocument();
+    expect(screen.queryByText(/seconds? left/)).toBeNull();
     const live = screen.getAllByRole('status').find((node) => node.classList.contains('sr-only'))!;
     expect(live).toHaveTextContent('Reading your photo');
     const steps = within(screen.getByRole('list'));
     expect(steps.getByText('Reading your photo').closest('li')).toHaveAttribute('aria-current', 'step');
 
     act(() => vi.advanceTimersByTime(5_000));
-    expect(screen.getByText('About 7 seconds left')).toBeInTheDocument();
+    expect(screen.queryByText(/seconds? left/)).toBeNull();
     expect(steps.getByText('Reading your photo').closest('li')).toHaveAttribute('aria-current', 'step');
 
     flow.serverStage = 'making';
@@ -238,10 +239,10 @@ describe('the v16 try-on sheet', () => {
     expect(steps.getByText('Reading your photo').closest('li')).not.toHaveAttribute('aria-current');
     expect(live).toHaveTextContent('Fitting the piece');
 
-    // Passing the estimate never advances the server's real stage.
+    // Near the expected provider duration, hold the final-details step.
     act(() => vi.advanceTimersByTime(30_000));
     expect(screen.queryByText(/seconds? left/)).toBeNull();
-    expect(steps.getByText('Fitting the piece').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(steps.getByText('Adding the final details').closest('li')).toHaveAttribute('aria-current', 'step');
     expect(live).toHaveTextContent('Almost there. Adding the final details.');
     expect(screen.queryByText('Your look is ready')).toBeNull();
 

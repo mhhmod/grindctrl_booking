@@ -25,6 +25,8 @@ import { resolveAnyStorefrontContextKey } from '@/lib/try-on/signing-keys';
 import { isActiveTenant } from '@/lib/shopify/tokens';
 import type { TryOnApiResponse, TryOnSession } from '@/lib/try-on/types';
 import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
+import { pasteTurnstileRequired } from '@/lib/paste/turnstile';
+import { demoLookChallengeRequired } from '@/lib/try-on/demo-allowance';
 
 /** A storefront context token (at most 4 KiB) plus product ids and a nonce. */
 const BODY_LIMIT_BYTES = 16 * 1024;
@@ -205,6 +207,7 @@ export async function POST(request: NextRequest) {
     }
 
     const session: TryOnSession = {
+      humanCheck: pasteTurnstileRequired(signedSession.claims) || demoLookChallengeRequired(signedSession.claims),
       sessionId: signedSession.token,
       productId: signedSession.claims.productId,
       shop: signedSession.claims.shop,

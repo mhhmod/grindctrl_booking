@@ -46,11 +46,12 @@ export async function GET(request: NextRequest) {
     if (!site || site.status === 'disabled') return hidden('not_found', 404);
     await requireRateLimit(proxyShopReadRatelimit, `paste-config:${site.id}`);
 
-    const trust = pasteTrust(await getPasteConnection(site.id));
-    if (trust !== 'trusted') return hidden(trust === 'not_connected' ? 'paste_not_connected' : trust);
     const tenant = siteTenantKey(site.id);
+    const [connection, active] = await Promise.all([getPasteConnection(site.id), isActiveTenant(tenant)]);
+    const trust = pasteTrust(connection);
+    if (trust !== 'trusted') return hidden(trust === 'not_connected' ? 'paste_not_connected' : trust);
     // Before the shared config cache: a disconnected site must never read as live.
-    if (!(await isActiveTenant(tenant))) return hidden('site_disconnected');
+    if (!active) return hidden('site_disconnected');
 
     const config = await buildSiteTryOnConfig(site.id, params.get('locale'));
     const features = Array.isArray(config.features) ? (config.features as string[]) : [];

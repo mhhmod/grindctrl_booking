@@ -113,6 +113,7 @@ export function TryOnSheet({
     estimateSeconds: lookSeconds,
     stepCount: steps.length,
     stage: flow.serverStage,
+    acceptedElapsedMs: flow.acceptedAt == null ? null : Math.max(0, now - flow.acceptedAt),
   });
   // One polite region for the whole sheet, so each step and the ready
   // moment are announced once.
@@ -144,7 +145,7 @@ export function TryOnSheet({
   }
 
   return (
-    <div className={`mx-auto flex min-h-[calc(100dvh-3rem)] w-full flex-col gap-5 ${flow.step === 'result' ? 'max-w-4xl' : 'max-w-xl'}`}>
+    <div className={`mx-auto flex h-[calc(100dvh-2rem)] min-h-0 w-full flex-col gap-5 ${flow.step === 'result' ? 'max-w-4xl' : 'max-w-xl'}`}>
       <p role="status" className="sr-only">
         {announcement}
       </p>
@@ -172,7 +173,7 @@ export function TryOnSheet({
         </div>
       )}
 
-      <div className="flex flex-1 flex-col">
+      <div className={`flex min-h-0 flex-1 flex-col ${flow.step === 'consent' || flow.step === 'result' ? '' : 'overflow-y-auto'}`}>
         {flow.step === 'upload' && phoneRead && (
           <SheetPhotoStep
             copy={copy}
@@ -194,6 +195,7 @@ export function TryOnSheet({
             keepOnPhone={keepOnPhone}
             busy={flow.sessionState !== 'ready'}
             onKeepOnPhone={changeKeep}
+            onAccepted={flow.acceptPhoto}
             onDifferentPhoto={flow.clearPhoto}
             onTryOn={() => void tryOn()}
             onShowPrivacy={() => setPrivacyOpen(true)}

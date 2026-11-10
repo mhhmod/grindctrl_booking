@@ -99,6 +99,7 @@ export function getTryOnMode(): TryOnMode {
  *  job then reports its stage until it settles. Without it, the call waits
  *  for the look, as it always has. */
 export type GenerateOptions = {
+  clientTimings?: unknown;
   background?: (task: () => Promise<void>) => void;
 };
 
@@ -131,7 +132,7 @@ export async function generateTryOn(
   const mode = getTryOnMode();
   const startedAt = Date.now();
   const clockStarted = performance.now();
-  const timings = createJobTimings(photoData);
+  const timings = createJobTimings(photoData, options.clientTimings);
   const finishTimings = async (finished: TryOnJob) => {
     timings.total_ms = performance.now() - clockStarted;
     await persistJobTimings(finished, timings);

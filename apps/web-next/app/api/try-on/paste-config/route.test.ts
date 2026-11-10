@@ -37,6 +37,23 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe('GET /api/try-on/paste-config', () => {
+  it('profiles independent config reads without a network', async () => {
+    vi.useFakeTimers();
+    const delayed = <T,>(value: T, ms: number) => new Promise<T>((resolve) => setTimeout(() => resolve(value), ms));
+    m.site.mockImplementation(() => delayed({ id: SITE, status: 'active' }, 50));
+    m.connection.mockImplementation(() => delayed(proven, 40));
+    m.active.mockImplementation(() => delayed(true, 40));
+    m.config.mockImplementation(() => delayed({ ...config, features: ['n5_preview_mode'] }, 60));
+    m.storeLaunch.mockImplementation(() => delayed(null, 45));
+    {
+      const start = Date.now();
+      const response = GET(new NextRequest('https://app.example/api/try-on/paste-config?key=gc_test_key'));
+      await vi.runAllTimersAsync();
+      expect((await response).status).toBe(200);
+      expect(Date.now() - start).toBe(195);
+    }
+    vi.useRealTimers();
+  });
   it('answers live with the card pill switch and only the pill and button styling, CORS-open and briefly cacheable', async () => {
     const response = await get();
     expect(response.status).toBe(200);

@@ -5,6 +5,9 @@
    label (lite, flash, muse) for the credit ledger; it no longer picks the
    model. */
 export const TRYON_IMAGE_MODEL = 'meta/muse-image';
+/** Fallback for the shopper's progress, from measured Muse provider time.
+ * Prefer the store's recent duration when one is available. */
+export const TRYON_EXPECTED_PROVIDER_MS = 14_000;
 
 /* Settings that used to pick a model per plan tier. They do nothing now. */
 const RETIRED_MODEL_SETTINGS = ['TRYON_MODEL', 'TRYON_MODEL_LITE', 'TRYON_MODEL_FLASH', 'TRYON_MODEL_MUSE'];

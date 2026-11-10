@@ -21,6 +21,8 @@ export interface TryOnProduct {
 
 /** Session payload returned by POST /api/try-on/session */
 export interface TryOnSession {
+  /** Server-derived loading hint only; the attempt still controls the check. */
+  humanCheck?: boolean;
   /** Short-lived signed generation capability (kept under the legacy field name). */
   sessionId: string;
   productId: string;
