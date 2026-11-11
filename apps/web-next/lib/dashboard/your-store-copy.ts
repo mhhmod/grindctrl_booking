@@ -33,6 +33,7 @@ export interface YourStoreCopy {
   getUpdatedCode: string;
   newFeatures: string;
   saveFailed: string;
+  alertsLabel: string;
   check: {
     title: string;
     checkedAt: (time: string) => string;
@@ -137,6 +138,7 @@ const en: YourStoreCopy = {
   getUpdatedCode: 'Get my updated code',
   newFeatures: 'New features appear here.',
   saveFailed: 'That didn’t save. Try again.',
+  alertsLabel: 'Email me when something stops working',
   check: {
     title: 'Store check',
     checkedAt: (time) => `Checked today at ${time}`,
@@ -247,6 +249,7 @@ const ar: YourStoreCopy = {
   getUpdatedCode: 'احصل على الكود المحدّث',
   newFeatures: 'المزايا الجديدة تظهر هنا.',
   saveFailed: 'لم يُحفظ ذلك. حاول مجدداً.',
+  alertsLabel: 'أرسل لي بريدًا عندما يتوقف شيء عن العمل',
   check: {
     title: 'فحص المتجر',
     checkedAt: (time) => `آخر فحص اليوم ${time}`,

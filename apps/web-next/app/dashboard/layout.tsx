@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { MantineUiProvider } from '@/components/mantine/provider';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { getRequestLocale } from '@/lib/auth/locale';
+import { rememberDashboardLocale } from '@/lib/auth/dashboard-locale';
 import { getDir } from '@/lib/landing/landing-i18n';
 import { hasCompletedOnboarding } from '@/lib/onboarding/profile';
 import { resolveDashboardPermissions } from '@/lib/rbac/dashboard-policy';
@@ -37,6 +38,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   /* Same gc-locale cookie the marketing site and storefront demo use, so a
      language chosen anywhere carries into the dashboard. */
   const locale = await getRequestLocale();
+  await rememberDashboardLocale(clerkUserId, locale);
   /* The person's role on the active store decides the nav (item 12). Every
      page and action checks the same role again on the server. */
   const activeStore = await getActiveStore();

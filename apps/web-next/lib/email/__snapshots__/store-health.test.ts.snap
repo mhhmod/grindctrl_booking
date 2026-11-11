@@ -1,0 +1,117 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`store health A7 email rendering > snapshots ar problem, including subject/dir/link/plain text 1`] = `
+{
+  "html": "<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><style>@media(max-width:480px){.gc-health-cta{width:100%!important}.gc-health-button{display:block!important;text-align:center!important;padding:0!important}}@media(prefers-color-scheme:dark){.gc-health-bg{background-color:#1f1d1a!important}.gc-health-card{background-color:#292723!important;color:#f6f1e7!important}.gc-health-muted{color:#d7d0c5!important}.gc-health-button{background-color:#f6f1e7!important;color:#1f1d1a!important}}</style></head>
+<body class="gc-health-bg" style="margin:0;padding:0;background-color:#f6f1e7;color:#1f1d1a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:16px;line-height:1.5">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse"><tr><td align="center" style="padding:24px 0">
+<!--[if mso]><table role="presentation" width="560" cellspacing="0" cellpadding="0"><tr><td><![endif]-->
+<table role="presentation" class="gc-health-card" width="100%" cellspacing="0" cellpadding="0" border="0" dir="rtl" style="width:100%;max-width:560px;background-color:#ffffff;color:#1f1d1a;border-collapse:collapse;text-align:right"><tr><td style="padding:24px;word-break:break-word">
+<p style="margin:0 0 24px;font-size:13px;letter-spacing:2px;font-weight:600"><span dir="ltr">GRINDCTRL</span></p>
+<h1 style="margin:0 0 16px;font-size:20px;line-height:1.5;font-weight:600">مرحبًا أزياء لولو، لا يرى المتسوقون زر القياس الافتراضي على متجرك منذ يوم الاثنين.</h1>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">غالبًا حذف تغييرٌ في القالب الكود.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">إعادته تأخذ نحو دقيقة.</p>
+<table role="presentation" class="gc-health-cta" cellspacing="0" cellpadding="0" border="0" style="margin:24px 0;width:auto"><tr><td bgcolor="#1f1d1a" style="background-color:#1f1d1a;border-radius:8px;text-align:center;mso-padding-alt:0 24px"><a class="gc-health-button" href="https://grindctrl.cloud/dashboard/store#check-code_gone" style="display:inline-block;background-color:#1f1d1a;color:#f6f1e7;text-decoration:none;border-radius:8px;padding:0 24px;line-height:48px;min-height:48px;font-weight:600;mso-text-raise:0">أصلحه في دقيقة</a></td></tr></table>
+<p class="gc-health-muted" style="margin:24px 0 8px;color:#6b655b;font-size:13px;line-height:1.5">تصلك هذه الرسالة فقط عندما يتوقف شيء عن العمل.<br><a class="gc-health-muted" href="https://grindctrl.cloud/dashboard/store#alerts" style="color:#6b655b;text-decoration:underline">إدارة التنبيهات</a></p>
+<p class="gc-health-muted" style="margin:0;color:#6b655b;font-size:12px;line-height:1.5"><span dir="ltr">Grind CTRL · grindctrl.cloud</span></p>
+</td></tr></table><!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>",
+  "subject": "توقف ظهور القياس الافتراضي على ⁦lulus-fashion.myeasyorders.com⁩",
+  "text": "GRINDCTRL
+
+مرحبًا أزياء لولو، لا يرى المتسوقون زر القياس الافتراضي على متجرك منذ يوم الاثنين.
+غالبًا حذف تغييرٌ في القالب الكود.
+إعادته تأخذ نحو دقيقة.
+
+أصلحه في دقيقة: https://grindctrl.cloud/dashboard/store#check-code_gone
+
+تصلك هذه الرسالة فقط عندما يتوقف شيء عن العمل.
+إدارة التنبيهات: https://grindctrl.cloud/dashboard/store#alerts
+Grind CTRL · grindctrl.cloud",
+}
+`;
+
+exports[`store health A7 email rendering > snapshots ar recovery, including subject/dir/link/plain text 1`] = `
+{
+  "html": "<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><style>@media(max-width:480px){.gc-health-cta{width:100%!important}.gc-health-button{display:block!important;text-align:center!important;padding:0!important}}@media(prefers-color-scheme:dark){.gc-health-bg{background-color:#1f1d1a!important}.gc-health-card{background-color:#292723!important;color:#f6f1e7!important}.gc-health-muted{color:#d7d0c5!important}.gc-health-button{background-color:#f6f1e7!important;color:#1f1d1a!important}}</style></head>
+<body class="gc-health-bg" style="margin:0;padding:0;background-color:#f6f1e7;color:#1f1d1a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:16px;line-height:1.5">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse"><tr><td align="center" style="padding:24px 0">
+<!--[if mso]><table role="presentation" width="560" cellspacing="0" cellpadding="0"><tr><td><![endif]-->
+<table role="presentation" class="gc-health-card" width="100%" cellspacing="0" cellpadding="0" border="0" dir="rtl" style="width:100%;max-width:560px;background-color:#ffffff;color:#1f1d1a;border-collapse:collapse;text-align:right"><tr><td style="padding:24px;word-break:break-word">
+<p style="margin:0 0 24px;font-size:13px;letter-spacing:2px;font-weight:600"><span dir="ltr">GRINDCTRL</span></p>
+<h1 style="margin:0 0 16px;font-size:20px;line-height:1.5;font-weight:600">مرحبًا أزياء لولو، عاد القياس الافتراضي للظهور على متجرك.</h1>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">رأينا الكود قبل دقائق.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">لا يلزمك فعل أي شيء.</p>
+
+<p class="gc-health-muted" style="margin:24px 0 8px;color:#6b655b;font-size:13px;line-height:1.5">تصلك هذه الرسالة فقط عندما يتوقف شيء عن العمل.<br><a class="gc-health-muted" href="https://grindctrl.cloud/dashboard/store#alerts" style="color:#6b655b;text-decoration:underline">إدارة التنبيهات</a></p>
+<p class="gc-health-muted" style="margin:0;color:#6b655b;font-size:12px;line-height:1.5"><span dir="ltr">Grind CTRL · grindctrl.cloud</span></p>
+</td></tr></table><!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>",
+  "subject": "عاد يعمل على ⁦lulus-fashion.myeasyorders.com⁩",
+  "text": "GRINDCTRL
+
+مرحبًا أزياء لولو، عاد القياس الافتراضي للظهور على متجرك.
+رأينا الكود قبل دقائق.
+لا يلزمك فعل أي شيء.
+
+تصلك هذه الرسالة فقط عندما يتوقف شيء عن العمل.
+إدارة التنبيهات: https://grindctrl.cloud/dashboard/store#alerts
+Grind CTRL · grindctrl.cloud",
+}
+`;
+
+exports[`store health A7 email rendering > snapshots en problem, including subject/dir/link/plain text 1`] = `
+{
+  "html": "<!doctype html><html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><style>@media(max-width:480px){.gc-health-cta{width:100%!important}.gc-health-button{display:block!important;text-align:center!important;padding:0!important}}@media(prefers-color-scheme:dark){.gc-health-bg{background-color:#1f1d1a!important}.gc-health-card{background-color:#292723!important;color:#f6f1e7!important}.gc-health-muted{color:#d7d0c5!important}.gc-health-button{background-color:#f6f1e7!important;color:#1f1d1a!important}}</style></head>
+<body class="gc-health-bg" style="margin:0;padding:0;background-color:#f6f1e7;color:#1f1d1a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:16px;line-height:1.5">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse"><tr><td align="center" style="padding:24px 0">
+<!--[if mso]><table role="presentation" width="560" cellspacing="0" cellpadding="0"><tr><td><![endif]-->
+<table role="presentation" class="gc-health-card" width="100%" cellspacing="0" cellpadding="0" border="0" dir="ltr" style="width:100%;max-width:560px;background-color:#ffffff;color:#1f1d1a;border-collapse:collapse;text-align:left"><tr><td style="padding:24px;word-break:break-word">
+<p style="margin:0 0 24px;font-size:13px;letter-spacing:2px;font-weight:600"><span dir="ltr">GRINDCTRL</span></p>
+<h1 style="margin:0 0 16px;font-size:20px;line-height:1.5;font-weight:600">Hi Lulu&#39;s Fashion, shoppers can&#39;t see the Try-On button on your store since Monday.</h1>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">Usually a theme change removed your code.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">Putting it back takes about a minute.</p>
+<table role="presentation" class="gc-health-cta" cellspacing="0" cellpadding="0" border="0" style="margin:24px 0;width:auto"><tr><td bgcolor="#1f1d1a" style="background-color:#1f1d1a;border-radius:8px;text-align:center;mso-padding-alt:0 24px"><a class="gc-health-button" href="https://grindctrl.cloud/dashboard/store#check-code_gone" style="display:inline-block;background-color:#1f1d1a;color:#f6f1e7;text-decoration:none;border-radius:8px;padding:0 24px;line-height:48px;min-height:48px;font-weight:600;mso-text-raise:0">Fix it in 1 minute</a></td></tr></table>
+<p class="gc-health-muted" style="margin:24px 0 8px;color:#6b655b;font-size:13px;line-height:1.5">You get this email only when something stops working.<br><a class="gc-health-muted" href="https://grindctrl.cloud/dashboard/store#alerts" style="color:#6b655b;text-decoration:underline">Manage alerts</a></p>
+<p class="gc-health-muted" style="margin:0;color:#6b655b;font-size:12px;line-height:1.5"><span dir="ltr">Grind CTRL · grindctrl.cloud</span></p>
+</td></tr></table><!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>",
+  "subject": "Try-On stopped showing on lulus-fashion.myeasyorders.com",
+  "text": "GRINDCTRL
+
+Hi Lulu's Fashion, shoppers can't see the Try-On button on your store since Monday.
+Usually a theme change removed your code.
+Putting it back takes about a minute.
+
+Fix it in 1 minute: https://grindctrl.cloud/dashboard/store#check-code_gone
+
+You get this email only when something stops working.
+Manage alerts: https://grindctrl.cloud/dashboard/store#alerts
+Grind CTRL · grindctrl.cloud",
+}
+`;
+
+exports[`store health A7 email rendering > snapshots en recovery, including subject/dir/link/plain text 1`] = `
+{
+  "html": "<!doctype html><html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><style>@media(max-width:480px){.gc-health-cta{width:100%!important}.gc-health-button{display:block!important;text-align:center!important;padding:0!important}}@media(prefers-color-scheme:dark){.gc-health-bg{background-color:#1f1d1a!important}.gc-health-card{background-color:#292723!important;color:#f6f1e7!important}.gc-health-muted{color:#d7d0c5!important}.gc-health-button{background-color:#f6f1e7!important;color:#1f1d1a!important}}</style></head>
+<body class="gc-health-bg" style="margin:0;padding:0;background-color:#f6f1e7;color:#1f1d1a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:16px;line-height:1.5">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse"><tr><td align="center" style="padding:24px 0">
+<!--[if mso]><table role="presentation" width="560" cellspacing="0" cellpadding="0"><tr><td><![endif]-->
+<table role="presentation" class="gc-health-card" width="100%" cellspacing="0" cellpadding="0" border="0" dir="ltr" style="width:100%;max-width:560px;background-color:#ffffff;color:#1f1d1a;border-collapse:collapse;text-align:left"><tr><td style="padding:24px;word-break:break-word">
+<p style="margin:0 0 24px;font-size:13px;letter-spacing:2px;font-weight:600"><span dir="ltr">GRINDCTRL</span></p>
+<h1 style="margin:0 0 16px;font-size:20px;line-height:1.5;font-weight:600">Hi Lulu&#39;s Fashion, Try-On is showing on your store again.</h1>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">We saw your code a few minutes ago.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">There is nothing else to do.</p>
+
+<p class="gc-health-muted" style="margin:24px 0 8px;color:#6b655b;font-size:13px;line-height:1.5">You get this email only when something stops working.<br><a class="gc-health-muted" href="https://grindctrl.cloud/dashboard/store#alerts" style="color:#6b655b;text-decoration:underline">Manage alerts</a></p>
+<p class="gc-health-muted" style="margin:0;color:#6b655b;font-size:12px;line-height:1.5"><span dir="ltr">Grind CTRL · grindctrl.cloud</span></p>
+</td></tr></table><!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>",
+  "subject": "It's working again on lulus-fashion.myeasyorders.com",
+  "text": "GRINDCTRL
+
+Hi Lulu's Fashion, Try-On is showing on your store again.
+We saw your code a few minutes ago.
+There is nothing else to do.
+
+You get this email only when something stops working.
+Manage alerts: https://grindctrl.cloud/dashboard/store#alerts
+Grind CTRL · grindctrl.cloud",
+}
+`;
