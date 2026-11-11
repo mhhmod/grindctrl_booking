@@ -250,7 +250,11 @@ jobs:
       # Playwright-managed browser binary is missing.
       - name: Install Playwright browsers
         working-directory: apps/web-next
-        run: npx playwright install --with-deps chromium
+        # Runner apt mirrors sometimes fail DNS. Retry, then fall back to the
+        # browser alone: the hosted image already has its system libraries.
+        run: |
+          for i in 1 2 3; do npx playwright install --with-deps chromium && exit 0; echo "install attempt $i failed"; sleep 20; done
+          npx playwright install chromium
       - name: Golden landing standard checks
         working-directory: apps/web-next
         env:
