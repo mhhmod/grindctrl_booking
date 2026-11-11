@@ -677,6 +677,12 @@
 }
 
 .optionalGroup { background: transparent; }
+.alertPreference { padding: 16px; display: grid; gap: 8px; min-inline-size: 0; scroll-margin-block-start: 100px; }
+.alertPreference :global(.mantine-Switch-body) { align-items: center; min-block-size: 44px; }
+.alertPreference :global(.mantine-Switch-labelWrapper) { min-inline-size: 0; }
+.alertPreference :global(.mantine-Switch-label) { overflow-wrap: anywhere; }
+.fixRow, .wellLine { scroll-margin-block-start: 100px; }
+@media (min-width: 48em) { .alertPreference { padding: 20px 24px; } }
 .optionalRow { padding-block: 16px; }
 .optionalAction { inline-size: 100%; }
 .wellSentence { overflow-wrap: anywhere; }

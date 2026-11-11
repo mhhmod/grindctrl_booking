@@ -108,6 +108,7 @@ export function YourStoreCheck({ state, locale, member }: { state: string; local
               view={buildYourStoreView(facts, copy, locale)}
               canChange={!member}
               locale={locale}
+              alerts={{ siteId: 'preview-site', enabled: true, save: async () => ({ ok: state !== 'low' }) }}
               connect={connectFor(state, member, locale)}
               actions={{
                 setTryOnButton: async () => ({ ok: state !== 'well' }),

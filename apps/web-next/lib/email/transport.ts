@@ -41,7 +41,7 @@ function readPassword(): string | null {
   return pass || null;
 }
 
-export function getSmtpTransport(): Transporter | null {
+export function getSmtpTransport(timeouts: { connectionTimeout?: number; greetingTimeout?: number; socketTimeout?: number } = {}): Transporter | null {
   const user = readUser();
   const pass = readPassword();
   if (!user || !pass) return null;
@@ -52,6 +52,7 @@ export function getSmtpTransport(): Transporter | null {
     port,
     secure: port === 465,
     auth: { user, pass },
+    ...timeouts,
   });
 }
 

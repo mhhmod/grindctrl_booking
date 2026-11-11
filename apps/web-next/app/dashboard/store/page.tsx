@@ -9,6 +9,8 @@ import { roleCan } from '@/lib/rbac/dashboard-policy';
 import { setTryOnButtonAction } from '@/app/dashboard/try-on/actions';
 import { setMessengerEnabled } from '@/app/dashboard/store-chat/actions';
 import { checkPasteDomainAction } from '@/app/dashboard/store-chat/paste-actions';
+import { readStoreHealthEmailPreference } from '@/lib/store-health/preferences';
+import { setStoreHealthAlertsAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +38,7 @@ export default async function YourStorePage() {
       view={buildYourStoreView(facts, getYourStoreCopy(locale), locale)}
       canChange={canChange}
       locale={locale}
+      alerts={activeStore.siteId ? { siteId: activeStore.siteId, enabled: await readStoreHealthEmailPreference(activeStore.siteId), save: setStoreHealthAlertsAction } : undefined}
       actions={{ setTryOnButton: setTryOnButtonAction, setStoreChat: setMessengerEnabled, checkDomain: checkPasteDomainAction }}
     />
   );

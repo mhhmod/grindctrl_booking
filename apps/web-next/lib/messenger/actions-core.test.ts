@@ -208,6 +208,14 @@ describe('published version snapshots', () => {
 });
 
 describe('revertConfigForSite', () => {
+  it('preserves live store health opt-out when reverting an older chat snapshot', async () => {
+    updateMock.mockReturnValue(chain({ data: [{ id: 'site-1' }], error: null }));
+    await revertConfigForSite(site({ settings_json: {
+      store_health_notifications: { emailOnFailure: false },
+      _previousSettings: { messenger_ai: { enabled: false }, store_health_notifications: { emailOnFailure: true } }, _previousVersion: 2,
+    } }), 'actor-1');
+    expect(updateMock.mock.calls[0][0].settings_json.store_health_notifications).toEqual({ emailOnFailure: false });
+  });
   it('restores exact prior settings once, advances version, and never reads or writes settings_draft', async () => {
     const previous = { messenger_ai: { enabled: false }, custom: { retained: ['exactly'] } };
     const current = site({ settings_json: { _previousSettings: previous, _previousVersion: 1 } });
