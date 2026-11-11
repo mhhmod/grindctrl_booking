@@ -9,6 +9,8 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ScrollShell, ScrollShellAction } from '@/components/embed/scroll-shell';
+import { X } from 'lucide-react';
 import { PhotoUpload } from './photo-upload';
 import { TryOnResult, type ResultControls } from './try-on-result';
 import { useTryOnLocale } from './locale-provider';
@@ -45,6 +47,7 @@ export function TryOnDemo({
   shopProduct,
   overrides,
   lookSeconds = null,
+  embedded = false,
 }: {
   productId?: string;
   /** Display/settings context only. Billing authority comes from the signed capability. */
@@ -53,6 +56,7 @@ export function TryOnDemo({
   shopProduct?: ShopProductOverride;
   overrides?: TryOnDemoOverrides;
   lookSeconds?: number | null;
+  embedded?: boolean;
 } = {}) {
   const { t, locale } = useTryOnLocale();
   const baseProduct = (productId && getProduct(productId)) || getDefaultProduct();
@@ -105,10 +109,10 @@ export function TryOnDemo({
   });
   const announcement = progress.overEstimate ? sheetCopy.makingAlmostThere : loadingSteps[progress.stepIndex];
 
-  return (
+  const content = (
     <div className="mx-auto w-full max-w-4xl space-y-10">
       {/* ─── Product showcase ─── */}
-      <div className="gc-fade-in-up flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:gap-8">
+      {!embedded && <div className="gc-fade-in-up flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:gap-8">
         {product.imageUrl ? (
           <div className="relative shrink-0 overflow-hidden rounded-xl border bg-muted/20 shadow-sm">
             <Image
@@ -138,7 +142,7 @@ export function TryOnDemo({
             ))}
           </ul>
         </div>
-      </div>
+      </div>}
 
       {/* ─── Flow area ─── */}
       {/* Shorter minimum on mobile: 420px on a short viewport (or with the
@@ -171,6 +175,7 @@ export function TryOnDemo({
               </p>
             </div>
             <PhotoUpload
+              compact={embedded}
               onFileSelected={handleFileSelected}
               onFileClear={clearPhoto}
               previewUrl={photoDataUrl}
@@ -231,7 +236,7 @@ export function TryOnDemo({
               </div>
             </div>
 
-            <Button
+            <ScrollShellAction><Button
               onClick={generate}
               disabled={sessionState !== 'ready'}
               size="lg"
@@ -240,7 +245,7 @@ export function TryOnDemo({
             >
               <Sparkles className="size-4" />
               {generateLabel}
-            </Button>
+            </Button></ScrollShellAction>
           </div>
         )}
 
@@ -248,7 +253,7 @@ export function TryOnDemo({
         {step === 'generating' && (
           <>
             <p role="status" className="sr-only">{announcement}</p>
-            <SheetMakingStep
+            <SheetMakingStep inline
               copy={sheetCopy}
               photoDataUrl={photoDataUrl}
               piece={product}
@@ -288,9 +293,9 @@ export function TryOnDemo({
                   <p className="text-sm text-muted-foreground">{t.challengeFailedBody}</p>
                 </div>
                 {/* A fresh check with the same photo and garment. */}
-                <Button variant="outline" onClick={() => void generate()} className="rounded-xl" id="tryon-challenge-retry-btn">
+                <ScrollShellAction><Button variant="outline" onClick={() => void generate()} className="rounded-xl" id="tryon-challenge-retry-btn">
                   {t.challengeRetry}
-                </Button>
+                </Button></ScrollShellAction>
               </>
             ) : (
               <>
@@ -300,14 +305,14 @@ export function TryOnDemo({
                   </h3>
                   <p className="text-sm text-muted-foreground">{error}</p>
                 </div>
-                <Button
+                <ScrollShellAction><Button
                   variant="outline"
                   onClick={reset}
                   className="rounded-xl"
                   id="tryon-retry-btn"
                 >
                   {t.tryAgain}
-                </Button>
+                </Button></ScrollShellAction>
               </>
             )}
           </div>
@@ -315,4 +320,13 @@ export function TryOnDemo({
       </div>
     </div>
   );
+  return embedded ? <ScrollShell actionSlot footerClassName="bg-background px-4 pt-3 [&_button]:min-h-11 [&_button]:w-full"
+    bodyClassName="px-4 py-4 sm:px-6"
+    header={<header className="flex items-center gap-3 border-b px-4 py-3">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={product.imageUrl} alt="" className="size-14 shrink-0 rounded-lg object-cover short:size-10" />
+      <p className="min-w-0 flex-1 truncate font-semibold">{product.name}</p>
+      <button type="button" data-sheet-close aria-label={sheetCopy.close} className="grid size-11 shrink-0 place-items-center rounded-full"
+        onClick={() => window.parent.postMessage({ type: 'grindctrl-tryon:close' }, '*')}><X className="size-5" /></button>
+    </header>}>{content}</ScrollShell> : content;
 }

@@ -1,8 +1,9 @@
 import { resolveOrderProvider } from '@/lib/messenger/order-provider';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { headers } from 'next/headers';
 import { loadPublicSite, originAllowed, toPublicPayload } from '@/lib/messenger/public-api';
 import { MessengerPanel } from '@/components/messenger/MessengerPanel';
+import { ScrollShell } from '@/components/embed/scroll-shell';
 import { signOriginToken } from '@/lib/messenger/identity';
 import { coreCapabilitySecret } from '@/lib/security/capability-key';
 import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
@@ -30,6 +31,11 @@ export const metadata: Metadata = {
   title: 'Support',
   robots: { index: false },
 };
+
+/* Opened on its own (not framed), an on-screen keyboard shrinks the layout
+   so the composer stays pinned above it. Inside a store's frame the loader
+   sizes the frame to the visual viewport instead (messenger.js). */
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, interactiveWidget: 'resizes-content' };
 
 export const dynamic = 'force-dynamic';
 
@@ -101,10 +107,10 @@ export default async function EmbedMessengerPage({
 
   if (!payload) {
     return (
-      <main className="flex h-dvh flex-col items-center justify-center gap-1 bg-background p-6 text-center text-foreground">
+      <ScrollShell bodyClassName="flex flex-col items-center justify-center gap-1 bg-background p-6 text-center text-foreground">
         <p className="text-sm font-semibold">Support is unavailable</p>
         <p className="text-xs text-muted-foreground">Please check back a little later.</p>
-      </main>
+      </ScrollShell>
     );
   }
 

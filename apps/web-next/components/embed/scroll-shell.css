@@ -1,0 +1,105 @@
+/* The one scroll rule for every shopper-facing sheet and window state
+   (Try-On sheet, Store Chat): a pinned header, one scrolling body, a pinned
+   footer, and a document that never scrolls behind them. Imported only by
+   scroll-shell.tsx, so it ships with the surfaces that render the shell and
+   nowhere else. The widget scripts' injected CSS repeats the .gc-scroll
+   declarations for anything they draw outside our iframes. */
+
+.gc-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  height: 100svh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* Inside a box someone else sizes (the dashboard's chat preview). */
+.gc-shell--fill {
+  height: 100%;
+}
+
+.gc-shell__head {
+  grid-row: 1;
+  min-inline-size: 0;
+}
+
+.gc-shell__body {
+  grid-row: 2;
+  min-block-size: 0;
+  min-inline-size: 0;
+}
+
+.gc-shell__foot {
+  grid-row: 3;
+  min-inline-size: 0;
+  border-block-start: 1px solid var(--border);
+  padding-block-end: max(16px, env(safe-area-inset-bottom));
+}
+
+/* A document that holds a viewport-sized shell never scrolls itself, so the
+   shell's body is the only thing that can. */
+html:has(.gc-shell:not(.gc-shell--fill)),
+html:has(.gc-shell:not(.gc-shell--fill)) body,
+html:has(.gc-embed-document),
+html:has(.gc-embed-document) body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.gc-embed-document { block-size: 100%; min-inline-size: 0; }
+.gc-shell__slot:has(.gc-shell__actions:empty) { display: none; }
+/* Native caret movement remains available without a second scroll UI. */
+.gc-shell textarea { overflow: hidden; }
+@media (max-height: 479.98px) {
+  .gc-shell__head header { padding-block: 8px; }
+}
+
+.gc-scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Chromium ignores ::-webkit-scrollbar once either standard property is
+   set, and on Windows then draws arrow buttons. The standard pair is for
+   browsers without the pseudo-element (Firefox); the rest get the same
+   thin thumb from the rules below. */
+@supports not selector(::-webkit-scrollbar) {
+  .gc-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, currentColor 25%, transparent) transparent;
+  }
+}
+
+/* Physical width and height on purpose: the scrollbar pseudo-element only
+   reads these, and 6px either way is direction-neutral. */
+.gc-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.gc-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gc-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in oklch, currentColor 25%, transparent);
+}
+
+.gc-scroll::-webkit-scrollbar-button {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .gc-scroll {
+    scrollbar-width: none;
+  }
+
+  .gc-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}

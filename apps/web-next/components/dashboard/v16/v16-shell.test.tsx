@@ -17,7 +17,7 @@ vi.mock('@clerk/nextjs', () => ({ useClerk: () => clerk }));
 const setTheme = vi.fn();
 vi.mock('next-themes', () => ({ useTheme: () => ({ resolvedTheme: 'light', setTheme }) }));
 
-import { V16Shell, isV16NavActive, type V16ShellProps } from './v16-shell';
+import { V16Shell, isV16FillRoute, isV16NavActive, type V16ShellProps } from './v16-shell';
 
 const stores: ShellStore[] = [
   { key: 'shop:maison.myshopify.com', label: 'Maison Noor', domain: 'maison.myshopify.com', initials: 'MN', choice: { shop: 'maison.myshopify.com' }, current: true },
@@ -183,6 +183,19 @@ describe('V16Shell', () => {
     expect(within(within(sidebar).getByRole('link', { name: /Store Chat/ })).queryByLabelText('3 waiting for a person')).toBeNull();
   });
 
+  /* The Inbox is one workspace with panes that scroll on their own, so the
+     shell frames it at the viewport and the document never scrolls; every
+     other page scrolls as a document. */
+  it('frames the Inbox at the viewport and leaves other pages to scroll', () => {
+    pathname = '/dashboard/inbox';
+    const { unmount } = render(<V16Shell {...props()} />);
+    expect(screen.getByTestId('v16-shell')).toHaveAttribute('data-fill');
+    unmount();
+    pathname = '/dashboard/try-on';
+    render(<V16Shell {...props()} />);
+    expect(screen.getByTestId('v16-shell')).not.toHaveAttribute('data-fill');
+  });
+
   it('offers the other language by its own name', () => {
     render(<V16Shell {...props()} />);
     const button = screen.getByRole('button', { name: getShellCopy('en').switchLanguage });
@@ -219,5 +232,14 @@ describe('isV16NavActive', () => {
     // Store setup and Store Chat share a prefix but never light up together.
     expect(isV16NavActive('/dashboard/store-chat', '/dashboard/store')).toBe(false);
     expect(isV16NavActive('/dashboard/store', '/dashboard/store-chat')).toBe(false);
+  });
+});
+
+describe('isV16FillRoute', () => {
+  it('fills the Inbox and its sub-pages only', () => {
+    expect(isV16FillRoute('/dashboard/inbox')).toBe(true);
+    expect(isV16FillRoute('/dashboard/inbox/c1')).toBe(true);
+    expect(isV16FillRoute('/dashboard')).toBe(false);
+    expect(isV16FillRoute('/dashboard/inboxes')).toBe(false);
   });
 });

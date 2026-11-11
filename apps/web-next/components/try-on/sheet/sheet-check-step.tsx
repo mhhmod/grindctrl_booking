@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Check, ChevronLeft, CircleAlert, ShieldCheck, Trash2, User, Loader2 } from 'lucide-react';
 import { checkPhoto, type PhotoCheck } from '@/lib/try-on/photo-check';
 import type { SheetCopy } from '@/lib/try-on/sheet-copy';
+import { SheetLayout } from './sheet-layout';
 
 /* TryOn-Check (02-try-on.md): the photo is checked on the phone before
    anything is sent. A failing check names the fix and says nothing was
@@ -58,7 +59,13 @@ export function SheetCheckStep({
   if (result && result.issue && !overridden) {
     const fix = result.issue === 'dark' ? copy.fixDark : result.issue === 'bright' ? copy.fixBright : copy.fixBlurry;
     return (
-      <div className="flex min-h-full flex-col gap-5">
+      <SheetLayout
+        footer={
+          <button type="button" onClick={onDifferentPhoto} className={PRIMARY}>
+            {copy.takeAgain}
+          </button>
+        }
+      >
         <StepHeader copy={copy} onBack={onDifferentPhoto} />
         <div className="flex gap-4">
           <Photo src={photoDataUrl} alt={copy.yourPhotoAlt} />
@@ -73,21 +80,28 @@ export function SheetCheckStep({
         </div>
         <p className="text-sm leading-relaxed text-muted-foreground">{copy.whyItMatters}</p>
         <p className="text-sm font-medium text-foreground">{copy.nothingSent}</p>
-        <div className="mt-auto space-y-2">
-          <button type="button" onClick={onDifferentPhoto} className={PRIMARY}>
-            {copy.takeAgain}
-          </button>
-          <button type="button" onClick={() => setOverriddenFor(photoDataUrl)} className={SECONDARY}>
-            {copy.useAnyway}
-          </button>
-        </div>
-      </div>
+        <button type="button" onClick={() => setOverriddenFor(photoDataUrl)} className={`${SECONDARY} mt-auto`}>
+          {copy.useAnyway}
+        </button>
+      </SheetLayout>
     );
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pb-4">
+    <SheetLayout
+      footer={
+        /* While the photo is checked the button keeps its full colour and says
+           so, instead of fading into something that looks switched off. */
+        <button type="button" onClick={onTryOn} disabled={busy || check === 'checking'} aria-busy={busy || check === 'checking'} className={`${PRIMARY} disabled:opacity-100 disabled:cursor-progress`}>
+          {busy || check === 'checking' ? (
+            <Loader2 className="size-5 motion-safe:animate-spin" aria-hidden="true" />
+          ) : (
+            <User className="size-5" aria-hidden="true" />
+          )}
+          {check === 'checking' ? copy.checking : firstTime ? copy.agreeAndTry : copy.tryItOn}
+        </button>
+      }
+    >
       <StepHeader copy={copy} onBack={onDifferentPhoto} />
       <div className="flex gap-4">
         <Photo src={photoDataUrl} alt={copy.yourPhotoAlt} />
@@ -102,9 +116,6 @@ export function SheetCheckStep({
               <CheckLine ok label={copy.checkBrightSharp} />
             </div>
           ) : null}
-          <button type="button" onClick={onDifferentPhoto} className="min-h-11 text-sm font-medium text-foreground underline underline-offset-2">
-            {copy.useDifferent}
-          </button>
         </div>
       </div>
 
@@ -148,26 +159,16 @@ export function SheetCheckStep({
         </span>
       </label>
 
-        <p className="text-center text-xs text-muted-foreground">
-          {copy.agreeNote}{' '}
-          <button type="button" onClick={onShowPrivacy} className="min-h-11 underline underline-offset-2">
-            {copy.privacyNoticeLink}
-          </button>.
-        </p>
-      </div>
-      <div className="sticky bottom-0 shrink-0 border-t bg-background pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        {/* While the photo is checked the button keeps its full colour and says
-            so, instead of fading into something that looks switched off. */}
-        <button type="button" onClick={onTryOn} disabled={busy || check === 'checking'} aria-busy={busy || check === 'checking'} className={`${PRIMARY} disabled:opacity-100 disabled:cursor-progress`}>
-          {busy || check === 'checking' ? (
-            <Loader2 className="size-5 motion-safe:animate-spin" aria-hidden="true" />
-          ) : (
-            <User className="size-5" aria-hidden="true" />
-          )}
-          {check === 'checking' ? copy.checking : firstTime ? copy.agreeAndTry : copy.tryItOn}
-        </button>
-      </div>
-    </div>
+      <button type="button" onClick={onDifferentPhoto} className="mt-auto min-h-11 text-sm font-medium text-foreground underline underline-offset-2">
+        {copy.useDifferent}
+      </button>
+      <p className="text-center text-xs text-muted-foreground">
+        {copy.agreeNote}{' '}
+        <button type="button" onClick={onShowPrivacy} className="min-h-11 underline underline-offset-2">
+          {copy.privacyNoticeLink}
+        </button>.
+      </p>
+    </SheetLayout>
   );
 }
 
@@ -196,7 +197,7 @@ function Photo({ src, alt }: { src: string; alt: string }) {
   return (
     // A data URL the shopper just chose; next/image cannot optimise it.
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} className="aspect-[3/4] w-36 shrink-0 rounded-2xl border object-cover sm:w-44" />
+    <img src={src} alt={alt} className="aspect-[3/4] w-36 shrink-0 rounded-2xl border object-cover sm:w-44 short:w-24" />
   );
 }
 

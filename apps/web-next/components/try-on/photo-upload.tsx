@@ -6,12 +6,14 @@ import { cn } from '@/lib/utils';
 import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
 import { useTryOnLocale } from './locale-provider';
 import { photoFileError, readPhotoAsDataUrl } from '@/lib/try-on/photo-file';
+import { ScrollShellAction } from '@/components/embed/scroll-shell';
 
 interface PhotoUploadProps {
   onFileSelected: (file: File, dataUrl: string) => void;
   onFileClear: () => void;
   previewUrl: string | null;
   disabled?: boolean;
+  compact?: boolean;
 }
 
 export function PhotoUpload({
@@ -19,6 +21,7 @@ export function PhotoUpload({
   onFileClear,
   previewUrl,
   disabled = false,
+  compact = false,
 }: PhotoUploadProps) {
   const { t } = useTryOnLocale();
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +91,7 @@ export function PhotoUpload({
             <button
               type="button"
               onClick={handleClear}
-              className="absolute end-2 top-2 flex size-8 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background"
+              className="absolute end-2 top-2 flex size-11 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background"
               aria-label={t.removePhoto}
             >
               <X className="size-4" />
@@ -97,7 +100,7 @@ export function PhotoUpload({
         </div>
       ) : (
         /* ─── Upload dropzone ─── */
-        <button
+        <ScrollShellAction><button
           type="button"
           disabled={disabled}
           onClick={() => inputRef.current?.click()}
@@ -105,7 +108,8 @@ export function PhotoUpload({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           className={cn(
-            'group relative flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 text-center transition-all',
+            'group relative flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl border-2 border-dashed text-center transition-all',
+            compact ? 'min-h-11 p-3' : 'flex-col p-8',
             'hover:border-primary/40 hover:bg-muted/40',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
             isDragging && 'border-primary/60 bg-primary/5',
@@ -125,7 +129,7 @@ export function PhotoUpload({
               {t.dropHint(TRYON_FILE_CONFIG.maxSizeMB)}
             </p>
           </div>
-        </button>
+        </button></ScrollShellAction>
       )}
 
       {/* Hidden file input */}

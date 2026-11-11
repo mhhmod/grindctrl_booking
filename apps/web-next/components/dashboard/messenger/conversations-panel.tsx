@@ -273,6 +273,7 @@ export function ConversationsPanel({
   currentProfileId,
   assignableMembers = [],
   inboxTabs = false,
+  fill = false,
   aside,
 }: {
   locale: 'en' | 'ar';
@@ -300,6 +301,10 @@ export function ConversationsPanel({
    *  (Needs you, Assistant, Resolved) in place of the status pills, opening
    *  on Needs you. */
   inboxTabs?: boolean;
+  /** The host gives the panel a frame of its own height that never scrolls
+   *  (the v16 shell's fill frame): the panel fills it rather than measuring
+   *  the viewport and scrolling the page to its own top. */
+  fill?: boolean;
   /** The v16 Inbox's customer column for the open conversation: a third
    *  column on wide screens, and a sheet from a header button below them,
    *  as Owner-Phone keeps the customer details. */
@@ -398,21 +403,24 @@ export function ConversationsPanel({
   const activeCanned = cannedReplies.filter((reply) => reply.status === 'active');
   const [cannedOpen, setCannedOpen] = useState(false);
 
-  /* Measure the space below the host's wrapping tabs/header, rather than
-     guessing their height. The mobile view aligns below DashboardShell's
-     h-14 sticky header; visualViewport also accounts for the soft keyboard. */
+  /* Without a fill frame, measure the space below the host's wrapping
+     tabs/header rather than guessing their height. The mobile view scrolls
+     to sit a clear gap below the host's sticky top bar (scroll-mt below);
+     visualViewport also accounts for the soft keyboard. */
   useLayoutEffect(() => {
     const panel = panelRef.current;
     if (!panel) return;
+    const narrow = window.matchMedia?.('(max-width: 1023px)').matches;
+    if (narrow) (mobileThreadOpen ? backRef.current : selectedRowRef.current)?.focus({ preventScroll: true });
+    if (fill) return;
     const viewport = window.visualViewport;
     const measure = () => {
       panel.style.setProperty('--inbox-top', `${Math.max(0, panel.getBoundingClientRect().top - (viewport?.offsetTop ?? 0))}px`);
       panel.style.setProperty('--inbox-viewport', viewport ? `${viewport.height}px` : '100dvh');
     };
-    if (window.matchMedia?.('(max-width: 1023px)').matches) {
+    if (narrow) {
       panel.style.setProperty('--inbox-top', '0px');
       panel.scrollIntoView({ block: 'start', behavior: 'instant' });
-      (mobileThreadOpen ? backRef.current : selectedRowRef.current)?.focus({ preventScroll: true });
     }
     measure();
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
@@ -428,7 +436,7 @@ export function ConversationsPanel({
       viewport?.removeEventListener('resize', measure);
       viewport?.removeEventListener('scroll', measure);
     };
-  }, [mobileThreadOpen, selectedId]);
+  }, [mobileThreadOpen, selectedId, fill]);
 
   useLayoutEffect(() => {
     const log = logRef.current;
@@ -439,6 +447,21 @@ export function ConversationsPanel({
     } else if (followLatest.current) {
       log.scrollTop = log.scrollHeight;
     }
+  }, [messages, visibleCount, mobileThreadOpen]);
+
+  /* While following the newest message, keep it in view when the thread's
+     box shrinks (a phone keyboard opening, the header and composer settling)
+     or its content grows (fonts and photos loading). Scrolling only happens
+     on new messages otherwise, which left the last one behind the reply box. */
+  useEffect(() => {
+    const log = logRef.current;
+    if (!log || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => {
+      if (followLatest.current) log.scrollTop = log.scrollHeight;
+    });
+    observer.observe(log);
+    for (const child of Array.from(log.children)) observer.observe(child);
+    return () => observer.disconnect();
   }, [messages, visibleCount, mobileThreadOpen]);
 
   /* The 15s poll and the post-action refetch overlap. Without a sequence
@@ -555,7 +578,11 @@ export function ConversationsPanel({
     <div
       ref={panelRef}
       dir={locale === 'ar' ? 'rtl' : 'ltr'}
-      className="flex h-[calc(var(--inbox-viewport,100dvh)-var(--inbox-top,0px)-var(--inbox-bottom,0px)-1rem)] min-h-0 min-w-0 scroll-mt-14 flex-col gap-2"
+      className={`flex min-h-0 min-w-0 flex-col gap-2 ${
+        fill
+          ? 'h-full'
+          : 'h-[calc(var(--inbox-viewport,100dvh)-var(--inbox-top,0px)-1rem)] scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-4'
+      }`}
     >
       {displayedError && (
         <div role="alert" className="flex max-h-[20%] shrink-0 items-center justify-between gap-2 overflow-y-auto rounded-xl border border-border bg-card px-3 py-2 text-xs text-destructive">
@@ -786,7 +813,7 @@ export function ConversationsPanel({
 
       {/* Thread */}
       <section className={`${mobileThreadOpen ? 'flex' : 'hidden lg:flex'} h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card`} aria-label={t.title}>
-        <header className="flex max-h-[40%] shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 overflow-y-auto overscroll-contain border-b border-border px-3 py-2.5 sm:px-4">
+        <header className="flex max-h-[40%] shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 overflow-y-auto overscroll-contain border-b border-border px-3 py-2.5 sm:px-4 short:py-1.5">
           {/* Who this is gets its own row on a phone; the actions wrap below it. */}
           <div className="flex min-w-0 basis-full items-center gap-2.5 sm:basis-auto sm:flex-1">
             <Button ref={backRef} variant="ghost" size="icon" className="min-h-11 min-w-11 shrink-0 lg:hidden" aria-label={t.back} onClick={() => setMobileThreadOpen(false)}>
@@ -986,12 +1013,14 @@ export function ConversationsPanel({
         </div>
 
         {status && (
-          <footer className="shrink-0 border-t border-border p-3">
+          <footer className="shrink-0 border-t border-border p-3 short:p-2">
             {/* One box: Reply or Note on top, the message, then the hint and
                 Send. A note tints the whole box so it is never mistaken for a
-                reply the shopper will see. */}
+                reply the shopper will see. On a short screen (a phone on its
+                side) Send moves up beside the message and the hint goes, so
+                the thread keeps room for a whole message. */}
             <form
-              className={`rounded-xl border transition-colors focus-within:ring-2 focus-within:ring-ring/40 ${
+              className={`rounded-xl border transition-colors focus-within:ring-2 focus-within:ring-ring/40 short:flex short:flex-wrap short:items-end ${
                 composerMode === 'note' || status === 'closed' ? 'border-amber-600/40 bg-amber-500/[0.06]' : 'border-input bg-background'
               }`}
               onSubmit={(e) => {
@@ -1000,7 +1029,7 @@ export function ConversationsPanel({
                 else sendReply();
               }}
             >
-            <div className="flex items-center gap-1 px-1.5 pt-1" role="group" aria-label={`${t.composerReply} / ${t.composerNote}`}>
+            <div className="flex items-center gap-1 px-1.5 pt-1 short:basis-full" role="group" aria-label={`${t.composerReply} / ${t.composerNote}`}>
               {status !== 'closed' && (
                 <button
                   type="button"
@@ -1085,10 +1114,10 @@ export function ConversationsPanel({
                   }
                 }}
                 placeholder={composerMode === 'note' || status === 'closed' ? t.notePh : t.replyPh}
-                className="field-sizing-content max-h-40 min-h-11 w-full min-w-0 resize-none overflow-y-auto border-0! bg-transparent px-3 py-2 shadow-none! focus-visible:ring-0!"
+                className="field-sizing-content max-h-40 min-h-11 w-full min-w-0 resize-none overflow-y-auto border-0! bg-transparent px-3 py-2 shadow-none! focus-visible:ring-0! short:max-h-20 short:flex-1"
               />
-              <div className="flex items-center justify-between gap-2 px-2 pb-2">
-                <p className="min-w-0 truncate text-[11px] text-muted-foreground">
+              <div className="flex items-center justify-between gap-2 px-2 pb-2 short:ps-0 short:pe-1.5 short:pb-1.5">
+                <p className="min-w-0 truncate text-[11px] text-muted-foreground short:hidden">
                   {composerMode === 'note' || status === 'closed' ? t.noteHint : <span className="hidden sm:inline">{t.enterHint}</span>}
                 </p>
                 <Button type="submit" size="sm" className="min-h-11 min-w-11 shrink-0" disabled={!draft.trim() || pending}>

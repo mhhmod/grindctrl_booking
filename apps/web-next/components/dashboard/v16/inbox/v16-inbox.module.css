@@ -1,15 +1,11 @@
-/* The v16 Inbox around today's conversation panel. The panel sizes itself
-   to the viewport below its own top; on phones the shell's bottom tab bar
-   (60px and its border) sits over that space, so the panel keeps clear of it. */
+/* The v16 Inbox around today's conversation panel. The shell frames the
+   Inbox at the viewport's height (v16-shell's fill frame), and the panel
+   fills what is left, so only its panes scroll. */
 
 .inbox {
+  flex: 1;
   min-width: 0;
-}
-
-@media (max-width: 47.99em) {
-  .inbox {
-    --inbox-bottom: calc(61px + env(safe-area-inset-bottom, 0px));
-  }
+  min-height: 0;
 }
 
 .notice {

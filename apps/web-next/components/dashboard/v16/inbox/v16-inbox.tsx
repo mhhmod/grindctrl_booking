@@ -74,6 +74,7 @@ export function V16Inbox({
         currentProfileId={data.currentProfileId}
         assignableMembers={data.assignableMembers}
         inboxTabs
+        fill
         aside={
           fetchCustomer
             ? {

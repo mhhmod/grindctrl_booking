@@ -20,6 +20,8 @@ function isLandingFamily(pathname: string): boolean {
    UI anyway) fall through to the null case. */
 export function showLauncherFor(pathname: string | null, isLoggedIn: boolean): boolean {
   if (!pathname) return false;
+  // Isolated shopper-layout fixtures render the store's own controls only.
+  if (pathname === '/dev/sheet-scroll-check' || pathname.startsWith('/dev/sheet-scroll-check/')) return false;
   if (pathname.startsWith('/assistant') || pathname.startsWith('/embed')) return false;
   /* Authentication is a focused flow. A floating chat control can cover
      Clerk's Continue button on small screens, including nested MFA/reset

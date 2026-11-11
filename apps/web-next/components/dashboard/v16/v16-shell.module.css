@@ -398,6 +398,97 @@ a.meter:focus-visible {
   inset-inline-start: calc(50% + 6px);
 }
 
+.page {
+  min-width: 0;
+}
+
+/* A page that is one workspace (the Inbox). The shell is exactly the visible
+   viewport and the page fills what the chrome leaves, so the document never
+   scrolls: each pane inside the page scrolls on its own. */
+.shell[data-fill] {
+  height: var(--v16-viewport-height, 100dvh);
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.shell[data-fill] .sidebar {
+  height: auto;
+}
+
+.shell[data-fill] .column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.shell[data-fill] .topbar {
+  flex: none;
+}
+
+.shell[data-fill] .main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  /* Scrolls only for a state taller than the frame, such as a notice; a
+     filled page shrinks to fit and never overflows it. */
+  overflow-y: auto;
+  padding-block: 14px calc(61px + 14px + env(safe-area-inset-bottom, 0px));
+}
+
+.shell[data-fill] .content {
+  flex: 1;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+}
+
+.shell[data-fill] .page {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* On a phone the tab bar already names the page and the menu holds the
+   language switch, so the page's header gives its height to the work: the
+   title stays for screen readers, the duplicate switch goes. */
+@media (max-width: 47.99em) {
+  .shell[data-fill] .content {
+    grid-template-rows: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .shell[data-fill] .header {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .shell[data-fill] .headerActions {
+    display: none;
+  }
+}
+
+@media (min-width: 48em) {
+  .shell[data-fill] .main {
+    padding-block: 22px;
+  }
+}
+
+/* A phone on its side: tighter frame so a whole message still fits. */
+@media (min-width: 48em) and (max-height: 479.98px) {
+  .shell[data-fill] .main {
+    padding-block: 10px;
+  }
+
+  .shell[data-fill] .content {
+    gap: 10px;
+  }
+}
+
 .drawerSection {
   display: grid;
   gap: 6px;
@@ -421,5 +512,59 @@ a.meter:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .skip {
     transition: none;
+  }
+}
+
+/* One scrollbar look across the dashboard, matching the storefront sheets
+   (components/embed/scroll-shell.css): a thin thumb, no arrow buttons, hidden
+   on touch screens. Covers the panes inside the shell and the page itself.
+   Chromium ignores ::-webkit-scrollbar once a standard scrollbar property is
+   set, so the standard pair is only for browsers without the pseudo-element. */
+@supports not selector(::-webkit-scrollbar) {
+  .shell,
+  .shell :global(*),
+  :global(html):has(.shell) {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, currentColor 25%, transparent) transparent;
+  }
+}
+
+.shell::-webkit-scrollbar,
+.shell :global(*)::-webkit-scrollbar,
+:global(html):has(.shell)::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.shell::-webkit-scrollbar-track,
+.shell :global(*)::-webkit-scrollbar-track,
+:global(html):has(.shell)::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.shell::-webkit-scrollbar-thumb,
+.shell :global(*)::-webkit-scrollbar-thumb,
+:global(html):has(.shell)::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--foreground) 25%, transparent);
+}
+
+.shell::-webkit-scrollbar-button,
+.shell :global(*)::-webkit-scrollbar-button,
+:global(html):has(.shell)::-webkit-scrollbar-button {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .shell,
+  .shell :global(*),
+  :global(html):has(.shell) {
+    scrollbar-width: none;
+  }
+
+  .shell::-webkit-scrollbar,
+  .shell :global(*)::-webkit-scrollbar,
+  :global(html):has(.shell)::-webkit-scrollbar {
+    display: none;
   }
 }

@@ -16,6 +16,8 @@ const ALLOWED_PREFIXES = ['app/api/try-on/', 'components/try-on/', 'lib/try-on/'
 // shop/redact erases a shop's result objects; it lists paths to delete and never reads a look.
 // Erasers name the result bucket only to delete from it, never to read a look.
 const ERASERS = ['lib/shopify/privacy.ts', 'lib/shopify/privacy-database-fixture.ts', 'lib/woo/privacy.ts'];
+// Drawn local fixture images only. No shopper looks or network flow is read.
+const SYNTHETIC_FIXTURE = 'app/dev/sheet-scroll-check/sheet-scroll-check.tsx';
 
 function sourceFiles(dir: string): string[] {
   const found: string[] = [];
@@ -38,7 +40,9 @@ describe('who can read a finished look', () => {
       .map((file) => path.relative(APP_ROOT, file).split(path.sep).join('/'));
 
     expect(readers.length).toBeGreaterThan(0);
-    expect(readers.filter((file) => !ALLOWED_PREFIXES.some((prefix) => file.startsWith(prefix)) && !ERASERS.includes(file))).toEqual([]);
+    expect(readers.filter((file) => !ALLOWED_PREFIXES.some((prefix) => file.startsWith(prefix)) && !ERASERS.includes(file) && file !== SYNTHETIC_FIXTURE)).toEqual([]);
+    expect(readFileSync(path.join(APP_ROOT, SYNTHETIC_FIXTURE), 'utf8')).toContain('resultImageUrl: LOOK');
+    expect(readFileSync(path.join(APP_ROOT, 'app/dev/sheet-scroll-check/page.tsx'), 'utf8')).toContain("if (process.env.NODE_ENV === 'production') notFound()");
   });
 
   it('never includes the storefront scripts that run in the merchant page', () => {

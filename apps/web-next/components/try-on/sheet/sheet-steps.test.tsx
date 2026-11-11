@@ -118,8 +118,13 @@ describe('the photo step inside an app', () => {
   it("names the app, leads with the gallery, and keeps the camera as a second choice", () => {
     photoStep('en', 20, { app: 'Instagram', os: 'ios' });
     expect(screen.getByText(/You're in Instagram's browser, so the camera may not open here\./)).toBeInTheDocument();
-    const choices = screen.getAllByRole('button').map((button) => button.textContent ?? '');
-    expect(choices.findIndex((text) => text.startsWith('Choose a photo'))).toBeLessThan(choices.findIndex((text) => text.startsWith('Take a photo')));
+    // The gallery is the pinned primary action; the camera follows in the body.
+    const gallery = screen.getByRole('button', { name: /^Choose a photo/ });
+    const camera = screen.getByRole('button', { name: /^Take a photo/ });
+    expect(gallery.closest('.gc-shell__foot')).not.toBeNull();
+    expect(gallery).toHaveClass('bg-primary');
+    expect(camera.closest('.gc-shell__body')).not.toBeNull();
+    expect(camera).not.toHaveClass('bg-primary');
     expect(screen.getByText('Your piece, size and choices come with you')).toBeInTheDocument();
   });
 

@@ -31,6 +31,43 @@
  */
 (function () {
   'use strict';
+
+  /* Fixed body prevents iOS rubber-band/pan behind our frame. Independent
+     windows share ownership, so closing chat cannot unlock an open Try-On. */
+  function lockStorePage(owner, locked) {
+    var saved = window.__gcShopperScrollLock;
+    var root = document.documentElement;
+    var body = document.body;
+    var props = ['position', 'insetBlockStart', 'insetInlineStart', 'insetBlockEnd', 'insetInlineEnd', 'inlineSize'];
+    var i;
+    if (locked) {
+      if (!saved) {
+        saved = { x: window.scrollX, y: window.scrollY, overflow: root.style.overflow, body: {}, owners: {} };
+        for (i = 0; i < props.length; i++) saved.body[props[i]] = body.style[props[i]];
+        window.__gcShopperScrollLock = saved;
+        root.style.overflow = 'hidden';
+        body.style.position = 'fixed';
+        body.style.insetBlockStart = -saved.y + 'px';
+        body.style.insetInlineStart = -saved.x + 'px';
+        body.style.insetBlockEnd = 'auto';
+        body.style.insetInlineEnd = 'auto';
+        body.style.inlineSize = '100%';
+      }
+      saved.owners[owner] = true;
+      return;
+    }
+    if (!saved || !saved.owners[owner]) return;
+    delete saved.owners[owner];
+    for (var other in saved.owners) { if (saved.owners[other]) return; }
+    for (i = 0; i < props.length; i++) body.style[props[i]] = saved.body[props[i]];
+    root.style.overflow = saved.overflow;
+    delete window.__gcShopperScrollLock;
+    if (window.scrollX !== saved.x || window.scrollY !== saved.y) {
+      try { window.scrollTo({ left: saved.x, top: saved.y, behavior: 'instant' }); }
+      catch (_) { window.scrollTo(saved.x, saved.y); }
+    }
+  }
+
   if (window.GRINDCTRL_TRYON_ENGINE) return;
   // One fire-and-forget health beacon per document, shared across engine mounts.
   var healthSent = false;
@@ -509,10 +546,13 @@
       '.gc-tryon-btn:hover .gc-tryon-ic{transform:scale(1.1)}',
       '@media (prefers-reduced-motion:reduce){.gc-tryon-btn .gc-tryon-ic,.gc-tryon-btn .gc-ic-scan,.gc-tryon-btn .gc-ic-spark{animation:none;opacity:1;transform:none}',
       '.gc-tryon-btn .gc-tryon-ic::after{animation:none;opacity:0}.gc-tryon-btn:hover .gc-tryon-ic{transform:none}}',
+      // Same rule as components/embed/scroll-shell.css, arrowless in Chromium too.
+      '.gc-scroll{overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}@supports not selector(::-webkit-scrollbar){.gc-scroll{scrollbar-width:thin;scrollbar-color:color-mix(in oklch,currentColor 25%,transparent) transparent}}.gc-scroll::-webkit-scrollbar{width:6px;height:6px}.gc-scroll::-webkit-scrollbar-track{background:transparent}.gc-scroll::-webkit-scrollbar-thumb{border-radius:999px;background:color-mix(in oklch,currentColor 25%,transparent)}.gc-scroll::-webkit-scrollbar-button{display:none}@media(pointer:coarse){.gc-scroll{scrollbar-width:none}.gc-scroll::-webkit-scrollbar{display:none}}',
+      'html.gc-tryon-open{overscroll-behavior:none}',
       '.gc-tryon-ready{font-size:.75em;padding:.2em .5em;border:1px solid currentColor;border-radius:999px}',
       '.gc-tryon-ready[hidden],.gc-tryon-loading[hidden]{display:none}',
       '.gc-tryon-live{position:absolute;inline-size:1px;block-size:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}',
-      '.gc-tryon-loading{position:absolute;inset-block:44px 0;inset-inline:0;z-index:1;padding-block:8px 24px;padding-inline:16px;background:inherit;color:inherit;font:inherit;box-sizing:border-box}',
+      '.gc-tryon-loading{position:absolute;inset-block:44px 0;inset-inline:0;z-index:1;overflow:hidden;padding-block:8px 24px;padding-inline:16px;background:inherit;color:inherit;font:inherit;box-sizing:border-box}',
       '.gc-tryon-skeleton{display:flex;flex-direction:column;gap:20px}',
       '.gc-tryon-skeleton span{display:block;background:currentColor;opacity:.08;border-radius:12px}',
       '.gc-tryon-skeleton__product{display:flex;align-items:center;gap:12px}',
@@ -526,10 +566,13 @@
       '@media(min-width:640px){.gc-tryon-loading{padding-inline:32px}}',
       '.gc-tryon-note{margin-block:.25rem;font-size:.875rem;line-height:1.4}',
       '.gc-tryon-note button{margin-inline-start:.5rem;min-block-size:44px;padding-inline:.75rem;font:inherit;cursor:pointer}',
-      '.gc-tryon-sheet{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:flex-end;justify-content:center}',
+      /* The sheet never scrolls itself: the frame inside it holds the one
+         scroll area. A drag on the dimmed page or the handle bar moves
+         nothing behind it, even where a browser ignores the page lock. */
+      '.gc-tryon-sheet{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:flex-end;justify-content:center;overscroll-behavior:contain}',
       '.gc-tryon-sheet[hidden]{display:none}',
-      '.gc-tryon-sheet__backdrop{position:absolute;inset:0;background:rgba(20,18,15,.55);opacity:0;transition:opacity .2s}',
-      '.gc-tryon-sheet__panel{position:relative;display:flex;flex-direction:column;inline-size:100%;block-size:min(92dvh,780px);',
+      '.gc-tryon-sheet__backdrop{position:absolute;inset:0;background:rgba(20,18,15,.55);opacity:0;transition:opacity .2s;touch-action:none}',
+      '.gc-tryon-sheet__panel{position:relative;display:flex;flex-direction:column;inline-size:100%;block-size:min(92svh,780px);block-size:min(92dvh,780px);',
       'background:#fff;color:#1f1d1a;border-start-start-radius:20px;border-start-end-radius:20px;overflow:hidden;',
       'transform:translateY(100%);transition:transform .25s ease}',
       '.gc-tryon-sheet--open .gc-tryon-sheet__backdrop{opacity:1}',
@@ -540,10 +583,14 @@
       'inline-size:44px;block-size:44px;border:0;background:transparent;color:inherit;cursor:pointer}',
       '.gc-tryon-sheet__close svg{inline-size:20px;block-size:20px}',
       '.gc-tryon-sheet__close:focus-visible{outline:3px solid currentColor;outline-offset:-3px}',
+      '.gc-tryon-sheet__panel--ready .gc-tryon-sheet__bar{min-block-size:12px}',
+      '.gc-tryon-sheet__panel--ready .gc-tryon-sheet__close{display:none}',
+      '@media(min-width:640px){.gc-tryon-sheet__panel--ready .gc-tryon-sheet__bar{display:none}}',
       '.gc-tryon-frame{flex:1 1 auto;inline-size:100%;min-block-size:0;border:0;background:transparent}',
       '@media (min-width:640px){.gc-tryon-sheet{align-items:center}',
       '.gc-tryon-sheet__handle{display:none}',
-      '.gc-tryon-sheet__panel{inline-size:min(520px,calc(100vw - 2rem));border-radius:20px;transform:translateY(24px);opacity:0;',
+      '.gc-tryon-sheet__panel{inline-size:min(520px,calc(100vw - 2rem));block-size:min(720px,calc(100svh - 48px));block-size:min(720px,calc(100dvh - 48px));',
+      'border-radius:20px;transform:translateY(24px);opacity:0;',
       'transition:transform .25s ease,opacity .2s}',
       '.gc-tryon-sheet--open .gc-tryon-sheet__panel{opacity:1}}',
       '@media (prefers-reduced-motion:reduce){.gc-tryon-sheet__backdrop,.gc-tryon-sheet__panel{transition:none}}',
@@ -646,6 +693,7 @@
     frame.addEventListener('load', function () {
       if (!frame.getAttribute('src')) return;
       loading.hidden = true;
+      panel.classList.add('gc-tryon-sheet__panel--ready');
       if (frame.contentWindow) frame.contentWindow.postMessage({ type: 'grindctrl-tryon:visibility', open: open }, new URL(frame.src).origin);
     });
     sheet.appendChild(backdrop);
@@ -655,7 +703,6 @@
     var open = false;
     var pushed = false;
     var inerted = [];
-    var previousOverflow = '';
 
     function onKey(event) {
       if (event.key === 'Escape') hide(false);
@@ -665,8 +712,7 @@
       if (open) return;
       open = true;
       sheet.hidden = false;
-      previousOverflow = document.documentElement.style.overflow;
-      document.documentElement.style.overflow = 'hidden';
+      lockStorePage('tryon', true);
       document.documentElement.classList.add('gc-tryon-open');
       for (var i = 0; i < document.body.children.length; i++) {
         var child = document.body.children[i];
@@ -686,15 +732,16 @@
       sheet.classList.remove('gc-tryon-sheet--open');
       sheet.hidden = true;
       panel.style.transform = '';
-      document.documentElement.style.overflow = previousOverflow;
       document.documentElement.classList.remove('gc-tryon-open');
+      lockStorePage('tryon', false);
       while (inerted.length) inerted.pop().inert = false;
       document.removeEventListener('keydown', onKey);
       if (pushed) {
         pushed = false;
         if (!fromHistory) { try { window.history.back(); } catch (_) { /* nothing to undo */ } }
       }
-      button.focus();
+      // Focus goes back without scrolling the page to the button.
+      try { button.focus({ preventScroll: true }); } catch (_) { button.focus(); }
       if (frame.isConnected && frame.getAttribute('src') && frame.contentWindow) frame.contentWindow.postMessage({ type: 'grindctrl-tryon:visibility', open: false }, new URL(frame.src).origin);
     }
 
