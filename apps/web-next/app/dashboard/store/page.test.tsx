@@ -15,6 +15,8 @@ vi.mock('@/lib/dashboard/active-store-server', () => ({
   getActiveStoreRole: vi.fn(async () => 'owner'),
 }));
 vi.mock('@/lib/dashboard/your-store-data', () => ({ getYourStoreFacts: vi.fn() }));
+vi.mock('@/lib/store-health/preferences', () => ({ readStoreHealthEmailPreference: vi.fn(async () => true) }));
+vi.mock('./actions', () => ({ setStoreHealthAlertsAction: vi.fn(async () => ({ ok: true })) }));
 vi.mock('@/app/dashboard/try-on/actions', () => ({ setTryOnButtonAction: vi.fn() }));
 vi.mock('@/app/dashboard/store-chat/actions', () => ({ setMessengerEnabled: vi.fn() }));
 vi.mock('@/app/dashboard/store-chat/paste-actions', () => ({ checkPasteDomainAction: vi.fn() }));

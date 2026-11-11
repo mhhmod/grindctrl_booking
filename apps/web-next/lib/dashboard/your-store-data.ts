@@ -75,11 +75,14 @@ export async function getYourStoreFacts({
   role,
   timeZone,
   now = Date.now(),
+  installedShop,
 }: {
   activeStore: ActiveStore;
   role: DashboardWorkspaceRole;
   timeZone: string;
   now?: number;
+  /** Background checks supply their service-read install state, without a Clerk request. */
+  installedShop?: boolean;
 }): Promise<YourStoreFacts | null> {
   const tenant = activeTenantKey(activeStore);
   const siteId = activeStore.siteId;
@@ -92,8 +95,8 @@ export async function getYourStoreFacts({
   let url: { host: string; href: string } | null = null;
 
   if (activeStore.platform === 'shopify' && activeStore.shopDomain) {
-    const shops = await listDashboardShops();
-    if (shops.find((shop) => shop.domain === activeStore.shopDomain)?.status !== 'installed') return null;
+    const installed = installedShop ?? (await listDashboardShops()).find((shop) => shop.domain === activeStore.shopDomain)?.status === 'installed';
+    if (!installed) return null;
     platform = 'shopify_app';
     // The app reports its install; it has no storefront signal to time.
     code = { lastSeenAt: null, connected: true };

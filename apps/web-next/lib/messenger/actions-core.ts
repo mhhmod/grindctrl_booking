@@ -158,6 +158,10 @@ export async function revertConfigForSite(
     return { ok: false, error: 'Nothing to revert to.' };
   }
   const cleanPrevious = { ...previous };
+  // Store health email consent is independent of the Store Chat draft.
+  // Reverting chat must never re-enable a store owner's opted-out alerts.
+  if ('store_health_notifications' in settings) cleanPrevious.store_health_notifications = settings.store_health_notifications;
+  else delete cleanPrevious.store_health_notifications;
   delete cleanPrevious._previousSettings;
   delete cleanPrevious._previousVersion;
 

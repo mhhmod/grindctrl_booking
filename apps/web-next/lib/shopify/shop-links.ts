@@ -1,6 +1,7 @@
 import 'server-only';
 
-import { auth, clerkClient } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server';
+import { getClerkAccountEmail } from '@/lib/team/clerk-account';
 import { createHash, randomInt } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 
@@ -200,10 +201,7 @@ export async function getShopLinkedAccountHint(shopDomain: string): Promise<stri
   const owner = (data as ShopOwnerRow | null)?.owner_clerk_user_id;
   if (!owner) return null;
   try {
-    const user = await (await clerkClient()).users.getUser(owner);
-    const email =
-      user.emailAddresses.find((entry) => entry.id === user.primaryEmailAddressId)?.emailAddress ??
-      user.emailAddresses[0]?.emailAddress;
+    const email = await getClerkAccountEmail(owner);
     return email ? maskEmail(email) : null;
   } catch {
     return null;

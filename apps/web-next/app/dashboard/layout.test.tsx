@@ -21,6 +21,7 @@ vi.mock('next/navigation', () => ({ redirect: mocks.redirect }));
 vi.mock('next/headers', () => ({ headers: async () => ({ get: () => '/dashboard' }) }));
 vi.mock('@/lib/auth/dashboard', () => ({ requireDashboardUser: vi.fn(async () => 'user_1') }));
 vi.mock('@/lib/auth/locale', () => ({ getRequestLocale: vi.fn(async () => 'en') }));
+vi.mock('@/lib/auth/dashboard-locale', () => ({ rememberDashboardLocale: vi.fn() }));
 vi.mock('@/lib/onboarding/profile', () => ({ hasCompletedOnboarding: mocks.onboarded }));
 vi.mock('@/lib/rbac/store-role', () => ({ listTeamMemberships: mocks.memberships }));
 vi.mock('@/lib/team/accept', () => ({ acceptInvitesForSignedIn: mocks.accept }));

@@ -21,6 +21,8 @@ import {
   type YourStoreView,
 } from '@/lib/dashboard/your-store-model';
 import classes from './v16-your-store.module.css';
+import { checkRowProblemKey } from '@/lib/store-health/problems';
+import { StoreHealthAlerts, type StoreHealthAlertsProps } from './store-health-alerts';
 
 /* Your store (Pack A handoff, A5 and A6): one card per product with its
    switch, status and sentence, then the Store check. The model in
@@ -148,7 +150,7 @@ const DOMAIN_ICON: Record<DomainLine['state'], GcIconName> = { live: 'check', wa
 function FixRowItem({ row, copy }: { row: FixRow; copy: YourStoreCopy }) {
   const hostAt = row.host ? row.sentence.indexOf(row.host) : -1;
   return (
-    <li className={classes.fixRow}>
+    <li id={`check-${checkRowProblemKey(row.key) ?? row.key}`} className={classes.fixRow}>
       <div className={classes.fixPill}>
         <StatusPill kind={row.kind} copy={copy} />
       </div>
@@ -192,7 +194,7 @@ function FixRowItem({ row, copy }: { row: FixRow; copy: YourStoreCopy }) {
 
 function WellLineItem({ line, mode = 'well' }: { line: WellLine; mode?: 'well' | 'waiting' | 'more' }) {
   return (
-    <li className={`${classes.wellLine} ${mode === 'more' ? classes.optionalRow : ''}`}>
+    <li id={`check-${checkRowProblemKey(line.key) ?? line.key}`} className={`${classes.wellLine} ${mode === 'more' ? classes.optionalRow : ''}`}>
       {mode !== 'more' && <GcIcon name={mode === 'waiting' ? 'clock' : 'check'} size={16} strokeWidth={2.25} className={mode === 'well' ? classes.wellTick : undefined} />}
       <span className={classes.wellTitle}>{line.title}</span>
       <span className={classes.wellSentence}>{line.sentence}</span>
@@ -225,11 +227,13 @@ function StoreCheck({
   recheck,
   copy,
   checkDomain,
+  alerts,
 }: {
   check: StoreCheckView;
   recheck: YourStoreView['recheck'];
   copy: YourStoreCopy;
   checkDomain: YourStoreActions['checkDomain'];
+  alerts?: React.ReactNode;
 }) {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
@@ -315,6 +319,7 @@ function StoreCheck({
           )}
         </>
       )}
+      {alerts}
     </section>
   );
 }
@@ -325,6 +330,7 @@ export function V16YourStore({
   locale,
   actions,
   connect,
+  alerts,
 }: {
   view: YourStoreView;
   /** Owners and admins; for anyone else the switches show, disabled (item 12). */
@@ -333,6 +339,7 @@ export function V16YourStore({
   actions: YourStoreActions;
   /** The Connect your store card; it carries the store's address and install steps. */
   connect?: React.ReactNode;
+  alerts?: StoreHealthAlertsProps;
 }) {
   const copy = getYourStoreCopy(locale);
   /* A switch shows its new position at once and goes back if the save
@@ -422,7 +429,10 @@ export function V16YourStore({
         <p className={classes.newFeatures}>{copy.newFeatures}</p>
       </section>
 
-      {view.check && <StoreCheck check={view.check} recheck={view.recheck} copy={copy} checkDomain={actions.checkDomain} />}
+      {view.check ? (
+        <StoreCheck check={view.check} recheck={view.recheck} copy={copy} checkDomain={actions.checkDomain}
+          alerts={alerts && <StoreHealthAlerts key={`${alerts.siteId}:${alerts.enabled}`} {...alerts} locale={locale} canChange={canChange} />} />
+      ) : alerts && <StoreHealthAlerts key={`${alerts.siteId}:${alerts.enabled}`} {...alerts} locale={locale} canChange={canChange} />}
     </div>
   );
 }
