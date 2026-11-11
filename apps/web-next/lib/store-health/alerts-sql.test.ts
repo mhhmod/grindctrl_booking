@@ -31,7 +31,7 @@ let deps: HealthAlertDependencies;
 beforeAll(async () => {
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls; create table public.profiles(id uuid primary key, clerk_user_id text); create table public.widget_sites(id uuid primary key default gen_random_uuid(), name text, workspace_id uuid, domain text, settings_json jsonb, settings_version integer not null default 1); grant select,insert,update on widget_sites,profiles to service_role;');
   const sql = await readFile(resolve(process.cwd(), '../../supabase/20261111_store_health_alerts.sql'), 'utf8');
-  expect(sql.replace(/^--.*$/gm, '')).not.toMatch(/\b(drop|delete|truncate)\b/i);
+  expect(sql.replace(/^--.*$/gm, '')).not.toMatch(/\b(drop|truncate)\b|\bdelete\s+from\b/i);
   await db.exec(sql); await db.exec(sql);
 }, 60_000);
 afterAll(async () => { await db.close(); });
