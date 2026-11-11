@@ -2,8 +2,8 @@
    store's own plan, its catalogue and its looks. Left out until their back
    ends exist (item 21), rather than guessed: billing through Shopify, Add
    80 looks and top-ups with their cap, switching plans in the page, the
-   recommendation, "Is it paying off?" (N3, N4), and the alerts at 20% and
-   5% by email or WhatsApp. Today the team changes plans and adds looks, so
+   recommendation, "Is it paying off?" (N3, N4), and the 5% alert or WhatsApp
+   alerts. The store-health job now emails at 20%. The team changes plans and adds looks, so
    the page says so and offers the call. */
 
 import type { ShopEntitlement, PlanCatalogItem } from '@/lib/try-on/entitlement';

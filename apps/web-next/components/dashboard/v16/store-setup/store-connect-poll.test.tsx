@@ -1,0 +1,20 @@
+import React from 'react';
+import { act, fireEvent, screen } from '@testing-library/react';
+import { expect, it, vi } from 'vitest';
+import { renderWithMantine } from '@/components/mantine/test-utils';
+import type { PasteInstallActions } from '../store-chat/paste-install';
+vi.mock('../store-chat/paste-install', () => ({ PasteInstall: ({ actions }: { actions: PasteInstallActions }) => <button onClick={() => void actions.status('s1').catch(() => {})}>Poll</button> }));
+import { StoreConnect } from './store-connect';
+it.each(['en', 'ar'] as const)('M11: three failed existing polls show a localized retry notice; recovery clears it (%s)', async (locale) => {
+  const status = vi.fn().mockResolvedValue({ ok: false, code: 'unavailable' });
+  const paste = { status } as unknown as PasteInstallActions;
+  renderWithMantine(<StoreConnect locale={locale} siteId="s1" meta={{ domain: null, embedKey: 'key', lastSeenMinutes: null, wooConnection: null, platformDetected: null }} actions={{ createWooPairingCodeAction: vi.fn(), paste }} />);
+  for (let i = 0; i < 2; i++) await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Poll' })); });
+  expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Poll' })); });
+  expect(screen.getByRole('status')).toHaveTextContent(locale === 'ar' ? 'نحاول مجددًا' : 'trying again');
+  status.mockResolvedValueOnce({ ok: true, data: {} });
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Poll' })); });
+  expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  expect(status).toHaveBeenCalledTimes(4);
+});

@@ -1,11 +1,12 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-const m = vi.hoisted(() => ({ connection: vi.fn(), domains: vi.fn(), plan: vi.fn(), launch: vi.fn(), flags: vi.fn(), code: vi.fn() }));
+const m = vi.hoisted(() => ({ connection: vi.fn(), domains: vi.fn(), plan: vi.fn(), launch: vi.fn(), flags: vi.fn(), code: vi.fn(), claimReason: vi.fn() }));
 vi.mock('@/lib/paste/store', async (original) => {
   const actual = await original<typeof import('@/lib/paste/store')>();
   return { pasteShopHost: actual.pasteShopHost, pasteTrust: actual.pasteTrust, getPasteConnection: m.connection, listPasteDomains: m.domains,
     readPasteCodeVersion: m.code };
 });
+vi.mock('@/lib/woo/free-plan-reason', () => ({ freePlanReason: m.claimReason }));
 const PROVEN_AT = '2026-11-08T13:00:00.000Z';
 vi.mock('@/lib/try-on/entitlement', () => ({ getShopEntitlement: m.plan }));
 vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: m.launch }));
@@ -21,6 +22,7 @@ beforeEach(() => {
   m.connection.mockResolvedValue({ status: 'active', platform: 'website', secret_version: 2 });
   m.domains.mockResolvedValue([{ id: 'domain-a', domain: 'merchant.example', state: 'trusted', domainVerified: true, firstSeenAt: null, lastSeenAt: null }]);
   m.plan.mockResolvedValue({ status: 'active', available: true, totalCreditsRemaining: 5 });
+  m.claimReason.mockResolvedValue(null);
   m.launch.mockResolvedValue(null); m.flags.mockResolvedValue([]); m.code.mockResolvedValue(null);
 });
 afterEach(() => vi.unstubAllEnvs());
@@ -198,4 +200,12 @@ describe('paste read model and dashboard tenant', () => {
     expect(resolveActiveStore({ shops: [], sites }, [{ site: SITE }])).toMatchObject({ tenantKey: `site:${SITE}`, shopDomain: null, platform: 'paste' });
     expect(resolveActiveStore({ shops: [], sites: [{ ...sites[0], paste: false }] }, [{ site: SITE }])).toMatchObject({ tenantKey: null, platform: null });
   });
+});
+
+it('m7: a proven paste store with no plan learns its domain free looks were already claimed', async () => {
+  m.plan.mockResolvedValue({ status: 'none', available: false, totalCreditsRemaining: 0 });
+  m.claimReason.mockResolvedValue('apex_taken');
+  const result = await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW);
+  expect(result).toMatchObject({ tryOnReady: false, tryOnReason: 'apex_taken' });
+  expect(m.claimReason).toHaveBeenCalledWith(SITE, ['merchant.example']);
 });

@@ -6,6 +6,10 @@ const m = vi.hoisted(() => ({ network: vi.fn(), visitor: vi.fn(), siteLimit: vi.
   hosts: vi.fn(), proofHosts: vi.fn(), prove: vi.fn(), signal: vi.fn(), signature: vi.fn(), active: vi.fn(), flags: vi.fn(),
   launch: vi.fn(), storeLaunch: vi.fn(), lookup: vi.fn(), codeVersion: vi.fn(), platforms: vi.fn(), fingerprint: vi.fn(),
   tryOnHosts: vi.fn(), domainCheck: vi.fn(), photo: vi.fn() }));
+// after() runs its task at once here, so the deferred health writes stay observable.
+vi.mock('next/server', async (importOriginal) => ({ ...await importOriginal<typeof import('next/server')>(),
+  after: (task: () => unknown) => { void task(); } }));
+vi.mock('@/lib/store-health/signature-signals', () => ({ recordSignatureHealth: vi.fn(async () => {}) }));
 vi.mock('@/lib/store-health/signals', () => ({ recordPhotoHealth: m.photo }));
 vi.mock('@/lib/ratelimit', () => ({ clientIp: () => '203.0.113.5', publicApiRatelimit: { limit: m.network },
   proxyVisitorRatelimit: { limit: m.visitor }, proxyShopMintRatelimit: { limit: m.siteLimit } }));
@@ -395,4 +399,17 @@ import { tryOnDayAvailability, readTryOnDayStatus } from '@/lib/try-on/daily-bud
 beforeEach(() => {
   vi.mocked(tryOnDayAvailability).mockResolvedValue('live');
   vi.mocked(readTryOnDayStatus).mockResolvedValue({ used: 0, limit: 300, reached: false });
+});
+
+it.each(['bad_signature','stale_signature'])('M10: records %s only after rate and origin gates, without minting', async (reason) => {
+  const { recordSignatureHealth } = await import('@/lib/store-health/signature-signals');
+  m.connection.mockResolvedValue(shopify); m.signature.mockResolvedValue({ ok: false, code: reason });
+  const response = await post({ signed });
+  expect(response.status).toBe(401);
+  expect(await response.json()).toMatchObject({ error: reason });
+  expect(recordSignatureHealth).toHaveBeenCalledWith(SITE, reason);
+  expect(m.signal).not.toHaveBeenCalled();
+  vi.mocked(recordSignatureHealth).mockClear();
+  await post({ signed }, 'https://evil.example');
+  expect(recordSignatureHealth).not.toHaveBeenCalled();
 });

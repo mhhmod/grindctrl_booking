@@ -22,7 +22,7 @@ export const LOOKS_LOW_SHARE = 0.2;
 /** The existing install surface: the steps, the code (updated when it
  *  changes) and each address's proof, on Store Chat's Set up. */
 export const INSTALL_HREF = '/dashboard/store#connect';
-export const PLAN_HREF = '/dashboard/plan';
+export const LOOKS_CONTACT_HREF = 'mailto:grindctrlnow@gmail.com';
 export const YOUR_STORE_HREF = '/dashboard/store';
 
 /** How GRINDCTRL is on the store: the Shopify app, the WooCommerce plugin,
@@ -47,7 +47,7 @@ export type YourStoreFacts = {
   storeUrl: string | null;
   /** Owners and admins change the switches and open set up (item 12). */
   canChange: boolean;
-  /** Only the owner opens Plan. */
+  /** Only the owner manages the plan or requests more looks. */
   canBilling: boolean;
   code: {
     /** The latest signal from our code on the store; null when never seen. */
@@ -59,6 +59,8 @@ export type YourStoreFacts = {
   launchState: LaunchState;
   /** A pasted Shopify install runs older code than the snippet handed out now. */
   codeOutdated: boolean;
+  pluginOutdated?: boolean;
+  signatureFailures?: number;
   health?: HealthCounts;
   /** Where the owner put the Try-On button (Pack B); unread counts as automatic. */
   placement?: PlacementMode;
@@ -67,12 +69,15 @@ export type YourStoreFacts = {
   wooDetected?: boolean;
   tryOn: null | {
     dailyLimitReached?: boolean;
+    dailyLimitUnreadable?: boolean;
+    dailyLimitCause?: 'store' | 'global' | null;
+    dailyResetAt?: string;
     tenant: string;
     showButton: boolean;
     looksLeft: number;
     looksIncluded: number;
     planActive: boolean;
-    /** Pasted code only: why the storefront hides Try-On (lib/paste/status.ts). */
+    /** Storefront refusal, including Woo domain/free-plan eligibility. */
     pasteReason: string | null;
   };
   chat: null | { siteId: string; enabled: boolean };
@@ -100,7 +105,7 @@ export type ProductCardView = {
 
 export type DomainLine = { domain: string; state: 'live' | 'waiting' | 'needs_proof'; label: string };
 
-export type CheckKey = 'code' | 'looks' | 'addresses' | 'productPages' | 'productDetails' | 'productPhotos' | 'collectionPages';
+export type CheckKey = 'plugin' | 'signature' | 'dailyLimit' | 'freePlan' | 'code' | 'looks' | 'addresses' | 'productPages' | 'productDetails' | 'productPhotos' | 'collectionPages';
 
 export type FixRow = {
   key: CheckKey;
@@ -137,6 +142,7 @@ export type YourStoreView = {
 };
 
 export type TodayStoreCardView = {
+  notice?: { sentence: string; action: Link } | null;
   checkedAt: string;
   products: Array<{ key: ProductKey; name: string; pill: PillKind | null; offLabel: string }>;
   link: Link;
@@ -174,9 +180,10 @@ export function productsHeading(anyOn: boolean, copy: YourStoreCopy): string {
 function tryOnPill(facts: YourStoreFacts, code: CodeState): { pill: PillKind; cant: boolean; preview: boolean } {
   const tryOn = facts.tryOn!;
   if (code === 'waiting' || tryOn.pasteReason === 'shop_proof_pending') return { pill: 'waiting', cant: false, preview: false };
-  if (tryOn.dailyLimitReached) return { pill: 'attention', cant: true, preview: false };
+  if (tryOn.dailyLimitUnreadable || tryOn.dailyLimitReached) return { pill: 'attention', cant: true, preview: false };
   const blocked =
     code === 'stale' ||
+    (facts.signatureFailures ?? 0) > 0 ||
     !tryOn.planActive ||
     tryOn.looksLeft <= 0 ||
     (tryOn.pasteReason !== null && !PASTE_REASONS_COVERED.has(tryOn.pasteReason));
@@ -187,7 +194,7 @@ function tryOnPill(facts: YourStoreFacts, code: CodeState): { pill: PillKind; ca
 }
 
 function chatPill(facts: YourStoreFacts, code: CodeState): { pill: PillKind; cant: boolean; preview: boolean } {
-  if (code === 'waiting') return { pill: 'waiting', cant: false, preview: false };
+  if (code === 'waiting' && !facts.pluginOutdated && !facts.signatureFailures && !facts.tryOn?.dailyLimitUnreadable && !['no_verified_domain', 'apex_taken'].includes(facts.tryOn?.pasteReason ?? '')) return { pill: 'waiting', cant: false, preview: false };
   if (code === 'stale') return { pill: 'bad', cant: true, preview: false };
   if (inPreview(facts.launchState)) return { pill: 'preview', cant: false, preview: true };
   return { pill: 'well', cant: false, preview: false };
@@ -267,7 +274,7 @@ function storeCheck(facts: YourStoreFacts, copy: YourStoreCopy, locale: SiteLoca
   const more: WellLine[] = [];
   const pending: WellLine[] = [];
   const setUp = (label: string) => (facts.canChange ? { label, href: INSTALL_HREF } : null);
-  const plan = (label: string) => (facts.canBilling ? { label, href: PLAN_HREF } : null);
+  const plan = (label: string) => (facts.canBilling ? { label, href: LOOKS_CONTACT_HREF } : null);
 
   if (code === 'stale') {
     bad.push({
@@ -278,7 +285,7 @@ function storeCheck(facts: YourStoreFacts, copy: YourStoreCopy, locale: SiteLoca
       domains: [],
       action: withPrimary(setUp(r.reinstall)),
     });
-  } else {
+  } else if (code === 'ok') {
     well.push({
       key: 'code',
       title: r.code,
@@ -287,20 +294,36 @@ function storeCheck(facts: YourStoreFacts, copy: YourStoreCopy, locale: SiteLoca
     });
   }
 
+  if (facts.pluginOutdated && facts.canChange) attention.push({ key: 'plugin', kind: 'attention', title: r.plugin, sentence: r.pluginUpdate, domains: [], action: withPrimary({ label: r.updatePlugin, href: '/downloads/grindctrl-store-chat.zip' }) });
+  if ((facts.signatureFailures ?? 0) > 0) bad.push({ key: 'signature', kind: 'bad', title: r.code, sentence: r.signature, domains: [], action: withPrimary(setUp(copy.getUpdatedCode)) });
+
   // The looks only matter while the Try-On button is switched on.
   const tryOn = facts.tryOn;
   if (tryOn?.showButton) {
     const left = Math.max(0, tryOn.looksLeft);
-    if (tryOn.dailyLimitReached) {
-      attention.push({ key: 'looks', kind: 'attention', title: r.looks, sentence: r.dailyLimitReached, domains: [], action: null });
-    } else if (!tryOn.planActive) {
-      bad.push({ key: 'looks', kind: 'bad', title: r.looks, sentence: r.planInactive, domains: [], action: withPrimary(plan(r.seePlan)) });
-    } else if (left <= 0) {
-      bad.push({ key: 'looks', kind: 'bad', title: r.looks, sentence: r.outOfLooks, domains: [], action: withPrimary(plan(r.topUp)) });
-    } else if (looksLow(tryOn)) {
-      attention.push({ key: 'looks', kind: 'attention', title: r.looks, sentence: r.looksLow(left), domains: [], action: withPrimary(plan(r.topUp)) });
-    } else {
-      well.push({ key: 'looks', title: r.looks, sentence: copy.looksLeftThisMonth(left), link: null });
+    const domainBlocked = ['no_verified_domain', 'apex_taken'].includes(tryOn.pasteReason ?? '');
+    if (domainBlocked) {
+      bad.push({ key: 'freePlan', kind: 'bad', title: r.looks, sentence: tryOn.pasteReason === 'apex_taken' ? r.apexTaken : r.noVerifiedDomain, domains: [], action: withPrimary(setUp(r.verifyDomain)) });
+    }
+    if (tryOn.dailyLimitUnreadable) {
+      attention.push({ key: 'dailyLimit', kind: 'attention', title: r.looks, sentence: r.dailyUnreadable, domains: [], action: null });
+    } else if (tryOn.dailyLimitReached) {
+      const day = new Date(facts.now);
+      const reset = tryOn.dailyResetAt ?? new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate() + 1)).toISOString();
+      const time = new Intl.DateTimeFormat(intlLocale(locale), { hour: 'numeric', minute: '2-digit', timeZone: facts.timeZone }).format(new Date(reset));
+      const sentence = [r.dailyLimitReached, r.dailyReset(time), tryOn.dailyLimitCause === 'global' ? r.sharedCeiling : ''].filter(Boolean).join(' ');
+      attention.push({ key: 'looks', kind: 'attention', title: r.looks, sentence, domains: [], action: withPrimary({ label: r.askRaise, href: LOOKS_CONTACT_HREF }) });
+
+    } else if (!domainBlocked) {
+      if (!tryOn.planActive) {
+        bad.push({ key: 'looks', kind: 'bad', title: r.looks, sentence: r.planInactive + (facts.canBilling ? '' : ' ' + r.askOwner), domains: [], action: withPrimary(plan(r.seePlan)) });
+      } else if (left <= 0) {
+        bad.push({ key: 'looks', kind: 'bad', title: r.looks, sentence: r.outOfLooks + (facts.canBilling ? '' : ' ' + r.askOwner), domains: [], action: withPrimary(plan(r.topUp)) });
+      } else if (looksLow(tryOn)) {
+        attention.push({ key: 'looks', kind: 'attention', title: r.looks, sentence: r.looksLow(left) + (facts.canBilling ? '' : ' ' + r.askOwner), domains: [], action: withPrimary(plan(r.topUp)) });
+      } else {
+        well.push({ key: 'looks', title: r.looks, sentence: copy.looksLeftThisMonth(left), link: null });
+      }
     }
   }
 
@@ -359,7 +382,7 @@ function storeCheck(facts: YourStoreFacts, copy: YourStoreCopy, locale: SiteLoca
     else wait('productPhotos', r.productPhotos);
 
     if (facts.platform === 'paste_website' && !facts.wooDetected) {
-      if (facts.easyOrders) more.push({ key: 'collectionPages', title: r.collectionPages, sentence: r.easyOrdersPills, link: null });
+      // No EasyOrders connector exists. Do not offer a step that cannot finish.
     } else if (facts.platform === 'paste_shopify' && facts.codeOutdated) {
       problem('collectionPages', 'attention', r.collectionPages, copy.updatedCodeNote, setUp(copy.getUpdatedCode));
     } else if (facts.pillsOn === false) {
@@ -411,6 +434,7 @@ export function buildYourStoreView(facts: YourStoreFacts, copy: YourStoreCopy, l
 export function buildTodayStoreCard(facts: YourStoreFacts, copy: YourStoreCopy, locale: SiteLocale): TodayStoreCardView {
   const code = codeState(facts);
   return {
+    notice: facts.pluginOutdated && facts.canChange ? { sentence: copy.rows.pluginUpdate, action: { label: copy.rows.updatePlugin, href: '/downloads/grindctrl-store-chat.zip' } } : null,
     checkedAt: copy.check.checkedAt(checkedAtTime(facts.now, locale, facts.timeZone)),
     products: productCards(facts, copy, code).map(({ key, name, pill }) => ({ key, name, pill, offLabel: copy.off })),
     link: { label: copy.todayCard.viewStoreCheck, href: YOUR_STORE_HREF },

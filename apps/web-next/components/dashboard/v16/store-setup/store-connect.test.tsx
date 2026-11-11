@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { fireEvent, screen } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithMantine } from '@/components/mantine/test-utils';
 import { getYourStoreCopy } from '@/lib/dashboard/your-store-copy';
@@ -12,6 +12,18 @@ const meta: StoreConnectMeta = { domain: 'shop.example.com', embedKey: 'test', l
 const actions: StoreConnectActions = { createWooPairingCodeAction: vi.fn(async () => ({ ok: true as const, code: 'CODE', expiresAt: '2026-11-04T10:15:00Z' })) };
 const en = getYourStoreCopy('en');
 const chat = getChatStudioCopy('en');
+
+it('M9: Verify your domain opens folded install steps when its link reaches #connect', async () => {
+  renderWithMantine(<StoreConnect locale="en" siteId="s1" meta={{ ...meta, lastSeenMinutes: 1 }} actions={actions} />);
+  expect(screen.queryByRole('heading', { name: chat.woocommerce.title })).not.toBeInTheDocument();
+  try {
+    await act(async () => {
+      window.history.replaceState({}, '', '#connect');
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    expect(screen.getByRole('heading', { name: chat.woocommerce.title })).toBeInTheDocument();
+  } finally { window.history.replaceState({}, '', window.location.pathname); }
+});
 
 describe('StoreConnect', () => {
   it('opens the install flow when the code has never been seen', () => {

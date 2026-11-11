@@ -192,3 +192,15 @@ describe('placement strings', () => {
     expect(ar.saved('before', 'أضف للسلة')).toBe('فوق «أضف للسلة»');
   });
 });
+
+it.each(['closed', 'expired'])('m6: reports an unsaved spot when the watcher is %s', async (reason) => {
+  const a = actions(); draw(a);
+  await waitFor(() => expect(radio(en.auto)).not.toBeDisabled());
+  fireEvent.click(radio(en.spot));
+  vi.useFakeTimers();
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: en.pick })); });
+  if (reason === 'closed') popup.closed = true;
+  await act(async () => { await vi.advanceTimersByTimeAsync(reason === 'closed' ? PICK_POLL_MS : 30 * 60_000); });
+  expect(screen.getByText(en.notSaved)).toBeInTheDocument();
+  expect(a.set).not.toHaveBeenCalled();
+});

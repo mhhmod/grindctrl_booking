@@ -126,7 +126,7 @@ describe('V16Plan', () => {
       'Launch$15 a month150 looks a month',
       'GrowthYour plan$29 a month350 looks a month',
     ]);
-    for (const link of screen.getAllByRole('link', { name: /Book a call/ })) {
+    for (const link of screen.getAllByRole('link', { name: /Talk to us to add looks/ })) {
       expect(link).toHaveAttribute('href', BOOKING_URL);
       expect(link).toHaveAttribute('target', '_blank');
     }
@@ -145,7 +145,7 @@ describe('V16Plan', () => {
   it('speaks Arabic in Arabic, with Western digits', () => {
     const { container } = renderPlan('ar');
     expect(screen.getByRole('region', { name: 'إطلالات التجربة في هذه الدورة' })).toHaveTextContent('150 متبقية');
-    expect(screen.getAllByRole('link', { name: /احجز مكالمة/ })).toHaveLength(2);
+    expect(screen.getAllByRole('link', { name: /تواصل معنا لإضافة إطلالات/ })).toHaveLength(2);
     expect(container.textContent).not.toMatch(/[٠-٩]/);
   });
 });

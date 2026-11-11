@@ -1,8 +1,8 @@
 import React from 'react';
 import fs from 'node:fs';
 import path from 'node:path';
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderWithMantine } from '@/components/mantine/test-utils';
 import { getChatStudioCopy } from '@/lib/dashboard/chat-studio-copy';
 import type { WooSiteConnectionSummary } from '@/lib/woo/connection';
@@ -14,7 +14,7 @@ import {
 
 const SITE_ID = '11111111-1111-4111-8111-111111111111';
 const CODE = 'K7QM4TXP';
-const EXPIRES_AT = '2026-11-04T10:15:00.000Z';
+const EXPIRES_AT = new Date(Date.now() + 15 * 60_000).toISOString();
 
 function successfulAction(): CreateWooPairingCode {
   return vi.fn(async () => ({ ok: true as const, code: CODE, expiresAt: EXPIRES_AT }));
@@ -146,4 +146,28 @@ describe('WoocommerceGuide', () => {
     expect(text).not.toMatch(/\b(supported|live)\b/i);
     expect(woocommerce.steps.domain).toMatch(/only after the domain is verified/);
   });
+});
+
+afterEach(() => vi.useRealTimers());
+it.each(['en','ar'] as const)('M8: replaces expired code with a renewal action (%s)', async (locale) => {
+  vi.useFakeTimers();
+  const copy = getChatStudioCopy(locale);
+  const create = vi.fn<CreateWooPairingCode>().mockResolvedValue({ ok: true, code: CODE, expiresAt: new Date(Date.now() + 1000).toISOString() });
+  draw(locale, create);
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: copy.woocommerce.getCode })); });
+  expect(screen.getByText(CODE)).toBeInTheDocument();
+  await act(async () => { await vi.advanceTimersByTimeAsync(1100); });
+  expect(screen.queryByText(CODE)).not.toBeInTheDocument();
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: copy.woocommerce.codeExpired })); });
+  expect(create).toHaveBeenCalledTimes(2);
+});
+it('M8: passes retryAfterSeconds into a visible, enforced countdown', async () => {
+  vi.useFakeTimers();
+  const create = vi.fn<CreateWooPairingCode>().mockResolvedValue({ ok: false, code: 'rate_limited', message: 'private detail', retryAfterSeconds: 2 });
+  const { copy } = draw('en', create);
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: copy.woocommerce.getCode })); });
+  expect(screen.getByRole('alert')).toHaveTextContent('Try again in 2 seconds.');
+  expect(screen.getByRole('button', { name: copy.woocommerce.getCode })).toBeDisabled();
+  await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+  expect(screen.getByRole('button', { name: copy.woocommerce.getCode })).toBeEnabled();
 });

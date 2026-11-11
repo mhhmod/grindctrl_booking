@@ -48,6 +48,7 @@ export function ButtonPlacement({
   const [loadError, setLoadError] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState(false);
+  const [notSaved, setNotSaved] = React.useState(false);
   const [handoff, setHandoff] = React.useState<Handoff>({ state: 'idle' });
   const [selector, setSelector] = React.useState('');
   const [position, setPosition] = React.useState<SpotPosition>('after');
@@ -105,9 +106,14 @@ export function ButtonPlacement({
     const timer = setInterval(async () => {
       if (Date.now() >= deadline || (popup && popup.closed)) {
         stopWatching();
-        if (mounted.current) setHandoff({ state: 'idle' });
-        // A save made just before the tab closed is still shown.
-        if (popup?.closed) actions.read({ shop }).then((result) => { if (mounted.current && result.ok) apply(result.placement); }, () => {});
+        // A last read includes a save just before closing or expiry.
+        const final = await actions.read({ shop }).catch(() => null);
+        if (mounted.current) {
+          setHandoff({ state: 'idle' });
+          const saved = final?.ok && final.placement.spot && !sameSpot(final.placement.spot, before);
+          if (final?.ok) apply(final.placement);
+          setNotSaved(!saved);
+        }
         return;
       }
       if (reading) return;
@@ -130,6 +136,7 @@ export function ButtonPlacement({
     const popup = window.open('', '_blank');
     setBusy(true);
     setError(false);
+    setNotSaved(false);
     setHandoff({ state: 'opening' });
     const result = await actions.open({ shop, advanced: advanced ? { selector, position } : null }).catch(() => null);
     if (!mounted.current) { popup?.close(); return; }
@@ -228,6 +235,7 @@ export function ButtonPlacement({
         </div>
       </Radio.Group>
 
+      {notSaved ? <Text size="sm" role="status">{copy.notSaved}</Text> : null}
       {error ? <Text size="sm" role="alert" className={classes.error}>{copy.failed}</Text> : null}
 
       <Accordion

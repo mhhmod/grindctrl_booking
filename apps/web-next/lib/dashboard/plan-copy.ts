@@ -82,7 +82,7 @@ const enLooks = (n: number) => (n === 1 ? '1 look' : `${n} looks`);
 
 const en: PlanCopy = {
   subtitle: 'Our team manages your plan for now. To change it or add looks, book a call and we’ll set it up.',
-  bookCall: 'Book a call',
+  bookCall: 'Talk to us to add looks',
   looksThisCycle: 'Try-on looks this cycle',
   left: (n) => `${n} left`,
   ofResets: (included, reset) => `of ${included}, resets ${reset}`,
@@ -156,7 +156,7 @@ const arUnit = (unit: 'day' | 'month' | 'year', count: number) => {
 
 const ar: PlanCopy = {
   subtitle: 'يدير فريقنا باقتك حالياً. لتغييرها أو إضافة إطلالات، احجز مكالمة وسنتولى الأمر.',
-  bookCall: 'احجز مكالمة',
+  bookCall: 'تواصل معنا لإضافة إطلالات',
   looksThisCycle: 'إطلالات التجربة في هذه الدورة',
   left: (n) => `${n} متبقية`,
   ofResets: (included, reset) => `من ${included}، تتجدد في ${reset}`,

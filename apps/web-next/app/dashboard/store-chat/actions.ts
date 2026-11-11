@@ -1,4 +1,7 @@
 'use server';
+import { randomUUID } from 'node:crypto';
+import { scheduleStoreDisconnectedEmail } from '@/lib/email/store-journey-sender';
+import { storeHealthOwner } from '@/lib/store-health/owner';
 
 import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
@@ -211,8 +214,12 @@ export async function disconnectSiteAction(siteId: string): Promise<ActionResult
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId, 'store');
     const profileId = await getProfileId(userId);
+    const owner = await storeHealthOwner(site).catch(() => {
+      console.error('[store-journey] disconnect recipient unavailable', { siteId }); return null;
+    });
     const result = await unclaimSite(site, profileId);
     if (!result) throw new Error('Store state changed. Refresh and try again.');
+    if (owner) scheduleStoreDisconnectedEmail(siteId, randomUUID(), owner.email, { locale: owner.locale, storeName: site.name, address: site.domain ?? '' });
     await recordAudit({
       siteId,
       actorClerkUserId: userId,

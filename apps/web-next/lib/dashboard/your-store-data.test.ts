@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 vi.mock('server-only', () => ({}));
+vi.mock('@/lib/store-health/signature-signals', () => ({ readSignatureFailures: vi.fn(async () => 0) }));
+vi.mock('@/lib/woo/garment-url', () => ({ verifiedSiteHosts: vi.fn(async () => ['store.example.com']) }));
+vi.mock('@/lib/woo/free-plan-reason', () => ({ freePlanReason: vi.fn(async () => null) }));
 
 const mocks = vi.hoisted(() => ({
   platforms: vi.fn(),
@@ -285,4 +288,16 @@ it('feeds the read-only daily ceiling into Store check without changing the merc
   const facts = await getYourStoreFacts({ activeStore: { shopDomain: 'lulus.myshopify.com', siteId: null, tenantKey: 'lulus.myshopify.com', platform: 'shopify' }, role: 'owner', timeZone: 'UTC', now: NOW });
   expect(facts?.tryOn).toMatchObject({ showButton: true, dailyLimitReached: true });
   expect(readTryOnDayStatus).toHaveBeenCalledWith('lulus.myshopify.com', new Date(NOW));
+});
+
+it('M7/M9/M11: carries Woo update, domain proof and unreadable daily limit into Store check facts', async () => {
+  const { verifiedSiteHosts } = await import('@/lib/woo/garment-url');
+  const { freePlanReason } = await import('@/lib/woo/free-plan-reason');
+  const { readTryOnDayStatus } = await import('@/lib/try-on/daily-budget');
+  mocks.woo.mockResolvedValue({ status: 'active', homeUrl: 'https://store.example', lastSeenAt: new Date(NOW).toISOString(), pluginOutdated: true });
+  vi.mocked(verifiedSiteHosts).mockResolvedValueOnce([]);
+  vi.mocked(freePlanReason).mockResolvedValueOnce('no_verified_domain');
+  vi.mocked(readTryOnDayStatus).mockRejectedValueOnce(new Error('offline'));
+  const facts = await getYourStoreFacts({ activeStore: { platform: 'woocommerce', siteId: 'site-1', shopDomain: null, tenantKey: 'site:site-1' }, role: 'admin', timeZone: 'UTC', now: NOW });
+  expect(facts).toMatchObject({ pluginOutdated: true, tryOn: { pasteReason: 'no_verified_domain', dailyLimitUnreadable: true, dailyLimitReached: false } });
 });

@@ -1,5 +1,6 @@
+import { recordSignatureHealth } from '@/lib/store-health/signature-signals';
 import { recordPhotoHealth } from '@/lib/store-health/signals';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { clientIp, publicApiRatelimit, proxyVisitorRatelimit, proxyShopMintRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
@@ -96,15 +97,20 @@ async function mint(request: NextRequest): Promise<Response> {
     }
     if (connection.platform === 'shopify') {
       const s = b.signed;
-      if (!s || typeof s !== 'object' || Array.isArray(s)) return json({ error: 'bad_signature' }, 401);
+      if (!s || typeof s !== 'object' || Array.isArray(s)) { after(() => recordSignatureHealth(site.id, 'bad_signature')); return json({ error: 'bad_signature' }, 401); }
       const claims = s as Record<string, unknown>;
       if (!['siteId', 'shopDomain', 'productId', 'variantId', 'issuedAt', 'customerId', 'signature']
         .every((key) => typeof claims[key] === 'string') || claims.productId !== b.productId || claims.variantId !== variantId) {
+        after(() => recordSignatureHealth(site.id, 'bad_signature'));
         return json({ error: 'bad_signature' }, 401);
       }
       const verified = await verifyLiquidSignature({ connection, claims: claims as unknown as LiquidClaims,
         signature: claims.signature as string });
-      if (!verified.ok) return json({ error: verified.code }, verified.code === 'unavailable' ? 503 : verified.code === 'replayed' ? 409 : 401);
+      if (!verified.ok) {
+        if (verified.code === 'bad_signature' || verified.code === 'stale_signature') { const code = verified.code; after(() => recordSignatureHealth(site.id, code)); }
+        return json({ error: verified.code }, verified.code === 'unavailable' ? 503 : verified.code === 'replayed' ? 409 : 401);
+      }
+      after(() => recordSignatureHealth(site.id, 'verified'));
       // Which snippet the store runs, for the dashboard's "copy the new code".
       // Unsigned, so only a hint, and only after this render verified.
       if (typeof b.codeVersion === 'number') await recordPasteCodeVersion(site.id, b.codeVersion);

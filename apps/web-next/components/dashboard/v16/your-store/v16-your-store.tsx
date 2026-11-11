@@ -470,6 +470,7 @@ export function V16YourStoreTodayCard({ card, locale }: { card: TodayStoreCardVi
           </li>
         ))}
       </ul>
+      {card.notice ? <p role="status" className={classes.muted}>{card.notice.sentence}{' '}<a href={card.notice.action.href}>{card.notice.action.label}</a></p> : null}
       <Link href={card.link.href} className={classes.todayLink}>
         {card.link.label}
         <GcIcon name="chev" size={16} />

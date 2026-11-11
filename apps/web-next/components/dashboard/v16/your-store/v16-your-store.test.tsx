@@ -147,8 +147,8 @@ describe('V16YourStore, Store check', () => {
     expect(within(rows[0]).getByText('Not working')).toBeInTheDocument();
     expect(within(rows[2]).getByText('Needs attention')).toBeInTheDocument();
     expect(within(rows[0]).getByRole('link', { name: 'Reinstall in 1 minute' })).toHaveAttribute('data-variant', 'filled');
-    expect(within(rows[1]).getByRole('link', { name: 'Top up' })).toHaveAttribute('href', '/dashboard/plan');
-    expect(within(rows[1]).getByRole('link', { name: 'Top up' })).toHaveAttribute('data-variant', 'default');
+    expect(within(rows[1]).getByRole('link', { name: 'Talk to us to add looks' })).toHaveAttribute('href', 'mailto:grindctrlnow@gmail.com');
+    expect(within(rows[1]).getByRole('link', { name: 'Talk to us to add looks' })).toHaveAttribute('data-variant', 'default');
     expect(within(rows[2]).getByText('Needs proof')).toBeInTheDocument();
     expect(within(rows[2]).getByRole('link', { name: "Prove it's yours" })).toBeInTheDocument();
   });

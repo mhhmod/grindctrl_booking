@@ -26,3 +26,10 @@ describe('Shopify step four copy', () => {
     for (const line of lines) expect(line).not.toMatch(/—/);
   });
 });
+
+it.each(['en','ar'])('m3: unreachable has a concrete storefront check and escalation (%s)', (locale) => {
+  const line = pasteInstallCopy(locale).shopCheck('unreachable', null);
+  expect(line).toContain('HTTPS');
+  expect(line).toContain(locale === 'ar' ? 'اطلب منا' : 'ask us');
+  expect(line).not.toContain(locale === 'ar' ? 'بعد دقيقة' : 'in a minute');
+});

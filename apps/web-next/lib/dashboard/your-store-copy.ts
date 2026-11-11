@@ -75,6 +75,18 @@ export interface YourStoreCopy {
     reinstall: string;
     looks: string;
     dailyLimitReached: string;
+    dailyReset: (time: string) => string;
+    sharedCeiling: string;
+    askRaise: string;
+    dailyUnreadable: string;
+    plugin: string;
+    pluginUpdate: string;
+    updatePlugin: string;
+    verifyDomain: string;
+    noVerifiedDomain: string;
+    apexTaken: string;
+    signature: string;
+    askOwner: string;
     outOfLooks: string;
     looksLow: (n: number) => string;
     planInactive: string;
@@ -184,12 +196,24 @@ const en: YourStoreCopy = {
     notSeenSince: (when) => `We haven't seen your code since ${when}. Usually a theme change removed it.`,
     reinstall: 'Reinstall in 1 minute',
     looks: 'Try-On availability',
-    dailyLimitReached: 'Paused for today: daily limit reached. Back at 00:00 UTC.',
+    dailyLimitReached: 'Try-On is paused for today. Shoppers cannot see the button.',
+    dailyReset: (time) => `It returns at ${time}, your store time.`,
+    sharedCeiling: 'The limit across all stores was reached. Your store may still have allowance.',
+    askRaise: 'Ask us to raise it',
+    dailyUnreadable: "We couldn't read your daily limit. Try-On may be hidden. Run check again shortly.",
+    plugin: 'WooCommerce plugin',
+    pluginUpdate: 'One last plugin update is needed. Download the zip, then in WordPress open Plugins, Add New, Upload Plugin, Replace current. Updates install automatically after this.',
+    updatePlugin: 'Download the update',
+    verifyDomain: 'Verify your domain',
+    noVerifiedDomain: 'Try-On is hidden until you verify your store address. Open Store setup and confirm the domain.',
+    apexTaken: 'The free looks for this domain were already claimed by another store. Verify your domain if the address is wrong, or ask us to add looks.',
+    signature: "Try-On can't verify your code. Copy the current code and replace the old one in your live theme.",
+    askOwner: 'Ask the store owner to contact us to add looks.',
     outOfLooks: 'Out of looks. The button is hidden from shoppers until you top up.',
     looksLow: (n) => (n === 1 ? '1 look left this month.' : `${n} looks left this month.`),
     planInactive: 'The plan is not active, so Try it on is hidden.',
-    topUp: 'Top up',
-    seePlan: 'See your plan',
+    topUp: 'Talk to us to add looks',
+    seePlan: 'Talk to us to add looks',
     storeChat: 'Store Chat',
     live: 'Live',
     addresses: 'Addresses',
@@ -299,12 +323,24 @@ const ar: YourStoreCopy = {
     notSeenSince: (when) => `لم نرَ الكود منذ ${when}. غالبًا حذفه تغيير في القالب.`,
     reinstall: 'أعد التركيب في دقيقة',
     looks: 'رصيد القياس الافتراضي',
-    dailyLimitReached: 'متوقف اليوم: تم بلوغ الحد اليومي. يعود الساعة 00:00 بتوقيت UTC.',
+    dailyLimitReached: 'القياس الافتراضي متوقف اليوم. لا يرى المتسوقون الزر.',
+    dailyReset: (time) => `يعود الساعة ${time} بتوقيت متجرك.`,
+    sharedCeiling: 'تم بلوغ الحد المشترك لكل المتاجر. قد يبقى لمتجرك رصيد يومي.',
+    askRaise: 'اطلب منا رفع الحد',
+    dailyUnreadable: 'تعذّرت قراءة الحد اليومي. قد يكون زر القياس مخفيًا. أعد الفحص بعد قليل.',
+    plugin: 'إضافة WooCommerce',
+    pluginUpdate: 'يلزم تحديث أخير للإضافة. نزّل الملف، ثم في WordPress افتح الإضافات، أضف جديد، رفع إضافة، استبدال الحالية. بعدها تُثبّت التحديثات تلقائيًا.',
+    updatePlugin: 'نزّل التحديث',
+    verifyDomain: 'أكّد ملكية النطاق',
+    noVerifiedDomain: 'زر القياس مخفي حتى تؤكد عنوان متجرك. افتح إعداد المتجر وأكّد ملكية النطاق.',
+    apexTaken: 'حصل متجر آخر على الإطلالات المجانية لهذا النطاق. أكّد ملكية نطاقك إن كان العنوان خطأ، أو اطلب منا إضافة إطلالات.',
+    signature: 'تعذّر التحقق من كود القياس. انسخ الكود الحالي واستبدل القديم في القالب المنشور.',
+    askOwner: 'اطلب من مالك المتجر التواصل معنا لإضافة إطلالات.',
     outOfLooks: 'انتهت الإطلالات. الزر مخفي عن المتسوقين حتى تضيف رصيدًا.',
     looksLow: (n) => `متبقي ${arLooks(n)} هذا الشهر.`,
     planInactive: 'الباقة غير فعّالة، لذلك زر التجربة مخفي.',
-    topUp: 'أضف إطلالات',
-    seePlan: 'اطّلع على باقتك',
+    topUp: 'تواصل معنا لإضافة إطلالات',
+    seePlan: 'تواصل معنا لإضافة إطلالات',
     storeChat: 'محادثة المتجر',
     live: 'يعمل',
     addresses: 'العناوين',

@@ -28,7 +28,7 @@ export const dynamic = 'force-dynamic';
 const COPY = {
   en: {
     successTitle: "You're connected",
-    successBody: 'Open Set up to choose how chat looks and works, and What it knows to teach it your store. Answer shoppers in Inbox. Your changes stay invisible to shoppers until you publish them.',
+    successBody: 'Open Store setup to turn on Store Chat and Try-On and check what shoppers will see. Then open a product page on your store to check the chat and Try-On button.',
     goToDashboard: 'Go to dashboard',
     expiredTitle: 'This link has expired',
     expiredBody: 'Reopen GRINDCTRL from your Shopify admin and choose "Claim this store" again.',
@@ -51,7 +51,7 @@ const COPY = {
   },
   ar: {
     successTitle: 'متجرك متصل الآن',
-    successBody: 'افتح الإعداد لاختيار شكل الدردشة وطريقة عملها، وما يعرفه ليتعلم عن متجرك. أجب عن المتسوقين من الرسائل. لن تظهر تغييراتك للمتسوقين حتى تنشرها.',
+    successBody: 'افتح إعداد المتجر لتشغيل محادثة المتجر والقياس الافتراضي ومعرفة ما سيظهر للمتسوقين. ثم افتح صفحة منتج في متجرك للتحقق من المحادثة وزر القياس.',
     goToDashboard: 'الانتقال إلى لوحة التحكم',
     expiredTitle: 'انتهت صلاحية هذا الرابط',
     expiredBody: 'أعد فتح GRINDCTRL من لوحة تحكم Shopify واختر "المطالبة بهذا المتجر" مرة أخرى.',
@@ -114,7 +114,7 @@ export default async function ClaimPage({
     await ensureMessengerSite(userId, claim.shop, claim.shop);
   } catch (error) {
     if (error instanceof StoreOwnedByAnotherAccountError) {
-      return <ClaimMessage locale={locale} title={copy.takenTitle} body={copy.takenBody} />;
+      return <ClaimMessage locale={locale} title={copy.takenTitle} body={copy.takenBody} actions={[{ label: copy.contactSupport, href: 'mailto:grindctrlnow@gmail.com' }]} />;
     }
     throw error;
   }
@@ -124,7 +124,7 @@ export default async function ClaimPage({
       locale={locale}
       title={copy.successTitle}
       body={copy.successBody}
-      actions={[{ label: copy.goToDashboard, href: '/dashboard/store-chat' }]}
+      actions={[{ label: copy.goToDashboard, href: '/dashboard/store' }]}
     />
   );
 }

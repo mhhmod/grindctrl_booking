@@ -279,6 +279,7 @@ export function getTryOnStudioCopy(locale: SiteLocale): TryOnStudioCopy {
 /* Button placement on Set up (Pack B, B1 and B2), word for word from the
    Pick a spot handoff. Store check's B7.4 row lives in your-store-copy.ts. */
 export interface PlacementCopy {
+  notSaved: string;
   section: string;
   auto: string;
   recommended: string;
@@ -303,6 +304,7 @@ export interface PlacementCopy {
 }
 
 const placementEn: PlacementCopy = {
+  notSaved: "We didn't see a spot saved. Your previous placement stays. Pick a spot to try again.",
   section: 'Button placement',
   auto: 'Next to your Buy button',
   recommended: 'Recommended',
@@ -326,6 +328,7 @@ const placementEn: PlacementCopy = {
 };
 
 const placementAr: PlacementCopy = {
+  notSaved: 'لم نرَ مكانًا محفوظًا. يبقى مكان الزر السابق. اختر مكانًا للمحاولة مجددًا.',
   section: 'مكان الزر',
   auto: 'بجوار زر الشراء',
   recommended: 'مستحسن',

@@ -51,14 +51,33 @@ export function WoocommerceGuide({
   const [pairing, setPairing] = React.useState<{ code: string; expiresAt: string } | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState(false);
+  const [expired, setExpired] = React.useState(false);
+  const [retry, setRetry] = React.useState(0);
+  const [retryUntil, setRetryUntil] = React.useState(0);
+  React.useEffect(() => {
+    if (!pairing) return;
+    const timer = setTimeout(() => setExpired(true), Math.max(0, Date.parse(pairing.expiresAt) - Date.now()));
+    return () => clearTimeout(timer);
+  }, [pairing]);
+  React.useEffect(() => {
+    if (!retryUntil) return;
+    const timer = setInterval(() => setRetry(Math.max(0, Math.ceil((retryUntil - Date.now()) / 1000))), 1000);
+    return () => clearInterval(timer);
+  }, [retryUntil]);
 
   const getCode = async () => {
+    if (retry > 0) return;
     setBusy(true);
     setError(false);
     try {
       const result = await createPairingCode(siteId);
-      if (result.ok) setPairing({ code: result.code, expiresAt: result.expiresAt });
-      else setError(true);
+      if (result.ok) { setExpired(Date.parse(result.expiresAt) <= Date.now()); setPairing({ code: result.code, expiresAt: result.expiresAt }); }
+      else {
+        setError(true);
+        const seconds = Math.max(0, Math.ceil(result.retryAfterSeconds ?? 0));
+        setRetry(seconds);
+        setRetryUntil(Date.now() + seconds * 1000);
+      }
     } catch {
       setError(true);
     } finally {
@@ -119,18 +138,19 @@ export function WoocommerceGuide({
         <li>
           <div className={classes.stepBody}>
             <p>{copy.steps.code}</p>
-            {!pairing && (
+            {(!pairing || expired) && (
               <Button
                 variant="default"
                 radius="pill"
                 className={classes.touch}
                 loading={busy}
+                disabled={retry > 0}
                 onClick={() => void getCode()}
               >
-                {busy ? copy.gettingCode : copy.getCode}
+                {busy ? copy.gettingCode : expired ? copy.codeExpired : copy.getCode}
               </Button>
             )}
-            {pairing && (
+            {pairing && !expired && (
               <div className={classes.codeBlock} aria-live="polite">
                 <div className={classes.keyRow}>
                   <code dir="ltr" className={classes.recordValue}>
@@ -157,7 +177,7 @@ export function WoocommerceGuide({
                 </p>
               </div>
             )}
-            {error && <p role="alert" className={classes.connectionError}>{copy.codeError}</p>}
+            {error && <p role="alert" className={classes.connectionError}>{copy.codeError}{retry > 0 ? ` ${copy.codeRetry(retry)}` : ''}</p>}
           </div>
         </li>
         <li>

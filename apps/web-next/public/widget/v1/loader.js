@@ -12,6 +12,7 @@
   'use strict';
 
   var LOADER_VERSION = '1.0.0';
+  var RUNTIME_VERSION = '0d52cf801db0';
   var GLOBAL_KEY = '__gc_widget_loader__';
 
   if (window[GLOBAL_KEY] && window[GLOBAL_KEY].version) {
@@ -48,7 +49,10 @@
     }
 
     if (src.indexOf('/widget/v1/loader.js') >= 0) {
-      return src.replace('/widget/v1/loader.js', '/widget/v1/runtime.js');
+      var runtimeUrl = new URL(src);
+      runtimeUrl.pathname = runtimeUrl.pathname.replace('/widget/v1/loader.js', '/widget/v1/runtime.js');
+      runtimeUrl.searchParams.set('v', RUNTIME_VERSION);
+      return runtimeUrl.toString();
     }
     if (src.indexOf('grindctrl-support.js') >= 0) {
       return src.replace('grindctrl-support.js', 'grindctrl-support-runtime.js');
@@ -111,10 +115,12 @@
       script.async = true;
       script.src = getRuntimeSrc();
       script.onload = function () { runtimeLoaded = true; resolve(); };
-      script.onerror = function () { reject(new Error('runtime_load_failed')); };
+      script.onerror = function () { script.remove(); reject(new Error('runtime_load_failed')); };
       document.head.appendChild(script);
     }).catch(function (err) {
-      warn('Failed to load runtime.');
+      runtimeLoadPromise = null;
+      warn('Failed to load runtime. Check your connection, then call init() again to retry.');
+      try { window.dispatchEvent(new CustomEvent('grindctrl:runtime-error', { detail: { code: 'runtime_load_failed' } })); } catch (e) {}
       throw err;
     });
 

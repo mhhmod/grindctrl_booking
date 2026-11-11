@@ -138,7 +138,8 @@ const en: PasteInstallCopy = {
       case 'no_trusted_domain': return 'Add your store address to turn on Try-On.';
       case 'paste_not_connected': return 'Finish the steps above to turn on Try-On.';
       case 'not_installed': return 'Turning on your free looks. This takes a moment.';
-      case 'plan_inactive': return 'Your plan isn’t active. Choose a plan to turn on Try-On.';
+      case 'apex_taken': return 'The free looks for this domain were already claimed by another store. Contact us to add looks.';
+      case 'plan_inactive': return 'Your plan is not active. Contact us to turn on Try-On.';
       case 'unavailable': return 'Try-On is unavailable right now. We’re looking into it.';
       case 'shop_proof_pending': return 'Confirm it’s your store to turn on Try-On.';
       case 'domain_unverified': return 'Try-On turns on once we find your code on your store. We check by ourselves.';
@@ -166,7 +167,7 @@ const en: PasteInstallCopy = {
       case 'wrong_site': return 'Your store shows code from another account. Replace it with your code, then check again.';
       case 'password_required': return 'Your store has a password page. Enter your storefront password once so we can check it.';
       case 'password_rejected': return 'That password didn’t open your store. Find it in Shopify under Online Store, then Preferences.';
-      case 'unreachable': return 'We couldn’t reach your store. Try again in a minute.';
+      case 'unreachable': return "We couldn't open your live store. Check it is published and its address opens over HTTPS without a redirect to another store. If it still fails, ask us to check it.";
       case 'rate_limited': return retryAfter ? `Too many checks. Try again in ${retryAfter} seconds.` : 'Too many checks. Try again shortly.';
       default: return 'After you paste and save your code, check your store. We confirm the code is on it before Try-On turns on.';
     }
@@ -265,7 +266,8 @@ const ar: PasteInstallCopy = {
       case 'no_trusted_domain': return 'أضف عنوان متجرك لتشغيل التجربة الافتراضية.';
       case 'paste_not_connected': return 'أكمل الخطوات أعلاه لتشغيل التجربة الافتراضية.';
       case 'not_installed': return 'نشغّل إطلالاتك المجانية. يستغرق ذلك لحظات.';
-      case 'plan_inactive': return 'خطتك غير مفعّلة. اختر خطة لتشغيل التجربة الافتراضية.';
+      case 'apex_taken': return 'حصل متجر آخر على الإطلالات المجانية لهذا النطاق. تواصل معنا لإضافة إطلالات.';
+      case 'plan_inactive': return 'خطتك غير مفعّلة. تواصل معنا لتفعيل التجربة الافتراضية.';
       case 'unavailable': return 'التجربة الافتراضية غير متاحة الآن. نعمل على ذلك.';
       case 'shop_proof_pending': return 'أكّد أن المتجر لك لتشغيل التجربة الافتراضية.';
       case 'domain_unverified': return 'تعمل التجربة الافتراضية بمجرد أن نجد الكود في متجرك، ونتحقق من ذلك تلقائياً.';
@@ -293,7 +295,7 @@ const ar: PasteInstallCopy = {
       case 'wrong_site': return 'يظهر في متجرك كود من حساب آخر. استبدله بالكود الخاص بك ثم تحقق مجدداً.';
       case 'password_required': return 'لمتجرك صفحة كلمة مرور. أدخل كلمة مرور واجهة المتجر مرة واحدة لنتحقق منه.';
       case 'password_rejected': return 'لم تفتح كلمة المرور هذه متجرك. تجدها في Shopify من المتجر الإلكتروني ثم التفضيلات.';
-      case 'unreachable': return 'لم نتمكن من الوصول إلى متجرك. حاول بعد دقيقة.';
+      case 'unreachable': return 'تعذّر فتح متجرك المنشور. تأكد أنه منشور وأن عنوانه يفتح عبر HTTPS دون تحويل لمتجر آخر. إن استمرت المشكلة، اطلب منا فحصه.';
       case 'rate_limited': return retryAfter ? `محاولات كثيرة. حاول بعد ${retryAfter} ثانية.` : 'محاولات كثيرة. حاول بعد قليل.';
       default: return 'بعد لصق الكود وحفظه، تحقق من متجرك. نتأكد من وجود الكود قبل تشغيل التجربة الافتراضية.';
     }
