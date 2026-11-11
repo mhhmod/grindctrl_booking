@@ -11,18 +11,31 @@ beforeEach(() => {
 });
 describe('store health counters', () => {
   it('reads one bounded seven-day query scoped to authorized sites', async () => {
-    m.limit.mockResolvedValue({ data: [
+    m.limit.mockResolvedValueOnce({ data: [
       { metric: 'placement', dimension: 'inline', count: '12' }, { metric: 'placement', dimension: 'floating', count: 2 },
       { metric: 'product_detected', dimension: 'yes', count: 12 }, { metric: 'product_detected', dimension: 'no', count: 3 },
       { metric: 'listing_views', dimension: '', count: 1 }, { metric: 'pills', dimension: '', count: 24 },
       { metric: 'photo_ok', dimension: '', count: 2 }, { metric: 'photo_failure', dimension: 'cdn.example.com', count: 1 },
     ], error: null });
-    expect(await readHealthCounts(['s1', 's2'], Date.parse('2026-11-10T23:59:00Z'))).toEqual({ inline: 12, floating: 2, detected: 12, missing: 3, listings: 1, pills: 24, photos: 2, photoHost: 'cdn.example.com' });
-    expect(m.from).toHaveBeenCalledExactlyOnceWith('store_health_signals');
+    expect(await readHealthCounts(['s1', 's2'], Date.parse('2026-11-10T23:59:00Z'))).toEqual({ inline: 12, floating: 2, detected: 12, missing: 3, listings: 1, pills: 24, photos: 2, photoHost: 'cdn.example.com', spotMissing: 0 });
+    expect(m.from).toHaveBeenCalledWith('store_health_signals');
     expect(m.in).toHaveBeenCalledWith('site_id', ['s1', 's2']);
     expect(m.gte).toHaveBeenCalledWith('day', '2026-11-04');
     expect(m.lte).toHaveBeenCalledWith('day', '2026-11-10');
     expect(m.limit).toHaveBeenCalledWith(400);
+  });
+  it('sums missing chosen spots over the last three UTC days, today included', async () => {
+    m.limit.mockResolvedValueOnce({ data: [], error: null }).mockResolvedValueOnce({ data: [{ count: 2 }, { count: '3' }, { count: -1 }], error: null });
+    expect((await readHealthCounts(['s1'], Date.parse('2026-11-10T08:00:00Z'))).spotMissing).toBe(5);
+    expect(m.from).toHaveBeenCalledWith('store_health_spot_signals');
+    expect(m.gte).toHaveBeenCalledWith('day', '2026-11-08');
+    expect(m.limit).toHaveBeenLastCalledWith(3);
+  });
+  it('reads no missing spot before its migration ran, and fails on any other spot read error', async () => {
+    m.limit.mockResolvedValueOnce({ data: [], error: null }).mockResolvedValueOnce({ data: null, error: { code: '42P01' } });
+    expect((await readHealthCounts(['s1'], Date.now())).spotMissing).toBe(0);
+    m.limit.mockResolvedValueOnce({ data: [], error: null }).mockResolvedValueOnce({ data: null, error: { code: '08006' } });
+    await expect(readHealthCounts(['s1'], Date.now())).rejects.toThrow('store health read failed');
   });
   it('does not read without a site and never guesses on database error', async () => {
     await readHealthCounts([], Date.now());

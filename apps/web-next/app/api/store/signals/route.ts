@@ -16,17 +16,20 @@ export async function POST(request: NextRequest) {
     const read = await readLimitedJson(request, 512);
     if (!read.ok || !isJsonObject(read.value)) return quiet();
     const b = read.value;
-    if (Object.keys(b).some((k) => !['key', 'kind', 'placement', 'productDetected', 'pills'].includes(k))
+    if (Object.keys(b).some((k) => !['key', 'kind', 'placement', 'productDetected', 'pills', 'spotMissing'].includes(k))
       || typeof b.key !== 'string' || !/^[A-Za-z0-9_-]{6,128}$/.test(b.key)) return quiet();
     let counters: HealthCounter[];
     if (b.kind === 'product_page') {
       if (typeof b.productDetected !== 'boolean' || b.pills !== undefined
-        || (b.productDetected ? !['inline', 'floating'].includes(String(b.placement)) : b.placement !== undefined)) return quiet();
+        || (b.productDetected ? !['inline', 'floating'].includes(String(b.placement)) : b.placement !== undefined)
+        // The owner's chosen spot was not on a page the button was placed on (Pack B, B7.4).
+        || (b.spotMissing !== undefined && (b.spotMissing !== true || !b.productDetected))) return quiet();
       counters = [{ metric: 'product_detected', dimension: b.productDetected ? 'yes' : 'no', count: 1 }];
       if (b.productDetected) counters.push({ metric: 'placement', dimension: b.placement as string, count: 1 });
+      if (b.spotMissing === true) counters.push({ metric: 'spot_missing', dimension: '', count: 1 });
     } else if (b.kind === 'listing') {
       if (!Number.isInteger(b.pills) || (b.pills as number) < 0 || (b.pills as number) > 200
-        || b.placement !== undefined || b.productDetected !== undefined) return quiet();
+        || b.placement !== undefined || b.productDetected !== undefined || b.spotMissing !== undefined) return quiet();
       counters = [{ metric: 'listing_views', dimension: '', count: 1 }, { metric: 'pills', dimension: '', count: b.pills as number }];
     } else return quiet();
     const site = await loadPublicSite(b.key);

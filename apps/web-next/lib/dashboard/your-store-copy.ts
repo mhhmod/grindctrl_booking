@@ -48,6 +48,11 @@ export interface YourStoreCopy {
     productPages: string;
     floating: string;
     pickSpot: string;
+    /** Pack B, B7.4: the owner's chosen spot is no longer on their product pages. */
+    spotMoved: string;
+    pickAgain: string;
+    /** The owner chose the floating button (Pack B, B1.3), so floating is working as asked. */
+    floatingChosen: string;
     collectionPages: string;
     easyOrdersPills: string;
     productPhotos: string;
@@ -152,6 +157,9 @@ const en: YourStoreCopy = {
     productPages: "Product pages",
     floating: "Showing as a floating button. Pick a spot?",
     pickSpot: "Pick a spot",
+    spotMoved: 'Your chosen spot moved. Try-On is showing next to your Buy button until you pick again.',
+    pickAgain: 'Pick again',
+    floatingChosen: 'Floating button',
     collectionPages: "Collection pages",
     easyOrdersPills: "Show a Try-On pill on your collection pages. Needs Connect EasyOrders.",
     productPhotos: "Product photos",
@@ -262,6 +270,9 @@ const ar: YourStoreCopy = {
     productPages: "صفحات المنتجات",
     floating: "يظهر كزر عائم. هل تختار له مكانًا؟",
     pickSpot: "اختر المكان",
+    spotMoved: 'تغيّر المكان الذي اخترته. يظهر زر القياس بجوار زر الشراء حتى تختار من جديد.',
+    pickAgain: 'اختر من جديد',
+    floatingChosen: 'زر عائم',
     collectionPages: "صفحات المجموعات",
     easyOrdersPills: "اعرض شارة القياس الافتراضي في صفحات المجموعات. يحتاج إلى ربط EasyOrders.",
     productPhotos: "صور المنتجات",

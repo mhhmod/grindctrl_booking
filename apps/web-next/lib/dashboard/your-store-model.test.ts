@@ -348,7 +348,7 @@ describe.each(['en', 'ar'] as const)('Store check observations (%s)', (locale) =
     ]);
     expect(c.fix[0]).toMatchObject({ sentence: copy.rows.missingDetails, action: { label: copy.rows.askUs, href: 'mailto:grindctrlnow@gmail.com' } });
     expect(c.fix[1].sentence).toBe(copy.rows.photoFailure('cdn.example.com'));
-    expect(c.fix[2]).toMatchObject({ sentence: copy.rows.floating, action: { label: copy.rows.pickSpot, href: '/dashboard/try-on/setup' } });
+    expect(c.fix[2]).toMatchObject({ sentence: copy.rows.floating, action: { label: copy.rows.pickSpot, href: '/dashboard/try-on/setup#button-placement' } });
     expect(c.fix[3]).toMatchObject({ sentence: copy.updatedCodeNote, action: { label: copy.getUpdatedCode, href: INSTALL_HREF } });
   });
   it('uses More you can add for pills off, and only EasyOrders gets the connection line', () => {
@@ -368,6 +368,29 @@ describe.each(['en', 'ar'] as const)('Store check observations (%s)', (locale) =
   });
   it('does not claim missing product details when any visited product was detected', () => {
     expect(check({ health: { ...emptyHealth(), detected: 1, missing: 3 } }).fix).toEqual([]);
+  });
+  it('B7.4: a chosen spot missing in the last three days needs attention, with Pick again', () => {
+    const c = check({ platform: 'paste_website', placement: 'spot', health: { ...emptyHealth(), inline: 5, detected: 5, spotMissing: 2 } });
+    expect(c.fix).toEqual([{ key: 'productPages', kind: 'attention', title: copy.rows.productPages, sentence: copy.rows.spotMoved, domains: [],
+      action: { label: copy.rows.pickAgain, href: '/dashboard/try-on/setup#button-placement', primary: false } }]);
+    // Before any page view of today's window too: the row explains the fallback.
+    expect(check({ placement: 'spot', health: { ...emptyHealth(), spotMissing: 1 } }).fix[0].sentence).toBe(copy.rows.spotMoved);
+    // Members see the row without the fix.
+    expect(check({ placement: 'spot', canChange: false, health: { ...emptyHealth(), spotMissing: 1 } }).fix[0].action).toBeNull();
+  });
+  it('a found spot, or a missing count left over after switching away, is not a problem', () => {
+    expect(check({ placement: 'spot', health: { ...emptyHealth(), inline: 3, detected: 3 } }).fix).toEqual([]);
+    expect(check({ placement: 'auto', health: { ...emptyHealth(), inline: 3, detected: 3, spotMissing: 4 } }).fix).toEqual([]);
+  });
+  it('floating chosen by the owner works as asked, not a fix', () => {
+    const c = check({ placement: 'floating', health: { ...emptyHealth(), floating: 6, detected: 6 } });
+    expect(c.fix).toEqual([]);
+    expect(c.well.find((r) => r.key === 'productPages')).toMatchObject({ sentence: copy.rows.floatingChosen });
+  });
+  it('B7.4 strings are the handoff strings', () => {
+    expect([copy.rows.spotMoved, copy.rows.pickAgain]).toEqual(locale === 'en'
+      ? ['Your chosen spot moved. Try-On is showing next to your Buy button until you pick again.', 'Pick again']
+      : ['تغيّر المكان الذي اخترته. يظهر زر القياس بجوار زر الشراء حتى تختار من جديد.', 'اختر من جديد']);
   });
 });
 

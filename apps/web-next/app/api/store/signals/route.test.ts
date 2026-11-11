@@ -32,6 +32,22 @@ describe('private aggregate storefront signals', () => {
     await POST(request({ ...beacon, placement }));
     expect(m.write.mock.calls[0][1][1]).toEqual({ metric: 'placement', dimension: placement, count: 1 });
   });
+  it('records a missing chosen spot beside the placement it fell back to', async () => {
+    await POST(request({ ...beacon, spotMissing: true }));
+    expect(m.write).toHaveBeenCalledExactlyOnceWith('site-1', [
+      { metric: 'product_detected', dimension: 'yes', count: 1 }, { metric: 'placement', dimension: 'inline', count: 1 },
+      { metric: 'spot_missing', dimension: '', count: 1 },
+    ]);
+  });
+  it.each([
+    { ...beacon, spotMissing: false },
+    { ...beacon, spotMissing: 'yes' },
+    { key: beacon.key, kind: 'product_page', productDetected: false, spotMissing: true },
+    { key: beacon.key, kind: 'listing', pills: 2, spotMissing: true },
+  ])('ignores a malformed spot report %#', async (body) => {
+    expect((await POST(request(body))).status).toBe(204);
+    expect(m.write).not.toHaveBeenCalled();
+  });
   it('records a product-page detection miss without inventing placement', async () => {
     await POST(request({ key: beacon.key, kind: beacon.kind, productDetected: false }));
     expect(m.write).toHaveBeenCalledWith('site-1', [{ metric: 'product_detected', dimension: 'no', count: 1 }]);
