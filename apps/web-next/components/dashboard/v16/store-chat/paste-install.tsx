@@ -71,7 +71,11 @@ export function PasteInstall({
   const [now, setNow] = React.useState(0);
   const [stepsOpen, setStepsOpen] = React.useState(false);
   const [password, setPassword] = React.useState('');
-  const [checked, setChecked] = React.useState<{ outcome: PasteShopCheckOutcome | 'rate_limited'; retryAfter: number | null } | null>(null);
+  const [checked, setChecked] = React.useState<{ outcome: PasteShopCheckOutcome | 'rate_limited'; retryAfter: number | null; at: number } | null>(null);
+  /* What the check that found the code saw on the storefront: a product page
+     to open, and whether a password page stood in front. Not stored, so it
+     lasts for this visit to the dashboard. */
+  const [storefront, setStorefront] = React.useState<NonNullable<PasteShopProof['storefront']> | null>(null);
   /* A domain check that could not run this time (rate limited). */
   const [domainWait, setDomainWait] = React.useState<{ id: string; retryAfter: number | null } | null>(null);
 
@@ -136,7 +140,7 @@ export function PasteInstall({
   const confirming = Boolean(status?.domains.some((d) => !d.domainVerified && d.state !== 'disputed'));
   /* Installed once our code has ever run on the store. "seen" alone means the
      last 30 minutes, which a quiet store falls out of while it is working. */
-  const everSeen = Boolean(status?.seen || status?.shopLastSeenAt
+  const everSeen = Boolean(status?.seen || status?.shopLastSeenAt || status?.shopProof === 'proven'
     || status?.domains.some((d) => d.state === 'trusted' && d.lastSeenAt));
   const waiting = Boolean(snippet) && (!everSeen || confirming || (!status?.tryOnReady && settling));
   React.useEffect(() => {
@@ -194,7 +198,10 @@ export function PasteInstall({
     const typed = password.trim();
     const result = await run('check', () => actions.proveShop(siteId, typed || undefined));
     setPassword('');
-    if (result) setChecked({ outcome: result.outcome, retryAfter: result.retryAfterSeconds });
+    if (result) {
+      setChecked({ outcome: result.outcome, retryAfter: result.retryAfterSeconds, at: Date.now() });
+      if (result.storefront) setStorefront(result.storefront);
+    }
     await refresh();
   }
 
@@ -207,6 +214,17 @@ export function PasteInstall({
   const storeUrl = `https://${storeHost ?? ''}`;
   /* Our code has run on the store: the install part is done. */
   const installed = everSeen && status?.connectionReason !== 'shopify_app_installed';
+  /* The owner's own check answers until the store records a newer one (a
+     product page visit runs a check of its own). */
+  const ownCheck = checked && !(Date.parse(status?.shopCheck?.checkedAt ?? '') > checked.at) ? checked : null;
+  const shopOutcome = ownCheck?.outcome ?? status?.shopCheck?.outcome ?? null;
+  const shopRetryAfter = ownCheck ? ownCheck.retryAfter : status?.shopCheck?.retryAfterSeconds ?? null;
+  const passwordAsked = shopOutcome === 'password_required' || shopOutcome === 'password_rejected';
+  /* Shopify: a product page is where the signed render, Store Chat and the
+     button all show, so that is the page to open. */
+  const productUrl = connectedAs === 'shopify' ? storefront?.productUrl ?? null : null;
+  const visitUrl = productUrl ?? storeUrl;
+  const passwordPage = connectedAs === 'shopify' && (passwordAsked || Boolean(storefront?.passwordPage));
 
   return (
     <Stack gap="lg" className={classes.root}>
@@ -223,6 +241,7 @@ export function PasteInstall({
                   ? copy.tryOnOff
                   : status.tryOnReady ? copy.tryOnOn(Math.max(0, status.plan?.totalCreditsRemaining ?? 0)) : copy.tryOnReason(status.tryOnReason)}
               </Text>
+              {passwordPage ? <Text size="sm">{copy.passwordPageNote}</Text> : null}
             </Stack>
           </Group>
           {status.codeOutdated ? (
@@ -236,7 +255,7 @@ export function PasteInstall({
             </Alert>
           ) : null}
           <Group gap="xs" mt="sm">
-            <Button component="a" href={storeUrl} target="_blank" rel="noopener noreferrer" radius="pill" size="sm" rightSection={<GcIcon name="ext" size={14} />}>
+            <Button component="a" href={visitUrl} target="_blank" rel="noopener noreferrer" radius="pill" size="sm" rightSection={<GcIcon name="ext" size={14} />}>
               {copy.seeOnStore}
             </Button>
             <Button component={Link} href="/dashboard/try-on" variant="default" radius="pill" size="sm">
@@ -465,9 +484,10 @@ export function PasteInstall({
                 <Text size="sm" fw={600}>{copy.shopCheckTitle}</Text>
                 {status?.connectionReason === 'shop_proven_elsewhere' ? <Text size="sm">{copy.provenElsewhere}</Text> : null}
                 <Text size="sm">
-                  {copy.shopCheck(checked?.outcome ?? status?.shopCheck?.outcome ?? null, checked?.retryAfter ?? status?.shopCheck?.retryAfterSeconds ?? null)}
+                  {copy.shopCheck(shopOutcome, shopRetryAfter)}
                 </Text>
-                {(checked?.outcome ?? status?.shopCheck?.outcome) === 'password_required' || (checked?.outcome ?? status?.shopCheck?.outcome) === 'password_rejected' ? (
+                {passwordPage ? <Text size="sm" c="dimmed">{copy.passwordPageNote}</Text> : null}
+                {passwordAsked ? (
                   <PasswordInput
                     label={copy.passwordLabel}
                     description={copy.passwordHint}
@@ -478,9 +498,19 @@ export function PasteInstall({
                     maxLength={256}
                   />
                 ) : null}
-                <Button type="submit" radius="pill" size="xs" className={classes.copy} loading={busy === 'check'} disabled={!snippet}>
-                  {copy.checkStore}
-                </Button>
+                <Group gap="xs" wrap="wrap">
+                  {shopOutcome === 'awaiting_visit' ? (
+                    /* The code is there: the one thing left is a product page visit. */
+                    <Button component="a" href={visitUrl} target="_blank" rel="noopener noreferrer" radius="pill" size="xs"
+                      rightSection={<GcIcon name="ext" size={14} />}>
+                      {productUrl ? copy.openProductPage : copy.openStore}
+                    </Button>
+                  ) : null}
+                  <Button type="submit" radius="pill" size="xs" variant={shopOutcome === 'awaiting_visit' ? 'default' : 'filled'}
+                    className={classes.copy} loading={busy === 'check'} disabled={!snippet}>
+                    {copy.checkStore}
+                  </Button>
+                </Group>
               </form>
             ) : null}
             {/* Installed is independent of preview or live; Try-On says which. */}
@@ -508,15 +538,16 @@ export function PasteInstall({
                 <span className={classes.pulse} aria-hidden="true" />
                 <div>
                   <Text size="sm">{copy.waiting}</Text>
-                  <Text size="xs" c="dimmed">{copy.waitingHint}</Text>
+                  <Text size="xs" c="dimmed">{connectedAs === 'shopify' ? copy.waitingHintShopify : copy.waitingHint}</Text>
                 </div>
               </Group>
             ) : (
               <Text size="sm" c="dimmed">{copy.codeLocked}</Text>
             )}
-            {snippet && storeHost ? (
-              <Button component="a" href={storeUrl} target="_blank" rel="noopener noreferrer" variant="default" radius="pill" size="xs" mt="xs" className={classes.copy} rightSection={<GcIcon name="ext" size={14} />}>
-                {copy.openStore}
+            {/* Shopify's "found" state already shows this link as its main action. */}
+            {snippet && storeHost && !(connectedAs === 'shopify' && status?.shopProof !== 'proven' && shopOutcome === 'awaiting_visit') ? (
+              <Button component="a" href={visitUrl} target="_blank" rel="noopener noreferrer" variant="default" radius="pill" size="xs" mt="xs" className={classes.copy} rightSection={<GcIcon name="ext" size={14} />}>
+                {productUrl ? copy.openProductPage : copy.openStore}
               </Button>
             ) : null}
           </li>

@@ -113,6 +113,10 @@ export type PasteShopProof = {
   checkedAt: string | null;
   /** Seconds until another check can run; null when one can run now. */
   retryAfterSeconds: number | null;
+  /** Only from a check that just found the code: a product page the
+   *  storefront links to (null when none), and whether the storefront showed
+   *  its password page first. Never stored. */
+  storefront?: { productUrl: string | null; passwordPage: boolean };
 };
 
 /** The result of a domain snippet check ("Check my store" on a website

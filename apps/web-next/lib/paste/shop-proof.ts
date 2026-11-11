@@ -1,7 +1,8 @@
 import 'server-only';
 import { pasteShopCheckShopRatelimit, pasteShopCheckSiteRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError } from '@/lib/request-rate-limit';
-import { beginPasteShopCheck, finishPasteShopCheck, provePasteShop, recordPasteShopRender } from './store';
+import { scheduleStoreConnectedEmail } from '@/lib/email/store-connected-sender';
+import { beginPasteShopCheck, finishPasteShopCheck, provePasteShop, recordPasteShopRender, releasePasteShopCheck } from './store';
 import { recordedStorefrontEvidence, scanShopStorefront, type StorefrontEvidence } from './storefront-scan';
 import { PasteError, type PasteConnection, type PasteShopCheckOutcome, type PasteShopProof } from './types';
 
@@ -37,16 +38,32 @@ export function cachedShopCheck(connection: PasteConnection, ttlSeconds: number,
   return remaining > 0 ? pending(outcome, connection.shop_checked_at, Math.min(remaining, ttlSeconds)) : null;
 }
 
-async function prove(connection: PasteConnection, evidence: StorefrontEvidence, now: Date): Promise<PasteShopProof> {
+/** Outcomes of a check that could not look at the storefront at all. They
+ *  say nothing about the code, so they never replace an unexpired finding. */
+const COULD_NOT_LOOK: ReadonlySet<PasteShopProof['outcome']> = new Set(['password_required', 'password_rejected', 'unreachable', 'rate_limited']);
+
+/** The stored finding, unchanged, when `outcome` could not look and the
+ *  finding has not expired; otherwise null. Its time stays the time our
+ *  server saw the code, so this never extends its life. */
+function keptFinding(connection: PasteConnection, outcome: PasteShopProof['outcome'], now: Date,
+  retryAfterSeconds: number | null): PasteShopProof | null {
+  return COULD_NOT_LOOK.has(outcome) && recordedStorefrontEvidence(connection, now.getTime())
+    ? pending('awaiting_visit', connection.shop_checked_at, retryAfterSeconds) : null;
+}
+
+async function prove(connection: PasteConnection, evidence: StorefrontEvidence, now: Date,
+  storefront?: PasteShopProof['storefront']): Promise<PasteShopProof> {
   const result = await provePasteShop(connection, evidence);
   if (result === 'shopify_app_installed') throw new PasteError('connection_conflict');
   if (result === 'not_pending') throw new PasteError('not_found');
   if (result === 'render_required') {
     // The code is on the storefront, but no signed render came from it yet.
     await finishPasteShopCheck(connection, 'awaiting_visit');
-    return pending('awaiting_visit', now.toISOString(), null);
+    return { ...pending('awaiting_visit', now.toISOString(), null), ...(storefront ? { storefront } : {}) };
   }
-  return { shopProof: 'proven', shopProvenAt: now.toISOString(), outcome: 'proven', checkedAt: now.toISOString(), retryAfterSeconds: null };
+  scheduleStoreConnectedEmail(connection.widget_site_id, { path: 'shopify_paste', host: connection.shop_domain ?? '' });
+  return { shopProof: 'proven', shopProvenAt: now.toISOString(), outcome: 'proven', checkedAt: now.toISOString(), retryAfterSeconds: null,
+    ...(storefront ? { storefront } : {}) };
 }
 
 function log(connection: PasteConnection, trigger: ShopCheckTrigger, outcome: PasteShopProof['outcome'], failure?: string) {
@@ -101,7 +118,7 @@ export async function checkPasteShop(connection: PasteConnection | null, trigger
   } catch (error) {
     if (error instanceof RequestRateLimitError && error.status === 429) {
       log(connection, trigger, 'rate_limited');
-      return pending('rate_limited', null, error.retryAfterSeconds);
+      return keptFinding(connection, 'rate_limited', now, error.retryAfterSeconds) ?? pending('rate_limited', null, error.retryAfterSeconds);
     }
     throw new PasteError('unavailable');
   }
@@ -109,7 +126,7 @@ export async function checkPasteShop(connection: PasteConnection | null, trigger
   const lease = await beginPasteShopCheck(connection);
   if (lease === 'shopify_app_installed') throw new PasteError('connection_conflict');
   if (lease === 'not_pending') throw new PasteError('not_found');
-  if (lease === 'busy') return pending('rate_limited', null, BUSY_RETRY_SECONDS);
+  if (lease === 'busy') return keptFinding(connection, 'rate_limited', now, BUSY_RETRY_SECONDS) ?? pending('rate_limited', null, BUSY_RETRY_SECONDS);
 
   let scan: Awaited<ReturnType<typeof scanShopStorefront>>;
   try {
@@ -120,11 +137,19 @@ export async function checkPasteShop(connection: PasteConnection | null, trigger
     throw error instanceof PasteError ? error : new PasteError('unavailable');
   }
   if (scan.outcome === 'found') {
-    const result = await prove(connection, scan.evidence, now);
+    const result = await prove(connection, scan.evidence, now, { productUrl: scan.productUrl, passwordPage: scan.passwordPage });
     log(connection, trigger, result.outcome);
     return result;
   }
   const outcome: Exclude<PasteShopCheckOutcome, 'proven'> = scan.outcome;
+  // Asked again without the password (or the store did not answer): the
+  // code our server already saw is still there as far as anyone knows.
+  const kept = keptFinding(connection, outcome, now, null);
+  if (kept) {
+    await releasePasteShopCheck(connection);
+    log(connection, trigger, outcome, scan.failure);
+    return kept;
+  }
   await finishPasteShopCheck(connection, outcome);
   log(connection, trigger, outcome, scan.failure);
   return pending(outcome, now.toISOString(), SHOP_CHECK_RETRY_SECONDS[trigger.kind]);

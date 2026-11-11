@@ -1,5 +1,6 @@
 import 'server-only';
 import { after } from 'next/server';
+import { scheduleStoreConnectedEmail } from '@/lib/email/store-connected-sender';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { pasteDomainCheckAutoRatelimit, pasteDomainCheckHostRatelimit, pasteDomainCheckOwnerRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError } from '@/lib/request-rate-limit';
@@ -70,6 +71,7 @@ export async function checkPasteDomain(site: { id: string; embedKey: string }, d
   // The page is already here: fingerprint its store platform too.
   await recordPasteDomainPlatform(site.id, verified.domain, detectPlatform(scan.page).platform);
   log(site.id, trigger, 'verified', { grant });
+  scheduleStoreConnectedEmail(site.id, { path: 'website_paste', host: verified.domain });
   return { domain: verified, outcome: 'verified', retryAfterSeconds: null };
 }
 

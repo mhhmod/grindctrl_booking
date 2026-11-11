@@ -69,7 +69,7 @@
     widgetLoads[name] = new Promise(function (resolve, reject) {
       var script = document.createElement('script');
       script.async = true;
-      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=1363491c4422';
+      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=903f9d4af03c';
       script.onload = resolve;
       script.onerror = function () { delete widgetLoads[name]; reject(new Error('widget_unavailable')); };
       document.head.appendChild(script);
@@ -188,7 +188,7 @@
     var adapter;
     Promise.all([loadWidget('tryon-paste.js', 'GRINDCTRL_TRYON_PASTE').then(function () {
       adapter = window.GRINDCTRL_TRYON_PASTE.create({ script: SCRIPT, appOrigin: APP_ORIGIN,
-        locale: pasteLocale(), visitorId: launchVisitorId(), preview: previewToken() });
+        locale: pasteLocale(), visitorId: launchVisitorId(), preview: previewToken(), onProven: chatAfterProof });
       return adapter.prepare();
     }), loadWidget('tryon-engine.js', 'GRINDCTRL_TRYON_ENGINE')]).then(function (ready) {
       if (ready[0] && (!adapter.injectButton || adapter.placementTarget())) window.GRINDCTRL_TRYON_ENGINE.mount(adapter);
@@ -1248,45 +1248,53 @@
     drainQueue(); // API available immediately; calls run when ready below.
     try { bootPasteTryOn(); } catch (_) { /* isolated from chat */ }
     try { bootPickSpot(); } catch (_) { /* isolated from chat */ }
-    fetchConfig(function (config) {
-      state.config = config;
-      if (!config || !config.active || pageExcluded(config) || launchHidden(config)) return;
-      state.locale = resolveLocale(config);
-      if (v16Chat()) state.lift = stickyCartLift();
-      // A website's client-side routes change the piece the panel shows.
-      if (v16Chat() && genericSite()) followPage(function () { sendPageProduct(true); });
-      buildLauncher();
-      attachShopperToken();
-      track('loader_initialized', {});
+    fetchConfig(startChat);
+  }
+  /* A Shopify store's first product page visit can confirm it (tryon-paste.js
+     onProven). Its config was refused a moment ago, so ask once more: Store
+     Chat then appears on this same page instead of the next one. */
+  function chatAfterProof() {
+    if (!state.host) fetchConfig(startChat);
+  }
+  function startChat(config) {
+    if (state.host) return;
+    state.config = config;
+    if (!config || !config.active || pageExcluded(config) || launchHidden(config)) return;
+    state.locale = resolveLocale(config);
+    if (v16Chat()) state.lift = stickyCartLift();
+    // A website's client-side routes change the piece the panel shows.
+    if (v16Chat() && genericSite()) followPage(function () { sendPageProduct(true); });
+    buildLauncher();
+    attachShopperToken();
+    track('loader_initialized', {});
 
-      /* Respect Save-Data and 2g: on a metered or slow connection an unused
-         preload is a real cost to the shopper, and the click-time fetch is
-         the lesser evil. */
-      var conn = navigator.connection;
-      var frugal = conn && (conn.saveData === true || /(^|-)2g$/.test(conn.effectiveType || ''));
-      // v16 builds the panel on the first sign of intent, never on page load.
-      if (!frugal && !v16Chat()) {
-        var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 2500); };
-        idle(function () { warmPanel(); }, { timeout: 6000 });
-      }
+    /* Respect Save-Data and 2g: on a metered or slow connection an unused
+       preload is a real cost to the shopper, and the click-time fetch is
+       the lesser evil. */
+    var conn = navigator.connection;
+    var frugal = conn && (conn.saveData === true || /(^|-)2g$/.test(conn.effectiveType || ''));
+    // v16 builds the panel on the first sign of intent, never on page load.
+    if (!frugal && !v16Chat()) {
+      var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 2500); };
+      idle(function () { warmPanel(); }, { timeout: 6000 });
+    }
 
-      if (config.available && config.aiEnabled) {
-        if (config.behaviour.greetingEnabled) {
-          setTimeout(function () {
-            if (state.open) return;
-            showTeaser(pick(config.behaviour.greeting) ||
-              (state.locale === 'ar' ? 'مرحباً 👋 كيف نقدر نساعدك؟' : 'Hi 👋 How can we help?'), 'greeting');
-          }, clampDelay(config.behaviour.greetingDelaySeconds));
-        }
-        if (config.behaviour.proactiveEnabled) {
-          setTimeout(function () {
-            if (state.open) return;
-            showTeaser(pick(config.behaviour.welcomeSubtitle) ||
-              (state.locale === 'ar' ? 'اسألنا أي شيء.' : 'Ask us anything.'), 'proactive');
-          }, clampDelay(config.behaviour.proactiveDelaySeconds));
-        }
+    if (config.available && config.aiEnabled) {
+      if (config.behaviour.greetingEnabled) {
+        setTimeout(function () {
+          if (state.open) return;
+          showTeaser(pick(config.behaviour.greeting) ||
+            (state.locale === 'ar' ? 'مرحباً 👋 كيف نقدر نساعدك؟' : 'Hi 👋 How can we help?'), 'greeting');
+        }, clampDelay(config.behaviour.greetingDelaySeconds));
       }
-    });
+      if (config.behaviour.proactiveEnabled) {
+        setTimeout(function () {
+          if (state.open) return;
+          showTeaser(pick(config.behaviour.welcomeSubtitle) ||
+            (state.locale === 'ar' ? 'اسألنا أي شيء.' : 'Ask us anything.'), 'proactive');
+        }, clampDelay(config.behaviour.proactiveDelaySeconds));
+      }
+    }
   }
   function clampDelay(seconds) {
     var n = Number(seconds);

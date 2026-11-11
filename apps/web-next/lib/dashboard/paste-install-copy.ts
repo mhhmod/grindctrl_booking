@@ -35,6 +35,11 @@ export type PasteInstallCopy = {
   openStore: string;
   waiting: string;
   waitingHint: string;
+  /** Shopify: only a product page carries the signed render that finishes the check. */
+  waitingHintShopify: string;
+  openProductPage: string;
+  /** A password-protected Shopify store: what shoppers see until it is removed. */
+  passwordPageNote: string;
   chatLive: (domain: string) => string;
   tryOnLive: string;
   tryOnReason: (reason: string | null) => string;
@@ -121,6 +126,9 @@ const en: PasteInstallCopy = {
   openStore: 'Open my store',
   waiting: 'Waiting for your store',
   waitingHint: 'Open a page on your store. This updates by itself.',
+  waitingHintShopify: 'Open a product page on your store. This updates by itself.',
+  openProductPage: 'Open a product page',
+  passwordPageNote: 'Shoppers can’t see Store Chat or Try-On until you remove the password page in Shopify under Online Store, then Preferences.',
   chatLive: (domain) => `Your code is working on ${domain}.`,
   tryOnLive: 'Try-On shows on your product pages.',
   tryOnReason: (reason) => {
@@ -152,11 +160,11 @@ const en: PasteInstallCopy = {
   shopCheckTitle: 'Confirm it’s your store',
   shopCheck: (outcome, retryAfter) => {
     switch (outcome) {
-      case 'awaiting_visit': return 'We found your code. Open any page on your store to finish.';
+      case 'awaiting_visit': return 'We found your code. Now open a product page on your store. Store Chat and the Try-On button appear there, and this step finishes by itself.';
       case 'not_found': return 'We couldn’t find your code on your store yet. Check it’s saved in the theme, then try again.';
       case 'outdated_code': return 'Your store has an older copy of your code. Copy it again and replace it.';
       case 'wrong_site': return 'Your store shows code from another account. Replace it with your code, then check again.';
-      case 'password_required': return 'Your store has a password page. Enter the storefront password so we can check it.';
+      case 'password_required': return 'Your store has a password page. Enter your storefront password once so we can check it.';
       case 'password_rejected': return 'That password didn’t open your store. Find it in Shopify under Online Store, then Preferences.';
       case 'unreachable': return 'We couldn’t reach your store. Try again in a minute.';
       case 'rate_limited': return retryAfter ? `Too many checks. Try again in ${retryAfter} seconds.` : 'Too many checks. Try again shortly.';
@@ -245,6 +253,9 @@ const ar: PasteInstallCopy = {
   openStore: 'افتح متجري',
   waiting: 'بانتظار متجرك',
   waitingHint: 'افتح أي صفحة في متجرك، وستتحدث هذه الحالة تلقائياً.',
+  waitingHintShopify: 'افتح صفحة منتج في متجرك، وستتحدث هذه الحالة تلقائياً.',
+  openProductPage: 'افتح صفحة منتج',
+  passwordPageNote: 'لن يرى المتسوقون دردشة المتجر أو التجربة الافتراضية حتى تزيل صفحة كلمة المرور من Shopify عبر المتجر الإلكتروني ثم التفضيلات.',
   chatLive: (domain) => `الكود يعمل على ${domain}.`,
   tryOnLive: 'التجربة الافتراضية تظهر في صفحات منتجاتك.',
   tryOnReason: (reason) => {
@@ -276,11 +287,11 @@ const ar: PasteInstallCopy = {
   shopCheckTitle: 'أكّد أن المتجر لك',
   shopCheck: (outcome, retryAfter) => {
     switch (outcome) {
-      case 'awaiting_visit': return 'وجدنا الكود. افتح أي صفحة في متجرك لإكمال التأكيد.';
+      case 'awaiting_visit': return 'وجدنا الكود. افتح الآن صفحة منتج في متجرك. ستظهر فيها دردشة المتجر وزر التجربة الافتراضية، وتكتمل هذه الخطوة تلقائياً.';
       case 'not_found': return 'لم نجد الكود في متجرك بعد. تأكد من حفظه في القالب ثم حاول مجدداً.';
       case 'outdated_code': return 'في متجرك نسخة قديمة من الكود. انسخه من جديد واستبدلها.';
       case 'wrong_site': return 'يظهر في متجرك كود من حساب آخر. استبدله بالكود الخاص بك ثم تحقق مجدداً.';
-      case 'password_required': return 'لمتجرك صفحة كلمة مرور. أدخل كلمة مرور واجهة المتجر لنتحقق منه.';
+      case 'password_required': return 'لمتجرك صفحة كلمة مرور. أدخل كلمة مرور واجهة المتجر مرة واحدة لنتحقق منه.';
       case 'password_rejected': return 'لم تفتح كلمة المرور هذه متجرك. تجدها في Shopify من المتجر الإلكتروني ثم التفضيلات.';
       case 'unreachable': return 'لم نتمكن من الوصول إلى متجرك. حاول بعد دقيقة.';
       case 'rate_limited': return retryAfter ? `محاولات كثيرة. حاول بعد ${retryAfter} ثانية.` : 'محاولات كثيرة. حاول بعد قليل.';

@@ -183,6 +183,71 @@ describe('paste install journey', () => {
     await waitFor(() => expect(screen.getByLabelText(copy.passwordLabel)).toHaveValue(''));
   });
 
+  describe('a pending Shopify store, after "Check my store"', () => {
+    const shopify = (over: Partial<PasteInstallStatus> = {}) => status({ platform: 'shopify', shopDomain: 'my-store.myshopify.com', shopProof: 'pending',
+      trusted: false, connectionReason: 'shop_proof_pending', tryOnReason: 'shop_proof_pending', ...over });
+    const found = { shopProof: 'pending' as const, shopProvenAt: null, outcome: 'awaiting_visit' as const, checkedAt: new Date().toISOString(),
+      retryAfterSeconds: null, storefront: { productUrl: 'https://my-store.myshopify.com/products/linen-dress', passwordPage: false } };
+
+    it('names the next action, a product page, and links straight to one', async () => {
+      const a = actions(shopify());
+      a.proveShop = vi.fn(async () => ({ ok: true as const, data: found }));
+      renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+      fireEvent.click(await screen.findByRole('button', { name: copy.checkStore }));
+      expect(await screen.findByText(copy.shopCheck('awaiting_visit', null))).toBeInTheDocument();
+      expect(copy.shopCheck('awaiting_visit', null)).toMatch(/product page.*Store Chat and the Try-On button/);
+      const links = screen.getAllByRole('link', { name: copy.openProductPage });
+      expect(links).toHaveLength(1);
+      expect(links[0]).toHaveAttribute('href', 'https://my-store.myshopify.com/products/linen-dress');
+      expect(links[0]).toHaveAttribute('target', '_blank');
+      expect(screen.getByText(copy.waitingHintShopify)).toBeInTheDocument();
+      expect(screen.queryByText(copy.passwordPageNote)).not.toBeInTheDocument();
+    });
+
+    it('falls back to the store itself when no product page is known', async () => {
+      const a = actions(shopify({ shopCheck: { outcome: 'awaiting_visit', checkedAt: new Date().toISOString(), retryAfterSeconds: null } }));
+      renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+      expect(await screen.findByText(copy.shopCheck('awaiting_visit', null))).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: copy.openStore })).toHaveAttribute('href', 'https://my-store.myshopify.com');
+    });
+
+    it('says a password-protected store needs its password once and is hidden from shoppers until the page is removed', async () => {
+      const a = actions(shopify({ shopCheck: { outcome: 'password_required', checkedAt: new Date().toISOString(), retryAfterSeconds: null } }));
+      renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+      expect(await screen.findByText(copy.shopCheck('password_required', null))).toHaveTextContent(/password once/);
+      expect(screen.getByText(copy.passwordPageNote)).toHaveTextContent('Online Store, then Preferences');
+      expect(screen.getByLabelText(copy.passwordLabel)).toBeInTheDocument();
+      // Found behind the password: the note stays with the next step.
+      a.proveShop = vi.fn(async () => ({ ok: true as const, data: { ...found, storefront: { productUrl: null, passwordPage: true } } }));
+      fireEvent.change(screen.getByLabelText(copy.passwordLabel), { target: { value: 'opensesame' } });
+      fireEvent.click(screen.getByRole('button', { name: copy.checkStore }));
+      expect(await screen.findByText(copy.shopCheck('awaiting_visit', null))).toBeInTheDocument();
+      expect(screen.getByText(copy.passwordPageNote)).toBeInTheDocument();
+      expect(screen.queryByLabelText(copy.passwordLabel)).not.toBeInTheDocument();
+    });
+
+    it('turns into the success state by itself when the visit proves the store, then stops polling', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        const a = actions(shopify({ shopCheck: { outcome: 'awaiting_visit', checkedAt: new Date().toISOString(), retryAfterSeconds: null } }));
+        renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+        expect(await screen.findByText(copy.shopCheck('awaiting_visit', null))).toBeInTheDocument();
+        // The product page visit proved the shop (no Store Chat signal needed yet).
+        a.current.value = shopify({ shopProof: 'proven', shopProvenAt: new Date().toISOString(), trusted: true, connectionReason: null,
+          tryOnReady: true, tryOnReason: null, shopCheck: { outcome: 'proven', checkedAt: new Date().toISOString(), retryAfterSeconds: null } });
+        await vi.advanceTimersByTimeAsync(5000);
+        expect(await screen.findByText(copy.installedTitle('my-store.myshopify.com'))).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: copy.seeOnStore })).toHaveAttribute('href', 'https://my-store.myshopify.com');
+        expect(screen.queryByText(copy.shopCheckTitle)).not.toBeInTheDocument();
+        const reads = vi.mocked(a.status).mock.calls.length;
+        await vi.advanceTimersByTimeAsync(15_000);
+        expect(vi.mocked(a.status).mock.calls.length).toBe(reads);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
   it('tells a store run by the Shopify app to use the app', async () => {
     const a = actions(status({ platform: 'shopify', shopDomain: 'my-store.myshopify.com', trusted: false, connectionReason: 'shopify_app_installed' }));
     renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);

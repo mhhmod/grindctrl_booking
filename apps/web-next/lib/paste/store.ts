@@ -294,6 +294,16 @@ export async function finishPasteShopCheck(connection: PasteConnection, outcome:
   await shopRpc('finish_paste_shop_check', connection, ['recorded'] as const, { p_outcome: outcome });
 }
 
+/** Ends the lease of a check that stores nothing: one that could not look at
+ *  the storefront while an earlier finding is still fresh. The finding and
+ *  its time stay exactly as they were. */
+export async function releasePasteShopCheck(connection: PasteConnection): Promise<void> {
+  if (connection.platform !== 'shopify' || !connection.shop_domain) return;
+  checked(await getMessengerServiceClient().from('paste_site_connections').update({ shop_check_started_at: null })
+    .eq('widget_site_id', connection.widget_site_id).eq('platform', 'shopify').eq('shop_domain', connection.shop_domain)
+    .eq('status', 'pending'));
+}
+
 export type PasteSignalResult = 'granted' | 'apex_taken' | 'recorded' | 'unverified' | 'ignored' | 'unavailable';
 
 /** Only browser Origin / signed-origin-token authorized config/heartbeat

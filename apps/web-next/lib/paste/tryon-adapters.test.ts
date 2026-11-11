@@ -439,6 +439,59 @@ describe("the pasted product button waits for the store's config", () => {
     expect(button!.dataset.gcStyled).toBeUndefined();
   });
 
+  describe('a Shopify store still waiting for its proof (root cause 1)', () => {
+    const PENDING = { tryOn: 'hidden', reason: 'shop_proof_pending', showCardPill: false };
+    const contextCalls = () => pageFetch.mock.calls.filter(([url]) => String(url) === `${APP}/api/try-on/paste-context`);
+    function pendingShop(onProven = vi.fn()) {
+      shopifyPage();
+      configFetch.mockResolvedValueOnce(json(PENDING));
+      const a = paste().create({ script: snippet('shopify'), appOrigin: APP, locale: 'en', visitorId: 'shared-visitor-123456', onProven });
+      return { a, onProven };
+    }
+
+    it('sends this page’s signed render once and shows the button only when it completes the proof', async () => {
+      vi.stubGlobal('CSS', supports);
+      pageFetch.mockResolvedValueOnce(json(shopifyProduct))
+        .mockResolvedValueOnce(json({ ...shopifyContext(), settings: { buttonLabel: 'Try it on', accentBg: '#112233' } }));
+      const { a, onProven } = pendingShop();
+      const button = await boot(a);
+      expect(contextCalls()).toHaveLength(1);
+      expect(bodyOf(1)).toMatchObject({ key: 'embed-key', productId: '42', variantId: '77', codeVersion: 1,
+        signed: { siteId: 'site-id', shopDomain: 'shop.myshopify.com', productId: '42', variantId: '77', issuedAt: '123', signature: 'signed' } });
+      expect(button).not.toBeNull();
+      expect(button!.querySelector('.gc-tryon-label')).toHaveTextContent('Try it on');
+      expect(button!.style.getPropertyValue('--gc-bg')).toBe('#112233');
+      expect(onProven).toHaveBeenCalledOnce();
+      // The proof's context serves the shopper's tap: the same render is never sent twice.
+      await a.getContext(a.detectProduct()!);
+      expect(contextCalls()).toHaveLength(1);
+    });
+
+    it('shows nothing and does not retry when the server says the proof is still pending', async () => {
+      pageFetch.mockResolvedValueOnce(json(shopifyProduct)).mockResolvedValueOnce(json({ error: 'shop_proof_pending' }, 403));
+      const { a, onProven } = pendingShop();
+      expect(await boot(a)).toBeNull();
+      await tick();
+      expect(contextCalls()).toHaveLength(1);
+      expect(onProven).not.toHaveBeenCalled();
+    });
+
+    it('never asks for a context for any other hidden reason', async () => {
+      shopifyPage();
+      pageFetch.mockResolvedValueOnce(json(shopifyProduct));
+      configFetch.mockResolvedValueOnce(json({ tryOn: 'hidden', reason: 'paste_not_connected', showCardPill: false }));
+      expect(await boot(adapter('shopify'))).toBeNull();
+      expect(contextCalls()).toHaveLength(0);
+    });
+
+    it('sends nothing from a page whose product does not match the signed render', async () => {
+      pageFetch.mockResolvedValueOnce(json({ ...shopifyProduct, id: 999 }));
+      const { a } = pendingShop();
+      expect(await boot(a)).toBeNull();
+      expect(contextCalls()).toHaveLength(0);
+    });
+  });
+
   it('adds no button when the product cannot be read, whatever the config says', async () => {
     shopifyPage();
     pageFetch.mockResolvedValueOnce(json({ ...shopifyProduct, id: 999 }));
@@ -529,6 +582,36 @@ describe('messenger paste loading', () => {
     await tick();
     expect(mount).toHaveBeenCalledOnce();
     expect(pageFetch.mock.calls.some(([url]) => String(url).startsWith(`${APP}/api/messenger/config?key=embed-key`))).toBe(true);
+  });
+  it('starts Store Chat on the same page once its signed render confirmed a waiting Shopify store', async () => {
+    shopifyPage();
+    vi.spyOn(document, 'currentScript', 'get').mockReturnValue(snippet('shopify'));
+    const chat = { v: 1, key: 'embed-key', active: true, available: true, aiEnabled: false, features: [],
+      appearance: { position: 'bottom-right', accentColor: '#222222', launcherIcon: 'chat', launcherLabel: { en: 'Chat', ar: 'محادثة' },
+        launcherSizePx: 56, radiusStyle: 'soft', languageMode: 'auto' },
+      behaviour: { greetingEnabled: false, proactiveEnabled: false, targetingMode: 'all', excludePatterns: [] } };
+    let proven = false;
+    pageFetch.mockImplementation(async (url) => String(url).includes('/api/messenger/config')
+      ? (proven ? json(chat) : json({ error: 'origin_not_allowed' }, 403)) : json(null));
+    let options: { onProven?: () => void } = {};
+    globals.GRINDCTRL_TRYON_PASTE = { create: (given: typeof options) => { options = given; return { prepare: () => Promise.resolve(false) }; } };
+    globals.GRINDCTRL_TRYON_ENGINE = { mount: vi.fn() };
+    (0, eval)(source('messenger'));
+    document.dispatchEvent(new Event('DOMContentLoaded'));
+    await vi.waitFor(() => expect(typeof options.onProven).toBe('function'));
+    await tick();
+    const configCalls = () => pageFetch.mock.calls.filter(([url]) => String(url).includes('/api/messenger/config')).length;
+    expect(configCalls()).toBe(1);
+    expect(document.querySelector('[data-gc-chat-launcher]')).toBeNull();
+
+    proven = true;
+    options.onProven!();
+    await vi.waitFor(() => expect(document.querySelector('[data-gc-chat-launcher]')).not.toBeNull());
+    expect(configCalls()).toBe(2);
+    options.onProven!(); // A second call is a no-op once Store Chat is up.
+    await tick();
+    expect(configCalls()).toBe(2);
+    expect(document.querySelectorAll('[data-gc-chat-launcher]')).toHaveLength(1);
   });
   it('chat boots even when product adapter loading fails', async () => {
     shopifyPage();

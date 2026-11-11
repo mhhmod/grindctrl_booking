@@ -2,9 +2,10 @@
 import { createHmac } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const m = vi.hoisted(() => ({ render: vi.fn(), begin: vi.fn(), finish: vi.fn(), prove: vi.fn(), siteLimit: vi.fn(), shopLimit: vi.fn() }));
+const m = vi.hoisted(() => ({ render: vi.fn(), begin: vi.fn(), finish: vi.fn(), release: vi.fn(), prove: vi.fn(), siteLimit: vi.fn(), shopLimit: vi.fn(), email: vi.fn() }));
 vi.mock('@/lib/paste/store', () => ({ recordPasteShopRender: m.render, beginPasteShopCheck: m.begin,
-  finishPasteShopCheck: m.finish, provePasteShop: m.prove }));
+  finishPasteShopCheck: m.finish, releasePasteShopCheck: m.release, provePasteShop: m.prove }));
+vi.mock('@/lib/email/store-connected-sender', () => ({ scheduleStoreConnectedEmail: m.email }));
 vi.mock('@/lib/ratelimit', () => ({ pasteShopCheckSiteRatelimit: { limit: m.siteLimit }, pasteShopCheckShopRatelimit: { limit: m.shopLimit } }));
 
 import { checkPasteShop, SHOP_CHECK_RETRY_SECONDS } from './shop-proof';
@@ -23,15 +24,16 @@ const pending: PasteConnection = {
   disconnected_reason: null, shop_render_at: null, shop_check_outcome: null, shop_checked_at: null, app_installed: false,
 };
 const evidence = { siteId: SITE, shopDomain: SHOP } as StorefrontEvidence;
-const found = vi.fn(async (): Promise<StorefrontScan> => ({ outcome: 'found', evidence, host: SHOP }));
+const PRODUCT = `https://${SHOP}/products/dress`;
+const found = vi.fn(async (): Promise<StorefrontScan> => ({ outcome: 'found', evidence, host: SHOP, productUrl: PRODUCT, passwordPage: false }));
 const ago = (seconds: number) => new Date(NOW.getTime() - seconds * 1000).toISOString();
 const allowed = { success: true, reset: NOW.getTime() + 1000 };
 
 beforeEach(() => {
   vi.resetAllMocks();
   vi.stubEnv('GRINDCTRL_CAPABILITY_SECRET', 'test-only-independent-core-key-with-at-least-32-bytes');
-  found.mockImplementation(async () => ({ outcome: 'found', evidence, host: SHOP }));
-  m.render.mockResolvedValue('recorded'); m.begin.mockResolvedValue('started'); m.finish.mockResolvedValue(undefined);
+  found.mockImplementation(async () => ({ outcome: 'found', evidence, host: SHOP, productUrl: PRODUCT, passwordPage: false }));
+  m.render.mockResolvedValue('recorded'); m.begin.mockResolvedValue('started'); m.finish.mockResolvedValue(undefined); m.release.mockResolvedValue(undefined);
   m.prove.mockResolvedValue('proven'); m.siteLimit.mockResolvedValue(allowed); m.shopLimit.mockResolvedValue(allowed);
   vi.spyOn(console, 'info').mockImplementation(() => undefined);
 });
@@ -40,7 +42,8 @@ afterEach(() => { vi.unstubAllEnvs(); vi.restoreAllMocks(); });
 describe('storefront proof for a pending Shopify shop', () => {
   it('proves from a verified render once the storefront shows this site\'s code', async () => {
     const result = await checkPasteShop(pending, { kind: 'render' }, { scan: found, now: NOW });
-    expect(result).toEqual({ shopProof: 'proven', shopProvenAt: NOW.toISOString(), outcome: 'proven', checkedAt: NOW.toISOString(), retryAfterSeconds: null });
+    expect(result).toEqual({ shopProof: 'proven', shopProvenAt: NOW.toISOString(), outcome: 'proven', checkedAt: NOW.toISOString(), retryAfterSeconds: null,
+      storefront: { productUrl: PRODUCT, passwordPage: false } });
     expect(m.render).toHaveBeenCalledExactlyOnceWith(pending);
     expect(m.siteLimit).toHaveBeenCalledWith(`paste-shop-check:site:${SITE}`);
     expect(m.shopLimit).toHaveBeenCalledWith(`paste-shop-check:shop:${SHOP}`);
@@ -163,6 +166,69 @@ describe('connection states', () => {
     await expect(checkPasteShop(pending, { kind: 'render' }, { scan: found, now: NOW })).rejects.toMatchObject({ code: 'connection_conflict' });
     m.begin.mockResolvedValue('shopify_app_installed');
     await expect(checkPasteShop(pending, { kind: 'owner' }, { scan: found, now: NOW })).rejects.toBeInstanceOf(PasteError);
+  });
+});
+
+describe('a finding survives a later check that could not look (root cause 2)', () => {
+  const foundAt = ago(5 * 60);
+  const waiting = { ...pending, shop_check_outcome: 'awaiting_visit' as const, shop_checked_at: foundAt };
+
+  it.each(['password_required', 'password_rejected', 'unreachable'] as const)(
+    'keeps an unexpired finding, and its time, when the next check says %s', async (outcome) => {
+      const result = await checkPasteShop(waiting, { kind: 'owner' }, { scan: async () => ({ outcome }), now: NOW });
+      expect(result).toEqual({ shopProof: 'pending', shopProvenAt: null, outcome: 'awaiting_visit', checkedAt: foundAt, retryAfterSeconds: null });
+      expect(m.finish).not.toHaveBeenCalled();
+      expect(m.release).toHaveBeenCalledExactlyOnceWith(waiting);
+      expect(vi.mocked(console.info)).toHaveBeenCalledWith('[paste] storefront check', expect.objectContaining({ outcome }));
+    });
+
+  it('keeps it when the owner is rate limited or another check holds the lease', async () => {
+    m.begin.mockResolvedValue('busy');
+    expect(await checkPasteShop(waiting, { kind: 'owner' }, { scan: found, now: NOW }))
+      .toEqual({ shopProof: 'pending', shopProvenAt: null, outcome: 'awaiting_visit', checkedAt: foundAt, retryAfterSeconds: 10 });
+    m.begin.mockResolvedValue('started');
+    m.siteLimit.mockResolvedValue({ success: false, reset: NOW.getTime() + 42_000 });
+    vi.useFakeTimers({ now: NOW });
+    try {
+      expect(await checkPasteShop(waiting, { kind: 'owner' }, { scan: found, now: NOW })).toMatchObject({ outcome: 'awaiting_visit', checkedAt: foundAt });
+    } finally { vi.useRealTimers(); }
+    expect(m.finish).not.toHaveBeenCalled();
+  });
+
+  it('lets the next render finish the proof after such a check', async () => {
+    await checkPasteShop(waiting, { kind: 'owner' }, { scan: async () => ({ outcome: 'password_required' }), now: NOW });
+    // The stored row is unchanged, so the render still completes the proof.
+    expect((await checkPasteShop(waiting, { kind: 'render' }, { scan: found, now: NOW })).outcome).toBe('proven');
+    expect(m.prove).toHaveBeenCalledExactlyOnceWith(waiting, { siteId: SITE, shopDomain: SHOP });
+  });
+
+  it.each(['not_found', 'wrong_site', 'outdated_code'] as const)('replaces the finding when a check positively finds %s', async (outcome) => {
+    const result = await checkPasteShop(waiting, { kind: 'owner' }, { scan: async () => ({ outcome }), now: NOW });
+    expect(result.outcome).toBe(outcome);
+    expect(m.finish).toHaveBeenCalledExactlyOnceWith(waiting, outcome);
+    expect(m.release).not.toHaveBeenCalled();
+  });
+
+  it('stores password_required once the finding has expired', async () => {
+    const old = { ...waiting, shop_checked_at: ago(16 * 60) };
+    expect((await checkPasteShop(old, { kind: 'render' }, { scan: async () => ({ outcome: 'password_required' }), now: NOW })).outcome)
+      .toBe('password_required');
+    expect(m.finish).toHaveBeenCalledExactlyOnceWith(old, 'password_required');
+  });
+});
+
+describe('what a successful check tells the dashboard, and the connected email', () => {
+  it('returns the product page and password page the check saw, without proving yet', async () => {
+    m.prove.mockResolvedValue('render_required');
+    found.mockImplementation(async () => ({ outcome: 'found', evidence, host: SHOP, productUrl: PRODUCT, passwordPage: true }));
+    expect(await checkPasteShop(pending, { kind: 'owner', password: PASSWORD }, { scan: found, now: NOW })).toMatchObject({
+      outcome: 'awaiting_visit', storefront: { productUrl: PRODUCT, passwordPage: true } });
+    expect(m.email).not.toHaveBeenCalled();
+  });
+
+  it('schedules the connected email for the site the moment its shop is proven', async () => {
+    await checkPasteShop(pending, { kind: 'render' }, { scan: found, now: NOW });
+    expect(m.email).toHaveBeenCalledExactlyOnceWith(SITE, { path: 'shopify_paste', host: SHOP });
   });
 });
 
