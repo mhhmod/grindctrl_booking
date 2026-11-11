@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { revalidatePath } from 'next/cache';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { syncSiteProducts } from '@/lib/messenger/products';
+vi.mock('@/lib/messenger/products', () => ({ syncSiteProducts: vi.fn(async () => ({ count: 2 })) }));
 import { requireMerchantRateLimit, RequestRateLimitError } from '@/lib/request-rate-limit';
 vi.mock('@/lib/request-rate-limit', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/lib/request-rate-limit')>(),
@@ -123,6 +125,7 @@ const SITE = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(syncSiteProducts).mockResolvedValue({ count: 2 });
   mocks.auth.mockResolvedValue({ userId: 'user_owner' });
   mocks.requireSiteAccess.mockResolvedValue(SITE);
   mocks.getProfileId.mockResolvedValue('profile-1');
@@ -130,6 +133,13 @@ beforeEach(() => {
 });
 
 describe('messenger server actions — authorization', () => {
+  it('syncs products only after settings permission and the existing write limit', async () => {
+    const result = await actions.syncKnowledgeProducts(SITE.id);
+    expect(result).toMatchObject({ ok: true, message: '2 products synced.' });
+    expect(mocks.requireSiteAccess).toHaveBeenCalledWith('user_owner', SITE.id, 'settings');
+    expect(requireMerchantRateLimit).toHaveBeenCalledWith('shop:sara.myshopify.com', 'write');
+    expect(syncSiteProducts).toHaveBeenCalledWith(SITE);
+  });
   it('blocks a limited owned shop before any mutation and gives actionable retry copy', async () => {
     vi.mocked(requireMerchantRateLimit).mockRejectedValueOnce(new RequestRateLimitError(429, 12));
     expect(await publishConfig(SITE.id)).toEqual({ ok: false, error: 'Too many requests. Please try again in 12 seconds.' });
@@ -551,6 +561,10 @@ describe('roles on a team store', () => {
     return form;
   };
   const cases: Array<[string, DashboardCapability, () => Promise<unknown>]> = [
+    ['syncKnowledgeProducts', 'settings', () => actions.syncKnowledgeProducts('site-1')],
+    ['listInboxConversations', 'chats', () => actions.listInboxConversations({ siteId: 'site-1' })],
+    ['inboxChangesSince', 'chats', () => actions.inboxChangesSince('site-1', '2026-11-11T00:00:00Z')],
+    ['inboxHandoffsSince', 'chats', () => actions.inboxHandoffsSince('site-1', '2026-11-11T00:00:00Z')],
     ['saveDraftSection', 'settings', () => actions.saveDraftSection('site-1', 'appearance', {})],
     ['saveDraftSections', 'settings', () => actions.saveDraftSections('site-1', [])],
     ['publishConfig', 'settings', () => actions.publishConfig('site-1')],
@@ -604,6 +618,7 @@ describe('roles on a team store', () => {
         expect(mocks.unclaimSite).not.toHaveBeenCalled();
         expect(mocks.recordAudit).not.toHaveBeenCalled();
         expect(mocks.insert).not.toHaveBeenCalled();
+        expect(syncSiteProducts).not.toHaveBeenCalled();
         expect(revalidatePath).not.toHaveBeenCalled();
       },
     );

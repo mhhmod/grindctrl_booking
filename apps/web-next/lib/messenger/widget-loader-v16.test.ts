@@ -248,6 +248,10 @@ describe('the v16 Store Chat shell', () => {
             product: {
               handle: 'layla-abaya',
               title: 'Layla Embroidered Abaya',
+              url: 'http://localhost:3000/products/layla-abaya',
+              description: '',
+              availability: 'unknown',
+              sizes: ['Black / S', 'Black / M'],
               imageUrl: 'https://cdn.shopify.com/s/files/layla.jpg',
               variantId: '457',
               variantTitle: 'Black / M',

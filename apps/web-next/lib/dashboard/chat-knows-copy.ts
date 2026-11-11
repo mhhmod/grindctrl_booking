@@ -8,6 +8,9 @@ import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import { arCount } from './today-copy';
 
 export interface ChatKnowsCopy {
+  syncProducts: string;
+  productsSynced: (count: number) => string;
+  productsSkipped: string;
   tabsLabel: string;
   whatItKnows: string;
   setUp: string;
@@ -68,6 +71,9 @@ const arChats = (n: number) =>
   arCount(n, { one: 'محادثة واحدة', two: 'محادثتين', few: (k) => `${k} محادثات`, many: (k) => `${k} محادثة` });
 
 const en: ChatKnowsCopy = {
+  syncProducts: 'Sync products now',
+  productsSynced: (count) => `${count} products synced.`,
+  productsSkipped: 'Catalogue sync is available for Shopify and WooCommerce stores.',
   tabsLabel: 'Store Chat',
   whatItKnows: 'What it knows',
   setUp: 'Set up',
@@ -121,6 +127,9 @@ const en: ChatKnowsCopy = {
 };
 
 const ar: ChatKnowsCopy = {
+  syncProducts: 'مزامنة المنتجات الآن',
+  productsSynced: (count) => `تمت مزامنة ${count} من المنتجات.`,
+  productsSkipped: 'مزامنة المنتجات متاحة لمتاجر شوبيفاي وووكومرس.',
   tabsLabel: 'دردشة المتجر',
   whatItKnows: 'ما يعرفه',
   setUp: 'الإعداد',

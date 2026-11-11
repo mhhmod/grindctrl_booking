@@ -136,10 +136,15 @@ describe('Store Chat on a WooCommerce store', () => {
     expect(parsePageProduct(message.product)).toEqual({
       handle: 'layla-abaya',
       title: 'Layla Abaya',
+      url: 'http://localhost:3000/product/layla-abaya/',
+      description: '',
+      availability: 'in_stock',
+      sizes: ['s', 'm'],
       imageUrl: 'https://dar-layla.test/wp-content/uploads/layla-m.jpg',
       variantId: '72',
       variantTitle: 'm',
       priceMinor: 130050,
+      price: '1300.5',
       currency: 'EGP',
       tryOn: false,
     });

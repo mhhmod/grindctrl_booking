@@ -10,6 +10,11 @@ export type PageProduct = {
   variantTitle: string;
   priceMinor: number | null;
   currency: string | null;
+  price?: string;
+  url?: string;
+  description?: string;
+  availability?: string;
+  sizes?: string[];
   /** The store's try-on button is on the page. */
   tryOn: boolean;
 };
@@ -35,6 +40,18 @@ export function parsePageProduct(raw: unknown): PageProduct | null {
     variantTitle: text(p.variantTitle, 120),
     priceMinor: typeof p.priceMinor === 'number' && Number.isInteger(p.priceMinor) && p.priceMinor >= 0 ? p.priceMinor : null,
     currency: typeof p.currency === 'string' && /^[A-Z]{3}$/.test(p.currency) ? p.currency : null,
+    ...(typeof p.price === 'string' && /^\d{1,12}(?:\.\d{1,4})?$/.test(p.price) ? { price: p.price } : {}),
     tryOn: p.tryOn === true,
+    ...(typeof p.url === 'string' ? { url: text(p.url, 2000) } : {}),
+    ...(typeof p.description === 'string' ? { description: text(p.description, 600) } : {}),
+    ...(typeof p.availability === 'string' ? { availability: text(p.availability, 30) } : {}),
+    ...(Array.isArray(p.sizes) ? { sizes: p.sizes.slice(0, 30).map((v) => text(v, 80)) } : {}),
   };
+}
+
+export function pageProductHint(product: PageProduct | null) {
+  if (!product) return undefined;
+  const digits = product.currency ? new Intl.NumberFormat('en', { style: 'currency', currency: product.currency }).resolvedOptions().maximumFractionDigits ?? 2 : 2;
+  return { title: product.title, url: product.url, description: product.description, availability: product.availability,
+    sizes: product.sizes, currency: product.currency, price: product.price ?? (product.priceMinor == null || !product.currency ? null : (product.priceMinor / 10 ** digits).toFixed(digits)) };
 }

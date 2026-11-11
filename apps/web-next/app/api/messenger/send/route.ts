@@ -54,6 +54,8 @@ import {
   type HandoffRuleReason,
 } from '@/lib/messenger/handoff-rules';
 import { parseCart } from '@/lib/messenger/cart';
+import { parseProductContext } from '@/lib/messenger/product-context';
+import { getMatchingProducts, productUrlTrusted } from '@/lib/messenger/products';
 import { recordUnansweredQuestion } from '@/lib/messenger/questions';
 import type { MessengerLocale } from '@/lib/messenger/types';
 
@@ -378,6 +380,8 @@ export async function POST(request: NextRequest) {
     // 4) Grounded generation.
     const locale = resolveReplyLocale(text, localeHint);
     const knowledge = await getActiveKnowledge(site.id);
+    const currentProduct = parseProductContext(body.product, (url) => productUrlTrusted(site, url));
+    const products = await getMatchingProducts(site, text).catch(() => []);
     /* The newest messages, not the oldest: listMessages returns the oldest
        first unless asked (phase zero item 11), so a long conversation used
        to show the model its opening instead of what was just said. */
@@ -443,6 +447,8 @@ export async function POST(request: NextRequest) {
           ai: site.config.ai,
           locale,
           knowledge,
+          currentProduct,
+          products,
           // Only this request's fresh proof makes the shopper verified to the
           // model; a saved identity alone does not (G09).
           identity:

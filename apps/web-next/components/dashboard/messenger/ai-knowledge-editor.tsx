@@ -12,6 +12,7 @@ import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 import type { ArabicDialect, AssistantTone, MessengerAi, MessengerLocale } from '@/lib/messenger/types';
 import type { KnowledgeEntry } from '@/lib/messenger/knowledge';
+import { getChatKnowsCopy } from '@/lib/dashboard/chat-knows-copy';
 
 /* AI & Knowledge: tone presets + one plain-language instructions field,
    plus the grounded knowledge list. No prompt engineering is exposed. */
@@ -137,10 +138,11 @@ export function AiKnowledgeEditor({
   publishedPayload: PublicMessengerPayload;
   actions: Pick<
     MessengerHostActions,
-    'saveDraftSection' | 'addKnowledge' | 'updateKnowledgeStatus' | 'deleteKnowledge' | 'syncKnowledge'
+    'saveDraftSection' | 'addKnowledge' | 'updateKnowledgeStatus' | 'deleteKnowledge' | 'syncKnowledge' | 'syncKnowledgeProducts'
   >;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
+  const productCopy = getChatKnowsCopy(locale);
   const [value, setValue] = useState<MessengerAi>(ai);
   const [pendingForm, startFormTransition] = useTransition();
   /* Outcome, not just text: an error rendered in success green reads as a
@@ -305,6 +307,10 @@ export function AiKnowledgeEditor({
           <header>
             <h3 className="text-sm font-semibold">{t.knowledgeTitle}</h3>
             <p className="text-xs text-muted-foreground">{t.knowledgeSubtitle}</p>
+            {actions.syncKnowledgeProducts && <Button type="button" size="sm" variant="outline" disabled={formPending} onClick={() => startForm(async () => {
+              const result = await actions.syncKnowledgeProducts!(siteId);
+              setFormNote(result.ok ? { ok: true, text: result.skipped ? productCopy.productsSkipped : productCopy.productsSynced(result.count ?? 0) } : { ok: false, text: result.error });
+            })}>{productCopy.syncProducts}</Button>}
           </header>
 
           <div className="flex flex-wrap items-center gap-2">

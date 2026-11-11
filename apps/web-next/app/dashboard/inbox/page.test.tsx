@@ -28,6 +28,9 @@ vi.mock('@/app/dashboard/store-chat/actions', () => ({
   releaseConversation: vi.fn(),
   closeConversationAction: vi.fn(),
   markConversationRead: vi.fn(),
+  listInboxConversations: vi.fn(),
+  inboxChangesSince: vi.fn(),
+  inboxHandoffsSince: vi.fn(),
 }));
 vi.mock('./actions', () => ({ fetchInboxCustomer: v16.customer }));
 vi.mock('@/components/dashboard/v16/states', () => ({

@@ -364,6 +364,15 @@ export async function fetchStorefrontPage(domain: string, options: {
 
 export type PublicPage = { url: string; contentType: string; body: Buffer };
 
+function withAbort<T>(work: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const abort = () => reject(new ScanStop('timeout'));
+    signal.addEventListener('abort', abort, { once: true });
+    if (signal.aborted) abort();
+    work.then(resolve, reject).finally(() => signal.removeEventListener('abort', abort));
+  });
+}
+
 /** GETs a merchant-supplied https page (a Store Chat knowledge URL) through
  *  the same pinned transport: every hop's host resolved and refused if any
  *  answer is non-public, the socket held to the checked address, redirects
@@ -371,20 +380,24 @@ export type PublicPage = { url: string; contentType: string; body: Buffer };
  *  and the decoded body cut at `maxBytes` rather than read whole. */
 export async function fetchPublicPage(raw: string, options: {
   maxBytes: number; accept: string; transport?: StorefrontTransport; lookup?: StorefrontLookup;
+  timeoutMs?: number; allowedHost?: (hostname: string) => boolean;
 }): Promise<PublicPage | { failure: StorefrontFailure }> {
   const transport = options.transport ?? pinnedStorefrontTransport;
   const lookup = options.lookup ?? defaultLookup;
-  const signal = AbortSignal.timeout(STOREFRONT_TOTAL_TIMEOUT_MS);
+  const signal = AbortSignal.timeout(options.timeoutMs ?? STOREFRONT_TOTAL_TIMEOUT_MS);
   try {
     if (raw.length > 2048 || !URL.canParse(raw)) throw new ScanStop('bad_url');
     let url = new URL(raw);
     if (!safeUrl(url)) throw new ScanStop('bad_url');
     for (let redirects = 0; ; redirects++) {
-      const target = await resolvePublic(url.hostname, lookup);
+      if (signal.aborted) throw new ScanStop('timeout');
+      if (options.allowedHost && !options.allowedHost(url.hostname)) throw new ScanStop('foreign_redirect');
+      const target = await withAbort(resolvePublic(url.hostname, lookup), signal);
       let response: StorefrontResponse;
       try {
-        response = await transport({ url, ...target, method: 'GET', signal, truncateAt: options.maxBytes,
-          headers: { 'user-agent': USER_AGENT, accept: options.accept, 'accept-language': 'en' } });
+        if (signal.aborted) throw new ScanStop('timeout');
+        response = await withAbort(transport({ url, ...target, method: 'GET', signal, truncateAt: options.maxBytes,
+          headers: { 'user-agent': USER_AGENT, accept: options.accept, 'accept-language': 'en' } }), signal);
       } catch (error) {
         throw new ScanStop(signal.aborted || (error instanceof Error && /timeout|abort/i.test(error.message + error.name)) ? 'timeout' : 'network');
       }

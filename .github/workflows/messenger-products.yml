@@ -1,0 +1,36 @@
+name: Store Chat Catalogue Refresh
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: messenger-products
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Refresh a bounded batch of due catalogues
+        env:
+          MESSENGER_PRODUCTS_URL: ${{ secrets.MESSENGER_PRODUCTS_URL }}
+          MESSENGER_PRODUCTS_SECRET: ${{ secrets.MESSENGER_PRODUCTS_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${MESSENGER_PRODUCTS_URL:-}" || -z "${MESSENGER_PRODUCTS_SECRET:-}" ]]; then
+            echo "::notice::Catalogue refresh secrets are not configured; skipping."
+            exit 0
+          fi
+          # Same bearer-protected endpoint pattern as messenger-alert-retry.
+          # Node is available on the runner; no dependency or storefront key.
+          node --input-type=module <<'JS'
+          const response = await fetch(process.env.MESSENGER_PRODUCTS_URL, {
+            method: 'POST', headers: { Authorization: `Bearer ${process.env.MESSENGER_PRODUCTS_SECRET}` },
+            signal: AbortSignal.timeout(240_000),
+          });
+          if (!response.ok) throw new Error(`Catalogue refresh HTTP ${response.status}`);
+          console.log(await response.text());
+          JS

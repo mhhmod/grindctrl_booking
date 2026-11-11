@@ -69,7 +69,7 @@
     widgetLoads[name] = new Promise(function (resolve, reject) {
       var script = document.createElement('script');
       script.async = true;
-      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=42dfe0311b68';
+      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=dd7c27019797';
       script.onload = resolve;
       script.onerror = function () { delete widgetLoads[name]; reject(new Error('widget_unavailable')); };
       document.head.appendChild(script);
@@ -852,15 +852,19 @@
     var variants = (Array.isArray(p.variations) ? p.variations : []).slice(0, 50).map(function (v) {
       var attributes = v && v.attributes && typeof v.attributes === 'object' ? v.attributes : {};
       var title = Object.keys(attributes).map(function (k) { return attributes[k]; }).filter(Boolean).join(' / ');
-      return { id: v && v.id, title: String(title), price: decimalToMinor(v && v.price, currency), imageUrl: v && v.image };
+      return { id: v && v.id, title: String(title), price: decimalToMinor(v && v.price, currency), imageUrl: v && v.image,
+        priceAmount: v && v.price,
+        available: v && typeof v.in_stock === 'boolean' ? v.in_stock : undefined };
     });
-    if (!variants.length) variants = [{ id: p.id, title: '', price: decimalToMinor(p.price, currency) }];
+    if (!variants.length) variants = [{ id: p.id, title: '', price: decimalToMinor(p.price, currency), priceAmount: p.price }];
     var image = typeof p.image === 'string' ? p.image : '';
     return {
       handle: slugFrom(p.url) || String(p.id),
       title: p.name,
       imageUrl: /^https:\/\//.test(image) ? image : '',
       variants: variants,
+      description: p.description || p.short_description || '',
+      availability: p.in_stock === true ? 'in_stock' : p.in_stock === false ? 'out_of_stock' : 'unknown',
       currency: currency
     };
   }
@@ -885,9 +889,12 @@
         title: found.title,
         imageUrl: found.imageUrl,
         currency: currency,
+        description: found.description || '',
+        availability: found.availability || 'unknown',
+        sizes: found.sizes || [],
         // The chat panel takes a numeric variant id or none.
         variants: [{ id: /^\d{1,20}$/.test(String(found.variantId || '')) ? String(found.variantId) : '', title: '',
-          price: currency ? decimalToMinor(found.price, currency) : null }]
+           price: currency ? decimalToMinor(found.price, currency) : null, priceAmount: found.price }]
       };
     }).catch(function () { return null; });
   }
@@ -905,7 +912,8 @@
         if (!product || !Array.isArray(product.variants) || !product.variants.length) return null;
         var image = typeof product.featured_image === 'string' ? product.featured_image : '';
         if (image.indexOf('//') === 0) image = 'https:' + image;
-        return { handle: handle, title: product.title || '', imageUrl: /^https:\/\//.test(image) ? image : '', variants: product.variants };
+        return { handle: handle, title: product.title || '', imageUrl: /^https:\/\//.test(image) ? image : '', variants: product.variants,
+          description: product.description || '', availability: product.available === true ? 'in_stock' : product.available === false ? 'out_of_stock' : 'unknown' };
       })
       .catch(function () { return null; });
     return pageProduct;
@@ -943,10 +951,15 @@
         product: {
           handle: product.handle,
           title: product.title,
+          url: window.location.href,
+          description: String(product.description || '').replace(/<[^>]*>/g, ' ').slice(0, 600),
+          availability: typeof variant.available === 'boolean' ? (variant.available ? 'in_stock' : 'out_of_stock') : product.availability || 'unknown',
+          sizes: product.sizes || product.variants.slice(0, 30).map(function (v) { return String(v.title || '').slice(0, 80); }),
           imageUrl: image,
           variantId: String(variant.id),
           variantTitle: variant.title || '',
           priceMinor: typeof variant.price === 'number' ? variant.price : null,
+          price: variant.priceAmount != null ? String(variant.priceAmount).slice(0, 20) : undefined,
           currency: typeof currency === 'string' ? currency : null,
           tryOn: !!document.querySelector('.gc-tryon-btn')
         }
