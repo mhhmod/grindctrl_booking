@@ -3,8 +3,10 @@ import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const m = vi.hoisted(() => ({
   verify: vi.fn(), acquire: vi.fn(), requestToken: vi.fn(), sync: vi.fn(), syncOrigin: vi.fn(), limit: vi.fn(),
-  reconcilePricing: vi.fn(), pricingPresentation: vi.fn(),
+  reconcilePricing: vi.fn(), pricingPresentation: vi.fn(), connectedEmail: vi.fn(), findSite: vi.fn(),
 }));
+vi.mock('@/lib/email/store-connected-sender', () => ({ scheduleStoreConnectedEmail: m.connectedEmail }));
+vi.mock('@/lib/messenger/shop-tenancy', () => ({ findSiteByDomain: m.findSite }));
 vi.mock('@/lib/shopify/admin', () => ({ syncShopifyAppOrigin: m.syncOrigin }));
 vi.mock('@/lib/shopify/app-pricing', () => ({
   reconcileShopifyAppPricing: m.reconcilePricing, getShopifyAppPricingPresentation: m.pricingPresentation,
@@ -42,6 +44,17 @@ describe('installation-aware token bootstrap', () => {
     expect(m.syncOrigin).toHaveBeenCalledWith('demo.myshopify.com', 'stored-b');
     expect(m.reconcilePricing).not.toHaveBeenCalled();
     expect(m.pricingPresentation).toHaveBeenCalledWith({ shopDomain: 'demo.myshopify.com', appClientId: 'app-b' });
+  });
+  it('asks for the connected email for the shop’s own site once the app holds a token', async () => {
+    m.findSite.mockResolvedValue({ id: 'site-demo' });
+    await GET(req());
+    expect(m.connectedEmail).toHaveBeenCalledExactlyOnceWith(expect.any(Function), { path: 'shopify_app', host: 'demo.myshopify.com' });
+    expect(await m.connectedEmail.mock.calls[0][0]()).toBe('site-demo');
+    expect(m.findSite).toHaveBeenCalledWith('demo.myshopify.com');
+    m.connectedEmail.mockClear();
+    m.acquire.mockRejectedValue(new ShopifyCredentialError('busy'));
+    await GET(req());
+    expect(m.connectedEmail).not.toHaveBeenCalled();
   });
   it('allows explicit eligible custom non-expiring mode without changing public defaults', async () => {
     m.verify.mockReturnValue({ shop: 'demo.myshopify.com', app: { clientId: 'app-b', secret: 'b', tokenMode: 'non-expiring' } });

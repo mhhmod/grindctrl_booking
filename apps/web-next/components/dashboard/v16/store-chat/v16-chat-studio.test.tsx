@@ -60,16 +60,13 @@ function draw(a = actions(), locale: 'en' | 'ar' = 'en', meta: Partial<ChatStudi
 }
 
 describe('V16ChatStudio', () => {
-  it.each(['en', 'ar'] as const)('shows the thirty-day confirmation and disconnected deadline in %s', async locale => {
+  it.each(['en', 'ar'] as const)('keeps the disconnected deadline without a duplicate paste disconnect in %s', async locale => {
     const copy = getChatStudioCopy(locale);
     const retention = pasteInstallCopy(locale);
     const deadline = '2026-12-12T12:00:00Z';
     draw(actions(), locale, { active: false, pasteRetention: { disconnected: true, redactAfter: deadline } });
     expect(screen.getByText(retention.deletionDate(pasteRetentionDate(deadline, locale)!))).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: copy.disconnect.label }));
-    const dialog = await screen.findByRole('dialog', { name: copy.disconnect.label });
-    expect(dialog).toHaveTextContent(retention.disconnectRetention);
-    expect(dialog).not.toHaveTextContent(copy.disconnectConfirm);
+    expect(screen.queryByRole('button', { name: copy.disconnect.label })).not.toBeInTheDocument();
     expect(screen.queryByText(copy.disconnect.body)).not.toBeInTheDocument();
   }, 20000);
   // This full Mantine board can exceed the default timeout under parallel Windows load.
@@ -184,7 +181,7 @@ describe('V16ChatStudio', () => {
       fireEvent.click(within(dialog).getByRole('button', { name: en.disconnect.label }));
     });
     expect(a.disconnectSiteAction).toHaveBeenCalledWith('site_1');
-    expect(router.replace).toHaveBeenCalledWith('/dashboard/store-chat');
+    expect(router.replace).toHaveBeenCalledWith(`/dashboard/store-chat?disconnected=1&shop=${encodeURIComponent(META.domain!)}`);
   });
 
   it('directs WooCommerce installation to Store setup', () => {

@@ -79,7 +79,7 @@ vi.mock('./actions', () => ({
   checkDomainAction: vi.fn(),
   removeDomainAction: vi.fn(),
 }));
-vi.mock('./woo-actions', () => ({ createWooPairingCodeAction: vi.fn() }));
+vi.mock('./woo-actions', () => ({ createWooPairingCodeAction: vi.fn(), readWooConnectionAction: vi.fn() }));
 vi.mock('@/components/dashboard/v16/store-setup/store-connect', () => ({ StoreConnect: ({ siteId, actions }: { siteId: string; actions?: object }) => <div data-testid="store-connect" data-actions={actions ? Object.keys(actions).sort().join(',') : ''}>{siteId}</div> }));
 // ChatStudio has its own tests (v16-chat-studio.test.tsx); here only what it is handed.
 vi.mock('@/components/dashboard/v16/store-chat/v16-chat-studio', () => ({
@@ -125,7 +125,7 @@ beforeEach(() => {
 });
 
 describe('the Store Chat routes', () => {
-  it('passes the stored retention deadline and disconnect capability for a domainless paste site', async () => {
+  it('passes the retention deadline without exposing the duplicate disconnect for a disabled paste site', async () => {
     const deadline = '2026-12-12T12:00:00Z';
     vi.mocked(listMessengerSites).mockResolvedValueOnce([{ ...SITE, domain: null, status: 'disabled', hasDraft: false }]);
     vi.mocked(getPasteConnection).mockResolvedValueOnce({
@@ -135,7 +135,7 @@ describe('the Store Chat routes', () => {
       shop_check_outcome: null, shop_checked_at: null, disconnected_reason: null, app_installed: false,
     });
     render(await setup());
-    expect(screen.getByTestId('chat-studio')).toHaveAttribute('data-can-disconnect', 'true');
+    expect(screen.getByTestId('chat-studio')).toHaveAttribute('data-can-disconnect', 'false');
     expect(screen.getByTestId('chat-studio')).toHaveAttribute('data-retention', JSON.stringify({ disconnected: true, redactAfter: deadline }));
   });
   it('renders install for the selected site with actions only for settings roles', async () => {

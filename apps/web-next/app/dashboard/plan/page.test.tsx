@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   role: vi.fn(),
   timeZone: vi.fn(),
   shops: vi.fn(),
+  pending: vi.fn(),
   locale: vi.fn(),
   facts: vi.fn(),
   currencyCookie: undefined as string | undefined,
@@ -29,8 +30,10 @@ vi.mock('@/lib/dashboard/active-store-server', () => ({
   getActiveStoreRole: mocks.role,
   getActiveStoreTimeZone: mocks.timeZone,
   listDashboardShops: mocks.shops,
+  getPendingPasteShop: mocks.pending,
 }));
 vi.mock('@/components/dashboard/v16/states', () => ({
+  V16FinishConfirming: ({ shop }: { shop: string }) => <div data-testid="finish-confirming">{shop}</div>,
   V16NeedsStore: ({ feature, shops }: { feature: string; shops: Array<{ domain: string }> }) => (
     <div data-testid="needs-shopify">
       {feature}:{shops.map((shop) => shop.domain).join(',')}
@@ -60,6 +63,7 @@ beforeEach(() => {
   mocks.role.mockResolvedValue('owner');
   mocks.timeZone.mockResolvedValue('Africa/Cairo');
   mocks.shops.mockResolvedValue([]);
+  mocks.pending.mockResolvedValue(null);
   mocks.locale.mockResolvedValue('en');
   mocks.facts.mockResolvedValue({
     now: NOW,
@@ -103,6 +107,15 @@ describe('DashboardPlanPage', () => {
     mocks.shops.mockResolvedValue([{ domain: 'second.myshopify.com', status: 'installed', lastSeenAt: '2026-10-01T00:00:00Z' }]);
     render(await DashboardPlanPage());
     expect(screen.getByTestId('needs-shopify')).toHaveTextContent('plan:second.myshopify.com');
+    expect(mocks.facts).not.toHaveBeenCalled();
+  });
+
+  it('points pasted code still being confirmed at the one step left, not at connecting a store', async () => {
+    mocks.active.mockResolvedValue({ shopDomain: null, siteId: 'site_1' });
+    mocks.pending.mockResolvedValue('maison.myshopify.com');
+    render(await DashboardPlanPage());
+    expect(screen.getByTestId('finish-confirming')).toHaveTextContent('maison.myshopify.com');
+    expect(screen.queryByTestId('needs-shopify')).not.toBeInTheDocument();
     expect(mocks.facts).not.toHaveBeenCalled();
   });
 

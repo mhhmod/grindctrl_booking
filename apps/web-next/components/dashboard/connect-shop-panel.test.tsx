@@ -2,13 +2,15 @@ import React from 'react';
 import { act, fireEvent, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ generateShopLinkCode: vi.fn() }));
+const mocks = vi.hoisted(() => ({ generateShopLinkCode: vi.fn(), status: vi.fn(), refresh: vi.fn() }));
 vi.mock('@/app/dashboard/connect-shop/actions', () => ({
   generateShopLinkCode: mocks.generateShopLinkCode,
+  shopLinkCodeStatus: mocks.status,
 }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: mocks.refresh }) }));
 
 import { renderWithMantine as render } from '@/components/mantine/test-utils';
-import { ConnectShopPanel } from './connect-shop-panel';
+import { ConnectShopPanel, LINK_POLL_MS } from './connect-shop-panel';
 import { getTryOnDashboardCopy } from '@/lib/try-on/dashboard-copy';
 
 const NOW = Date.parse('2026-09-10T10:00:00.000Z');
@@ -22,6 +24,8 @@ describe('ConnectShopPanel', () => {
       code: 'ABCDEFGH',
       expiresAt: new Date(NOW + 5_000).toISOString(),
     });
+    mocks.status.mockReset().mockResolvedValue({ linkedShop: null });
+    mocks.refresh.mockReset();
   });
 
   afterEach(() => vi.useRealTimers());
@@ -60,6 +64,42 @@ describe('ConnectShopPanel', () => {
     });
 
     expect(screen.getByText(c.shopLinkExpiresIn('0:02'))).toBeInTheDocument();
+  });
+
+  it('watches the open code every 5 seconds and shows the connected store without a reload (M4)', async () => {
+    mocks.generateShopLinkCode.mockResolvedValueOnce({ code: 'ABCDEFGH', expiresAt: new Date(NOW + 600_000).toISOString() });
+    render(<ConnectShopPanel locale="en" />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: c.connectStore }));
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(LINK_POLL_MS);
+    });
+    expect(mocks.status).toHaveBeenCalledExactlyOnceWith('ABCDEFGH');
+    expect(mocks.refresh).not.toHaveBeenCalled();
+
+    mocks.status.mockResolvedValue({ linkedShop: 'maison.myshopify.com' });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(LINK_POLL_MS);
+    });
+    expect(screen.getByRole('status')).toHaveTextContent(c.shopLinked('maison.myshopify.com'));
+    expect(mocks.refresh).toHaveBeenCalledTimes(1);
+    // Stops once linked.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(LINK_POLL_MS * 3);
+    });
+    expect(mocks.status).toHaveBeenCalledTimes(2);
+  });
+
+  it('stops watching once the code expired', async () => {
+    render(<ConnectShopPanel locale="en" />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: c.connectStore }));
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(LINK_POLL_MS * 4);
+    });
+    expect(mocks.status).not.toHaveBeenCalled();
   });
 
   it('offers and generates a fresh code after expiry', async () => {

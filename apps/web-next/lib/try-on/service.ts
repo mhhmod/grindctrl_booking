@@ -17,7 +17,9 @@ import {
   persistTryOnJob,
 } from './persistence';
 import { validateProductId, validateSessionId } from './validator';
-import { getShopModelKey } from './entitlement';
+import { getShopModelKey, TryOnUnavailableError } from './entitlement';
+import { claimTryOnDailyBudget, siteDailyLooks } from './daily-budget';
+import { shopperFailureMessage } from './shopper-errors';
 import type { VerifiedTryOnSession } from './storefront-context';
 import {
   TryOnFinalizationPendingError,
@@ -264,6 +266,21 @@ export async function generateTryOn(
       createdAt: reservation.createdAt,
       meta: { runtime: 'live', provider: providerModel, costEstimate: null },
     };
+    // All merchant platforms (Shopify, Woo and paste), including signed test
+    // looks, converge here. Replays above spend neither credits nor budget.
+    const ceiling = await claimTryOnDailyBudget(shop);
+    if (ceiling !== 'allowed') {
+      garmentController.abort();
+      const refused: TryOnJob = {
+        ...pending, status: 'failed', stage: undefined,
+        message: shopperFailureMessage('busy'),
+        // No provider call happened; unlike a provider failure this is known zero.
+        meta: { ...pending.meta, costEstimate: 0 },
+      };
+      storeJob(refused);
+      await finalize(refused); // Existing failed-job refund, also for test jobs.
+      throw new TryOnUnavailableError(shopperFailureMessage('busy'));
+    }
     const makeLook = async (): Promise<TryOnJob> => {
       setStage(pending, 'making');
       const resultLookupStarted = performance.now();
@@ -416,6 +433,20 @@ export async function generateTryOn(
       status: 'processing', stage: 'received', createdAt: new Date().toISOString(),
       meta: { runtime: 'live', provider: TRYON_IMAGE_MODEL, costEstimate: null },
     };
+    // The optional shopless legacy bridge is paid by the platform. It has
+    // no canonical store or credit reservation: share one conservative day
+    // bucket, and still count it against the merchant global circuit breaker.
+    if (purpose === 'legacy-compat') {
+      const ceiling = await claimTryOnDailyBudget('legacy-compat', { siteLimit: siteDailyLooks() });
+      if (ceiling !== 'allowed') {
+        const refused: TryOnJob = { ...pending, status: 'failed', stage: undefined,
+          message: shopperFailureMessage('busy'), meta: { ...pending.meta, costEstimate: 0 } };
+        storeJob(refused);
+        await persistTryOnJob(refused, Date.now() - startedAt, authorization).catch(() => {});
+        await finishTimings(refused);
+        throw new TryOnUnavailableError(shopperFailureMessage('busy'));
+      }
+    }
     if (publicDemo) {
       const claimStarted = performance.now();
       const created = await beginPublicDemoTryOnJob(authorization, pending);

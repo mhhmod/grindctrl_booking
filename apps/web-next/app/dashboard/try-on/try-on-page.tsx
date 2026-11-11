@@ -1,7 +1,7 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
 import { getTryOnSettingsForEdit } from '@/lib/try-on/settings';
-import { getActiveStore, getActiveStoreRole, listDashboardShops } from '@/lib/dashboard/active-store-server';
+import { getActiveStore, getActiveStoreRole, getPendingPasteShop, listDashboardShops } from '@/lib/dashboard/active-store-server';
 import { activeTenantKey } from '@/lib/dashboard/active-store';
 import { wpAdminUrls } from '@/lib/dashboard/tryon-studio-model';
 import { getActiveWooSiteContext } from '@/lib/woo/connection';
@@ -21,7 +21,7 @@ import { getTodayCopy } from '@/lib/dashboard/today-copy';
 import { V16TryOnFrame, V16TryOnResults, V16TryOnResultsError } from '@/components/dashboard/v16/try-on/v16-tryon';
 import { V16TryOnStudio, V16TryOnStudioError } from '@/components/dashboard/v16/try-on/v16-tryon-studio';
 import { V16TryOnApp } from '@/components/dashboard/v16/try-on/v16-tryon-app';
-import { V16NeedsStore } from '@/components/dashboard/v16/states';
+import { V16FinishConfirming, V16NeedsStore } from '@/components/dashboard/v16/states';
 import { tryOnButtonStatus } from '@/lib/dashboard/tryon-button-status';
 import { readPasteCodeOutdated } from '@/lib/paste/status';
 import { isActiveTenant } from '@/lib/shopify/tokens';
@@ -53,7 +53,11 @@ export async function TryOnPage({
      domain, or `site:<id>` for a WooCommerce store. It is passed on as
      `shop` wherever a component or action only needs to name the store. */
   const shop = activeTenantKey(activeStore);
-  if (!shop) return <V16NeedsStore locale={locale} feature="tryOn" shops={shopChoices(shops)} />;
+  if (!shop) {
+    const pending = await getPendingPasteShop(activeStore);
+    return pending ? <V16FinishConfirming locale={locale} shop={pending} />
+      : <V16NeedsStore locale={locale} feature="tryOn" shops={shopChoices(shops)} />;
+  }
   const isWoo = activeStore.platform === 'woocommerce';
 
   // Set up is for owners and admins (item 12); a member's Try-On is Results.

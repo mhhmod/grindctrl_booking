@@ -458,7 +458,7 @@ export function V16ChatStudio({
       const result = await actions.disconnectSiteAction(siteId).catch((): ActionResult => ({ ok: false, error: 'failed' }));
       setBusy(null);
       if (result.ok) {
-        router.replace('/dashboard/store-chat');
+        router.replace(`/dashboard/store-chat?disconnected=1&shop=${encodeURIComponent(meta.domain ?? '')}`);
         router.refresh();
       } else setNote({ ok: false, text: copy.failed });
     }
@@ -514,13 +514,13 @@ export function V16ChatStudio({
             {deletionDate && (
               <p className={classes.muted} role="status">{retentionCopy.deletionDate(deletionDate)}</p>
             )}
-            {meta.canDisconnect && actions.disconnectSiteAction && (
+            {meta.canDisconnect && !meta.pasteRetention && actions.disconnectSiteAction && (
               <div className={classes.row}>
                 <div className={classes.rowText}>
                   <Button variant="subtle" color="danger" className={classes.inlineButton} loading={busy === 'disconnect'} onClick={() => setConfirm('disconnect')}>
                     {copy.disconnect.label}
                   </Button>
-                  <p className={classes.muted}>{meta.pasteRetention ? retentionCopy.disconnectRetention : copy.disconnect.body}</p>
+                  <p className={classes.muted}>{copy.disconnect.body}</p>
                 </div>
               </div>
             )}
@@ -613,7 +613,7 @@ export function V16ChatStudio({
         closeButtonProps={{ 'aria-label': copy.close }}
       >
         <p className={classes.confirmText}>{confirm === 'disconnect'
-          ? meta.pasteRetention ? retentionCopy.disconnectRetention : copy.disconnectConfirm
+          ? copy.disconnectConfirm
           : copy.revertConfirm}</p>
         <div className={classes.confirmActions}>
           <Button variant="default" radius="pill" onClick={() => setConfirm(null)}>

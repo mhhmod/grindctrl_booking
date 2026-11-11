@@ -20,8 +20,8 @@ describe('store health A7 email rendering', () => {
   it.each(STORE_HEALTH_PROBLEMS)('gives %s a clear problem heading and the matching row link', (problem) => {
     for (const locale of ['en', 'ar'] as const) {
       const email = buildStoreHealthEmail({ problem, recovery: false, locale, address: 'store.example', storeName: 'Store', sinceDay: 'Monday' });
-      expect(email.html).toContain(`#check-${problem}`);
-      expect(email.text).toContain(`#check-${problem}`);
+      expect(email.html).toContain(problem === 'tryon_out_of_looks' ? 'mailto:grindctrlnow@gmail.com' : `#check-${problem}`);
+      expect(email.text).toContain(problem === 'tryon_out_of_looks' ? 'mailto:grindctrlnow@gmail.com' : `#check-${problem}`);
       expect(email.subject).toContain('store.example');
       expect(email.html).toMatch(/<h1[^>]*>[^<]+<\/h1>/);
       if (problem !== 'code_gone') expect(email.subject).toContain(locale === 'ar' ? 'عن العمل على' : 'stopped working on');

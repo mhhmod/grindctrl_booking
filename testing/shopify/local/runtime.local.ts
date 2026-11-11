@@ -13,6 +13,14 @@ import { generateTryOn, forgetJob } from '@/lib/try-on/service';
 import { loadAuthorizedDurableTryOnJob } from '@/lib/try-on/persistence';
 import type { VerifiedTryOnSession } from '@/lib/try-on/storefront-context';
 
+// This phase runs with no Redis on purpose, and the daily look ceiling fails
+// closed without it. The ceiling has its own tests (daily-budget, service);
+// here it always allows, so the real ledger and storage paths are exercised.
+vi.mock('@/lib/try-on/daily-budget', async (original) => ({
+  ...(await original<typeof import('@/lib/try-on/daily-budget')>()),
+  claimTryOnDailyBudget: async () => 'allowed' as const,
+}));
+
 const statePath = process.env.M1_LOCAL_STATE;
 if (!statePath) throw new Error('explicit disposable local state required');
 const state = JSON.parse(readFileSync(statePath,'utf8'));

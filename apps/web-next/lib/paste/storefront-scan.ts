@@ -56,7 +56,14 @@ export type StorefrontScanOutcome =Exclude<PasteShopCheckOutcome, 'proven' | 'aw
 export type StorefrontFailure = 'bad_url' | 'dns' | 'private_address' | 'foreign_redirect' | 'bad_redirect' | 'too_many_redirects'
   | 'status' | 'not_html' | 'too_large' | 'timeout' | 'network' | 'password_form';
 export type StorefrontScan =
-  | { outcome: 'found'; evidence: StorefrontEvidence; host: string }
+  | {
+    outcome: 'found'; evidence: StorefrontEvidence; host: string;
+    /** A product page linked from the page the code was found on, for the
+     *  dashboard's "open a product page" link; null when none is linked. */
+    productUrl: string | null;
+    /** The storefront answered with its password page first. */
+    passwordPage: boolean;
+  }
   | { outcome: StorefrontScanOutcome; failure?: StorefrontFailure };
 
 export type StorefrontRequest = {
@@ -266,6 +273,22 @@ export function findPasswordForm(html: string): PasswordForm | null {
     const postsToPassword = /^(?:https:\/\/[^/]+)?\/password\/?(?:[?#].*)?$/i.test(action)
       && (formAttrs.get('method') ?? '').toLowerCase() === 'post' && passwordField !== null;
     if (storefrontPassword || postsToPassword) return { action: action || '/password', fields, passwordField: passwordField ?? 'password' };
+  }
+  return null;
+}
+
+/** The first product page this storefront page links to on its own host,
+ *  as `https://host/products/handle`. Only a plain handle is kept, so the
+ *  dashboard link can never point anywhere but that storefront. */
+export function findProductLink(html: string, host: string): string | null {
+  const base = `https://${host}/`;
+  for (const tag of startTags(html)) {
+    if (tag.name !== 'a') continue;
+    const href = tag.attrs.get('href') ?? '';
+    if (!href || href.length > 2048 || !URL.canParse(href, base)) continue;
+    const url = new URL(href, base);
+    const handle = /^(?:\/[A-Za-z]{2}(?:-[A-Za-z]{2,4})?)?(?:\/collections\/[^/]+)?\/products\/([A-Za-z0-9%._~-]{1,255})\/?$/.exec(url.pathname)?.[1];
+    if (url.protocol === 'https:' && url.hostname === host && !url.port && handle) return `${base}products/${handle}`;
   }
   return null;
 }
@@ -526,7 +549,8 @@ export async function scanShopStorefront(connection: PasteConnection, options: {
       if (response.status === 200) {
         const verdict = classifyTags(connection, findPasteTags(html), nowSeconds);
         if (verdict === 'found') {
-          return { outcome: 'found', host: url.hostname, evidence: { siteId: connection.widget_site_id, shopDomain: shop } as StorefrontEvidence };
+          return { outcome: 'found', host: url.hostname, evidence: { siteId: connection.widget_site_id, shopDomain: shop } as StorefrontEvidence,
+            productUrl: findProductLink(html, url.hostname), passwordPage: passwordSent };
         }
         if (!findPasswordForm(html)) return { outcome: verdict };
       }

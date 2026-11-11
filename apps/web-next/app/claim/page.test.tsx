@@ -103,8 +103,8 @@ describe('ClaimPage', () => {
   });
 
   it.each([
-    ['en', "You're connected", 'Open Set up to choose how chat looks and works, and What it knows to teach it your store. Answer shoppers in Inbox. Your changes stay invisible to shoppers until you publish them.', 'Go to dashboard'],
-    ['ar', 'متجرك متصل الآن', 'افتح الإعداد لاختيار شكل الدردشة وطريقة عملها، وما يعرفه ليتعلم عن متجرك. أجب عن المتسوقين من الرسائل. لن تظهر تغييراتك للمتسوقين حتى تنشرها.', 'الانتقال إلى لوحة التحكم'],
+    ['en', "You're connected", 'Open Store setup to turn on Store Chat and Try-On and check what shoppers will see. Then open a product page on your store to check the chat and Try-On button.', 'Go to dashboard'],
+    ['ar', 'متجرك متصل الآن', 'افتح إعداد المتجر لتشغيل محادثة المتجر والقياس الافتراضي ومعرفة ما سيظهر للمتسوقين. ثم افتح صفحة منتج في متجرك للتحقق من المحادثة وزر القياس.', 'الانتقال إلى لوحة التحكم'],
   ] as const)('adopts the store and renders next steps without redirecting in %s', async (locale, title, body, action) => {
     vi.mocked(getRequestLocale).mockResolvedValue(locale);
     vi.mocked(verifyClaimToken).mockReturnValue({ shop: 'demo.myshopify.com' });
@@ -117,7 +117,7 @@ describe('ClaimPage', () => {
     expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
     expect(screen.getByText(body)).toBeInTheDocument();
     expect(screen.getAllByRole('link')).toHaveLength(1);
-    expect(screen.getByRole('link', { name: action })).toHaveAttribute('href', '/dashboard/store-chat');
+    expect(screen.getByRole('link', { name: action })).toHaveAttribute('href', '/dashboard/store');
     expect(container.querySelector('section')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
     expect(ensureMessengerSite).toHaveBeenCalledWith('user_1', 'demo.myshopify.com', 'demo.myshopify.com');
     expect(getShopOwnerEmail).toHaveBeenCalledWith('demo.myshopify.com');
@@ -224,4 +224,15 @@ describe('ClaimPage', () => {
 
     expect(redirectMock).not.toHaveBeenCalled();
   });
+});
+
+it('m1: a taken store offers contact support', async () => {
+  vi.mocked(getRequestLocale).mockResolvedValue('en');
+  vi.mocked(verifyClaimToken).mockReturnValue({ shop: 'demo.myshopify.com' } as never);
+  vi.mocked(requireDashboardUser).mockResolvedValue('user_1');
+  vi.mocked(currentUser).mockResolvedValue({ primaryEmailAddress: { emailAddress: 'owner@example.com' }, emailAddresses: [] } as never);
+  vi.mocked(getShopOwnerEmail).mockResolvedValue('owner@example.com');
+  vi.mocked(ensureMessengerSite).mockRejectedValue(new StoreOwnedByAnotherAccountError('demo.myshopify.com'));
+  render(await ClaimPage({ searchParams: Promise.resolve({ token: 'valid' }) }));
+  expect(screen.getByRole('link', { name: 'Contact support' })).toHaveAttribute('href', 'mailto:grindctrlnow@gmail.com');
 });

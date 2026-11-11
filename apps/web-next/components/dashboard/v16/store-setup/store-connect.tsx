@@ -14,7 +14,7 @@ import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import type { WooSiteConnectionSummary } from '@/lib/woo/connection';
 import { StorefrontDomains } from '../store-chat/storefront-domains';
 import { PasteInstall, type PasteInstallActions } from '../store-chat/paste-install';
-import { WoocommerceGuide, type CreateWooPairingCode } from '../store-chat/woocommerce-guide';
+import { WoocommerceGuide, type CreateWooPairingCode, type ReadWooConnection } from '../store-chat/woocommerce-guide';
 import classes from './store-connect.module.css';
 
 export type StoreConnectMeta = {
@@ -29,6 +29,7 @@ export type StoreConnectMeta = {
 
 export type StoreConnectActions = {
   createWooPairingCodeAction: CreateWooPairingCode;
+  readWooConnectionAction?: ReadWooConnection;
   paste?: PasteInstallActions;
 } & Partial<DomainActions>;
 
@@ -77,6 +78,25 @@ export function StoreConnect({
   const installed = meta.lastSeenMinutes !== null;
   const [open, setOpen] = React.useState(!installed);
   const [copied, setCopied] = React.useState(false);
+  const [pollFailures, setPollFailures] = React.useState(0);
+  React.useEffect(() => {
+    const openInstallSteps = () => { if (window.location.hash === '#connect') setOpen(true); };
+    window.addEventListener('hashchange', openInstallSteps);
+    const timer = setTimeout(openInstallSteps, 0);
+    return () => { clearTimeout(timer); window.removeEventListener('hashchange', openInstallSteps); };
+  }, []);
+  const paste = actions?.paste;
+  // Observe the existing poll. Do not add another request or weaken its limits.
+  const pasteActions = React.useMemo(() => paste ? {
+    ...paste,
+    status: async (id: string) => {
+      try {
+        const result = await paste.status(id);
+        setPollFailures((count) => result.ok ? 0 : count + 1);
+        return result;
+      } catch (error) { setPollFailures((count) => count + 1); throw error; }
+    },
+  } : undefined, [paste]);
 
   return (
     <section id="connect" aria-labelledby={`${id}-title`} className={classes.card}>
@@ -125,6 +145,7 @@ export function StoreConnect({
         </div>
       </div>
 
+      {pollFailures >= 3 ? <p role="status" className={classes.muted}>{locale === 'ar' ? 'لا نستطيع الفحص الآن. نحاول مجددًا.' : "We can't check right now, trying again."}</p> : null}
       {open && actions && (
         <div id={`${id}-steps`} className={classes.body}>
           {shopify && meta.domain && (
@@ -169,7 +190,7 @@ export function StoreConnect({
               locale={locale}
               copy={pasteInstallCopy(locale)}
               ago={chat.ago}
-              actions={actions.paste}
+              actions={pasteActions!}
               initialPlatform={meta.wooConnection ? 'woocommerce' : null}
               woocommerce={
                 <>
@@ -178,6 +199,7 @@ export function StoreConnect({
                     siteId={siteId}
                     connection={meta.wooConnection}
                     createPairingCode={actions.createWooPairingCodeAction}
+                    readConnection={actions.readWooConnectionAction}
                     copy={chat.woocommerce}
                     copyLabels={chat.domains}
                   />
@@ -203,6 +225,7 @@ export function StoreConnect({
               siteId={siteId}
               connection={meta.wooConnection}
               createPairingCode={actions.createWooPairingCodeAction}
+              readConnection={actions.readWooConnectionAction}
               copy={chat.woocommerce}
               copyLabels={chat.domains}
             />

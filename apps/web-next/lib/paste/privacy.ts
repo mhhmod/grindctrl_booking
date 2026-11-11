@@ -1,5 +1,4 @@
 import 'server-only';
-import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { drainWooPrivacyStorageQueue, eraseShopperData, exportShopperData, parsePrivacyRequest } from '@/lib/woo/privacy';
 import { getPasteConnection } from './store';
 import { PasteError } from './types';
@@ -15,15 +14,4 @@ export async function pasteShopperPrivacy(siteId: string, operation: 'export' | 
   const storage = await drainWooPrivacyStorageQueue();
   if (storage.failed) throw new PasteError('unavailable');
   return result;
-}
-
-/** Returns false for a non-paste site; otherwise disconnects and durably
- * schedules shopper redaction after the owner's 30-day reconnect window. */
-export async function disconnectPasteSite(siteId: string, actorUserId: string): Promise<boolean> {
-  if (!(await getPasteConnection(siteId))) return false;
-  const result = await getMessengerServiceClient().rpc('disconnect_paste_site', {
-    p_site: siteId, p_actor_user_id: actorUserId,
-  });
-  if (result.error || result.data !== true) throw new PasteError('unavailable');
-  return true;
 }

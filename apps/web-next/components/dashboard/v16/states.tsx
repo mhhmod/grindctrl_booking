@@ -112,6 +112,20 @@ export function V16StoreTaken({ locale }: { locale: SiteLocale }) {
   );
 }
 
+/** Pasted code on a Shopify store whose confirmation is not finished. The
+ *  store has no Try-On or plan yet, but it is connected: point at the one
+ *  step left, never at "connect your store" again. */
+export function V16FinishConfirming({ locale, shop }: { locale: SiteLocale; shop: string }) {
+  const copy = getStatesCopy(locale);
+  return (
+    <V16Notice title={copy.finishConfirming.title(shop)} body={copy.finishConfirming.body}>
+      <Button component={Link} href="/dashboard/store#connect" radius="pill" h={44}>
+        {copy.finishConfirming.action}
+      </Button>
+    </V16Notice>
+  );
+}
+
 /** The way back from More settings to the Set up board. */
 export function V16BackToSetUp({ locale }: { locale: SiteLocale }) {
   const copy = getStatesCopy(locale);

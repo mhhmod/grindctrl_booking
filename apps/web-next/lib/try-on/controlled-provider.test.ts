@@ -9,6 +9,7 @@ import { pathToFileURL } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { createClient, rpc, upload } = vi.hoisted(() => ({ createClient: vi.fn(), rpc: vi.fn(), upload: vi.fn() }));
+vi.mock('./daily-budget', () => ({ claimTryOnDailyBudget: async () => 'allowed' }));
 vi.mock('@supabase/supabase-js', () => ({ createClient }));
 import { generateTryOn } from './service';
 import type { VerifiedTryOnSession } from './storefront-context';

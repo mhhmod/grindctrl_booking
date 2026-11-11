@@ -111,6 +111,8 @@ export interface ChatStudioCopy {
     codeLabel: string;
     codeExpires: (at: string) => string;
     codeError: string;
+    codeExpired: string;
+    codeRetry: (seconds: number) => string;
     connected: string;
     disconnected: string;
     pluginVersion: (version: string) => string;
@@ -287,6 +289,8 @@ const en: ChatStudioCopy = {
     codeLabel: 'Connection code',
     codeExpires: (at) => `Expires at ${at}.`,
     codeError: 'Could not create a connection code. Try again.',
+    codeExpired: 'Expired, get a new code',
+    codeRetry: (seconds) => `Try again in ${seconds} seconds.`,
     connected: 'Connected',
     disconnected: 'Disconnected',
     pluginVersion: (version) => `Plugin version ${version}`,
@@ -334,8 +338,8 @@ const en: ChatStudioCopy = {
   publishedVersion: (n) => `Published version ${n}`,
   revert: 'Revert to previous version',
   revertConfirm: 'Shoppers see the previous version again. Your current version is kept as the one before.',
-  disconnect: { label: 'Disconnect this store', body: 'Store Chat in Shopify and your data stay in place.' },
-  disconnectConfirm: 'Disconnect this store from your dashboard? Store Chat in Shopify and your data stay in place.',
+  disconnect: { label: 'Disconnect this store', body: 'This removes Store Chat from this dashboard. Store Chat in Shopify, Try-On, your plan and data stay in place.' },
+  disconnectConfirm: 'Disconnect Store Chat from this dashboard? Store Chat in Shopify, Try-On, your plan and data stay in place. Reconnect from GRINDCTRL in Shopify using Claim this store or a dashboard link code.',
   cancel: 'Cancel',
   moreSettings: {
     label: 'More settings',
@@ -466,6 +470,8 @@ const ar: ChatStudioCopy = {
     codeLabel: 'رمز الاتصال',
     codeExpires: (at) => `تنتهي صلاحيته الساعة ${at}.`,
     codeError: 'تعذّر إنشاء رمز اتصال. حاول مرة أخرى.',
+    codeExpired: 'انتهت صلاحيته، احصل على رمز جديد',
+    codeRetry: (seconds) => `حاول بعد ${seconds} ثانية.`,
     connected: 'متصل',
     disconnected: 'تم قطع الاتصال',
     pluginVersion: (version) => `إصدار الإضافة ${version}`,
@@ -513,8 +519,8 @@ const ar: ChatStudioCopy = {
   publishedVersion: (n) => `النسخة المنشورة ${n}`,
   revert: 'استعد النسخة السابقة',
   revertConfirm: 'سيرى المتسوقون النسخة السابقة مجدداً. وتُحفظ نسختك الحالية على أنها السابقة.',
-  disconnect: { label: 'افصل هذا المتجر', body: 'تبقى دردشة المتجر في Shopify وبياناتك كما هي.' },
-  disconnectConfirm: 'هل تفصل هذا المتجر عن لوحة التحكم؟ تبقى دردشة المتجر في Shopify وبياناتك كما هي.',
+  disconnect: { label: 'افصل هذا المتجر', body: 'تُزال محادثة المتجر من لوحة التحكم هذه. تبقى المحادثة في Shopify والقياس الافتراضي والباقة والبيانات كما هي.' },
+  disconnectConfirm: 'هل تفصل محادثة المتجر عن لوحة التحكم هذه؟ تبقى المحادثة في Shopify والقياس الافتراضي والباقة والبيانات كما هي. أعد الربط من GRINDCTRL في Shopify باختيار المطالبة بهذا المتجر أو باستخدام رمز الربط.',
   cancel: 'إلغاء',
   moreSettings: {
     label: 'إعدادات أخرى',

@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Alert, Badge, Button, Code, CopyButton, Group, PasswordInput, Radio, Stack, Text, TextInput } from '@mantine/core';
 import { ShopifyLogo, WooCommerceLogo, WordPressMark } from '@/components/brand-marks';
 import { GcIcon } from '@/components/icons';
@@ -9,7 +10,8 @@ import type { InstallPlatform, PasteInstallCopy } from '@/lib/dashboard/paste-in
 import type { PasteInstallStatus } from '@/lib/paste/status';
 import { pasteRetentionDate } from '@/lib/dashboard/paste-retention-date';
 import type {
-  PasteDomain, PasteDomainCheck, PasteErrorCode, PastePlatform, PasteResult, PasteShopCheckOutcome, PasteShopProof, PasteSnippet,
+  PasteConflictHolder, PasteDomain, PasteDomainCheck, PasteErrorCode, PastePlatform, PasteResult, PasteShopCheckOutcome, PasteShopProof,
+  PasteSnippet,
 } from '@/lib/paste/types';
 import classes from './paste-install.module.css';
 
@@ -24,6 +26,8 @@ export type PasteInstallActions = {
   status(siteId: string): Promise<PasteResult<PasteInstallStatus>>;
   proveShop(siteId: string, storefrontPassword?: string): Promise<PasteResult<PasteShopProof>>;
   checkDomain(siteId: string, domainId: string): Promise<PasteResult<PasteDomainCheck>>;
+  /** Owner only: undo the pasted install to connect another store. */
+  disconnect?(siteId: string): Promise<PasteResult<null>>;
 };
 
 const POLL_MS = 5000;
@@ -72,17 +76,30 @@ export function PasteInstall({
   const [now, setNow] = React.useState(0);
   const [stepsOpen, setStepsOpen] = React.useState(false);
   const [password, setPassword] = React.useState('');
-  const [checked, setChecked] = React.useState<{ outcome: PasteShopCheckOutcome | 'rate_limited'; retryAfter: number | null } | null>(null);
+  const [checked, setChecked] = React.useState<{ outcome: PasteShopCheckOutcome | 'rate_limited'; retryAfter: number | null; at: number } | null>(null);
+  /* What the check that found the code saw on the storefront: a product page
+     to open, and whether a password page stood in front. Not stored, so it
+     lasts for this visit to the dashboard. */
+  const [storefront, setStorefront] = React.useState<NonNullable<PasteShopProof['storefront']> | null>(null);
   /* A domain check that could not run this time (rate limited). */
   const [domainWait, setDomainWait] = React.useState<{ id: string; retryAfter: number | null } | null>(null);
+  /* Which connection holds the store, when enabling was refused. */
+  const [heldBy, setHeldBy] = React.useState<PasteConflictHolder | null>(null);
+  /* "Use a different store": where its confirmation shows, and its outcome. */
+  const [leaving, setLeaving] = React.useState<{ at: 'alert' | 'step'; store: string | null } | null>(null);
+  const [released, setReleased] = React.useState(false);
+  const router = useRouter();
 
   const run = React.useCallback(async <T,>(key: string, call: () => Promise<PasteResult<T>>): Promise<T | null> => {
     setBusy(key);
     setError(null);
+    setHeldBy(null);
+    setReleased(false);
     try {
       const result = await call();
       if (!result.ok) {
         setError(result.code);
+        setHeldBy(result.heldBy ?? null);
         return null;
       }
       return result.data;
@@ -137,7 +154,7 @@ export function PasteInstall({
   const confirming = Boolean(status?.domains.some((d) => !d.domainVerified && d.state !== 'disputed'));
   /* Installed once our code has ever run on the store. "seen" alone means the
      last 30 minutes, which a quiet store falls out of while it is working. */
-  const everSeen = Boolean(status?.seen || status?.shopLastSeenAt
+  const everSeen = Boolean(status?.seen || status?.shopLastSeenAt || status?.shopProof === 'proven'
     || status?.domains.some((d) => d.state === 'trusted' && d.lastSeenAt));
   const waiting = Boolean(snippet) && (!everSeen || confirming || (!status?.tryOnReady && settling));
   React.useEffect(() => {
@@ -195,8 +212,33 @@ export function PasteInstall({
     const typed = password.trim();
     const result = await run('check', () => actions.proveShop(siteId, typed || undefined));
     setPassword('');
-    if (result) setChecked({ outcome: result.outcome, retryAfter: result.retryAfterSeconds });
+    if (result) {
+      setChecked({ outcome: result.outcome, retryAfter: result.retryAfterSeconds, at: Date.now() });
+      if (result.storefront) setStorefront(result.storefront);
+    }
     await refresh();
+  }
+
+  async function leave() {
+    const disconnect = actions.disconnect;
+    if (!disconnect) return;
+    const was = connectedAs;
+    // Its data is null on success, so success is read from `ok`.
+    const left = await run('leave', async () => {
+      const result = await disconnect(siteId);
+      return result.ok ? { ok: true as const, data: true } : result;
+    });
+    if (!left) return;
+    setLeaving(null);
+    setSnippet(null);
+    setChecked(null);
+    setStorefront(null);
+    setStepsOpen(false);
+    // Straight back to the same platform's first step: usually the address was wrong.
+    setPlatform((current) => current ?? was);
+    setReleased(true);
+    await refresh();
+    router.refresh();
   }
 
   const liveDomain = domains.find((d) => d.state === 'trusted' && d.lastSeenAt && now - Date.parse(d.lastSeenAt) <= LIVE_WINDOW_MS);
@@ -209,6 +251,45 @@ export function PasteInstall({
   /* Our code has run on the store: the install part is done. */
   const installed = everSeen && status?.connectionReason !== 'shopify_app_installed';
   const deletionDate = status && !status.connected ? pasteRetentionDate(status.redactAfter, locale === 'ar' ? 'ar' : 'en') : null;
+  /* The owner's own check answers until the store records a newer one (a
+     product page visit runs a check of its own). */
+  const ownCheck = checked && !(Date.parse(status?.shopCheck?.checkedAt ?? '') > checked.at) ? checked : null;
+  const shopOutcome = ownCheck?.outcome ?? status?.shopCheck?.outcome ?? null;
+  const shopRetryAfter = ownCheck ? ownCheck.retryAfter : status?.shopCheck?.retryAfterSeconds ?? null;
+  const passwordAsked = shopOutcome === 'password_required' || shopOutcome === 'password_rejected';
+  /* Shopify: a product page is where the signed render, Store Chat and the
+     button all show, so that is the page to open. Without a product link
+     from this visit's check, the store's all-products page is one tap away
+     from one (its home page may be the password page). */
+  const productUrl = connectedAs === 'shopify' ? storefront?.productUrl ?? null : null;
+  const visitUrl = productUrl ?? (connectedAs === 'shopify' && storeHost ? `${storeUrl}/collections/all` : storeUrl);
+  const visitLabel = productUrl ? copy.openProductPage : connectedAs === 'shopify' ? copy.openProducts : copy.openStore;
+  const passwordPage = connectedAs === 'shopify' && (passwordAsked || Boolean(storefront?.passwordPage));
+
+  /* Success shows without a reload: when the store turns installed (and a
+     Shopify shop proven), the server-drawn parts of the page are read again. */
+  const done = installed && (connectedAs !== 'shopify' || status?.shopProof === 'proven');
+  const wasDone = React.useRef<boolean | null>(null);
+  React.useEffect(() => {
+    if (!status) return;
+    if (wasDone.current === false && done) router.refresh();
+    wasDone.current = done;
+  }, [status, done, router]);
+
+  const leaveConfirm = (store: string | null) => (
+    <Stack gap="xs" className={classes.proof} role="group" aria-label={copy.leaveAction}>
+      <Text size="sm">{copy.leaveBody(store)}</Text>
+      <Text size="sm" c="dimmed">{copy.disconnectRetention}</Text>
+      <Group gap="xs">
+        <Button color="red" size="compact-sm" radius="pill" loading={busy === 'leave'} onClick={() => void leave()}>
+          {copy.leaveConfirm}
+        </Button>
+        <Button variant="subtle" color="gray" size="compact-sm" onClick={() => setLeaving(null)}>
+          {copy.cancel}
+        </Button>
+      </Group>
+    </Stack>
+  );
 
   return (
     <Stack gap="lg" className={classes.root}>
@@ -230,6 +311,7 @@ export function PasteInstall({
                   ? copy.tryOnOff
                   : status.tryOnReady ? copy.tryOnOn(Math.max(0, status.plan?.totalCreditsRemaining ?? 0)) : copy.tryOnReason(status.tryOnReason)}
               </Text>
+              {passwordPage ? <Text size="sm">{copy.passwordPageNote}</Text> : null}
             </Stack>
           </Group>
           {status.codeOutdated ? (
@@ -243,7 +325,7 @@ export function PasteInstall({
             </Alert>
           ) : null}
           <Group gap="xs" mt="sm">
-            <Button component="a" href={storeUrl} target="_blank" rel="noopener noreferrer" radius="pill" size="sm" rightSection={<GcIcon name="ext" size={14} />}>
+            <Button component="a" href={visitUrl} target="_blank" rel="noopener noreferrer" radius="pill" size="sm" rightSection={<GcIcon name="ext" size={14} />}>
               {copy.seeOnStore}
             </Button>
             <Button component={Link} href="/dashboard/try-on" variant="default" radius="pill" size="sm">
@@ -281,8 +363,20 @@ export function PasteInstall({
 
       {error ? (
         <Alert color="red" variant="light" role="alert" icon={<GcIcon name="warn" size={18} />}>
-          {copy.errors[error]}
+          <Stack gap="xs" align="flex-start">
+            <span>{error === 'connection_conflict' && heldBy ? copy.conflict(heldBy) : copy.errors[error]}</span>
+            {/* Held by this account's own pasted code: the way out is right here. */}
+            {heldBy?.kind === 'paste' && actions.disconnect && leaving?.at !== 'alert' ? (
+              <Button variant="default" size="compact-sm" radius="pill" onClick={() => setLeaving({ at: 'alert', store: heldBy.store })}>
+                {copy.leaveAction}
+              </Button>
+            ) : null}
+          </Stack>
         </Alert>
+      ) : null}
+      {leaving?.at === 'alert' ? leaveConfirm(leaving.store) : null}
+      {released ? (
+        <Alert variant="light" role="status" icon={<GcIcon name="check" size={18} />}>{copy.leaveDone}</Alert>
       ) : null}
 
       {platform === 'woocommerce' ? woocommerce : null}
@@ -316,6 +410,23 @@ export function PasteInstall({
               </form>
             ) : (
               <>
+                {connectedAs ? (
+                  /* B5: a wrong address, or another platform, is undone here. */
+                  <Group gap="xs" wrap="wrap" align="center">
+                    {connectedAs === 'shopify' && status?.shopDomain ? (
+                      <Text size="sm" className={classes.grow}>
+                        {copy.connectedTo('\u0000').split('\u0000')[0]}<bdi dir="ltr">{status.shopDomain}</bdi>
+                        {copy.connectedTo('\u0000').split('\u0000')[1]}
+                      </Text>
+                    ) : null}
+                    {actions.disconnect && leaving?.at !== 'step' ? (
+                      <Button variant="subtle" size="compact-sm" onClick={() => setLeaving({ at: 'step', store: status?.shopDomain ?? null })}>
+                        {copy.leaveAction}
+                      </Button>
+                    ) : null}
+                  </Group>
+                ) : null}
+                {leaving?.at === 'step' ? leaveConfirm(leaving.store) : null}
                 <form onSubmit={addDomain} className={classes.inline}>
                   <TextInput
                     label={copy.domainLabel}
@@ -472,9 +583,11 @@ export function PasteInstall({
                 <Text size="sm" fw={600}>{copy.shopCheckTitle}</Text>
                 {status?.connectionReason === 'shop_proven_elsewhere' ? <Text size="sm">{copy.provenElsewhere}</Text> : null}
                 <Text size="sm">
-                  {copy.shopCheck(checked?.outcome ?? status?.shopCheck?.outcome ?? null, checked?.retryAfter ?? status?.shopCheck?.retryAfterSeconds ?? null)}
+                  {copy.shopCheck(shopOutcome, shopRetryAfter)}
                 </Text>
-                {(checked?.outcome ?? status?.shopCheck?.outcome) === 'password_required' || (checked?.outcome ?? status?.shopCheck?.outcome) === 'password_rejected' ? (
+                {storefront?.addedDomain ? <Text size="sm">{copy.primaryDomainAdded(storefront.addedDomain)}</Text> : null}
+                {passwordPage ? <Text size="sm" c="dimmed">{copy.passwordPageNote}</Text> : null}
+                {passwordAsked ? (
                   <PasswordInput
                     label={copy.passwordLabel}
                     description={copy.passwordHint}
@@ -485,9 +598,26 @@ export function PasteInstall({
                     maxLength={256}
                   />
                 ) : null}
-                <Button type="submit" radius="pill" size="xs" className={classes.copy} loading={busy === 'check'} disabled={!snippet}>
-                  {copy.checkStore}
-                </Button>
+                <Group gap="xs" wrap="wrap">
+                  {shopOutcome === 'awaiting_visit' ? (
+                    /* The code is there: the one thing left is a product page visit. */
+                    <Button component="a" href={visitUrl} target="_blank" rel="noopener noreferrer" radius="pill" size="xs"
+                      rightSection={<GcIcon name="ext" size={14} />}>
+                      {visitLabel}
+                    </Button>
+                  ) : null}
+                  {shopOutcome === 'not_found' && shopifyDomain ? (
+                    /* We read the published theme only: send them to it. */
+                    <Button component="a" href={`https://${shopifyDomain}/admin/themes/current/editor`} target="_blank"
+                      rel="noopener noreferrer" radius="pill" size="xs" variant="default" rightSection={<GcIcon name="ext" size={14} />}>
+                      {copy.openLiveTheme}
+                    </Button>
+                  ) : null}
+                  <Button type="submit" radius="pill" size="xs" variant={shopOutcome === 'awaiting_visit' ? 'default' : 'filled'}
+                    className={classes.copy} loading={busy === 'check'} disabled={!snippet}>
+                    {copy.checkStore}
+                  </Button>
+                </Group>
               </form>
             ) : null}
             {/* Installed is independent of preview or live; Try-On says which. */}
@@ -515,15 +645,16 @@ export function PasteInstall({
                 <span className={classes.pulse} aria-hidden="true" />
                 <div>
                   <Text size="sm">{copy.waiting}</Text>
-                  <Text size="xs" c="dimmed">{copy.waitingHint}</Text>
+                  <Text size="xs" c="dimmed">{connectedAs === 'shopify' ? copy.waitingHintShopify : copy.waitingHint}</Text>
                 </div>
               </Group>
             ) : (
               <Text size="sm" c="dimmed">{copy.codeLocked}</Text>
             )}
-            {snippet && storeHost ? (
-              <Button component="a" href={storeUrl} target="_blank" rel="noopener noreferrer" variant="default" radius="pill" size="xs" mt="xs" className={classes.copy} rightSection={<GcIcon name="ext" size={14} />}>
-                {copy.openStore}
+            {/* Shopify's "found" state already shows this link as its main action. */}
+            {snippet && storeHost && !(connectedAs === 'shopify' && status?.shopProof !== 'proven' && shopOutcome === 'awaiting_visit') ? (
+              <Button component="a" href={visitUrl} target="_blank" rel="noopener noreferrer" variant="default" radius="pill" size="xs" mt="xs" className={classes.copy} rightSection={<GcIcon name="ext" size={14} />}>
+                {visitLabel}
               </Button>
             ) : null}
           </li>

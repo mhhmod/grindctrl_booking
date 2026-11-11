@@ -1,4 +1,8 @@
 import 'server-only';
+import { freePlanReason } from '@/lib/woo/free-plan-reason';
+import { verifiedSiteHosts } from '@/lib/woo/garment-url';
+import { readSignatureFailures } from '@/lib/store-health/signature-signals';
+import { readTryOnDayStatus } from '@/lib/try-on/daily-budget';
 
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { getShopEntitlement, type ShopEntitlement } from '@/lib/try-on/entitlement';
@@ -90,6 +94,7 @@ export async function getYourStoreFacts({
   if (!tenant) return null;
 
   let platform: YourStorePlatform;
+  let pluginOutdated = false;
   let paste: PasteInstallStatus | null = null;
   let siteStatus: string | null = null;
   let code: YourStoreFacts['code'];
@@ -107,6 +112,7 @@ export async function getYourStoreFacts({
     const [connection, status] = await Promise.all([getWooSiteConnection(siteId), readSiteStatus(siteId)]);
     if (connection?.status !== 'active') return null;
     platform = 'woocommerce';
+    pluginOutdated = connection.pluginOutdated;
     siteStatus = status;
     // The plugin's daily heartbeat is its signal.
     code = { lastSeenAt: connection.lastSeenAt, connected: true };
@@ -123,18 +129,27 @@ export async function getYourStoreFacts({
     return null;
   }
 
-  const [showButton, entitlement, launchState, health, pillsOn, domainPlatforms, placement] = await Promise.all([
+  const [showButton, entitlement, launchState, health, pillsOn, domainPlatforms, day, placement] = await Promise.all([
     readTryOnShowButton(tenant),
     paste ? Promise.resolve(paste.plan) : getShopEntitlement(tenant),
     paste ? Promise.resolve(paste.mode) : readLaunchState(activeStore, tenant, now),
     readHealthCounts(siteId ? [siteId] : [], now),
     readTryOnShowCardPill(tenant),
     platform === 'paste_website' && siteId ? readPasteDomainPlatforms(siteId) : Promise.resolve(null),
+    readTryOnDayStatus(tenant, new Date(now)).catch(() => null),
     // The Shopify app block is placed in the theme editor. A failed read only softens Store check.
     platform === 'shopify_app' ? Promise.resolve(null) : readButtonPlacement(tenant).then((value) => value.placement, () => null),
   ]);
 
+  let reason = paste?.tryOnReason ?? null;
+  if (siteId && platform === 'woocommerce') {
+    const hosts = await verifiedSiteHosts(siteId);
+    if (!hosts.length || entitlement.status === 'none') reason = await freePlanReason(siteId, hosts);
+  }
+  const signatureFailures = siteId && platform === 'paste_shopify' ? await readSignatureFailures(siteId, now) : 0;
   return {
+    pluginOutdated,
+    signatureFailures,
     now,
     timeZone,
     platform,
@@ -150,7 +165,7 @@ export async function getYourStoreFacts({
     pillsOn,
     wooDetected: domainPlatforms?.some((domain) => domain.platform === 'woocommerce') ?? false,
     easyOrders: domainPlatforms?.some((domain) => domain.platform === 'easyorders') ?? false,
-    tryOn: { tenant, showButton, ...looksOf(entitlement), pasteReason: paste?.tryOnReason ?? null },
+    tryOn: { tenant, showButton, dailyLimitReached: day?.reached ?? false, dailyLimitUnreadable: day === null, dailyLimitCause: day?.cause, dailyResetAt: day?.resetAt, ...looksOf(entitlement), pasteReason: reason },
     chat: siteId && siteStatus !== null ? { siteId, enabled: siteStatus === 'active' } : null,
     domains:
       platform === 'paste_website' && paste

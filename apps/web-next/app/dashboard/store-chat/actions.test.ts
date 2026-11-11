@@ -1,6 +1,10 @@
 // @vitest-environment node
 import { revalidatePath } from 'next/cache';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { scheduleStoreDisconnectedEmail } from '@/lib/email/store-journey-sender';
+import { storeHealthOwner } from '@/lib/store-health/owner';
+vi.mock('@/lib/email/store-journey-sender', () => ({ scheduleStoreDisconnectedEmail: vi.fn() }));
+vi.mock('@/lib/store-health/owner', () => ({ storeHealthOwner: vi.fn(async () => ({ email: 'owner@example.com', locale: 'en' as const })) }));
 import { syncSiteProducts } from '@/lib/messenger/products';
 vi.mock('@/lib/messenger/products', () => ({ syncSiteProducts: vi.fn(async () => ({ count: 2 })) }));
 import { requireMerchantRateLimit, RequestRateLimitError } from '@/lib/request-rate-limit';
@@ -26,7 +30,6 @@ const mocks = vi.hoisted(() => {
     auth: vi.fn(),
     requireSiteAccess: vi.fn(),
     unclaimSite: vi.fn(),
-    disconnectPasteSite: vi.fn(async () => false),
     getProfileId: vi.fn(async () => 'profile-1'),
     recordAudit: vi.fn(async () => {}),
     getConversationForSite: vi.fn(),
@@ -50,7 +53,6 @@ const mocks = vi.hoisted(() => {
 });
 
 const UnauthorizedError = mocks.UnauthorizedError;
-vi.mock('@/lib/paste/privacy', () => ({ disconnectPasteSite: mocks.disconnectPasteSite }));
 
 vi.mock('@clerk/nextjs/server', () => ({ auth: mocks.auth }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
@@ -127,6 +129,7 @@ const SITE = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(storeHealthOwner).mockResolvedValue({ email: 'owner@example.com', locale: 'en' });
   vi.mocked(syncSiteProducts).mockResolvedValue({ count: 2 });
   mocks.auth.mockResolvedValue({ userId: 'user_owner' });
   mocks.requireSiteAccess.mockResolvedValue(SITE);
@@ -514,20 +517,6 @@ describe('revertConfigAction', () => {
 
 
 describe('disconnectSiteAction', () => {
-  it('schedules paste deletion without unclaiming the site, and refreshes Store setup', async () => {
-    const pasteId = '11111111-1111-4111-8111-111111111111';
-    mocks.requireSiteAccess.mockResolvedValueOnce({ ...SITE, id: pasteId });
-    mocks.disconnectPasteSite.mockResolvedValueOnce(true);
-    expect(await disconnectSiteAction(pasteId)).toEqual({ ok: true });
-    expect(mocks.disconnectPasteSite).toHaveBeenCalledWith(pasteId, 'user_owner');
-    expect(mocks.unclaimSite).not.toHaveBeenCalled();
-    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/store');
-  });
-  it('does not fall through to unclaim when paste scheduling fails', async () => {
-    mocks.disconnectPasteSite.mockRejectedValueOnce(new Error('unavailable'));
-    expect((await disconnectSiteAction(SITE.id)).ok).toBe(false);
-    expect(mocks.unclaimSite).not.toHaveBeenCalled();
-  });
   beforeEach(() => { mocks.unclaimSite.mockResolvedValue({ ...SITE, workspace_id: 'ws-shop' }); });
 
   it('authorizes and rate checks before unclaiming, then audits and revalidates', async () => {
@@ -538,6 +527,8 @@ describe('disconnectSiteAction', () => {
     expect(mocks.requireSiteAccess.mock.invocationCallOrder[0]).toBeLessThan(mocks.unclaimSite.mock.invocationCallOrder[0]);
     expect(vi.mocked(requireMerchantRateLimit).mock.invocationCallOrder[0]).toBeLessThan(mocks.unclaimSite.mock.invocationCallOrder[0]);
     expect(mocks.recordAudit).toHaveBeenCalledExactlyOnceWith({ siteId: SITE.id, actorClerkUserId: 'user_owner', action: 'store_disconnected', detail: { domain: SITE.domain } });
+    expect(scheduleStoreDisconnectedEmail).toHaveBeenCalledWith(SITE.id, expect.any(String), 'owner@example.com', expect.objectContaining({ address: SITE.domain }));
+    expect(vi.mocked(storeHealthOwner).mock.invocationCallOrder[0]).toBeLessThan(mocks.unclaimSite.mock.invocationCallOrder[0]);
     expect(mocks.unclaimSite.mock.invocationCallOrder[0]).toBeLessThan(mocks.recordAudit.mock.invocationCallOrder[0]);
     expect(revalidatePath).toHaveBeenCalledExactlyOnceWith('/dashboard', 'layout');
     expect(mocks.recordAudit.mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(revalidatePath).mock.invocationCallOrder[0]);

@@ -145,6 +145,20 @@ describe('Button placement (B1)', () => {
     expect(popup.close).toHaveBeenCalled();
   });
 
+  it('says the store has no confirmed address and links to Store setup, instead of "try again"', async () => {
+    const a = actions();
+    a.open.mockResolvedValueOnce({ ok: false, code: 'unavailable', message: 'x', reason: 'no_store_address' } as never);
+    draw(a);
+    await waitFor(() => expect(radio(en.auto)).not.toBeDisabled());
+    fireEvent.click(radio(en.spot));
+    fireEvent.click(await screen.findByRole('button', { name: en.pick }));
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(en.noAddress);
+    expect(alert).not.toHaveTextContent(en.failed);
+    expect(screen.getByRole('link', { name: en.noAddressAction })).toHaveAttribute('href', '/dashboard/store');
+    expect(popup.close).toHaveBeenCalled();
+  });
+
   it('advanced: tests a valid selector on the store, above or below', async () => {
     const a = actions();
     draw(a);
@@ -191,4 +205,16 @@ describe('placement strings', () => {
     expect(en.saved('after', 'Add to cart')).toBe('Below "Add to cart"');
     expect(ar.saved('before', 'أضف للسلة')).toBe('فوق «أضف للسلة»');
   });
+});
+
+it.each(['closed', 'expired'])('m6: reports an unsaved spot when the watcher is %s', async (reason) => {
+  const a = actions(); draw(a);
+  await waitFor(() => expect(radio(en.auto)).not.toBeDisabled());
+  fireEvent.click(radio(en.spot));
+  vi.useFakeTimers();
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: en.pick })); });
+  if (reason === 'closed') popup.closed = true;
+  await act(async () => { await vi.advanceTimersByTimeAsync(reason === 'closed' ? PICK_POLL_MS : 30 * 60_000); });
+  expect(screen.getByText(en.notSaved)).toBeInTheDocument();
+  expect(a.set).not.toHaveBeenCalled();
 });

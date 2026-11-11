@@ -10,6 +10,8 @@ import {
   type AiTurnCounter,
 } from './ai-budget';
 
+vi.mock('@/lib/spend/store', () => ({ readChatSpendLimits: async () => ({}) }));
+
 afterEach(() => vi.unstubAllEnvs());
 
 /** Both daily counters as the script keeps them. */
@@ -69,6 +71,12 @@ describe('claimAiTurnBudget', () => {
     expect(counter).toHaveBeenCalledWith(['gc-msgr-ai:{2026-11-09}:site:site-a', 'gc-msgr-ai:{2026-11-09}:all'], 2000, 50000, 172800);
   });
 
+  it('uses a bounded operator override before env, including zero', async () => {
+    const count = memoryCounter(); vi.stubEnv('MESSENGER_AI_SITE_DAILY_TURNS', '1');
+    expect(await claimAiTurnBudget('a', { counter: count, siteLimit: 2 })).toBe('allowed');
+    expect(await claimAiTurnBudget('a', { counter: count, siteLimit: 2 })).toBe('allowed');
+    expect(await claimAiTurnBudget('a', { counter: count, siteLimit: 0 })).toBe('site_exhausted');
+  });
   it('fails closed when Redis throws, answers oddly or is not configured', async () => {
     expect(await claimAiTurnBudget('site-a', { counter: async () => { throw new Error('timeout'); } })).toBe('unavailable');
     expect(await claimAiTurnBudget('site-a', { counter: async () => 9 })).toBe('unavailable');

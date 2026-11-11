@@ -17,7 +17,10 @@ const mocks = vi.hoisted(() => ({
   limit: vi.fn(),
   handle: vi.fn(),
   calls: [] as unknown[],
+  connectedEmail: vi.fn(),
 }));
+
+vi.mock('@/lib/email/store-connected-sender', () => ({ scheduleStoreConnectedEmail: mocks.connectedEmail }));
 
 vi.mock('@/lib/ratelimit', () => ({
   publicApiRatelimit: { configured: true, limit: mocks.limit },
@@ -144,6 +147,7 @@ beforeEach(() => {
   mocks.calls.length = 0;
   mocks.limit.mockReset().mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
   mocks.handle.mockReset();
+  mocks.connectedEmail.mockReset();
   process.env.GRINDCTRL_CAPABILITY_SECRET = CORE;
   vi.spyOn(console, 'error').mockImplementation(() => {});
   vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -219,6 +223,8 @@ describe('POST /api/woo/pair', () => {
       uninstalled_at: null,
     });
     expect(find('tryon_shops', 'upsert')!.options).toEqual({ onConflict: 'shop_domain' });
+    // Live now: the owner hears so (the sender keeps it to once per store).
+    expect(mocks.connectedEmail).toHaveBeenCalledExactlyOnceWith(SITE_ID, { path: 'woocommerce', host: 'shop.example.com' });
   });
 
   it('accepts the two-part versions WordPress reports', async () => {
@@ -249,6 +255,7 @@ describe('POST /api/woo/pair', () => {
     expect(await response.json()).toEqual({ error: 'invalid_code' });
     expect(find('woo_pairing_codes', 'update')).toBeUndefined();
     expect(find('woo_site_connections', 'upsert')).toBeUndefined();
+    expect(mocks.connectedEmail).not.toHaveBeenCalled();
   });
 
   it('refuses a code that was already used', async () => {

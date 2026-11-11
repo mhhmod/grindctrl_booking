@@ -1,5 +1,8 @@
 import 'server-only';
-import { pasteRedis, scriptCount } from '@/lib/paste/redis';
+import { pasteRedis } from '@/lib/paste/redis';
+import { claimDailyBudget, dailyKeys, redisDailyCounter } from '@/lib/spend/daily-counter';
+import { effectiveSpendLimit } from '@/lib/spend/limits';
+import { readChatSpendLimits } from '@/lib/spend/store';
 
 /* What Store Chat may spend on the model in one UTC day. Each shopper turn
    that reaches the model is counted against its site and against every
@@ -40,41 +43,18 @@ function utcDay(now: Date): string {
   return now.toISOString().slice(0, 10);
 }
 
-// The global key carries the hash tag the site key does, so both live in one slot.
-const CLAIM_SCRIPT = `
-if tonumber(redis.call('GET', KEYS[1]) or '0') >= tonumber(ARGV[1]) then return 2 end
-if tonumber(redis.call('GET', KEYS[2]) or '0') >= tonumber(ARGV[2]) then return 3 end
-redis.call('INCR', KEYS[1])
-redis.call('INCR', KEYS[2])
-if redis.call('TTL', KEYS[1]) < 0 then redis.call('EXPIRE', KEYS[1], tonumber(ARGV[3])) end
-if redis.call('TTL', KEYS[2]) < 0 then redis.call('EXPIRE', KEYS[2], tonumber(ARGV[3])) end
-return 1`;
-
-const redisCounter: AiTurnCounter = async (keys, siteLimit, globalLimit, ttlSeconds) =>
-  scriptCount(await pasteRedis().eval(CLAIM_SCRIPT, keys, [String(siteLimit), String(globalLimit), String(ttlSeconds)]));
-
 const redisOnce: OnceClaimer = async (key, ttlSeconds) =>
   (await pasteRedis().set(key, '1', { nx: true, ex: ttlSeconds })) === 'OK';
 
 export async function claimAiTurnBudget(
   siteId: string,
-  options: { now?: Date; counter?: AiTurnCounter } = {},
+  options: { now?: Date; counter?: AiTurnCounter; siteLimit?: number } = {},
 ): Promise<AiTurnBudget> {
-  const global = globalDailyAiTurns();
-  if (global === 0) return 'global_exhausted';
-  const site = siteDailyAiTurns();
-  if (site === 0) return 'site_exhausted';
-  const day = utcDay(options.now ?? new Date());
   try {
-    const result = await (options.counter ?? redisCounter)(
-      [`gc-msgr-ai:{${day}}:site:${siteId}`, `gc-msgr-ai:{${day}}:all`], site, global, KEY_TTL_SECONDS);
-    if (result === 1) return 'allowed';
-    if (result === 2) return 'site_exhausted';
-    if (result === 3) return 'global_exhausted';
-    return 'unavailable';
-  } catch {
-    return 'unavailable';
-  }
+    const override = options.siteLimit ?? (await readChatSpendLimits(siteId)).storeChatDailyTurns;
+    return await claimDailyBudget(dailyKeys('chat', siteId, options.now),
+      effectiveSpendLimit(override, siteDailyAiTurns()), globalDailyAiTurns(), options.counter ?? redisDailyCounter);
+  } catch { return 'unavailable'; }
 }
 
 /** Claims today's one merchant alert for a site whose budget ran out. A

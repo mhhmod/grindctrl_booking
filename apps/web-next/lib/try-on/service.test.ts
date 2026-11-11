@@ -14,6 +14,7 @@ const {
   prepareGarmentImageMock,
   persistJobTimingsMock,
   getShopModelKeyMock,
+  dailyBudgetMock,
 } = vi.hoisted(() => ({
   beginTryOnJobMock: vi.fn(),
   beginTestTryOnJobMock: vi.fn(),
@@ -28,7 +29,10 @@ const {
   prepareGarmentImageMock: vi.fn(),
   persistJobTimingsMock: vi.fn(),
   getShopModelKeyMock: vi.fn(),
+  dailyBudgetMock: vi.fn(),
 }));
+
+vi.mock('./daily-budget', () => ({ claimTryOnDailyBudget: dailyBudgetMock, siteDailyLooks: () => 300 }));
 
 vi.mock('./persistence', () => ({
   beginPublicDemoTryOnJob: (...args: unknown[]) => beginPublicDemoTryOnJobMock(...args),
@@ -52,7 +56,8 @@ vi.mock('./job-timings', async (importOriginal) => ({
   ...await importOriginal<typeof import('./job-timings')>(),
   persistJobTimings: (...args: unknown[]) => persistJobTimingsMock(...args),
 }));
-vi.mock('./entitlement', () => ({
+vi.mock('./entitlement', async original => ({
+  ...await original<typeof import('./entitlement')>(),
   getShopModelKey: (...args: unknown[]) => getShopModelKeyMock(...args),
 }));
 
@@ -120,6 +125,7 @@ function legacyCompatAuthorization(
 
 describe('try-on service', () => {
   beforeEach(() => {
+    dailyBudgetMock.mockReset().mockResolvedValue('allowed');
     delete process.env.TRYON_MODE;
     beginTryOnJobMock.mockReset();
     beginTestTryOnJobMock.mockReset();
@@ -162,6 +168,16 @@ describe('try-on service', () => {
   });
 
   describe('generateTryOn', () => {
+
+    it('bounds optional shopless legacy provider work through a shared daily and global ceiling', async () => {
+      process.env.TRYON_MODE = 'live'; dailyBudgetMock.mockResolvedValue('global_exhausted');
+      await expect(generateTryOn(legacyCompatAuthorization(), 'upload', 'data:image/png;base64,AQID')).rejects.toThrow('Try-on is busy');
+      expect(persistTryOnJobMock.mock.calls.at(-1)?.[0]).toMatchObject({ status: 'failed', meta: { costEstimate: 0 } });
+      expect(dailyBudgetMock).toHaveBeenCalledWith('legacy-compat', { siteLimit: 300 });
+      expect(runImageGenerationMock).not.toHaveBeenCalled();
+      expect(beginTryOnJobMock).not.toHaveBeenCalled();
+    });
+
     it('requires photoSource parameter', async () => {
       await expect(
         generateTryOn(authorization(), '' as never),
@@ -221,6 +237,35 @@ describe('try-on service', () => {
 
       afterEach(() => {
         TIER_ENV_NAMES.forEach((name) => delete process.env[name]);
+      });
+
+      it.each([
+        ['shopify', false], ['shopify', true], ['woocommerce', false], ['woocommerce', true],
+        ['paste-website', false], ['paste-website', true], ['paste-shopify', false], ['paste-shopify', true],
+      ] as const)('daily refusal refunds %s test=%s before provider work', async (platform, test) => {
+        const reserve = (input: { jobId: string }) => Promise.resolve({ jobId: input.jobId, created: true,
+          status: 'processing', modelKey: 'test', createdAt: '2026-08-31T00:00:00.000Z' });
+        beginTryOnJobMock.mockImplementation(reserve); beginTestTryOnJobMock.mockImplementation(reserve);
+        dailyBudgetMock.mockResolvedValue('site_exhausted');
+        const auth = storefrontAuthorization({ platform: platform === 'shopify' ? undefined : platform, test: test ? true : undefined,
+          shop: platform === 'shopify' ? 'store-one.myshopify.com' : 'site:123e4567-e89b-42d3-a456-426614174000' });
+        const background = vi.fn();
+        await expect(generateTryOn(auth, 'upload', 'data:image/png;base64,AQID', undefined, undefined, { background })).rejects.toMatchObject({ code: 'TRYON_UNAVAILABLE', message: 'Try-on is busy at the moment. Please try again in a minute.' });
+        const result = finalizeTryOnJobMock.mock.calls.at(-1)?.[0];
+        expect(result).toMatchObject({ status: 'failed', message: 'Try-on is busy at the moment. Please try again in a minute.', meta: { costEstimate: 0 } });
+        expect(runImageGenerationMock).not.toHaveBeenCalled(); expect(background).not.toHaveBeenCalled();
+        expect(finalizeTryOnJobMock).toHaveBeenCalledWith(result, expect.any(Number));
+        const reserved = test ? beginTestTryOnJobMock : beginTryOnJobMock;
+        expect(reserved.mock.invocationCallOrder[0]).toBeLessThan(dailyBudgetMock.mock.invocationCallOrder[0]);
+        expect(dailyBudgetMock).toHaveBeenCalledWith(auth.shop);
+      });
+      it('allows no provider work while the ceiling claim is pending', async () => {
+        let release!: (result: string) => void;
+        dailyBudgetMock.mockImplementation(() => new Promise(resolve => { release = resolve; }));
+        const running = generateTryOn(storefrontAuthorization(), 'upload', 'data:image/png;base64,AQID');
+        await vi.waitFor(() => expect(dailyBudgetMock).toHaveBeenCalledOnce());
+        expect(runImageGenerationMock).not.toHaveBeenCalled(); release('global_exhausted');
+        await expect(running).rejects.toThrow('Try-on is busy'); expect(runImageGenerationMock).not.toHaveBeenCalled();
       });
 
       it('starts garment preparation during plan lookup, but cannot call the provider before reservation', async () => {

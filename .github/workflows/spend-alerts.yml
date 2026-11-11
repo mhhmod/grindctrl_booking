@@ -1,0 +1,41 @@
+name: Daily Spend Alerts
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: spend-alerts
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - name: Check today's spend ceilings
+        env:
+          SPEND_ALERTS_URL: ${{ secrets.SPEND_ALERTS_URL }}
+          SPEND_ALERTS_SECRET: ${{ secrets.SPEND_ALERTS_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${SPEND_ALERTS_URL:-}" || -z "${SPEND_ALERTS_SECRET:-}" ]]; then
+            echo "::notice::Spend alert secrets are not configured; skipping."
+            exit 0
+          fi
+          node --input-type=module <<'JS'
+          const call = () => fetch(process.env.SPEND_ALERTS_URL, {
+            method: 'POST', headers: { Authorization: `Bearer ${process.env.SPEND_ALERTS_SECRET}` },
+            signal: AbortSignal.timeout(240_000),
+          });
+          let response;
+          try { response = await call(); } catch (error) {
+            if (!['UND_ERR_CONNECT_TIMEOUT', 'ETIMEDOUT'].includes(error?.cause?.code)) throw error;
+            console.log('Connection timed out; retrying in 20 s.');
+            await new Promise((resolve) => setTimeout(resolve, 20_000));
+            response = await call();
+          }
+          if (!response.ok) throw new Error(`Spend alerts HTTP ${response.status}`);
+          console.log(await response.text());
+          JS

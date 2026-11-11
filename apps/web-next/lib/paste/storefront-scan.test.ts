@@ -70,6 +70,15 @@ describe('storefront proof of theme control', () => {
     expect(fake.calls[0]).toMatchObject({ method: 'GET', address: '23.227.38.65', family: 4, body: undefined });
     expect(fake.calls[0].headers).not.toHaveProperty('cookie');
     expect(fake.calls[0].headers).not.toHaveProperty('authorization');
+    expect(await result).toMatchObject({ productUrl: null, passwordPage: false });
+  });
+
+  it('names the first product page the storefront links to on its own host, for the dashboard link', async () => {
+    const links = '<a href="https://evil.example/products/x">x</a><a href="/pages/about">About</a><!-- <a href="/products/hidden"> -->'
+      + '<a href="javascript:alert(1)">bad</a><a href="/products/bad%2Fslash/extra">nested</a>'
+      + `<a href="/ar/collections/new/products/linen-dress?variant=1#top">Dress</a><a href="/products/second">Second</a>`;
+    const { result } = scan({ [`GET https://${SHOP}/`]: html(`<html><body><main>${links}</main><footer>${tag()}</footer></body></html>`) });
+    expect(await result).toMatchObject({ outcome: 'found', productUrl: `https://${SHOP}/products/linen-dress`, passwordPage: false });
   });
 
   it('accepts the product-page render and the previous secret during the rotation overlap', async () => {
@@ -216,7 +225,7 @@ describe('password-protected stores', () => {
         ? html(page(tag())) : redirect('/password'),
     }, { password: PASSWORD });
     const outcome = await result;
-    expect(outcome).toMatchObject({ outcome: 'found' });
+    expect(outcome).toMatchObject({ outcome: 'found', passwordPage: true });
     const post = fake.calls.find((call) => call.method === 'POST')!;
     expect(post.url.href).toBe(`https://${SHOP}/password`);
     expect(post.headers).toMatchObject({ 'content-type': 'application/x-www-form-urlencoded', cookie: '_shopify_s=session1' });

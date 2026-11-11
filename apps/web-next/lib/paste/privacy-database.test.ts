@@ -17,7 +17,7 @@ async function value<T>(sql: string, params: unknown[] = []): Promise<T> {
   return (await db.query<{ value: T }>(sql, params)).rows[0]?.value;
 }
 const count = (table: string, id = site) => value<number>(`select count(*)::int as value from public.${table} where widget_site_id=$1`, [id]);
-const disconnect = (id = site) => value<boolean>('select public.disconnect_paste_site($1,$2) as value', [id, 'clerk_owner']);
+const disconnect = async (id = site) => (await value<{ code: string }>('select public.disconnect_paste_install($1) as value', [id])).code === 'ok';
 const redact = (id = site, batch = 100) => value<{ done: boolean; redacted: boolean }>('select public.paste_site_redact($1,$2) as value', [id, batch]);
 const due = () => db.query<{ id: string }>('select public.paste_sites_due_for_redaction() as id').then(r => r.rows.map(r => r.id));
 
@@ -47,6 +47,7 @@ beforeAll(async () => {
     '20261111_messenger_inbox.sql', '20261111_messenger_products.sql',
     '20261110_store_health_signals.sql', '20261111_store_health_alerts.sql',
     '20261111_store_health_spot_missing.sql', '20261111_tryon_job_product_info.sql',
+    '20261111_paste_disconnect.sql',
     migration, migration]) await db.exec(await read(file));
   await db.exec('grant select,insert,update,delete on all tables in schema public to service_role');
 }, 60_000);
@@ -94,13 +95,12 @@ describe('G17 real SQL over current main', () => {
     expect(await value('select redact_after::text as value from paste_site_connections where widget_site_id=$1', [site])).toBe(deadline);
   });
   it('schedules exactly thirty days and repeated disconnect does not postpone deletion', async () => {
-    await disconnect();
+    expect(await disconnect()).toBe(true);
     expect(await value<boolean>(`select redact_after-disconnected_at between interval '30 days -1 second' and interval '30 days 1 second' as value
       from paste_site_connections where widget_site_id=$1`, [site])).toBe(true);
     const before = await value('select redact_after::text as value from paste_site_connections where widget_site_id=$1', [site]);
-    await disconnect();
+    expect(await disconnect()).toBe(false);
     expect(await value('select redact_after::text as value from paste_site_connections where widget_site_id=$1', [site])).toBe(before);
-    expect(await value(`select actor_clerk_user_id as value from messenger_audit where widget_site_id=$1 and action='store_disconnected' limit 1`, [site])).toBe('clerk_owner');
   });
   it.each(['website', 'shopify'])('reconnect within thirty days cancels %s removal even for a stale listed task', async platform => {
     if (platform === 'shopify') {
@@ -115,14 +115,39 @@ describe('G17 real SQL over current main', () => {
     expect(await redact()).toMatchObject({ redacted: false });
     expect(await count('widget_conversations')).toBe(1);
   });
+  it.each(['website', 'shopify'])('lets a disabled %s paste site enable another shop through both applied migrations', async platform => {
+    if (platform === 'shopify') {
+      await disconnect();
+      expect(await value('select enable_paste_install($1,$2,$3) as value', [site, 'shopify', 'old.myshopify.com'])).toBe('enabled');
+    }
+    await shopper();
+    await db.exec('set role service_role');
+    try {
+      expect(await disconnect()).toBe(true);
+      expect(await value('select status as value from widget_sites where id=$1', [site])).toBe('disabled');
+      expect(await value('select redact_after is not null as value from paste_site_connections where widget_site_id=$1', [site])).toBe(true);
+      expect(await value('select enable_paste_install($1,$2,$3) as value', [site, 'shopify', 'another.myshopify.com'])).toBe('enabled');
+      expect(await value('select row_to_json(c) as value from paste_site_connections c where widget_site_id=$1', [site]))
+        .toMatchObject({ status: 'pending', shop_domain: 'another.myshopify.com', redact_after: null, redacted_at: null });
+      expect(await value('select status as value from widget_sites where id=$1', [site])).toBe('active');
+      expect(await due()).not.toContain(site);
+      expect(await redact()).toMatchObject({ redacted: false });
+      expect(await count('widget_conversations')).toBe(1);
+    } finally { await db.exec('reset role'); }
+  });
   it('does not schedule owner deletion for a shop displaced by another install', async () => {
     await db.query(`update paste_site_connections set status='disconnected',disconnected_reason='displaced',disconnected_at=now() where widget_site_id=$1`, [site]);
     expect(await value('select redact_after as value from paste_site_connections where widget_site_id=$1', [site])).toBeNull();
     expect(await redact()).toMatchObject({ redacted: false });
   });
   it('refuses removal before thirty days and redacts in bounded batches once due, keeping another tenant', async () => {
-    await shopper(); await shopper(); await shopper(other);
-    await disconnect();
+    const first = await shopper(), second = await shopper(), untouched = await shopper(other);
+    expect(await disconnect()).toBe(true);
+    // The server action audits after the RPC. Keep merchant history while
+    // removing shopper-linked audit entries, just as the applied SQL promises.
+    await db.query(`insert into messenger_audit(widget_site_id,actor_clerk_user_id,action,detail)
+      values ($1,'clerk_owner','store_disconnected','{"install":"paste"}')`, [site]);
+    expect(await value('select status as value from widget_sites where id=$1', [site])).toBe('disabled');
     await db.query(`update paste_site_connections set disconnected_at=now()-interval '29 days',redact_after=now()+interval '1 day' where widget_site_id=$1`, [site]);
     expect(await due()).not.toContain(site);
     expect(await redact()).toMatchObject({ redacted: false });
@@ -132,10 +157,18 @@ describe('G17 real SQL over current main', () => {
     expect(await redact(site, 1)).toMatchObject({ redacted: true, done: false });
     expect(await count('widget_conversations')).toBe(1);
     expect(await redact(site, 1)).toMatchObject({ redacted: true, done: true });
-    for (const table of ['widget_conversations','widget_visitors','widget_leads','widget_events','messenger_attachments','messenger_feedback','messenger_unanswered']) expect(await count(table)).toBe(0);
-    expect(await count('widget_conversations', other)).toBe(1);
+    for (const table of ['widget_conversations','widget_visitors','widget_leads','widget_events','messenger_attachments','messenger_feedback','messenger_unanswered']) {
+      expect(await count(table)).toBe(0);
+      expect(await count(table, other)).toBe(1);
+    }
+    expect(await value('select count(*)::int as value from widget_messages where conversation_id=any($1::uuid[])', [[first.chat, second.chat]])).toBe(0);
+    expect(await value('select count(*)::int as value from widget_messages where conversation_id=$1', [untouched.chat])).toBe(1);
     expect(await value<number>('select count(*)::int as value from woo_privacy_storage_queue where widget_site_id=$1', [site])).toBe(2);
-    expect(await value<number>(`select count(*)::int as value from messenger_audit where widget_site_id=$1 and action='store_disconnected'`, [site])).toBeGreaterThan(0);
+    expect(await count('woo_privacy_storage_queue', other)).toBe(0);
+    expect(await count('messenger_audit', other)).toBe(2);
+    expect(await count('messenger_audit')).toBe(1);
+    expect(await value('select action as value from messenger_audit where widget_site_id=$1', [site])).toBe('store_disconnected');
+    expect(await value('select status as value from widget_sites where id=$1', [other])).toBe('active');
     expect(await redact()).toMatchObject({ redacted: false });
   });
   it('exports current inbox fields, contact, events and audit, then erases every linked shopper table', async () => {

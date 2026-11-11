@@ -6,6 +6,10 @@ const m = vi.hoisted(() => ({ network: vi.fn(), visitor: vi.fn(), siteLimit: vi.
   hosts: vi.fn(), proofHosts: vi.fn(), prove: vi.fn(), signal: vi.fn(), signature: vi.fn(), active: vi.fn(), flags: vi.fn(),
   launch: vi.fn(), storeLaunch: vi.fn(), lookup: vi.fn(), codeVersion: vi.fn(), platforms: vi.fn(), fingerprint: vi.fn(),
   tryOnHosts: vi.fn(), domainCheck: vi.fn(), photo: vi.fn() }));
+// after() runs its task at once here, so the deferred health writes stay observable.
+vi.mock('next/server', async (importOriginal) => ({ ...await importOriginal<typeof import('next/server')>(),
+  after: (task: () => unknown) => { void task(); } }));
+vi.mock('@/lib/store-health/signature-signals', () => ({ recordSignatureHealth: vi.fn(async () => {}) }));
 vi.mock('@/lib/store-health/signals', () => ({ recordPhotoHealth: m.photo }));
 vi.mock('@/lib/ratelimit', () => ({ clientIp: () => '203.0.113.5', publicApiRatelimit: { limit: m.network },
   proxyVisitorRatelimit: { limit: m.visitor }, proxyShopMintRatelimit: { limit: m.siteLimit } }));
@@ -315,6 +319,49 @@ describe('pending Shopify shop proof', () => {
     expect((await shopPost()).status).toBe(503);
     expect(m.signal).not.toHaveBeenCalled(); expect(m.active).not.toHaveBeenCalled();
   });
+  describe('a proof-only request from Store Chat (M3)', () => {
+    const proofPost = (over: Record<string, unknown> = {}, origin = 'https://merchant.myshopify.com') =>
+      post({ proof: true, imageUrl: undefined, title: undefined, signed, pageUrl: 'https://merchant.myshopify.com/collections/all', ...over }, origin);
+
+    it('finishes the proof with the page\'s signed render and mints nothing else, whatever Try-On would say', async () => {
+      // Try-On itself is paused and the plan inactive: the proof still completes.
+      m.launch.mockResolvedValue({ launch: { tryOn: 'hidden', reason: 'paused' }, unsubscribed: true });
+      const response = await proofPost();
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ proven: true });
+      expect(m.signature).toHaveBeenCalledWith(expect.objectContaining({ connection: pending, claims: signed }));
+      expect(m.prove).toHaveBeenCalledExactlyOnceWith(pending, { kind: 'render' });
+      expect(m.visitor).toHaveBeenCalled(); expect(m.siteLimit).toHaveBeenCalled(); expect(m.network).toHaveBeenCalled();
+      for (const later of [m.active, m.signal, m.launch, m.tryOnHosts]) expect(later).not.toHaveBeenCalled();
+    });
+
+    it('keeps every check: signature, replay, origin, pending outcome and the signed product', async () => {
+      m.signature.mockResolvedValue({ ok: false, code: 'replayed' });
+      expect((await proofPost()).status).toBe(409);
+      m.signature.mockResolvedValue({ ok: false, code: 'bad_signature' });
+      expect((await proofPost()).status).toBe(401);
+      m.signature.mockResolvedValue({ ok: true });
+      expect((await proofPost({}, 'https://evil.example')).status).toBe(403);
+      expect((await proofPost({ signed: undefined })).status).toBe(401);
+      expect((await proofPost({ productId: '43' })).status).toBe(401);
+      expect(m.prove).not.toHaveBeenCalled();
+      m.prove.mockResolvedValue({ shopProof: 'pending', outcome: 'not_found' });
+      expect(await (await proofPost()).json()).toEqual({ error: 'shop_proof_pending' });
+      // Only `true`; and only for Shopify.
+      expect((await proofPost({ proof: 'yes' })).status).toBe(400);
+      m.connection.mockResolvedValue(connection);
+      expect((await proofPost({}, 'https://merchant.example')).status).toBe(400);
+    });
+
+    it('answers proven for a shop that is already proven, without a storefront check', async () => {
+      m.connection.mockResolvedValue(shopify);
+      m.site.mockResolvedValue({ ...site, patterns: [], pasteShopDomain: 'merchant.myshopify.com' });
+      m.hosts.mockResolvedValue(['merchant.myshopify.com']);
+      expect(await (await proofPost()).json()).toEqual({ proven: true });
+      expect(m.prove).not.toHaveBeenCalled();
+    });
+  });
+
   it('refuses a connection the Shopify app already holds before checking any signature', async () => {
     m.connection.mockResolvedValue({ ...shopify, app_installed: true });
     const response = await shopPost();
@@ -388,4 +435,24 @@ describe('paste context limits and launch', () => {
     expect(OPTIONS(new NextRequest('https://grindctrl.cloud/api/try-on/paste-context', { headers: { origin: 'https://merchant.example' } })).status).toBe(204);
     expect(m.site).not.toHaveBeenCalled();
   });
+});
+
+vi.mock('@/lib/try-on/daily-budget', () => ({ tryOnDayAvailability: vi.fn(async () => 'live'), readTryOnDayStatus: vi.fn(async () => ({ used: 0, limit: 300, reached: false })) }));
+import { tryOnDayAvailability, readTryOnDayStatus } from '@/lib/try-on/daily-budget';
+beforeEach(() => {
+  vi.mocked(tryOnDayAvailability).mockResolvedValue('live');
+  vi.mocked(readTryOnDayStatus).mockResolvedValue({ used: 0, limit: 300, reached: false });
+});
+
+it.each(['bad_signature','stale_signature'])('M10: records %s only after rate and origin gates, without minting', async (reason) => {
+  const { recordSignatureHealth } = await import('@/lib/store-health/signature-signals');
+  m.connection.mockResolvedValue(shopify); m.signature.mockResolvedValue({ ok: false, code: reason });
+  const response = await post({ signed });
+  expect(response.status).toBe(401);
+  expect(await response.json()).toMatchObject({ error: reason });
+  expect(recordSignatureHealth).toHaveBeenCalledWith(SITE, reason);
+  expect(m.signal).not.toHaveBeenCalled();
+  vi.mocked(recordSignatureHealth).mockClear();
+  await post({ signed }, 'https://evil.example');
+  expect(recordSignatureHealth).not.toHaveBeenCalled();
 });

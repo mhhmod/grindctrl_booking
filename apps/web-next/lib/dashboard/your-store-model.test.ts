@@ -6,7 +6,7 @@ import {
   CODE_STALE_AFTER_MS,
   domainLineState,
   INSTALL_HREF,
-  PLAN_HREF,
+  LOOKS_CONTACT_HREF,
   type YourStoreFacts,
 } from './your-store-model';
 
@@ -229,7 +229,7 @@ describe('buildYourStoreView, Store check', () => {
     });
     expect(check.fix[1]).toMatchObject({
       sentence: 'Out of looks. The button is hidden from shoppers until you top up.',
-      action: { label: 'Top up', href: PLAN_HREF },
+      action: { label: 'Talk to us to add looks', href: LOOKS_CONTACT_HREF },
     });
     expect(check.fix[2]).toMatchObject({ action: { label: "Prove it's yours", href: INSTALL_HREF } });
     expect(check.fix[2].domains.map((d) => [d.domain, d.state, d.label])).toEqual([
@@ -254,13 +254,13 @@ describe('buildYourStoreView, Store check', () => {
   it('flags low looks as Needs attention with Top up, and leads with the primary only for Not working', () => {
     const check = buildYourStoreView(facts({ tryOn: tryOn({ looksLeft: 3 }) }), en, 'en').check!;
     expect(check.fix).toEqual([
-      expect.objectContaining({ key: 'looks', kind: 'attention', sentence: '3 looks left this month.', action: { label: 'Top up', href: PLAN_HREF, primary: false } }),
+      expect.objectContaining({ key: 'looks', kind: 'attention', sentence: '3 looks left this month.', action: { label: 'Talk to us to add looks', href: LOOKS_CONTACT_HREF, primary: false } }),
     ]);
   });
 
   it('points an inactive plan at the plan page, and only the owner gets the link', () => {
     const owner = buildYourStoreView(facts({ tryOn: tryOn({ planActive: false }) }), en, 'en').check!;
-    expect(owner.fix[0]).toMatchObject({ key: 'looks', kind: 'bad', action: { label: 'See your plan', href: PLAN_HREF, primary: true } });
+    expect(owner.fix[0]).toMatchObject({ key: 'looks', kind: 'bad', action: { label: 'Talk to us to add looks', href: LOOKS_CONTACT_HREF, primary: true } });
     const admin = buildYourStoreView(facts({ canBilling: false, tryOn: tryOn({ looksLeft: 0 }) }), en, 'en').check!;
     expect(admin.fix[0].action).toBeNull();
   });
@@ -312,6 +312,7 @@ describe('buildTodayStoreCard', () => {
   it('gives one status per product, the check time and the link to Your store', () => {
     const card = buildTodayStoreCard(facts({ tryOn: tryOn({ looksLeft: 0 }), chat: { siteId: 'site-1', enabled: false } }), en, 'en');
     expect(card).toEqual({
+      notice: null,
       checkedAt: 'Checked today at 12:14 PM',
       products: [
         { key: 'tryOn', name: 'Try-On', pill: 'bad', offLabel: 'Off' },
@@ -355,7 +356,7 @@ describe.each(['en', 'ar'] as const)('Store check observations (%s)', (locale) =
     expect(check({ platform: 'paste_shopify', pillsOn: false }).more).toEqual([
       { key: 'collectionPages', title: copy.rows.collectionPages, sentence: copy.rows.pillsOff, link: { label: copy.rows.turnOnPills, href: '/dashboard/try-on/setup' } },
     ]);
-    expect(check({ platform: 'paste_website', easyOrders: true }).more[0]).toMatchObject({ sentence: copy.rows.easyOrdersPills });
+    expect(check({ platform: 'paste_website', easyOrders: true }).more).toEqual([]);
     const other = check({ platform: 'paste_website' });
     expect([...other.fix, ...other.more, ...other.well, ...other.pending].some((r) => r.key === 'collectionPages')).toBe(false);
   });
@@ -406,4 +407,59 @@ it('uses the handoff strings word for word in EN/AR', async () => {
       expect(lines.some((line, i) => line === text && (offset === 0 ? lines[i - 1]?.startsWith('A6') : lines[i - 2]?.startsWith('A6')))).toBe(true);
     }
   }
+});
+
+it.each(['en', 'ar'] as const)('shows the daily pause in the existing warning row in %s', locale => {
+  const copy = getYourStoreCopy(locale);
+  const view = buildYourStoreView(facts({ tryOn: tryOn({ dailyLimitReached: true }) }), copy, locale);
+  expect(view.check!.fix).toContainEqual(expect.objectContaining({ key: 'looks', kind: 'attention', sentence: locale === 'en'
+    ? 'Try-On is paused for today. Shoppers cannot see the button. It returns at 12:00 AM, your store time.' : 'القياس الافتراضي متوقف اليوم. لا يرى المتسوقون الزر. يعود الساعة 12:00 ص بتوقيت متجرك.', action: { label: copy.rows.askRaise, href: LOOKS_CONTACT_HREF, primary: false } }));
+  expect(view.products[0]).toMatchObject({ pill: 'attention', seeIt: null });
+});
+
+// Journey regressions: the row must name the actual next step in both locales.
+describe.each(['en', 'ar'] as const)('merchant journey (%s)', (locale) => {
+  const copy = getYourStoreCopy(locale);
+  const view = (over: Partial<YourStoreFacts>) => buildYourStoreView(facts(over), copy, locale);
+  it('M7: surfaces the Woo update outside install steps and on Today for owner/admin', () => {
+    const f = facts({ platform: 'woocommerce', pluginOutdated: true });
+    expect(view(f).check!.fix).toContainEqual(expect.objectContaining({ key: 'plugin', action: expect.objectContaining({ href: '/downloads/grindctrl-store-chat.zip' }) }));
+    expect(buildTodayStoreCard(f, copy, locale).notice?.action.href).toBe('/downloads/grindctrl-store-chat.zip');
+    expect(buildTodayStoreCard({ ...f, canChange: false }, copy, locale).notice).toBeNull();
+  });
+  it.each(['no_verified_domain', 'apex_taken'])('M9/m7: explains %s and links to domain proof', (reason) => {
+    const check = view({ tryOn: tryOn({ planActive: false, pasteReason: reason }) }).check!;
+    expect(check.fix).toContainEqual(expect.objectContaining({ key: 'freePlan', sentence: reason === 'apex_taken' ? copy.rows.apexTaken : copy.rows.noVerifiedDomain, action: expect.objectContaining({ label: copy.rows.verifyDomain, href: INSTALL_HREF }) }));
+    expect(check.well.some((row) => row.key === 'looks')).toBe(false);
+  });
+  it('M10: a failed signature cannot leave Try-On green', () => {
+    const v = view({ signatureFailures: 2 });
+    expect(v.products[0].pill).toBe('bad');
+    expect(v.check!.fix).toContainEqual(expect.objectContaining({ key: 'signature', action: expect.objectContaining({ href: INSTALL_HREF }) }));
+  });
+  it('M11: unreadable daily limits are attention, never healthy', () => {
+    const v = view({ tryOn: tryOn({ dailyLimitUnreadable: true }) });
+    expect(v.products[0].pill).toBe('attention');
+    expect(v.check!.fix).toContainEqual(expect.objectContaining({ key: 'dailyLimit', sentence: copy.rows.dailyUnreadable }));
+  });
+  it('M12: converts UTC reset to store time and names the shared ceiling separately', () => {
+    const reset = '2026-11-12T00:00:00Z';
+    const v = view({ timeZone: 'Africa/Cairo', tryOn: tryOn({ dailyLimitReached: true, dailyLimitCause: 'global', dailyResetAt: reset }) });
+    const row = v.check!.fix.find((row) => row.key === 'looks')!;
+    expect(row.sentence).toContain(copy.rows.sharedCeiling);
+    expect(row.sentence).toContain(locale === 'en' ? '2:00 AM' : '2:00 ص');
+    expect(row.action).toMatchObject({ label: copy.rows.askRaise, href: LOOKS_CONTACT_HREF });
+    const local = view({ tryOn: tryOn({ dailyLimitReached: true, dailyLimitCause: 'store' }) });
+    expect(local.check!.fix[0].sentence).not.toContain(copy.rows.sharedCeiling);
+  });
+  it('M13: names the contact action and tells an admin to ask the owner', () => {
+    expect(view({ tryOn: tryOn({ looksLeft: 0 }) }).check!.fix[0].action).toMatchObject({ label: copy.rows.topUp, href: 'mailto:grindctrlnow@gmail.com' });
+    const admin = view({ canBilling: false, tryOn: tryOn({ looksLeft: 0 }) }).check!.fix[0];
+    expect(admin.sentence).toContain(copy.rows.askOwner);
+    expect(admin.action).toBeNull();
+  });
+  it('M15: offers no unimplemented EasyOrders connector', () => {
+    const check = view({ platform: 'paste_website', easyOrders: true }).check!;
+    expect([...check.fix, ...check.more, ...check.pending, ...check.well].some((row) => row.sentence.includes('EasyOrders'))).toBe(false);
+  });
 });
