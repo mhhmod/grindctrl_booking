@@ -26,11 +26,20 @@ jobs:
           fi
           # Same bearer-protected endpoint pattern as messenger-alert-retry.
           # Node is available on the runner; no dependency or storefront key.
+          # Reaching this VPS from a GitHub runner sometimes times out on connect
+          # (the deploy workflow retries for the same reason). A batch is safe to
+          # repeat, so one retry after a short wait; a real outage still fails.
           node --input-type=module <<'JS'
-          const response = await fetch(process.env.MESSENGER_PRODUCTS_URL, {
+          const call = () => fetch(process.env.MESSENGER_PRODUCTS_URL, {
             method: 'POST', headers: { Authorization: `Bearer ${process.env.MESSENGER_PRODUCTS_SECRET}` },
             signal: AbortSignal.timeout(240_000),
           });
+          let response;
+          try { response = await call(); } catch (error) {
+            console.log(`First attempt failed (${error?.cause?.code ?? error?.name ?? 'error'}); retrying in 20 s.`);
+            await new Promise((resolve) => setTimeout(resolve, 20_000));
+            response = await call();
+          }
           if (!response.ok) throw new Error(`Catalogue refresh HTTP ${response.status}`);
           console.log(await response.text());
           JS
