@@ -1,0 +1,41 @@
+name: Store Health Alerts
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: store-health-alerts
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - name: Check a bounded batch of stores
+        env:
+          STORE_HEALTH_ALERTS_URL: ${{ secrets.STORE_HEALTH_ALERTS_URL }}
+          STORE_HEALTH_ALERTS_SECRET: ${{ secrets.STORE_HEALTH_ALERTS_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${STORE_HEALTH_ALERTS_URL:-}" || -z "${STORE_HEALTH_ALERTS_SECRET:-}" ]]; then
+            echo "::notice::Store health alert secrets are not configured; skipping."
+            exit 0
+          fi
+          node --input-type=module <<'JS'
+          const call = () => fetch(process.env.STORE_HEALTH_ALERTS_URL, {
+            method: 'POST', headers: { Authorization: `Bearer ${process.env.STORE_HEALTH_ALERTS_SECRET}` },
+            signal: AbortSignal.timeout(240_000),
+          });
+          let response;
+          try { response = await call(); } catch (error) {
+            if (!['UND_ERR_CONNECT_TIMEOUT', 'ETIMEDOUT'].includes(error?.cause?.code)) throw error;
+            console.log('Connection timed out; retrying in 20 s.');
+            await new Promise((resolve) => setTimeout(resolve, 20_000));
+            response = await call();
+          }
+          if (!response.ok) throw new Error(`Store health alerts HTTP ${response.status}`);
+          console.log(await response.text());
+          JS
