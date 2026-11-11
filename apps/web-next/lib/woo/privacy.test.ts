@@ -19,7 +19,7 @@ vi.mock('@/lib/messenger/db', () => ({
   }),
 }));
 
-import { parsePrivacyRequest, redactDueWooSites } from './privacy';
+import { parsePrivacyRequest, redactDueWooSites, redactDuePasteSites } from './privacy';
 
 const A = '123e4567-e89b-12d3-a456-426614174000';
 const B = '223e4567-e89b-12d3-a456-426614174000';
@@ -41,6 +41,14 @@ describe('parsePrivacyRequest', () => {
 });
 
 describe('redactDueWooSites', () => {
+  it('uses the same bounded worker and Storage queue for due paste sites', async () => {
+    mocks.rpc.mockImplementation(async (fn: string) => fn === 'paste_sites_due_for_redaction'
+      ? { data: [A], error: null } : { data: { done: true, redacted: true }, error: null });
+    expect(await redactDuePasteSites()).toMatchObject({ sites: 1, completed: 1, failed: 0 });
+    expect(mocks.rpc).toHaveBeenCalledWith('paste_sites_due_for_redaction', { p_limit: 5 });
+    expect(mocks.rpc).toHaveBeenCalledWith('paste_site_redact', { p_site: A });
+    expect(mocks.rpc).not.toHaveBeenCalledWith('woo_site_redact', expect.anything());
+  });
   it('redacts only the sites the database lists as due, in bounded batches', async () => {
     mocks.rpc.mockImplementation(async (fn: string, args: { p_site?: string }) => {
       if (fn === 'woo_sites_due_for_redaction') return { data: [A, B], error: null };

@@ -59,9 +59,12 @@ const SHOP_CHECK_OUTCOMES: readonly PasteShopCheckOutcome[] = ['proven', 'awaiti
 export async function getPasteConnection(siteId: string): Promise<PasteConnection | null> {
   const db = getMessengerServiceClient();
   const result = await db.from('paste_site_connections')
-    .select('widget_site_id, platform, shop_domain, status, secret_version, previous_secret_version, previous_valid_until, first_seen_at, last_seen_at, shop_proven_at, disconnected_reason, shop_render_at, shop_check_outcome, shop_checked_at')
+    .select('widget_site_id, platform, shop_domain, status, redact_after, secret_version, previous_secret_version, previous_valid_until, first_seen_at, last_seen_at, shop_proven_at, disconnected_reason, shop_render_at, shop_check_outcome, shop_checked_at')
     .eq('widget_site_id', siteId).maybeSingle();
-  if (result.error && schemaMissing(result.error)) return null;
+  // An absent paste table means an older, non-paste installation. A missing
+  // column (including the retention deadline) must fail closed: treating a
+  // real paste connection as absent would bypass scheduled disconnect.
+  if (result.error && ['42P01', 'PGRST205'].includes(result.error.code ?? '')) return null;
   const row = checked(result) as Omit<PasteConnection, 'app_installed'> | null;
   if (!row) return null;
   if (row.widget_site_id !== siteId || !['website', 'shopify'].includes(row.platform)

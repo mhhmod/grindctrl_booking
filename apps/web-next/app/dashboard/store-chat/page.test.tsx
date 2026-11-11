@@ -2,6 +2,7 @@ import React from 'react';
 import { cleanup, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithMantine as render } from '@/components/mantine/test-utils';
+import type { ChatStudioMeta } from '@/components/dashboard/v16/store-chat/v16-chat-studio';
 
 /* Which page each Store Chat route draws, behind v16_dashboard. The reads
    behind them are stubbed: each has its own tests. */
@@ -55,6 +56,7 @@ vi.mock('@/lib/shopify/tokens', () => ({ hasShopOrderAccess: vi.fn(async () => f
 vi.mock('@/lib/shopify/platform-operator', () => ({ isTryOnPlatformOperator: vi.fn(async () => false) }));
 vi.mock('@/lib/shopify/shop-timezone', () => ({ getShopTimezone: vi.fn(async () => 'Africa/Cairo') }));
 vi.mock('@/lib/woo/connection', () => ({ getWooSiteConnection: vi.fn(async () => null) }));
+vi.mock('@/lib/paste/store', () => ({ getPasteConnection: vi.fn(async () => null), readPasteDomainPlatforms: vi.fn(async () => []) }));
 vi.mock('@/lib/flags/store-flags', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/flags/store-flags')>()),
   storeFlags: vi.fn(async () => []),
@@ -81,8 +83,9 @@ vi.mock('./woo-actions', () => ({ createWooPairingCodeAction: vi.fn(), readWooCo
 vi.mock('@/components/dashboard/v16/store-setup/store-connect', () => ({ StoreConnect: ({ siteId, actions }: { siteId: string; actions?: object }) => <div data-testid="store-connect" data-actions={actions ? Object.keys(actions).sort().join(',') : ''}>{siteId}</div> }));
 // ChatStudio has its own tests (v16-chat-studio.test.tsx); here only what it is handed.
 vi.mock('@/components/dashboard/v16/store-chat/v16-chat-studio', () => ({
-  V16ChatStudio: ({ meta, actions }: { meta: { version: number; domain: string | null; wooConnection: { status: string } | null }; actions: object }) => (
-    <div data-testid="chat-studio" data-actions={Object.keys(actions).sort().join(',')}>
+  V16ChatStudio: ({ meta, actions }: { meta: ChatStudioMeta; actions: object }) => (
+    <div data-testid="chat-studio" data-actions={Object.keys(actions).sort().join(',')}
+      data-can-disconnect={meta.canDisconnect} data-retention={JSON.stringify(meta.pasteRetention)}>
       {meta.domain}:{meta.version}:{meta.wooConnection?.status ?? 'none'}
     </div>
   ),
@@ -106,6 +109,7 @@ import { listConversationsForSite } from '@/lib/messenger/conversations';
 import { listMessengerSites, listTeamSites, ensureMessengerSite, shouldEnsureMessengerSite } from '@/lib/messenger/provisioning';
 import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
 import { redirect } from 'next/navigation';
+import { getPasteConnection } from '@/lib/paste/store';
 
 type Query = { tab?: string; site?: string; orders?: string };
 const knows = (query: Query = {}) => MessengerPage({ searchParams: Promise.resolve(query) });
@@ -121,6 +125,19 @@ beforeEach(() => {
 });
 
 describe('the Store Chat routes', () => {
+  it('passes the retention deadline without exposing the duplicate disconnect for a disabled paste site', async () => {
+    const deadline = '2026-12-12T12:00:00Z';
+    vi.mocked(listMessengerSites).mockResolvedValueOnce([{ ...SITE, domain: null, status: 'disabled', hasDraft: false }]);
+    vi.mocked(getPasteConnection).mockResolvedValueOnce({
+      widget_site_id: SITE.id, platform: 'website', shop_domain: null, status: 'disconnected', redact_after: deadline,
+      secret_version: 1, previous_secret_version: null, previous_valid_until: null,
+      first_seen_at: null, last_seen_at: null, shop_proven_at: null, shop_render_at: null,
+      shop_check_outcome: null, shop_checked_at: null, disconnected_reason: null, app_installed: false,
+    });
+    render(await setup());
+    expect(screen.getByTestId('chat-studio')).toHaveAttribute('data-can-disconnect', 'false');
+    expect(screen.getByTestId('chat-studio')).toHaveAttribute('data-retention', JSON.stringify({ disconnected: true, redactAfter: deadline }));
+  });
   it('renders install for the selected site with actions only for settings roles', async () => {
     render(await StoreChatPage({ params: {}, tab: 'install' }));
     expect(screen.getByTestId('store-connect')).toHaveTextContent(SITE.id);

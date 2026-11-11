@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const m = vi.hoisted(() => ({ auth: vi.fn(), access: vi.fn(), limit: vi.fn(), enable: vi.fn(), add: vi.fn(), remove: vi.fn(), prove: vi.fn(), proveMeta: vi.fn(), rotate: vi.fn(),
-  connection: vi.fn(), status: vi.fn(), invalidate: vi.fn(), check: vi.fn(), fingerprint: vi.fn(), domainCheck: vi.fn(), grant: vi.fn(), list: vi.fn(), audit: vi.fn(), disconnect: vi.fn(), appInstalled: vi.fn(), woo: vi.fn() }));
+  connection: vi.fn(), status: vi.fn(), invalidate: vi.fn(), check: vi.fn(), fingerprint: vi.fn(), domainCheck: vi.fn(), grant: vi.fn(), list: vi.fn(), audit: vi.fn(), privacy: vi.fn(), disconnect: vi.fn(), appInstalled: vi.fn(), woo: vi.fn() }));
+vi.mock('@/lib/paste/privacy', () => ({ pasteShopperPrivacy: m.privacy }));
 vi.mock('@/lib/woo/connection', () => ({ listActiveWooSiteIds: m.woo }));
 vi.mock('@/lib/messenger/conversations', () => ({ recordAudit: m.audit }));
 vi.mock('@/lib/paste/platform-check', () => ({ schedulePasteDomainPlatformCheck: m.fingerprint }));
@@ -18,7 +19,7 @@ vi.mock('@/lib/paste/store', async (original) => ({ pasteTrust: (await original<
 vi.mock('@/lib/paste/status', () => ({ readPasteInstallStatus: m.status }));
 vi.mock('@/lib/paste/shop-proof', () => ({ checkPasteShop: m.check }));
 vi.mock('@/lib/shopify/proxy-config-cache', () => ({ invalidateProxyConfig: m.invalidate }));
-import { enablePasteInstallAction, addPasteDomainAction, removePasteDomainAction, provePasteDomainAction, provePasteDomainMetaAction, rotatePasteSecretAction, getPasteSnippetAction, getPasteInstallStatusAction, provePasteShopAction, checkPasteDomainAction, disconnectPasteInstallAction } from '@/app/dashboard/store-chat/paste-actions';
+import { enablePasteInstallAction, addPasteDomainAction, removePasteDomainAction, provePasteDomainAction, provePasteDomainMetaAction, rotatePasteSecretAction, getPasteSnippetAction, getPasteInstallStatusAction, provePasteShopAction, checkPasteDomainAction, pastePrivacyRequestAction, disconnectPasteInstallAction } from '@/app/dashboard/store-chat/paste-actions';
 import { PasteError } from '@/lib/paste/types';
 import { UnauthorizedError } from '@/lib/messenger/provisioning';
 import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
@@ -35,6 +36,17 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 describe('owner-authorized paste plumbing actions', () => {
+  it('requires the store capability before either privacy operation', async () => {
+    m.privacy.mockResolvedValue({ done: true });
+    expect(await pastePrivacyRequestAction(SITE, 'erase', { email: 'a@example.com' })).toEqual({ ok: true, data: { done: true } });
+    expect(m.access).toHaveBeenCalledWith('owner', SITE, 'store');
+    expect(m.privacy).toHaveBeenCalledWith(SITE, 'erase', { email: 'a@example.com' });
+    m.privacy.mockClear();
+    m.access.mockRejectedValue(new RoleNotAllowedError('store'));
+    expect(await pastePrivacyRequestAction(SITE, 'export', {})).toMatchObject({ ok: false, code: 'forbidden' });
+    expect(m.privacy).not.toHaveBeenCalled();
+  });
+
   it('audits domain changes and key rotation with actor and target, excluding secrets', async () => {
     await addPasteDomainAction(SITE, 'merchant.example');
     await removePasteDomainAction(SITE, 'domain-a');
@@ -47,6 +59,15 @@ describe('owner-authorized paste plumbing actions', () => {
     expect(await enablePasteInstallAction(SITE, 'shopify', 'Merchant.MyShopify.com')).toEqual({ ok: true, data: { tenantKey: `site:${SITE}` } });
     expect(m.access).toHaveBeenCalledWith('owner', SITE, 'store');
     expect(m.enable).toHaveBeenCalledExactlyOnceWith(SITE, 'shopify', 'merchant.myshopify.com');
+  });
+  it('allows the owner to enable another shop while the privacy trigger has disabled serving', async () => {
+    m.access.mockResolvedValue({ ...site, status: 'disabled' });
+    expect(await enablePasteInstallAction(SITE, 'shopify', 'another.myshopify.com'))
+      .toEqual({ ok: true, data: { tenantKey: `site:${SITE}` } });
+    expect(m.access).toHaveBeenCalledWith('owner', SITE, 'store');
+    expect(m.limit).toHaveBeenCalledWith(`paste:${SITE}:owner`, 'write');
+    expect(m.enable).toHaveBeenCalledExactlyOnceWith(SITE, 'shopify', 'another.myshopify.com');
+    expect(m.invalidate).toHaveBeenCalledWith(`site:${SITE}`);
   });
   it('rejects unknown platforms and invalid Shopify domains', async () => {
     expect(await enablePasteInstallAction(SITE, 'shopify', 'attacker.example')).toMatchObject({ ok: false, code: 'invalid_platform' });

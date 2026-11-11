@@ -1,6 +1,7 @@
 'use server';
 
 import { auth } from '@clerk/nextjs/server';
+import { pasteShopperPrivacy } from '@/lib/paste/privacy';
 import { scheduleStoreConnectedEmail } from '@/lib/email/store-connected-sender';
 import { recordAudit } from '@/lib/messenger/conversations';
 import { requireSiteAccess, UnauthorizedError } from '@/lib/messenger/provisioning';
@@ -82,7 +83,8 @@ async function conflictHolder(site: { id: string; domain: string | null }, shop:
 
 /** "Use a different store": the owner undoes the pasted install. The code on
  * the store stops working at once and its addresses are released; plan,
- * looks and conversations stay with this account. Audited. Owner only. */
+ * looks stay with this account. The privacy trigger schedules shopper data
+ * removal in 30 days unless the site reconnects. Audited. Owner only. */
 export async function disconnectPasteInstallAction(siteId: string): Promise<PasteResult<null>> {
   return authorized(siteId, 'store', 'write', async (site, userId) => {
     let released;
@@ -219,4 +221,13 @@ async function addShopPrimaryDomain(site: { id: string; embed_key: string }, use
 export async function getPasteInstallStatusAction(siteId: string): Promise<PasteResult<PasteInstallStatus>> {
   // Includes the complete billing state, so it is the owner's alone.
   return authorized(siteId, 'store', 'read', (site) => readPasteInstallStatus(site));
+}
+
+/** Owner-only privacy fulfilment, reusing the plugin's bounded export/erase
+ * and durable Storage queue. Each call handles one page/batch. */
+export async function pastePrivacyRequestAction(siteId: string, operation: 'export' | 'erase', request: unknown) {
+  return authorized(siteId, 'store', operation === 'export' ? 'read' : 'write', async (site) => {
+    if (operation !== 'export' && operation !== 'erase') throw new PasteError('invalid_request');
+    return pasteShopperPrivacy(site.id, operation, request);
+  });
 }

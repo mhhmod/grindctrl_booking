@@ -22,9 +22,19 @@ describe('Shopify step four copy', () => {
 
   it.each(['en', 'ar'])('keeps the house style: no em dashes (%s)', (locale) => {
     const copy = pasteInstallCopy(locale);
-    const lines = [...OUTCOMES.map((outcome) => copy.shopCheck(outcome, 30)), copy.waitingHintShopify, copy.openProductPage, copy.passwordPageNote];
+    const lines = [...OUTCOMES.map((outcome) => copy.shopCheck(outcome, 30)), copy.waitingHintShopify, copy.openProductPage, copy.passwordPageNote,
+      copy.disconnectRetention, copy.deletionDate('12/12/2026')];
     for (const line of lines) expect(line).not.toMatch(/—/);
   });
+});
+
+it.each(['en', 'ar'])('explains the old store removal date and reconnect exception (%s)', (locale) => {
+  const copy = pasteInstallCopy(locale);
+  expect(copy.disconnectRetention).toContain('30');
+  expect(copy.deletionDate('12/12/2026')).toContain('12/12/2026');
+  const sameStore = locale === 'ar' ? 'المتجر نفسه' : 'same store';
+  expect(copy.disconnectRetention).toContain(sameStore);
+  expect(copy.deletionDate('12/12/2026')).toContain(sameStore);
 });
 
 it.each(['en','ar'])('m3: unreachable has a concrete storefront check and escalation (%s)', (locale) => {
