@@ -7,6 +7,7 @@ import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
 import { getTryOnSettings } from '@/lib/try-on/settings';
 import { readPublicPlacement } from '@/lib/try-on/placement-store';
 import { cardPillsOn } from '@/lib/try-on/card-pill';
+import { tryOnDayAvailability } from '@/lib/try-on/daily-budget';
 import { getTryOnLaunch } from '@/lib/try-on/launch';
 import {
   cachedProxyConfig,
@@ -96,7 +97,12 @@ export async function GET(request: NextRequest) {
   };
 
   const cacheKey = proxyConfigCacheKey(shop, locale);
-  const cached = cachedProxyConfig(cacheKey);
+  let cached = cachedProxyConfig(cacheKey);
+  if (shop && cached) {
+    const day = await tryOnDayAvailability(shop);
+    if (day !== 'live') cached = { ...cached, tryOn: 'hidden', reason: day, available: false, messageKey: 'tryOnTemporarilyUnavailable' };
+    else if (cached.reason === 'daily_limit') cached = null;
+  }
   if (cached) {
     return NextResponse.json(forVisitor(cached, await audienceFor(cached.features)), {
       headers: { 'Cache-Control': 'private, no-store' },

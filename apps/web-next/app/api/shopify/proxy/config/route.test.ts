@@ -322,3 +322,29 @@ describe('GET /api/shopify/proxy/config launch state (N5, N6)', () => {
   });
 });
 
+
+vi.mock('@/lib/try-on/daily-budget', () => ({ tryOnDayAvailability: vi.fn(async () => 'live'), readTryOnDayStatus: vi.fn(async () => ({ used: 0, limit: 300, reached: false })) }));
+import { tryOnDayAvailability, readTryOnDayStatus } from '@/lib/try-on/daily-budget';
+beforeEach(() => {
+  vi.mocked(tryOnDayAvailability).mockResolvedValue('live');
+  vi.mocked(readTryOnDayStatus).mockResolvedValue({ used: 0, limit: 300, reached: false });
+});
+
+it('hides the cached button across processes until the UTC day resets', async () => {
+  vi.stubEnv('SHOPIFY_API_KEY', 'test-only-client-id');
+  vi.stubEnv('SHOPIFY_API_SECRET', SECRET);
+  vi.stubEnv('GRINDCTRL_CAPABILITY_SECRET', CORE_SECRET);
+  rateLimitMock.mockReset().mockResolvedValue({ success: true, reset: Date.now() + 10000 });
+  clearProxyConfigCache();
+  settingsMock.mockReset().mockResolvedValue({ accentBg: '#111', accentFg: '#fff', radiusPx: 12 });
+  showButtonMock.mockReset().mockResolvedValue(true);
+  entitlementMock.mockReset().mockResolvedValue(entitlement());
+  flagsMock.mockReset().mockResolvedValue([]);
+  launchMock.mockReset().mockResolvedValue(null);
+  activeInstallationMock.mockReset().mockResolvedValue(true);
+  expect((await (await GET(request())).json()).tryOn).toBe('live');
+  vi.mocked(tryOnDayAvailability).mockResolvedValue('daily_limit');
+  expect(await (await GET(request())).json()).toMatchObject({ tryOn: 'hidden', reason: 'daily_limit', available: false });
+  vi.mocked(tryOnDayAvailability).mockResolvedValue('live');
+  expect((await (await GET(request())).json()).tryOn).toBe('live');
+});

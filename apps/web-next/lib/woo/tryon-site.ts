@@ -4,6 +4,7 @@ import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { getShopEntitlement } from '@/lib/try-on/entitlement';
 import { PAUSED, tryOnLaunchFromEntitlement, type TryOnLaunch } from '@/lib/try-on/launch';
 import { readTryOnShowButton } from '@/lib/try-on/settings';
+import { tryOnDayAvailability } from '@/lib/try-on/daily-budget';
 import { siteTenantKey } from '@/lib/tenancy/tenant-key';
 
 /* Site-level Try-On state for WooCommerce and WordPress tenants: which
@@ -48,6 +49,8 @@ export async function readSiteLaunch(
   if (showButton.status === 'rejected' || entitlement.status === 'rejected') {
     return { launch: { tryOn: 'hidden', reason: 'unavailable' }, unsubscribed: false };
   }
+  const day = await tryOnDayAvailability(tenant);
+  if (day !== 'live') return { launch: { tryOn: 'hidden', reason: day }, unsubscribed: false };
   return {
     launch: tryOnLaunchFromEntitlement(entitlement.value),
     unsubscribed: entitlement.value.status === 'none',

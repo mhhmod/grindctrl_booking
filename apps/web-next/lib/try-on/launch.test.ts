@@ -1,15 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('./daily-budget', () => ({ tryOnDayAvailability: vi.fn(async () => 'live') }));
 vi.mock('server-only', () => ({}));
 const mocks = vi.hoisted(() => ({ entitlement: vi.fn(), showButton: vi.fn() }));
 vi.mock('./entitlement', () => ({ getShopEntitlement: mocks.entitlement }));
 vi.mock('./settings', () => ({ readTryOnShowButton: mocks.showButton }));
 
+import { tryOnDayAvailability } from './daily-budget';
 import { getTryOnLaunch, tryOnLaunchFromEntitlement } from './launch';
 
 describe('getTryOnLaunch, the one launch answer every storefront reads', () => {
   const live = { available: true, status: 'active', totalCreditsRemaining: 3 };
   beforeEach(() => {
+    vi.mocked(tryOnDayAvailability).mockResolvedValue('live');
     mocks.entitlement.mockReset().mockResolvedValue(live);
     mocks.showButton.mockReset().mockResolvedValue(true);
   });
@@ -39,6 +42,10 @@ describe('getTryOnLaunch, the one launch answer every storefront reads', () => {
     expect(await getTryOnLaunch('demo.myshopify.com')).toEqual({ tryOn: 'hidden', reason: 'unavailable' });
   });
 
+  it.each(['daily_limit', 'unavailable'] as const)('hides the button for %s', async reason => {
+    vi.mocked(tryOnDayAvailability).mockResolvedValue(reason);
+    expect(await getTryOnLaunch('demo.myshopify.com')).toEqual({ tryOn: 'hidden', reason });
+  });
   it('reads nothing without a shop', async () => {
     expect(await getTryOnLaunch(null)).toEqual({ tryOn: 'hidden', reason: 'not_installed' });
     expect(mocks.showButton).not.toHaveBeenCalled();

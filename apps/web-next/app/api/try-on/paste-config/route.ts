@@ -1,3 +1,4 @@
+import { tryOnDayAvailability } from '@/lib/try-on/daily-budget';
 import { StorefrontConfigCache, configTiming } from '@/lib/storefront-config-cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { clientIp, proxyShopReadRatelimit, publicApiRatelimit } from '@/lib/ratelimit';
@@ -62,9 +63,11 @@ async function getConfig(request: NextRequest, timing: ReturnType<typeof configT
     if (!active) return hidden('site_disconnected');
 
     const cacheKey = JSON.stringify([site.id, site.settings_version ?? 0, siteConfigLocale(params.get('locale'))]);
-    const config = await configs.read(cacheKey,
+    let config = await configs.read(cacheKey,
       () => buildSiteTryOnConfig(site.id, params.get('locale'), { fresh: true, timing }),
       (value) => value.reason === 'unavailable' ? 0 : value.enabled === true ? 20_000 : 5_000);
+    const day = await tryOnDayAvailability(tenant);
+    if (day !== 'live') config = { ...config, enabled: false, reason: day };
     const features = Array.isArray(config.features) ? (config.features as string[]) : [];
     const audience = launchAudience({
       launch: features.includes('n5_preview_mode') ? await timing.measure('plan', () => getStoreLaunch(tenant)) : null,

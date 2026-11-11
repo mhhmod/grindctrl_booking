@@ -2,6 +2,7 @@ import 'server-only';
 
 import { getShopEntitlement, type ShopEntitlement } from './entitlement';
 import { readTryOnShowButton } from './settings';
+import { tryOnDayAvailability } from './daily-budget';
 
 /* Whether the storefront may show the Try it on button, and why not.
    Contract N34 in docs/handoff/product-v16/09-backend-contracts.md.
@@ -15,6 +16,7 @@ import { readTryOnShowButton } from './settings';
    which the routes add per visitor. `unavailable` is ours: a read failed,
    which is not the same as any of the merchant states above. */
 export type TryOnLaunchReason =
+  | 'daily_limit'
   | 'out_of_looks'
   | 'paused'
   | 'preview'
@@ -58,5 +60,7 @@ export async function getTryOnLaunch(shop: string | null): Promise<TryOnLaunch> 
   if (showButton.status === 'rejected' || entitlement.status === 'rejected') {
     return { tryOn: 'hidden', reason: 'unavailable' };
   }
+  const day = await tryOnDayAvailability(shop);
+  if (day !== 'live') return { tryOn: 'hidden', reason: day };
   return tryOnLaunchFromEntitlement(entitlement.value);
 }

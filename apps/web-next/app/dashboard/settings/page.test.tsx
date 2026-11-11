@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   operator: vi.fn(),
   rows: vi.fn(),
 }));
+vi.mock('@/lib/spend/operator-data', () => ({ operatorLimitRows: async () => [] }));
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }));
 vi.mock('@/lib/auth/dashboard', () => ({ requireDashboardUser: mocks.user }));
 vi.mock('@/lib/auth/locale', () => ({ getRequestLocale: mocks.locale }));
@@ -86,6 +87,13 @@ describe('SettingsPage', () => {
     mocks.operator.mockResolvedValue(false);
     render(await SettingsPage());
     expect(screen.queryByTestId('operator-tools')).not.toBeInTheDocument();
+  });
+
+  it('shows limits for a plain Store Chat site without a Try-On tenant', async () => {
+    mocks.active.mockResolvedValue({ shopDomain: null, siteId: SITE_ID, tenantKey: null, platform: null });
+    mocks.operator.mockResolvedValue(true);
+    render(await SettingsPage());
+    expect(screen.getByTestId('operator-tools')).toHaveTextContent(SITE_ID);
   });
 
   it('reads the invites and hands over the team actions with n21_team_invites', async () => {

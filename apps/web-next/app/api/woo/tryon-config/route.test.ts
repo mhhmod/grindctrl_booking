@@ -38,11 +38,11 @@ beforeEach(() => {
 });
 
 describe('GET /api/woo/tryon-config', () => {
-  it('returns the site config with open CORS and a short public cache', async () => {
+  it('returns the site config with open CORS and no browser cache for live daily availability', async () => {
     const response = await get();
     expect(response.status).toBe(200);
     expect(response.headers.get('access-control-allow-origin')).toBe('*');
-    expect(response.headers.get('cache-control')).toContain('max-age=60');
+    expect(response.headers.get('cache-control')).toBe('no-store');
     expect(await response.json()).toMatchObject({ enabled: true });
     expect(mocks.config).toHaveBeenCalledWith(SITE, 'ar');
     expect(mocks.siteLimit).toHaveBeenCalledWith(`wtcfg:${SITE}`);
@@ -77,4 +77,11 @@ describe('GET /api/woo/tryon-config', () => {
   it('answers the preflight', async () => {
     expect((await OPTIONS()).status).toBe(204);
   });
+});
+
+vi.mock('@/lib/try-on/daily-budget', () => ({ tryOnDayAvailability: vi.fn(async () => 'live'), readTryOnDayStatus: vi.fn(async () => ({ used: 0, limit: 300, reached: false })) }));
+import { tryOnDayAvailability, readTryOnDayStatus } from '@/lib/try-on/daily-budget';
+beforeEach(() => {
+  vi.mocked(tryOnDayAvailability).mockResolvedValue('live');
+  vi.mocked(readTryOnDayStatus).mockResolvedValue({ used: 0, limit: 300, reached: false });
 });

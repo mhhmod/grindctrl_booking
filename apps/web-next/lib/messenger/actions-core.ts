@@ -162,6 +162,9 @@ export async function revertConfigForSite(
   // Reverting chat must never re-enable a store owner's opted-out alerts.
   if ('store_health_notifications' in settings) cleanPrevious.store_health_notifications = settings.store_health_notifications;
   else delete cleanPrevious.store_health_notifications;
+  // Operator limits are independent of merchant chat revisions.
+  if ('spend_limits' in settings) cleanPrevious.spend_limits = settings.spend_limits;
+  else delete cleanPrevious.spend_limits;
   delete cleanPrevious._previousSettings;
   delete cleanPrevious._previousVersion;
 

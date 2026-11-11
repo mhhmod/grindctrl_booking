@@ -66,6 +66,7 @@ export type YourStoreFacts = {
   easyOrders?: boolean;
   wooDetected?: boolean;
   tryOn: null | {
+    dailyLimitReached?: boolean;
     tenant: string;
     showButton: boolean;
     looksLeft: number;
@@ -158,7 +159,7 @@ export function looksLow(tryOn: { looksLeft: number; looksIncluded: number }): b
 /* Pasted-code reasons the storefront hides Try-On that a card already
    covers some other way: preview has its own pill, the looks and the plan
    their own row, a shop still proving itself is waiting for its code. */
-const PASTE_REASONS_COVERED = new Set(['preview', 'out_of_looks', 'plan_inactive', 'shop_proof_pending']);
+const PASTE_REASONS_COVERED = new Set(['daily_limit', 'preview', 'out_of_looks', 'plan_inactive', 'shop_proof_pending']);
 
 export function domainLineState(domain: YourStoreDomainFact): DomainLine['state'] {
   if (domain.verified && domain.state === 'trusted') return 'live';
@@ -173,6 +174,7 @@ export function productsHeading(anyOn: boolean, copy: YourStoreCopy): string {
 function tryOnPill(facts: YourStoreFacts, code: CodeState): { pill: PillKind; cant: boolean; preview: boolean } {
   const tryOn = facts.tryOn!;
   if (code === 'waiting' || tryOn.pasteReason === 'shop_proof_pending') return { pill: 'waiting', cant: false, preview: false };
+  if (tryOn.dailyLimitReached) return { pill: 'attention', cant: true, preview: false };
   const blocked =
     code === 'stale' ||
     !tryOn.planActive ||
@@ -202,11 +204,11 @@ function productCards(facts: YourStoreFacts, copy: YourStoreCopy, code: CodeStat
       name: copy.products.tryOn.name,
       on,
       pill: status?.pill ?? null,
-      sentence: status?.cant ? copy.products.tryOn.cant : status?.preview ? copy.preview : copy.products.tryOn.sentence,
+      sentence: on && facts.tryOn.dailyLimitReached ? copy.rows.dailyLimitReached : status?.cant ? copy.products.tryOn.cant : status?.preview ? copy.preview : copy.products.tryOn.sentence,
       sentenceQuiet: !status?.cant && !status?.preview,
       looks: on ? copy.looksLeftThisMonth(Math.max(0, facts.tryOn.looksLeft)) : null,
       // Nothing to see while shoppers can't see it, or before the first signal.
-      seeIt: on && status?.pill !== 'bad' && status?.pill !== 'waiting' ? seeIt : null,
+      seeIt: on && !facts.tryOn.dailyLimitReached && status?.pill !== 'bad' && status?.pill !== 'waiting' ? seeIt : null,
       updatedCode:
         on && facts.codeOutdated
           ? { note: copy.updatedCodeNote, action: facts.canChange ? { label: copy.getUpdatedCode, href: INSTALL_HREF } : null }
@@ -289,7 +291,9 @@ function storeCheck(facts: YourStoreFacts, copy: YourStoreCopy, locale: SiteLoca
   const tryOn = facts.tryOn;
   if (tryOn?.showButton) {
     const left = Math.max(0, tryOn.looksLeft);
-    if (!tryOn.planActive) {
+    if (tryOn.dailyLimitReached) {
+      attention.push({ key: 'looks', kind: 'attention', title: r.looks, sentence: r.dailyLimitReached, domains: [], action: null });
+    } else if (!tryOn.planActive) {
       bad.push({ key: 'looks', kind: 'bad', title: r.looks, sentence: r.planInactive, domains: [], action: withPrimary(plan(r.seePlan)) });
     } else if (left <= 0) {
       bad.push({ key: 'looks', kind: 'bad', title: r.looks, sentence: r.outOfLooks, domains: [], action: withPrimary(plan(r.topUp)) });

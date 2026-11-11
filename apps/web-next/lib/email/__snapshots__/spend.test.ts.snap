@@ -1,0 +1,21 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`platform email > renders English HTML and plain text 1`] = `
+{
+  "html": "<!doctype html><html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><style>@media(max-width:480px){.gc-health-button{display:block!important;text-align:center!important;padding:0!important}}@media(prefers-color-scheme:dark){.gc-health-bg{background-color:#1f1d1a!important}.gc-health-card{background-color:#292723!important;color:#f6f1e7!important}.gc-health-muted{color:#d7d0c5!important}.gc-health-button{background-color:#f6f1e7!important;color:#1f1d1a!important}}</style></head><body class="gc-health-bg" style="margin:0;background-color:#f6f1e7;color:#1f1d1a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:16px;line-height:1.5"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:24px 0"><table role="presentation" class="gc-health-card" width="100%" style="width:100%;max-width:560px;background-color:#ffffff;color:#1f1d1a;border-collapse:collapse"><tr><td style="padding:24px;word-break:break-word"><p style="margin:0 0 24px;font-size:13px;letter-spacing:2px;font-weight:600">GRINDCTRL</p><h1 style="margin:0 0 16px;font-size:20px;line-height:1.5">Try-On reached 80% of its daily ceiling</h1><table style="width:100%;border-collapse:collapse;text-align:left"><tr><th scope="row" style="padding:8px">Feature</th><td style="padding:8px;overflow-wrap:anywhere">Try-On</td></tr><tr><th scope="row" style="padding:8px">Used</th><td style="padding:8px;overflow-wrap:anywhere">4000</td></tr><tr><th scope="row" style="padding:8px">Limit</th><td style="padding:8px;overflow-wrap:anywhere">5000</td></tr><tr><th scope="row" style="padding:8px">Top store 1</th><td style="padding:8px;overflow-wrap:anywhere">lulu.myshopify.com: 250</td></tr></table><p class="gc-health-muted">Resets at 00:00 UTC</p><a class="gc-health-button" href="https://grindctrl.cloud/dashboard/settings" style="display:inline-block;background-color:#1f1d1a;color:#f6f1e7;text-decoration:none;border-radius:8px;padding:0 24px;line-height:48px;min-height:48px;font-weight:600">Open operator tools</a><p class="gc-health-muted" style="margin:24px 0 0;color:#6b655b;font-size:12px">Grind CTRL · grindctrl.cloud</p></td></tr></table></td></tr></table></body></html>",
+  "subject": "Try-On reached 80% of its daily ceiling",
+  "text": "GRINDCTRL
+
+Try-On reached 80% of its daily ceiling
+
+Feature: Try-On
+Used: 4000
+Limit: 5000
+Top store 1: lulu.myshopify.com: 250
+
+Resets at 00:00 UTC
+Open operator tools: https://grindctrl.cloud/dashboard/settings
+
+Grind CTRL · grindctrl.cloud",
+}
+`;

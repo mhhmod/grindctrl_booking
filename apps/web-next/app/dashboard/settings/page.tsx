@@ -9,7 +9,8 @@ import { activeTenantKey } from '@/lib/dashboard/active-store';
 import { isTryOnPlatformOperator } from '@/lib/shopify/platform-operator';
 import { getStoreLaunch } from '@/lib/launch/store-launch';
 import { launchView } from '@/lib/launch/audience';
-import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
+import { isSiteTenantKey, siteTenantKey } from '@/lib/tenancy/tenant-key';
+import { operatorLimitRows } from '@/lib/spend/operator-data';
 import { StoreFlagsCard } from '@/components/dashboard/store-flags-card';
 import { roleCan } from '@/lib/rbac/dashboard-policy';
 import { getTeamFacts } from '@/lib/dashboard/team-data';
@@ -78,9 +79,11 @@ export default async function SettingsPage() {
    Try-On and Store Chat set up pages so merchants' pages carry only what
    merchants use. The toggles check the allowlist again on the server. */
 async function operatorToolsFor(activeStore: Awaited<ReturnType<typeof getActiveStore>>) {
-  const shop = activeTenantKey(activeStore);
+  const shop = activeTenantKey(activeStore) ?? (activeStore.siteId ? siteTenantKey(activeStore.siteId) : null);
   if (!shop || !(await isTryOnPlatformOperator())) return null;
-  const [rows, storeLaunch] = await Promise.all([storeFlagRows(flagStoreForTenant(shop)), getStoreLaunch(shop)]);
+  const [rows, storeLaunch, dailyLimits, locale] = await Promise.all([
+    storeFlagRows(flagStoreForTenant(shop)), getStoreLaunch(shop), operatorLimitRows(shop), getRequestLocale(),
+  ]);
   const site = isSiteTenantKey(shop);
   return (
     <StoreFlagsCard
@@ -89,6 +92,8 @@ async function operatorToolsFor(activeStore: Awaited<ReturnType<typeof getActive
       launchKey={shop}
       storeLabel={shop}
       rows={rows}
+      dailyLimits={dailyLimits}
+      locale={locale}
       launchState={launchView(storeLaunch, new Date()).state}
     />
   );
