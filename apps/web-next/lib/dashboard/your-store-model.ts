@@ -5,6 +5,7 @@
    order. Storefront facts are aggregate observations; absent evidence waits. */
 
 import type { HealthCounts } from '@/lib/store-health/signals';
+import type { PlacementMode } from '@/lib/try-on/placement';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import type { LaunchState } from '@/lib/launch/audience';
 import { intlLocale } from '@/lib/copy/rules';
@@ -59,6 +60,8 @@ export type YourStoreFacts = {
   /** A pasted Shopify install runs older code than the snippet handed out now. */
   codeOutdated: boolean;
   health?: HealthCounts;
+  /** Where the owner put the Try-On button (Pack B); unread counts as automatic. */
+  placement?: PlacementMode;
   pillsOn?: boolean;
   easyOrders?: boolean;
   wooDetected?: boolean;
@@ -333,14 +336,18 @@ function storeCheck(facts: YourStoreFacts, copy: YourStoreCopy, locale: SiteLoca
 
   if (tryOn?.showButton && facts.platform !== 'shopify_app') {
     const health = facts.health;
-    const tryOnSetup = (label: string) => facts.canChange ? { label, href: '/dashboard/try-on/setup' } : null;
+    const tryOnSetup = (label: string, hash = '') => facts.canChange ? { label, href: `/dashboard/try-on/setup${hash}` } : null;
     const support = (label: string) => ({ label, href: 'mailto:grindctrlnow@gmail.com' });
     const wait = (key: CheckKey, title: string) => pending.push({ key, title, sentence: copy.pill.waiting, link: null });
     const problem = (key: CheckKey, kind: FixRow['kind'], title: string, sentence: string, link: Link | null, host?: string) =>
       (kind === 'bad' ? bad : attention).push({ key, kind, title, sentence, domains: [], action: withPrimary(link), ...(host ? { host } : {}) });
     const pages = (health?.inline ?? 0) + (health?.floating ?? 0);
-    if (!pages) wait('productPages', r.productPages);
-    else if (health!.floating > 0) problem('productPages', 'attention', r.productPages, r.floating, tryOnSetup(r.pickSpot));
+    // B7.4: a chosen spot missing on any view in the last three days; the button fell back to automatic there.
+    if (facts.placement === 'spot' && (health?.spotMissing ?? 0) > 0) {
+      problem('productPages', 'attention', r.productPages, r.spotMoved, tryOnSetup(r.pickAgain, '#button-placement'));
+    } else if (!pages) wait('productPages', r.productPages);
+    else if (facts.placement === 'floating') well.push({ key: 'productPages', title: r.productPages, sentence: r.floatingChosen, link: null });
+    else if (health!.floating > 0) problem('productPages', 'attention', r.productPages, r.floating, tryOnSetup(r.pickSpot, '#button-placement'));
     else well.push({ key: 'productPages', title: r.productPages, sentence: r.inlinePages(health!.inline, pages), link: null });
 
     if (!health || health.detected + health.missing === 0) wait('productDetails', r.productDetails);

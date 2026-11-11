@@ -67,10 +67,19 @@ describe('GET /api/try-on/paste-config', () => {
     expect(response.headers.get('cache-control')).toBe('no-store');
     expect(await response.json()).toEqual({ tryOn: 'live', reason: null, showCardPill: true, locale: 'ar', catalogLabel: 'جرّب',
       catalogIconPx: 14, catalogFontPx: 12, catalogPadPx: 6, accentBg: '#2a2826', accentFg: '#f0ede9', radiusPx: 999,
-      buttonLabel: 'جرّبها الآن', iconBgFrom: '#ff9a3d', iconBgTo: '#ffd76e', buttonIconPx: 30 });
+      placement: 'auto', buttonLabel: 'جرّبها الآن', iconBgFrom: '#ff9a3d', iconBgTo: '#ffd76e', buttonIconPx: 30 });
     // The config paste-context returns as its settings, for the request's locale.
     expect(m.config).toHaveBeenCalledWith(SITE, 'ar', expect.objectContaining({ fresh: true }));
     expect(m.siteLimit).toHaveBeenCalledWith(`paste-config:${SITE}`);
+  });
+  it('passes on where the owner put the button: the picked spot\'s selector and position only', async () => {
+    m.config.mockResolvedValue({ ...config, placement: 'spot', spot: { selector: 'form[action*="cart"]', position: 'before' } });
+    expect(await (await get()).json()).toMatchObject({ placement: 'spot', spot: { selector: 'form[action*="cart"]', position: 'before' } });
+    StorefrontConfigCache.clearAll();
+    m.config.mockResolvedValue({ ...config, placement: 'floating' });
+    const floating = await (await get()).json();
+    expect(floating.placement).toBe('floating');
+    expect(floating).not.toHaveProperty('spot');
   });
 
   it("returns the button label resolved for the request's locale", async () => {

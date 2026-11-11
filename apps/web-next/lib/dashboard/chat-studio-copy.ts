@@ -294,7 +294,7 @@ const en: ChatStudioCopy = {
     neverSeen: 'No heartbeat received yet.',
     cloneWarning:
       'This connection is reporting a different website address than the one it was paired with. If this is a copy or a staging site, pair the original store again with a new connection code.',
-    updatePlugin: 'Update the plugin: this version is older than the one GRINDCTRL supports. Download the latest zip and upload it in WordPress.',
+    updatePlugin: 'Update the plugin one last time: download the zip below, then in WordPress go to Plugins, Add New, Upload Plugin, and choose Replace current. After this, updates install by themselves.',
     steps: {
       download: 'Download the plugin and keep it zipped. WordPress installs the zip file as it is.',
       upload: 'In WordPress, go to Plugins, then Add New, then Upload Plugin. Choose the file, install it and activate it.',
@@ -473,7 +473,7 @@ const ar: ChatStudioCopy = {
     neverSeen: 'لم تصل نبضة اتصال بعد.',
     cloneWarning:
       'يُبلّغ هذا الاتصال عن عنوان موقع مختلف عن العنوان الذي ارتبط به. إذا كان نسخة أو موقعاً تجريبياً، اربط المتجر الأصلي من جديد برمز اتصال جديد.',
-    updatePlugin: 'حدّث الإضافة: هذا الإصدار أقدم من الإصدار الذي تدعمه GRINDCTRL. نزّل أحدث ملف مضغوط وارفعه في WordPress.',
+    updatePlugin: 'حدّث الإضافة للمرة الأخيرة: نزّل الملف المضغوط بالأسفل، ثم في WordPress اذهب إلى الإضافات، أضف جديد، رفع إضافة، واختر استبدال الحالية. بعد ذلك تُثبَّت التحديثات تلقائيًا.',
     steps: {
       download: 'نزّل الإضافة وأبقها مضغوطة. يثبّت WordPress ملف ZIP كما هو.',
       upload: 'في WordPress افتح Plugins ثم Add New ثم Upload Plugin. اختر الملف وثبّته ثم فعّل الإضافة.',

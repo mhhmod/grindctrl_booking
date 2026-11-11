@@ -15,7 +15,9 @@ const mocks = vi.hoisted(() => ({
   entitlement: vi.fn(),
   flags: vi.fn(),
   launch: vi.fn(),
+  placement: vi.fn(async () => ({ placement: 'auto' })),
 }));
+vi.mock('@/lib/try-on/placement-store', () => ({ readButtonPlacement: mocks.placement }));
 
 vi.mock('@/lib/messenger/db', () => ({
   getMessengerServiceClient: () =>
@@ -239,6 +241,17 @@ it('passes only the active authorized site to the bounded seven-day health reade
   const result = await getYourStoreFacts({ activeStore: { shopDomain: null, siteId: 'site-1', tenantKey: 'site:1', platform: 'paste' }, role: 'owner', timeZone: 'UTC', now: NOW });
   expect(readHealthCounts).toHaveBeenCalledExactlyOnceWith(['site-1'], NOW);
   expect(result?.health).toMatchObject({ inline: 0, photos: 0, photoHost: null });
+});
+
+it('reads where the owner put the button for Store check, softly', async () => {
+  mocks.paste.mockResolvedValue(pasteStatus());
+  const store = { activeStore: { shopDomain: null, siteId: 'site-1', tenantKey: 'site:1', platform: 'paste' as const }, role: 'owner' as const, timeZone: 'UTC', now: NOW };
+  mocks.placement.mockResolvedValueOnce({ placement: 'spot' });
+  expect((await getYourStoreFacts(store))?.placement).toBe('spot');
+  expect(mocks.placement).toHaveBeenCalledWith('site:1');
+  // A failed read leaves it out rather than failing the page.
+  mocks.placement.mockRejectedValueOnce(new Error('placement unavailable'));
+  expect((await getYourStoreFacts(store))?.placement).toBeUndefined();
 });
 
 it('uses the server-detected EasyOrders platform, not the shopper or a hostname guess', async () => {

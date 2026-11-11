@@ -5,6 +5,7 @@ import { verifyShopifyProxySignature } from '@/lib/messenger/identity';
 import { resolveShopifyApp } from '@/lib/shopify/app-registry';
 import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
 import { getTryOnSettings } from '@/lib/try-on/settings';
+import { readPublicPlacement } from '@/lib/try-on/placement-store';
 import { cardPillsOn } from '@/lib/try-on/card-pill';
 import { tryOnDayAvailability } from '@/lib/try-on/daily-budget';
 import { getTryOnLaunch } from '@/lib/try-on/launch';
@@ -124,6 +125,8 @@ export async function GET(request: NextRequest) {
   const available = launch.tryOn === 'live';
 
   const body: Record<string, unknown> = {
+    // { placement, spot? } for engine-driven buttons; the app block keeps its theme editor place.
+    ...(shop ? await readPublicPlacement(shop) : { placement: 'auto' }),
     buttonLabel: copy.buttonLabel,
     accentBg: settings.accentBg,
     accentFg: settings.accentFg,

@@ -92,6 +92,9 @@ async function getConfig(request: NextRequest, timing: ReturnType<typeof configT
       accentBg: config.accentBg,
       accentFg: config.accentFg,
       radiusPx: config.radiusPx,
+      // Where the button goes (Pack B): auto, a picked spot, or floating.
+      placement: config.placement ?? 'auto',
+      ...(config.spot ? { spot: config.spot } : {}),
       // The product button's look, so pasted code shows it from the first paint.
       // The same locale-resolved label paste-context returns in its settings.
       buttonLabel: config.buttonLabel,

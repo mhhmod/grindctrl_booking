@@ -457,7 +457,31 @@ it('passes the public plugin key to the shared engine health reporter', async ()
   vi.stubGlobal('navigator', Object.create(navigator, { sendBeacon: { value: beacon } }));
   page('simple');
   load({ embedKey: 'public-plugin-key' });
-  await tick();
+  // The beacon says where the button went, so it waits for the owner's placement.
+  await tick(); await tick();
+  expect(calls[0].url).toBe('https://grindctrl.cloud/api/woo/tryon-config?key=public-plugin-key&locale=en');
+  expect(calls[0].init).toMatchObject({ credentials: 'omit' });
   expect(beacon).toHaveBeenCalledWith('https://grindctrl.cloud/api/store/signals', JSON.stringify({ kind: 'product_page', productDetected: true, placement: 'inline', key: 'public-plugin-key' }));
   expect(PLUGIN_SOURCE).toContain("'embedKey'      => grindctrl_sc_key()");
+});
+
+it('moves the plugin button to the owner\'s chosen spot once the config says so, and reads no config on catalog pages', async () => {
+  const beacon = vi.fn(() => true);
+  vi.stubGlobal('navigator', Object.create(navigator, { sendBeacon: { value: beacon } }));
+  page('simple');
+  document.body.insertAdjacentHTML('afterbegin', '<h1 class="product_title">Dress</h1>');
+  handler = (url) => url.includes('/api/woo/tryon-config')
+    ? json({ enabled: true, placement: 'spot', spot: { selector: 'h1.product_title', position: 'after' } })
+    : json({ embedUrl: EMBED });
+  load({ embedKey: 'public-plugin-key' });
+  await tick(); await tick();
+  expect(document.querySelector('h1')!.nextElementSibling).toBe(document.querySelector('form .gc-tryon-btn, h1 + .gc-tryon-btn'));
+  expect(document.querySelector('h1')!.nextElementSibling!.getAttribute('data-gc-page')).toBe('1');
+  document.body.innerHTML = '<ul><li class="product"><button type="button" class="gc-tryon-btn gc-tryon-btn--card" data-product-id="43">Card</button></li></ul>';
+  calls = [];
+  delete (window as unknown as Record<string, unknown>).__grindctrlTryOnWoo;
+  delete (window as unknown as Record<string, unknown>).GRINDCTRL_TRYON_ENGINE;
+  load({ embedKey: 'public-plugin-key' });
+  await tick();
+  expect(calls.some((call) => call.url.includes('/api/woo/tryon-config'))).toBe(false);
 });

@@ -27,6 +27,9 @@ import { readPasteCodeOutdated } from '@/lib/paste/status';
 import { isActiveTenant } from '@/lib/shopify/tokens';
 import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
 import { saveTryOnSettingsAction, setTryOnButtonAction, setTryOnCardPillAction } from './actions';
+import { createPickLinkAction, readPlacementAction, setPlacementAction } from './placement-actions';
+
+const PLACEMENT_ACTIONS = { read: readPlacementAction, set: setPlacementAction, open: createPickLinkAction };
 
 /* The Try-On page (04-dashboard.md), drawn by both of its routes:
    /dashboard/try-on is Results and /dashboard/try-on/setup is Set up
@@ -97,7 +100,19 @@ export async function TryOnPage({
         status={entitlement ? { live, label: live ? copy.liveOnStore : copy.hiddenOnStore } : null}
       >
         {settings ? (
-          <V16TryOnStudio locale={locale} shop={shop} wpAdmin={wpAdmin} settings={settings} saveSettings={saveTryOnSettingsAction} buttonStatus={buttonStatus} setButton={setTryOnButtonAction} cardPill={settings.showCardPill} setCardPill={setTryOnCardPillAction} />
+          <V16TryOnStudio
+            locale={locale}
+            shop={shop}
+            wpAdmin={wpAdmin}
+            settings={settings}
+            saveSettings={saveTryOnSettingsAction}
+            buttonStatus={buttonStatus}
+            setButton={setTryOnButtonAction}
+            cardPill={settings.showCardPill}
+            setCardPill={setTryOnCardPillAction}
+            // The Shopify app block is placed in the theme editor; pasted code and Woo pick here.
+            placementActions={installed && isSiteTenantKey(shop) ? PLACEMENT_ACTIONS : undefined}
+          />
         ) : (
           <V16TryOnStudioError locale={locale} />
         )}

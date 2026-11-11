@@ -186,11 +186,39 @@
       });
     }
   };
-  function start() { window.GRINDCTRL_TRYON_ENGINE.mount(adapter); }
+  /* Where the product page button goes (Pack B): the owner's placement from
+     the public Try-On config, read only on a product page. The buttons work
+     from the moment the engine mounts; the placement is applied when it
+     arrives, within PLACEMENT_WAIT_MS. A slow or failed read keeps the
+     button where the plugin printed it (automatic). */
+  var PLACEMENT_WAIT_MS = 1500;
+  function readPlacement() {
+    var key = adapter.signalKey;
+    if (!key || !/^[A-Za-z0-9_-]{6,128}$/.test(key) || !document.querySelector('.gc-tryon-btn[data-gc-page="1"]')) return Promise.resolve(null);
+    var request = fetch(adapter.embedOrigin + '/api/woo/tryon-config?key=' + encodeURIComponent(key) +
+      '&locale=' + (CFG.locale === 'ar' ? 'ar' : 'en'), { credentials: 'omit', headers: { Accept: 'application/json' } })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (config) {
+        return config && (config.placement === 'spot' || config.placement === 'floating')
+          ? { placement: config.placement, spot: config.spot } : null;
+      }).catch(function () { return null; });
+    return Promise.race([request, new Promise(function (resolve) { setTimeout(function () { resolve(null); }, PLACEMENT_WAIT_MS); })]);
+  }
+  var started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    var engine = window.GRINDCTRL_TRYON_ENGINE;
+    // An edit link from the dashboard opened this tab: the engine verifies it first.
+    if (engine.bootPick) engine.bootPick(adapter.embedOrigin);
+    adapter.placementLater = true;
+    var handle = engine.mount(adapter);
+    readPlacement().then(function (placement) { if (handle && handle.place) handle.place(placement); });
+  }
   if (window.GRINDCTRL_TRYON_ENGINE) { start(); return; }
   // The engine is served beside this file, from the same versioned directory.
   var script = document.createElement('script');
-  script.src = new URL('tryon-engine.js?v=d7f53b3782d1', document.currentScript ? document.currentScript.src : 'https://grindctrl.cloud/widget/v1/tryon-woo.js').href;
+  script.src = new URL('tryon-engine.js?v=1363491c4422', document.currentScript ? document.currentScript.src : 'https://grindctrl.cloud/widget/v1/tryon-woo.js').href;
   script.async = true;
   script.onload = start;
   // Without the engine a button would do nothing: take them away instead.

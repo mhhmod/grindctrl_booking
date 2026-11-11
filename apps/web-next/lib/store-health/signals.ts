@@ -1,9 +1,14 @@
 import 'server-only';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 
-export type HealthCounter = { metric: 'placement' | 'product_detected' | 'listing_views' | 'pills' | 'photo_ok' | 'photo_failure'; dimension: string; count: number };
-export type HealthCounts = { inline: number; floating: number; detected: number; missing: number; listings: number; pills: number; photos: number; photoHost: string | null };
-export const emptyHealthCounts = (): HealthCounts => ({ inline: 0, floating: 0, detected: 0, missing: 0, listings: 0, pills: 0, photos: 0, photoHost: null });
+export type HealthCounter = { metric: 'placement' | 'product_detected' | 'listing_views' | 'pills' | 'photo_ok' | 'photo_failure' | 'spot_missing'; dimension: string; count: number };
+/** spotMissing: product page views, over the last SPOT_MISSING_DAYS, where the chosen spot was not found. */
+export type HealthCounts = { inline: number; floating: number; detected: number; missing: number; listings: number; pills: number; photos: number; photoHost: string | null; spotMissing?: number };
+export const emptyHealthCounts = (): HealthCounts => ({ inline: 0, floating: 0, detected: 0, missing: 0, listings: 0, pills: 0, photos: 0, photoHost: null, spotMissing: 0 });
+/** UTC calendar days, today included, that a missing spot stays on Store check (B7.4). */
+export const SPOT_MISSING_DAYS = 3;
+// Before 20261111_store_health_spot_missing.sql runs, nothing is missing.
+const MISSING_TABLE = new Set(['42P01', 'PGRST205']);
 
 export async function incrementHealthCounters(siteId: string, counters: HealthCounter[]): Promise<void> {
   const { error } = await getMessengerServiceClient().rpc('increment_store_health_signals', { p_site_id: siteId, p_counters: counters });
@@ -25,10 +30,21 @@ export async function readHealthCounts(siteIds: string[], now: number): Promise<
   if (!siteIds.length) return counts;
   const today = new Date(now).toISOString().slice(0, 10);
   const start = new Date(Date.parse(today) - 6 * 86400000).toISOString().slice(0, 10);
-  const { data, error } = await getMessengerServiceClient().from('store_health_signals')
-    .select('day, metric, dimension, count').in('site_id', siteIds).gte('day', start).lte('day', today)
-    .order('day', { ascending: false }).order('metric').order('dimension').limit(200 * siteIds.length);
+  const spotStart = new Date(Date.parse(today) - (SPOT_MISSING_DAYS - 1) * 86400000).toISOString().slice(0, 10);
+  const db = getMessengerServiceClient();
+  const [{ data, error }, spots] = await Promise.all([
+    db.from('store_health_signals')
+      .select('day, metric, dimension, count').in('site_id', siteIds).gte('day', start).lte('day', today)
+      .order('day', { ascending: false }).order('metric').order('dimension').limit(200 * siteIds.length),
+    db.from('store_health_spot_signals')
+      .select('count').in('site_id', siteIds).gte('day', spotStart).lte('day', today).limit(SPOT_MISSING_DAYS * siteIds.length),
+  ]);
   if (error) throw new Error('store health read failed');
+  if (spots.error && !MISSING_TABLE.has(String(spots.error.code))) throw new Error('store health read failed');
+  for (const row of spots.data ?? []) {
+    const n = Number(row.count);
+    if (Number.isSafeInteger(n) && n > 0) counts.spotMissing = (counts.spotMissing ?? 0) + n;
+  }
   for (const row of data ?? []) {
     const n = Number(row.count);
     if (!Number.isSafeInteger(n) || n < 0) continue;

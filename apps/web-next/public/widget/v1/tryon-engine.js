@@ -1,5 +1,5 @@
 /**
- * GRINDCTRL Try-On hosted engine v1.4.0.
+ * GRINDCTRL Try-On hosted engine v1.5.0.
  *
  * One storefront lifecycle for every platform: the button, its animated icon
  * and ready badge, the "Try on" pills on product cards, prewarm on view (skipped on
@@ -19,9 +19,12 @@
  *                                     cardSettings carries the catalog label, sizes and colors; cardTrigger?
  *                                     the selector of new markup worth a rescan
  *   lookKey(button), messageProductId(product), checkout(), locale, embedOrigin?, buttonLabel?, cardLabel?
- *   buttonSettings?                -> the owner's button look, applied before an injected button is shown
+ *   buttonSettings?                -> the owner's button look, applied before an injected button is shown,
+ *                                     and its placement ({ placement, spot? }, see chosenPlacement)
  *   followsPage?                   -> mount() returns { refresh() } to call after the page changed
  *                                     client-side: one button for the product now shown, pills to match
+ *   placementLater?                -> plugin-printed buttons keep their place, and the health beacon
+ *                                     waits, until the adapter calls handle.place(placement)
  *
  * Platform data is display and cart data only; the signed context is the
  * authority for a look. Fails quiet: nothing here may break the store page.
@@ -48,7 +51,232 @@
   }
   // Per page, across mounts: every icon's clipPath needs its own id.
   var iconCount = 0;
-  window.GRINDCTRL_TRYON_ENGINE = { version: '1.4.0', mount: function (adapter) {
+
+  /* ── Placement (Pack B) ─────────────────────────────────────────────── */
+
+  /* The owner's choice from the config response: { placement: 'auto' |
+     'spot' | 'floating', spot?: { selector, position } }. A spot is looked
+     up on every product page: at most SPOT_MATCHES matches, the first one
+     shown. Returns null for automatic placement, { missing: true } when the
+     spot is not on this page (the button then goes where automatic would). */
+  var SPOT_MATCHES = 3;
+  function shown(node) {
+    if (!node.isConnected || node.closest('[hidden],[data-gc-pick],.gc-tryon-sheet,.gc-tryon-btn')) return false;
+    if (typeof node.checkVisibility === 'function') return node.checkVisibility();
+    var style = window.getComputedStyle(node);
+    return style.display !== 'none' && style.visibility !== 'hidden';
+  }
+  /* A spot on a run of text (the price's <bdi>, a <strong>) means the line it
+     sits in: placing a block button inside an inline element breaks the line
+     and can push the page wider than a phone. */
+  function blockAnchor(node) {
+    for (var n = node; n && n.parentElement && n !== document.body; n = n.parentElement) {
+      if (/^(BUTTON|INPUT|SELECT|TEXTAREA|IMG|PICTURE|VIDEO|SVG)$/i.test(n.tagName)) return n;
+      var display = window.getComputedStyle(n).display;
+      if (display !== 'inline' && display !== 'contents') return n;
+    }
+    return node;
+  }
+  function chosenPlacement(settings) {
+    var s = settings || {};
+    if (s.placement === 'floating') return { node: null, mode: 'float' };
+    if (s.placement !== 'spot') return null;
+    var spot = s.spot || {};
+    var nodes = [];
+    try {
+      if (typeof spot.selector === 'string' && spot.selector.length <= 300) nodes = document.querySelectorAll(spot.selector);
+    } catch (_) { nodes = []; }
+    if (nodes.length <= SPOT_MATCHES) {
+      for (var i = 0; i < nodes.length; i++) {
+        if (shown(nodes[i])) return { node: blockAnchor(nodes[i]), mode: spot.position === 'before' ? 'before' : 'after' };
+      }
+    }
+    return { missing: true };
+  }
+  function placeAt(button, spot) {
+    button.classList.toggle('gc-tryon-btn--float', spot.mode === 'float');
+    if (spot.mode === 'float') document.body.appendChild(button);
+    else spot.node.insertAdjacentElement(spot.mode === 'before' ? 'beforebegin' : 'afterend', button);
+  }
+
+  /* ── Pick a spot: edit mode (Pack B, B2 to B7) ──────────────────────── */
+
+  /* Opened only by a one-time link from the dashboard (?gc_pick=<token>).
+     The token leaves the address bar at once and lives in this tab's
+     sessionStorage, beside a random claim this tab sends on every call: the
+     server binds the link to the first tab that verifies it. Nothing is
+     drawn and no editor code loads until GRINDCTRL verifies the link. */
+  var PICK_STORE = 'gc_pick';
+  var PICK_TOKEN = /^[0-9a-f-]{36}\.(\d{13})\.[A-Za-z0-9_-]{43}$/;
+  var PICK_CLAIM = /^[A-Za-z0-9_-]{43}$/;
+  // The edit chrome, versioned by its content like this file (widget-version.test.ts).
+  var PICK_SCRIPT = 'pick-spot.js?v=f5db9ed9f471';
+  var pickStarted = false;
+  var pickPreview = null;
+
+  function pickLocale() {
+    var root = document.documentElement;
+    return /^ar\b/i.test(root.lang || '') || String(root.dir).toLowerCase() === 'rtl' ? 'ar' : 'en';
+  }
+  function forgetPick() {
+    try { window.sessionStorage.removeItem(PICK_STORE); } catch (_) {}
+  }
+  function newClaim() {
+    var bytes = new Uint8Array(32);
+    window.crypto.getRandomValues(bytes);
+    var text = '';
+    for (var i = 0; i < bytes.length; i++) text += String.fromCharCode(bytes[i]);
+    return window.btoa(text).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  /** { token, claim } for this tab, or null when no edit link is open here. */
+  function pickSession() {
+    var fromUrl = '';
+    var saved = null;
+    try { fromUrl = new URLSearchParams(window.location.search).get('gc_pick') || ''; } catch (_) {}
+    try { saved = JSON.parse(window.sessionStorage.getItem(PICK_STORE) || 'null'); } catch (_) {}
+    if (saved && (!PICK_TOKEN.test(saved.token) || !PICK_CLAIM.test(saved.claim))) saved = null;
+    if (fromUrl) {
+      try {
+        var clean = new URL(window.location.href);
+        clean.searchParams.delete('gc_pick');
+        window.history.replaceState(window.history.state, '', clean.href);
+      } catch (_) {}
+      if (!PICK_TOKEN.test(fromUrl)) return { token: '', claim: '' };
+      if (!saved || saved.token !== fromUrl) {
+        saved = { token: fromUrl, claim: window.crypto && window.crypto.getRandomValues ? newClaim() : '' };
+        try { window.sessionStorage.setItem(PICK_STORE, JSON.stringify(saved)); } catch (_) {}
+      }
+    }
+    return saved;
+  }
+  function hasPickSession() {
+    if (/[?&]gc_pick=/.test(window.location.search)) return true;
+    try { return !!window.sessionStorage.getItem(PICK_STORE); } catch (_) { return false; }
+  }
+
+  /* B7.1: the one message edit mode shows without its own script. */
+  function pickExpired() {
+    forgetPick();
+    if (!document.body || document.querySelector('[data-gc-pick]')) return;
+    var ar = pickLocale() === 'ar';
+    var host = document.createElement('div');
+    host.setAttribute('data-gc-pick', '');
+    host.style.cssText = 'all:initial!important;position:fixed!important;inset-inline:0!important;inset-block-start:0!important;z-index:2147483647!important;display:block!important';
+    var root = host.attachShadow ? host.attachShadow({ mode: 'open' }) : host;
+    var box = document.createElement('div');
+    box.setAttribute('role', 'alert');
+    box.dir = ar ? 'rtl' : 'ltr';
+    box.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:16px;padding:12px 16px;background:#f6f1e7;color:#1f1d1a;' +
+      'border-radius:12px;box-shadow:0 6px 30px rgba(31,29,26,.18);font:15px/1.5 Manrope,"IBM Plex Sans Arabic",system-ui,sans-serif';
+    var text = document.createElement('span');
+    text.style.cssText = 'flex:1 1 16rem;min-inline-size:0';
+    text.textContent = ar ? 'انتهت صلاحية هذا الرابط. افتح «اختر المكان» مرة أخرى من لوحة التحكم.' : 'This link has expired. Open Pick a spot again from your dashboard.';
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.textContent = ar ? 'إلغاء' : 'Cancel';
+    close.style.cssText = 'min-block-size:44px;padding:8px 16px;border:1px solid rgba(31,29,26,.3);border-radius:12px;background:transparent;color:inherit;font:inherit;cursor:pointer';
+    close.addEventListener('click', function () { host.remove(); });
+    box.appendChild(text);
+    box.appendChild(close);
+    root.appendChild(box);
+    document.body.appendChild(host);
+  }
+
+  function bootPick(appOrigin) {
+    if (pickStarted || !hasPickSession()) return;
+    pickStarted = true;
+    var session = pickSession();
+    var match = session && PICK_TOKEN.exec(session.token);
+    if (!match || !session.claim || Number(match[1]) <= Date.now()) { pickExpired(); return; }
+    var attempts = 0;
+    function verify() {
+      attempts++;
+      window.fetch(appOrigin + '/api/try-on/pick/verify', {
+        method: 'POST', credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer',
+        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+        body: JSON.stringify({ token: session.token, claim: session.claim, locale: pickLocale() })
+      }).then(function (res) {
+        if (res.status === 410) return { expired: true };
+        if (!res.ok) throw new Error('unavailable');
+        return res.json();
+      }).then(function (data) {
+        if (!data || data.expired || data.ok !== true) { pickExpired(); return; }
+        window.GRINDCTRL_PICK_CONFIG = { token: session.token, claim: session.claim, appOrigin: appOrigin,
+          preset: data.preset || null, look: data.button || null, forget: forgetPick };
+        var script = document.createElement('script');
+        script.src = appOrigin + '/widget/v1/' + PICK_SCRIPT;
+        script.async = true;
+        script.referrerPolicy = 'no-referrer';
+        document.head.appendChild(script);
+      }).catch(function () {
+        // Once more for a dropped connection; then the link's own message.
+        if (attempts < 2) setTimeout(verify, 1500); else pickExpired();
+      });
+    }
+    verify();
+  }
+
+  /* The live preview is the store's real button, moved to the spot being
+     tried. On a page without one (Try-On hidden there, or no product found)
+     a button is made in the owner's look; it never opens a look. */
+  function productButton() {
+    var buttons = document.querySelectorAll('.gc-tryon-btn[data-product-id]:not(.gc-tryon-btn--card)');
+    for (var i = 0; i < buttons.length; i++) if (!buttons[i].closest('.gc-tryon-sheet')) return buttons[i];
+    return null;
+  }
+  function previewAdapter(node, position, look) {
+    var label = look && typeof look.buttonLabel === 'string' ? look.buttonLabel.trim() : '';
+    return {
+      injectButton: true,
+      buttonSettings: look || null,
+      buttonLabel: label && label.length <= 80 ? label : (pickLocale() === 'ar' ? 'جرّبها' : 'Try it on'),
+      locale: pickLocale(),
+      // No product behind it: a tap or a prewarm finds nothing to open.
+      detectProduct: function (button) { return button ? null : { id: 'gc-pick-preview' }; },
+      placement: function () { return { node: node, mode: position === 'before' ? 'before' : 'after' }; },
+      placementTarget: function () { return node; },
+      lookKey: function () { return 'gc-pick-preview'; },
+      messageProductId: function () { return 'gc-pick-preview'; },
+      getContext: function () { return Promise.reject(new Error('preview')); },
+      getProduct: function () { return Promise.resolve(null); },
+      addToCart: function () { return Promise.resolve('unsupported'); },
+      checkout: function () {}
+    };
+  }
+  function preview(node, position, look) {
+    if (!node || !node.parentNode) return null;
+    var button = pickPreview ? pickPreview.button : productButton();
+    if (button && (node === button || button.contains(node))) return null;
+    if (!pickPreview && button) {
+      pickPreview = { button: button, parent: button.parentNode, next: button.nextSibling, className: button.className,
+        display: button.style.display, created: false };
+    } else if (!pickPreview) {
+      window.GRINDCTRL_TRYON_ENGINE.mount(previewAdapter(node, position, look));
+      button = productButton();
+      if (!button) return null;
+      button.setAttribute('data-gc-pick-preview', '');
+      pickPreview = { button: button, created: true };
+    }
+    button.classList.remove('gc-tryon-btn--float', 'gc-tryon-btn--float-end', 'gc-tryon-btn--preview');
+    button.style.removeProperty('display');
+    node.insertAdjacentElement(position === 'before' ? 'beforebegin' : 'afterend', button);
+    return button;
+  }
+  /** keep: the spot was saved, so the button stays where the owner put it. */
+  function endPreview(keep) {
+    var state = pickPreview;
+    pickPreview = null;
+    if (!state || keep) return;
+    if (state.created) { state.button.remove(); return; }
+    state.button.className = state.className;
+    if (state.display) state.button.style.display = state.display;
+    if (state.parent && state.parent.isConnected) {
+      state.parent.insertBefore(state.button, state.next && state.next.parentNode === state.parent ? state.next : null);
+    }
+  }
+
+  window.GRINDCTRL_TRYON_ENGINE = { version: '1.5.0', bootPick: bootPick, hasPickSession: hasPickSession,
+    preview: preview, endPreview: endPreview, mount: function (adapter) {
   var BUTTON = '.gc-tryon-btn[data-product-id]';
   var PILL = '.gc-tryon-pill[data-product-id]';
   // Pills one page may hold; the observer stops once there are this many.
@@ -833,21 +1061,26 @@
     old.remove();
   }
 
-  /* The Store Chat bubble is placed left or right whatever the page's
-     direction: the floating pill takes the other bottom corner. */
+  /* The floating pill sits at the bottom start corner (left in English,
+     right in Arabic). The Store Chat bubble is placed left or right whatever
+     the page's direction: when it holds that corner, the pill takes the
+     other one, so the two never cover each other. */
+  var floated = null;
   function settleFloat() {
-    if (!injected || !injected.classList.contains('gc-tryon-btn--float')) return;
+    var button = floated;
+    if (!button || !button.isConnected || !button.classList.contains('gc-tryon-btn--float')) return;
     var chat = document.querySelector('[data-gc-chat-launcher]');
-    var dirHolder = injected.closest('[dir]');
-    var rtl = dirHolder ? dirHolder.getAttribute('dir').toLowerCase() === 'rtl' : window.getComputedStyle(injected).direction === 'rtl';
+    var dirHolder = button.closest('[dir]');
+    var rtl = dirHolder ? dirHolder.getAttribute('dir').toLowerCase() === 'rtl' : window.getComputedStyle(button).direction === 'rtl';
     var chatLeft = !!chat && chat.classList.contains('pos-bl');
-    injected.classList.toggle('gc-tryon-btn--float-end', !!chat && chatLeft !== rtl);
+    button.classList.toggle('gc-tryon-btn--float-end', !!chat && chatLeft !== rtl);
   }
 
   /* One button, for the product the page shows now. Put back after the
      page re-renders it away, at most MAX_REMOUNTS times per address, and
      never after the store said this product, or any, cannot start a look. */
   function placeButton() {
+    if (pickPreview) return;
     if (!adapter.injectButton || buttonStopped) { dropInjected(); return; }
     // A store that also runs the Shopify app block or the Woo plugin keeps that one button.
     if (document.querySelector('.gc-tryon-root') ||
@@ -860,7 +1093,10 @@
       remounts[href] = (remounts[href] || 0) + 1;
       if (remounts[href] > MAX_REMOUNTS) return;
     }
-    var spot = adapter.placement ? adapter.placement() : { node: adapter.placementTarget(), mode: 'after' };
+    // The owner's spot or floating choice first; automatic when there is none, or the spot is not on this page.
+    var chosen = chosenPlacement(adapter.buttonSettings);
+    var spot = chosen && !chosen.missing ? chosen
+      : adapter.placement ? adapter.placement() : { node: adapter.placementTarget(), mode: 'after' };
     var float = !!spot && spot.mode === 'float';
     if (!spot || (!float && !(spot.node && spot.node.parentNode))) return;
     if (!injected || injected.dataset.productId !== detected.id) prewarmed = false;
@@ -877,9 +1113,12 @@
     addIcon(button);
     // The owner's design from its first paint; the context settings later find it styled.
     applySettings(button, adapter.buttonSettings, null);
-    if (float) document.body.appendChild(button); else spot.node.insertAdjacentElement('afterend', button);
+    placeAt(button, spot);
     injected = button;
-    healthBeacon(adapter, { kind: 'product_page', productDetected: true, placement: float ? 'floating' : 'inline' });
+    if (float) floated = button;
+    var facts = { kind: 'product_page', productDetected: true, placement: float ? 'floating' : 'inline' };
+    if (chosen && chosen.missing) facts.spotMissing = true;
+    healthBeacon(adapter, facts);
     settleFloat();
     indicatorFor(button);
     observeForPrewarm(button, function () { if (button === injected) openTryOn(button, true); });
@@ -889,15 +1128,33 @@
   if (adapter.injectCards) mountPills();
   placeButton();
   if (adapter.productMissing) healthBeacon(adapter, { kind: 'product_page', productDetected: false });
-  // Woo prints its own product and catalog buttons before this engine mounts.
-  var nativeProducts = {};
-  document.querySelectorAll(BUTTON).forEach(function (button) {
-    if (adapter.injectButton || adapter.injectCards || !owns(button) || button.hidden ||
-        button.style.display === 'none' || button.classList.contains('gc-tryon-btn--preview')) return;
-    if (button.dataset.gcPage === '1') healthBeacon(adapter, { kind: 'product_page', productDetected: true, placement: 'inline' });
-    else if (button.classList.contains('gc-tryon-btn--card')) nativeProducts[button.dataset.productId] = true;
-  });
-  if (Object.keys(nativeProducts).length) healthBeacon(adapter, { kind: 'listing', pills: Object.keys(nativeProducts).length });
+  /* Woo prints its own product and catalog buttons before this engine
+     mounts, its product button next to the Buy button (automatic). A chosen
+     spot or floating moves it, and the page's health beacon says where it
+     went. An adapter that reads the placement after mounting (placementLater)
+     calls handle.place() once it has it, so its buttons work meanwhile. */
+  var nativePlaced = false;
+  function placeNative() {
+    if (nativePlaced) return;
+    nativePlaced = true;
+    var nativeProducts = {};
+    document.querySelectorAll(BUTTON).forEach(function (button) {
+      if (adapter.injectButton || adapter.injectCards || !owns(button) || button.hidden ||
+          button.style.display === 'none' || button.classList.contains('gc-tryon-btn--preview')) return;
+      if (button.dataset.gcPage === '1') {
+        var choice = pickPreview ? null : chosenPlacement(adapter.buttonSettings);
+        var moves = !!choice && !choice.missing && choice.node !== button && !(choice.node && button.contains(choice.node));
+        if (moves) placeAt(button, choice);
+        if (moves && choice.mode === 'float') { floated = button; settleFloat(); }
+        var facts = { kind: 'product_page', productDetected: true, placement: moves && choice.mode === 'float' ? 'floating' : 'inline' };
+        if (choice && choice.missing) facts.spotMissing = true;
+        healthBeacon(adapter, facts);
+      }
+      else if (button.classList.contains('gc-tryon-btn--card')) nativeProducts[button.dataset.productId] = true;
+    });
+    if (Object.keys(nativeProducts).length) healthBeacon(adapter, { kind: 'listing', pills: Object.keys(nativeProducts).length });
+  }
+  if (!adapter.placementLater) placeNative();
   window.addEventListener('gc:chat-launcher', settleFloat);
   // An exhausted store stays hidden to shoppers. Only a preview token reveals
   // its test entry; the context route is still the authority for test looks.
@@ -921,6 +1178,11 @@
       if (!adapter.followsPage) return;
       placeButton();
       syncPills();
+    },
+    // The owner's placement ({ placement, spot? } or null for automatic), once, for placementLater adapters.
+    place: function (settings) {
+      adapter.buttonSettings = settings || null;
+      placeNative();
     }
   };
   } };

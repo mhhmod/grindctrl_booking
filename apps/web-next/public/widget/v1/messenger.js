@@ -69,7 +69,7 @@
     widgetLoads[name] = new Promise(function (resolve, reject) {
       var script = document.createElement('script');
       script.async = true;
-      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=d7f53b3782d1';
+      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=1363491c4422';
       script.onload = resolve;
       script.onerror = function () { delete widgetLoads[name]; reject(new Error('widget_unavailable')); };
       document.head.appendChild(script);
@@ -192,6 +192,19 @@
       return adapter.prepare();
     }), loadWidget('tryon-engine.js', 'GRINDCTRL_TRYON_ENGINE')]).then(function (ready) {
       if (ready[0] && (!adapter.injectButton || adapter.placementTarget())) window.GRINDCTRL_TRYON_ENGINE.mount(adapter);
+    }).catch(function () { /* Store Chat remains available. */ });
+  }
+
+  /* Pick a spot (Pack B): the dashboard opened this tab with a one-time
+     edit link (?gc_pick=, then kept in this tab's sessionStorage across
+     pages). Shoppers never have either, so for them this loads nothing.
+     The engine verifies the link before any edit code loads. */
+  function bootPickSpot() {
+    var open = /[?&]gc_pick=/.test(window.location.search);
+    if (!open) { try { open = !!window.sessionStorage.getItem('gc_pick'); } catch (_) { open = false; } }
+    if (!open) return;
+    loadWidget('tryon-engine.js', 'GRINDCTRL_TRYON_ENGINE').then(function () {
+      window.GRINDCTRL_TRYON_ENGINE.bootPick(APP_ORIGIN);
     }).catch(function () { /* Store Chat remains available. */ });
   }
   /* Storage namespace has to be stable BEFORE the config response arrives,
@@ -1234,6 +1247,7 @@
   function boot() {
     drainQueue(); // API available immediately; calls run when ready below.
     try { bootPasteTryOn(); } catch (_) { /* isolated from chat */ }
+    try { bootPickSpot(); } catch (_) { /* isolated from chat */ }
     fetchConfig(function (config) {
       state.config = config;
       if (!config || !config.active || pageExcluded(config) || launchHidden(config)) return;

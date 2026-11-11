@@ -4,7 +4,7 @@ Tags: chat, woocommerce, virtual try-on, customer support, order tracking
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.3.7
+Stable tag: 0.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,8 @@ This plugin loads a script from grindctrl.cloud, the GRINDCTRL service that runs
 * On pages with a Try-On button the browser loads https://grindctrl.cloud/widget/v1/tryon-woo.js, and the plugin reads https://grindctrl.cloud/api/woo/tryon-config (public; embed key and language). When a shopper taps Try it on, the plugin sends a signed request to https://grindctrl.cloud/api/woo/tryon-context with the product title, product page URL, product image URL and a one-way salted hash of the visitor's IP address and browser, never the raw address. The Try-On panel is a frame from grindctrl.cloud, and the shopper's photo goes from their browser straight to GRINDCTRL.
 * When you run Export or Erase Personal Data, the plugin sends the email address you entered, signed with the site's secret, to https://grindctrl.cloud/api/woo/privacy/export or https://grindctrl.cloud/api/woo/privacy/erase.
 
+* WordPress checks https://grindctrl.cloud/api/woo/plugin/update for plugin releases. The request identifies the plugin version and this site's home host in its User-Agent, with no cookies. Update archives are downloaded from grindctrl.cloud and checked against the release's SHA-256 checksum before installation. Auto-updates start enabled and can be turned off on the Plugins screen.
+
 GRINDCTRL terms: https://grindctrl.cloud/terms
 GRINDCTRL privacy policy: https://grindctrl.cloud/privacy
 
@@ -75,14 +77,17 @@ The script loads asynchronously in the footer, and the chat window only loads wh
 
 == Changelog ==
 
+= 0.4.0 =
+* Updates now install by themselves. Turn this off any time from the Plugins screen.
+
 = 0.3.7 =
-* Store Chat can answer about the product a shopper is viewing: the product's public description and stock status are passed to the chat with each message.
+* Store Chat can answer questions about the product a shopper is viewing, including its description and stock status.
 
 = 0.3.6 =
-* Try-On reports where its button sits and whether product details were found, so Store check in your GRINDCTRL dashboard can show what to fix. Only daily counts are sent; no visitor data.
+* Store check shows where the Try-On button sits and whether product details were found. Only daily counts are sent, with no visitor data.
 
 = 0.3.5 =
-* The per-visitor Try-On limit uses the connection address (IPv6 by /64). Private, loopback and link-local proxy connections automatically use the last public X-Forwarded-For address or X-Real-IP. Public proxy/CDN connections can use a trusted header selected under WooCommerce > Settings > Products. The count is atomic and keeps one row per visitor, cleared daily.
+* Try-On limits each visitor fairly, including stores behind a proxy. Stores using a public proxy can select its trusted address header in WooCommerce settings.
 
 = 0.3.4 =
 * The Try it on button on product pages shows the animated try-on icon, in the gradient and size set in the GRINDCTRL dashboard, from the first page load.
