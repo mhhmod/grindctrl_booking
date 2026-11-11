@@ -896,9 +896,11 @@
         for (var w = 0; w < loops.length && found.length < CARD_LIMIT; w++) {
           var loop = loops[w];
           if (loop.closest('.gc-tryon-sheet') || loop.querySelector('.gc-tryon-pill')) continue;
-          var cart = loop.querySelector('a.add_to_cart_button[data-product_id]');
-          var wooId = cart && productId(cart.getAttribute('data-product_id'));
-          var permalink = loop.querySelector('a.woocommerce-LoopProduct-link, a.wc-block-grid__product-link, .wc-block-components-product-name a, a.wc-block-components-product-name');
+          // Classic loops print Add to cart as a link, block themes as a button.
+          var cart = loop.querySelector('.add_to_cart_button[data-product_id]');
+          var postId = /(?:^|\s)post-(\d+)(?:\s|$)/.exec(loop.className || '');
+          var wooId = productId(cart ? cart.getAttribute('data-product_id') : postId && postId[1]);
+          var permalink = loop.querySelector('a.woocommerce-LoopProduct-link, a.wc-block-grid__product-link, .wc-block-components-product-name a, a.wc-block-components-product-name, .wp-block-post-title a');
           if (!permalink) {
             var candidates = loop.querySelectorAll('a[href]');
             for (var c = 0; c < candidates.length; c++) {
@@ -910,7 +912,7 @@
           var wooHref = permalink && permalink.getAttribute('href');
           var wooKey = wooHref && pageKey(wooHref);
           var wooPhoto = cardPhoto(loop);
-          var titleNode = loop.querySelector('.woocommerce-loop-product__title, .wc-block-grid__product-title, .wc-block-components-product-name');
+          var titleNode = loop.querySelector('.woocommerce-loop-product__title, .wc-block-grid__product-title, .wc-block-components-product-name, .wp-block-post-title');
           var img = loop.querySelector('img');
           var wooTitle = String((titleNode && titleNode.textContent) || (img && img.getAttribute('alt')) || '').replace(/\s+/g, ' ').trim().slice(0, 200);
           if (!wooId || !wooKey || !wooPhoto || claimed.some(function (other) { return other.contains(loop) || loop.contains(other); }) ||

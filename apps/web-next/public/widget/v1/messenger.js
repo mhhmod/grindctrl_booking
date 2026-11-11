@@ -69,7 +69,7 @@
     widgetLoads[name] = new Promise(function (resolve, reject) {
       var script = document.createElement('script');
       script.async = true;
-      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=f1a487995574';
+      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=42dfe0311b68';
       script.onload = resolve;
       script.onerror = function () { delete widgetLoads[name]; reject(new Error('widget_unavailable')); };
       document.head.appendChild(script);
@@ -84,7 +84,7 @@
     if (document.querySelector('[data-grindctrl-tryon][data-product-id],[data-grindctrl-card],meta[property^="product:"],' +
         'meta[property="og:type"][content="product"],[itemscope][itemtype*="schema.org/Product"]')) return true;
     // WooCommerce shop and category pages: its own product cards (the adapter checks the page is WooCommerce).
-    if (document.querySelector('li.product a.add_to_cart_button[data-product_id],.wc-block-grid__product,.wc-block-product')) return true;
+    if (document.querySelector('li.product .add_to_cart_button[data-product_id],.wc-block-grid__product,.wc-block-product')) return true;
     return Array.prototype.some.call(document.querySelectorAll('script[type="application/ld+json"]'), function (node) {
       try { return /"(?:https?:\/\/schema.org\/)?(?:Product|ProductGroup|ItemList)"/.test(JSON.stringify(JSON.parse(node.textContent))); } catch (_) { return false; }
     });
