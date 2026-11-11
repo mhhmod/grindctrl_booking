@@ -318,9 +318,11 @@ describe('WooCommerce loops through pasted website code', () => {
   it('reads classic and block cards with the store product id, title and image', async () => {
     woo();
     const { adapter } = await start(LIVE, {}, 'website');
-    expect(pills().map((p) => p.dataset.productId)).toEqual(['14', '15']);
+    expect(pills().map((p) => p.dataset.productId)).toEqual(['14', '15', '16']);
     expect(adapter.detectProduct(pillFor('14'))).toMatchObject({ id: '14', title: 'Linen shirt', imageUrl: 'https://store.example/wp-content/uploads/linen.jpg' });
     expect(adapter.detectProduct(pillFor('15'))).toMatchObject({ id: '15', title: 'Silk scarf', imageUrl: 'https://store.example/wp-content/uploads/silk.jpg' });
+    // Block themes: Add to cart is a button, the title a post-title link.
+    expect(adapter.detectProduct(pillFor('16'))).toMatchObject({ id: '16', title: 'Knit polo', imageUrl: 'https://store.example/wp-content/uploads/knit-polo.jpg' });
     expect(adapter.injectButton).toBe(false);
     pillFor('14').click();
     await tick();
@@ -345,7 +347,8 @@ describe('WooCommerce loops through pasted website code', () => {
   it('skips foreign links and incomplete cards and honours the config gate', async () => {
     woo(); document.querySelector('.woocommerce-LoopProduct-link')!.setAttribute('href', 'https://foreign.example/product/tee');
     document.querySelector('.wc-block-grid__product img')!.remove();
-    await start(LIVE, {}, 'website'); expect(pills()).toHaveLength(0);
+    // Only the untouched Product Collection card is left whole.
+    await start(LIVE, {}, 'website'); expect(pills().map((p) => p.dataset.productId)).toEqual(['16']);
     woo();
     await start({ ...LIVE, showCardPill: false }, {}, 'website'); expect(pills()).toHaveLength(0);
   });

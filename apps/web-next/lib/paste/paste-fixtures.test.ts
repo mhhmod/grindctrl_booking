@@ -404,8 +404,8 @@ describe('product cards on a listing', () => {
     (window as unknown as { wc_add_to_cart_params?: object }).wc_add_to_cart_params = {};
     try {
       boot();
-      await vi.waitFor(() => expect(pills().map((pill) => pill.dataset.productId).sort()).toEqual(['14', '15']));
-      expect(fixture.expect).toBe('cards:2');
+      await vi.waitFor(() => expect(pills().map((pill) => pill.dataset.productId).sort()).toEqual(['14', '15', '16']));
+      expect(fixture.expect).toBe('cards:3');
       document.querySelector<HTMLButtonElement>('.gc-tryon-pill[data-product-id="14"]')!.click();
       await vi.waitFor(() => expect(contextBodies.at(-1)).toMatchObject({ productId: '14', imageUrl: 'https://store.example/wp-content/uploads/linen.jpg' }));
     } finally {

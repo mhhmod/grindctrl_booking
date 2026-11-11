@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="gc-fixture-path" content="/shop/">
-  <meta name="gc-fixture-expect" content="cards:2">
+  <meta name="gc-fixture-expect" content="cards:3">
   <title>WooCommerce shop</title>
   <script async src="http://localhost:3000/widget/v1/messenger.js" data-key="REPLACE_WITH_EMBED_KEY" data-gc-install="paste" data-gc-platform="website" data-gc-v="2"></script>
 </head><body>
@@ -28,5 +28,13 @@
       <a class="add_to_cart_button" data-product_id="15" href="?add-to-cart=15">Add to cart</a>
     </li>
   </ul></div>
+  <!-- Product Collection block (block themes): Add to cart is a button. -->
+  <ul class="wc-block-product-template">
+    <li class="wc-block-product post-16 product type-product has-post-thumbnail">
+      <figure class="wc-block-components-product-image"><a href="/product/knit-polo/"><img src="https://store.example/wp-content/uploads/knit-polo.jpg" width="600" height="750" alt="Knit polo"></a></figure>
+      <h3 class="wp-block-post-title"><a href="/product/knit-polo/">Knit polo</a></h3>
+      <div class="wp-block-button wc-block-components-product-button"><button class="wp-block-button__link wp-element-button wc-block-components-product-button__button add_to_cart_button ajax_add_to_cart product_type_simple" data-product_id="16">Add to cart</button></div>
+    </li>
+  </ul>
 </main>
 </body></html>
