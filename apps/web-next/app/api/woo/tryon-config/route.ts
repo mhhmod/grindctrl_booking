@@ -24,7 +24,7 @@ const CORS = {
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
   'Access-Control-Expose-Headers': 'Retry-After',
 };
-const PUBLIC_CACHE = 'public, max-age=60, stale-while-revalidate=300';
+const PUBLIC_CACHE = 'no-store';
 
 function reply(body: Record<string, unknown>, status = 200, cache = 'no-store') {
   return NextResponse.json(body, { status, headers: { ...CORS, 'Cache-Control': cache } });

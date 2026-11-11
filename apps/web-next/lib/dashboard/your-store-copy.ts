@@ -69,6 +69,7 @@ export interface YourStoreCopy {
     notSeenSince: (when: string) => string;
     reinstall: string;
     looks: string;
+    dailyLimitReached: string;
     outOfLooks: string;
     looksLow: (n: number) => string;
     planInactive: string;
@@ -175,6 +176,7 @@ const en: YourStoreCopy = {
     notSeenSince: (when) => `We haven't seen your code since ${when}. Usually a theme change removed it.`,
     reinstall: 'Reinstall in 1 minute',
     looks: 'Try-On availability',
+    dailyLimitReached: 'Paused for today: daily limit reached. Back at 00:00 UTC.',
     outOfLooks: 'Out of looks. The button is hidden from shoppers until you top up.',
     looksLow: (n) => (n === 1 ? '1 look left this month.' : `${n} looks left this month.`),
     planInactive: 'The plan is not active, so Try it on is hidden.',
@@ -286,6 +288,7 @@ const ar: YourStoreCopy = {
     notSeenSince: (when) => `لم نرَ الكود منذ ${when}. غالبًا حذفه تغيير في القالب.`,
     reinstall: 'أعد التركيب في دقيقة',
     looks: 'رصيد القياس الافتراضي',
+    dailyLimitReached: 'متوقف اليوم: تم بلوغ الحد اليومي. يعود الساعة 00:00 بتوقيت UTC.',
     outOfLooks: 'انتهت الإطلالات. الزر مخفي عن المتسوقين حتى تضيف رصيدًا.',
     looksLow: (n) => `متبقي ${arLooks(n)} هذا الشهر.`,
     planInactive: 'الباقة غير فعّالة، لذلك زر التجربة مخفي.',

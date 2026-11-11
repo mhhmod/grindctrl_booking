@@ -1,4 +1,5 @@
 import 'server-only';
+import { tryOnDayAvailability } from '@/lib/try-on/daily-budget';
 
 import type { configTiming } from '@/lib/storefront-config-cache';
 import { cachedProxyConfig, proxyConfigCacheKey, storeProxyConfig } from '@/lib/shopify/proxy-config-cache';
@@ -32,7 +33,11 @@ export async function buildSiteTryOnConfig(
   const tenant = siteTenantKey(siteId);
   const cacheKey = proxyConfigCacheKey(tenant, locale);
   const cached = options?.fresh ? null : cachedProxyConfig(cacheKey);
-  if (cached) return cached;
+  if (cached) {
+    const day = await tryOnDayAvailability(tenant);
+    if (day !== 'live') return { ...cached, enabled: false, reason: day };
+    if (cached.reason !== 'daily_limit') return cached;
+  }
 
   const measure = options?.timing?.measure ?? (async <T,>(_phase: string, run: () => Promise<T>) => run());
   const [hasVerifiedDomain, settings, { launch, unsubscribed }, features] = await Promise.all([

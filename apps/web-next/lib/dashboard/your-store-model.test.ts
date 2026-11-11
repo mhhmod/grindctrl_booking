@@ -384,3 +384,11 @@ it('uses the handoff strings word for word in EN/AR', async () => {
     }
   }
 });
+
+it.each(['en', 'ar'] as const)('shows the daily pause in the existing warning row in %s', locale => {
+  const copy = getYourStoreCopy(locale);
+  const view = buildYourStoreView(facts({ tryOn: tryOn({ dailyLimitReached: true }) }), copy, locale);
+  expect(view.check!.fix).toContainEqual(expect.objectContaining({ key: 'looks', kind: 'attention', sentence: locale === 'en'
+    ? 'Paused for today: daily limit reached. Back at 00:00 UTC.' : 'متوقف اليوم: تم بلوغ الحد اليومي. يعود الساعة 00:00 بتوقيت UTC.', action: null }));
+  expect(view.products[0]).toMatchObject({ pill: 'attention', seeIt: null });
+});

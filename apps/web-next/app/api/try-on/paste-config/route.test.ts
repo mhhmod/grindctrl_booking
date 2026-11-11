@@ -185,3 +185,18 @@ it('assigns holdout by vid on a cache hit without reusing the first visitor answ
   expect(await (await get('key=gc_public_key_42&locale=ar&vid=' + off)).json()).toMatchObject({ tryOn: 'hidden', reason: 'holdout' });
   expect(m.config).toHaveBeenCalledTimes(1);
 });
+
+vi.mock('@/lib/try-on/daily-budget', () => ({ tryOnDayAvailability: vi.fn(async () => 'live'), readTryOnDayStatus: vi.fn(async () => ({ used: 0, limit: 300, reached: false })) }));
+import { tryOnDayAvailability, readTryOnDayStatus } from '@/lib/try-on/daily-budget';
+beforeEach(() => {
+  vi.mocked(tryOnDayAvailability).mockResolvedValue('live');
+  vi.mocked(readTryOnDayStatus).mockResolvedValue({ used: 0, limit: 300, reached: false });
+});
+
+it('hides button and pills despite a live cached config once the daily ceiling is reached', async () => {
+  expect((await (await get()).json()).tryOn).toBe('live');
+  vi.mocked(tryOnDayAvailability).mockResolvedValue('daily_limit');
+  expect(await (await get()).json()).toMatchObject({ tryOn: 'hidden', reason: 'daily_limit', showCardPill: false });
+  vi.mocked(tryOnDayAvailability).mockResolvedValue('live');
+  expect((await (await get()).json()).tryOn).toBe('live');
+});

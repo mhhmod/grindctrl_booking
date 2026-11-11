@@ -5,6 +5,10 @@ import { Button, Group, Paper, Stack, Text, Title } from '@mantine/core';
 import { setStoreFlag } from '@/app/dashboard/flags/actions';
 import { setLaunchStateAsOperator } from '@/app/dashboard/try-on/launch-actions';
 
+import { StoreDailyLimits } from './store-daily-limits';
+import type { OperatorLimitRow } from '@/lib/spend/operator-data';
+import type { SiteLocale } from '@/lib/landing/landing-i18n';
+
 const LAUNCH_STATES = ['setup', 'preview', 'live', 'holdout'] as const;
 
 export type StoreFlagRow = {
@@ -25,7 +29,11 @@ export function StoreFlagsCard({
   rows,
   launchState,
   launchKey,
+  dailyLimits,
+  locale = 'en',
 }: {
+  dailyLimits?: OperatorLimitRow[];
+  locale?: SiteLocale;
   kind: 'shop' | 'site';
   storeKey: string;
   storeLabel: string;
@@ -120,6 +128,7 @@ export function StoreFlagsCard({
             ))}
           </Group>
         )}
+        {dailyLimits && <StoreDailyLimits rows={dailyLimits} tenant={launchKey ?? storeKey} locale={locale} />}
         {error && (
           <Text size="sm" c="danger" role="alert">
             {error}

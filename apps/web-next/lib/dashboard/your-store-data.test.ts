@@ -258,3 +258,18 @@ it('reads Woo detection for pasted websites from the existing domain platform re
   mocks.platforms.mockResolvedValue([{ domain: 'shop.example', platform: 'custom' }]);
   expect(await getYourStoreFacts(input)).toMatchObject({ wooDetected: false });
 });
+
+vi.mock('@/lib/try-on/daily-budget', () => ({ tryOnDayAvailability: vi.fn(async () => 'live'), readTryOnDayStatus: vi.fn(async () => ({ used: 0, limit: 300, reached: false })) }));
+import { tryOnDayAvailability, readTryOnDayStatus } from '@/lib/try-on/daily-budget';
+beforeEach(() => {
+  vi.mocked(tryOnDayAvailability).mockResolvedValue('live');
+  vi.mocked(readTryOnDayStatus).mockResolvedValue({ used: 0, limit: 300, reached: false });
+});
+
+it('feeds the read-only daily ceiling into Store check without changing the merchant switch', async () => {
+  mocks.shops.mockResolvedValue([{ domain: 'lulus.myshopify.com', status: 'installed' }]);
+  vi.mocked(readTryOnDayStatus).mockResolvedValue({ used: 300, limit: 300, reached: true });
+  const facts = await getYourStoreFacts({ activeStore: { shopDomain: 'lulus.myshopify.com', siteId: null, tenantKey: 'lulus.myshopify.com', platform: 'shopify' }, role: 'owner', timeZone: 'UTC', now: NOW });
+  expect(facts?.tryOn).toMatchObject({ showButton: true, dailyLimitReached: true });
+  expect(readTryOnDayStatus).toHaveBeenCalledWith('lulus.myshopify.com', new Date(NOW));
+});

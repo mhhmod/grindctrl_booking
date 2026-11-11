@@ -389,3 +389,10 @@ describe('paste context limits and launch', () => {
     expect(m.site).not.toHaveBeenCalled();
   });
 });
+
+vi.mock('@/lib/try-on/daily-budget', () => ({ tryOnDayAvailability: vi.fn(async () => 'live'), readTryOnDayStatus: vi.fn(async () => ({ used: 0, limit: 300, reached: false })) }));
+import { tryOnDayAvailability, readTryOnDayStatus } from '@/lib/try-on/daily-budget';
+beforeEach(() => {
+  vi.mocked(tryOnDayAvailability).mockResolvedValue('live');
+  vi.mocked(readTryOnDayStatus).mockResolvedValue({ used: 0, limit: 300, reached: false });
+});

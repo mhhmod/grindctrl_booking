@@ -1,4 +1,5 @@
 import 'server-only';
+import { readTryOnDayStatus } from '@/lib/try-on/daily-budget';
 
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { getShopEntitlement, type ShopEntitlement } from '@/lib/try-on/entitlement';
@@ -122,13 +123,14 @@ export async function getYourStoreFacts({
     return null;
   }
 
-  const [showButton, entitlement, launchState, health, pillsOn, domainPlatforms] = await Promise.all([
+  const [showButton, entitlement, launchState, health, pillsOn, domainPlatforms, day] = await Promise.all([
     readTryOnShowButton(tenant),
     paste ? Promise.resolve(paste.plan) : getShopEntitlement(tenant),
     paste ? Promise.resolve(paste.mode) : readLaunchState(activeStore, tenant, now),
     readHealthCounts(siteId ? [siteId] : [], now),
     readTryOnShowCardPill(tenant),
     platform === 'paste_website' && siteId ? readPasteDomainPlatforms(siteId) : Promise.resolve(null),
+    readTryOnDayStatus(tenant, new Date(now)).catch(() => null),
   ]);
 
   return {
@@ -146,7 +148,7 @@ export async function getYourStoreFacts({
     pillsOn,
     wooDetected: domainPlatforms?.some((domain) => domain.platform === 'woocommerce') ?? false,
     easyOrders: domainPlatforms?.some((domain) => domain.platform === 'easyorders') ?? false,
-    tryOn: { tenant, showButton, ...looksOf(entitlement), pasteReason: paste?.tryOnReason ?? null },
+    tryOn: { tenant, showButton, dailyLimitReached: day?.reached ?? false, ...looksOf(entitlement), pasteReason: paste?.tryOnReason ?? null },
     chat: siteId && siteStatus !== null ? { siteId, enabled: siteStatus === 'active' } : null,
     domains:
       platform === 'paste_website' && paste
