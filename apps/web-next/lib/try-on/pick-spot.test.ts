@@ -145,6 +145,14 @@ describe('edit chrome', () => {
     expect(text('.callout h2')).toBe('Put Try-On here?');
   });
 
+  // Live bug 2026-11-11: choosing the price chose its inline <bdi>.
+  it('choosing text inside a line chooses the whole line', () => {
+    boot({ page: PAGE.replace('<div class="price">350 EGP</div>', '<div class="price"><span class="amount"><bdi>350 EGP</bdi></span></div>') });
+    tap(document.querySelector('.price bdi')!);
+    expect(q('.callout').hidden).toBe(false);
+    expect(document.querySelector('.price')!.nextElementSibling).toBe(tryOn());
+  });
+
   it('phone: a bottom bar; the first tap highlights, the second on the same element selects', () => {
     width(390);
     boot();
