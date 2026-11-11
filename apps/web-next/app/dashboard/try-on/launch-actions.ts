@@ -75,7 +75,7 @@ export async function createPreviewLink(input: { shop: string }): Promise<Previe
        the query, so the token lands in storage on the domain shoppers use. A
        WooCommerce store opens on its verified domain or paired address. */
     const origin = await previewOriginFor(shop);
-    if (!origin) return { ok: false, code: 'not_enabled', message: 'Add and verify your store’s domain first.' };
+    if (!origin) return { ok: false, code: 'not_enabled', message: 'We don’t have a confirmed address for your store yet. Finish connecting it in Store setup first.' };
     return { ok: true, url: previewUrl(origin, signed.token), expiresAt: signed.expiresAt };
   } catch (error) {
     return ownershipFailure(error) ?? merchantActionFailure(error);

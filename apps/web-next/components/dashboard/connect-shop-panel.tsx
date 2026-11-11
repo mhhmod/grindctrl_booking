@@ -1,11 +1,14 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button, Stack, Text } from '@mantine/core';
-import { generateShopLinkCode } from '@/app/dashboard/connect-shop/actions';
+import { generateShopLinkCode, shopLinkCodeStatus } from '@/app/dashboard/connect-shop/actions';
 import { getTryOnDashboardCopy } from '@/lib/try-on/dashboard-copy';
 import type { ShopLinkCode } from '@/lib/shopify/shop-links';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
+
+export const LINK_POLL_MS = 5_000;
 
 function secondsUntil(expiresAt: string): number {
   return Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 1_000));
@@ -28,6 +31,9 @@ export function ConnectShopPanel({ locale, hasShops = false }: { locale: SiteLoc
   const [linkCode, setLinkCode] = useState<ShopLinkCode | null>(null);
   const [remaining, setRemaining] = useState(0);
   const [status, setStatus] = useState<'idle' | 'generating' | 'error'>('idle');
+  /** The shop the code connected, once it was entered in Shopify. */
+  const [linked, setLinked] = useState<string | null>(null);
+  const router = useRouter();
 
   const generate = useCallback(async () => {
     setStatus('generating');
@@ -49,6 +55,33 @@ export function ConnectShopPanel({ locale, hasShops = false }: { locale: SiteLoc
     const interval = window.setInterval(update, 1_000);
     return () => window.clearInterval(interval);
   }, [linkCode]);
+
+  /* While the code can still be used, watch for it being entered in
+     Shopify, then load the connected store without a reload. */
+  useEffect(() => {
+    if (!linkCode || linked) return;
+    let reading = false;
+    const interval = window.setInterval(async () => {
+      if (secondsUntil(linkCode.expiresAt) === 0) { window.clearInterval(interval); return; }
+      if (reading || document.visibilityState !== 'visible') return;
+      reading = true;
+      const { linkedShop } = await shopLinkCodeStatus(linkCode.code).catch(() => ({ linkedShop: null }));
+      reading = false;
+      if (!linkedShop) return;
+      window.clearInterval(interval);
+      setLinked(linkedShop);
+      router.refresh();
+    }, LINK_POLL_MS);
+    return () => window.clearInterval(interval);
+  }, [linkCode, linked, router]);
+
+  if (linked) {
+    return (
+      <Text size="sm" role="status" fw={600}>
+        {c.shopLinked(linked)}
+      </Text>
+    );
+  }
 
   if (!linkCode) {
     return (

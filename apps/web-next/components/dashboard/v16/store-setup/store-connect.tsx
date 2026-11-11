@@ -14,7 +14,7 @@ import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import type { WooSiteConnectionSummary } from '@/lib/woo/connection';
 import { StorefrontDomains } from '../store-chat/storefront-domains';
 import { PasteInstall, type PasteInstallActions } from '../store-chat/paste-install';
-import { WoocommerceGuide, type CreateWooPairingCode } from '../store-chat/woocommerce-guide';
+import { WoocommerceGuide, type CreateWooPairingCode, type ReadWooConnection } from '../store-chat/woocommerce-guide';
 import classes from './store-connect.module.css';
 
 export type StoreConnectMeta = {
@@ -29,6 +29,7 @@ export type StoreConnectMeta = {
 
 export type StoreConnectActions = {
   createWooPairingCodeAction: CreateWooPairingCode;
+  readWooConnectionAction?: ReadWooConnection;
   paste?: PasteInstallActions;
 } & Partial<DomainActions>;
 
@@ -198,6 +199,7 @@ export function StoreConnect({
                     siteId={siteId}
                     connection={meta.wooConnection}
                     createPairingCode={actions.createWooPairingCodeAction}
+                    readConnection={actions.readWooConnectionAction}
                     copy={chat.woocommerce}
                     copyLabels={chat.domains}
                   />
@@ -223,6 +225,7 @@ export function StoreConnect({
               siteId={siteId}
               connection={meta.wooConnection}
               createPairingCode={actions.createWooPairingCodeAction}
+              readConnection={actions.readWooConnectionAction}
               copy={chat.woocommerce}
               copyLabels={chat.domains}
             />

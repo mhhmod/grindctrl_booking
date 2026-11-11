@@ -43,13 +43,32 @@ describe('storefront proof for a pending Shopify shop', () => {
   it('proves from a verified render once the storefront shows this site\'s code', async () => {
     const result = await checkPasteShop(pending, { kind: 'render' }, { scan: found, now: NOW });
     expect(result).toEqual({ shopProof: 'proven', shopProvenAt: NOW.toISOString(), outcome: 'proven', checkedAt: NOW.toISOString(), retryAfterSeconds: null,
-      storefront: { productUrl: PRODUCT, passwordPage: false } });
+      storefront: { productUrl: PRODUCT, passwordPage: false, primaryHost: null } });
     expect(m.render).toHaveBeenCalledExactlyOnceWith(pending);
     expect(m.siteLimit).toHaveBeenCalledWith(`paste-shop-check:site:${SITE}`);
     expect(m.shopLimit).toHaveBeenCalledWith(`paste-shop-check:shop:${SHOP}`);
     expect(m.prove).toHaveBeenCalledExactlyOnceWith(pending, evidence);
     expect(m.render.mock.invocationCallOrder[0]).toBeLessThan(m.prove.mock.invocationCallOrder[0]);
     expect(m.finish).not.toHaveBeenCalled();
+  });
+
+  it("gives the owner's check its own budget, so shopper visits never use up the owner's click (m9)", async () => {
+    await checkPasteShop(pending, { kind: 'owner' }, { scan: found, now: NOW });
+    expect(m.siteLimit).toHaveBeenCalledExactlyOnceWith(`paste-shop-check:owner:site:${SITE}`);
+    expect(m.shopLimit).toHaveBeenCalledExactlyOnceWith(`paste-shop-check:owner:shop:${SHOP}`);
+    // A render whose budget is spent is refused; the owner's next click still checks.
+    m.siteLimit.mockImplementation(async (key: string) => key.includes(':owner:') ? allowed : { success: false, reset: NOW.getTime() + 60_000 });
+    expect(await checkPasteShop(pending, { kind: 'render' }, { scan: found, now: NOW })).toMatchObject({ outcome: 'rate_limited' });
+    expect(await checkPasteShop(pending, { kind: 'owner' }, { scan: found, now: NOW })).toMatchObject({ outcome: 'proven' });
+  });
+
+  it('reports the custom primary domain the shop sent our fetch to, and nothing for the shop host itself (B2)', async () => {
+    m.prove.mockResolvedValue('render_required');
+    const custom = vi.fn(async (): Promise<StorefrontScan> => ({ outcome: 'found', evidence, host: 'www.brand.com',
+      productUrl: 'https://www.brand.com/products/dress', passwordPage: false }));
+    expect(await checkPasteShop(pending, { kind: 'owner' }, { scan: custom, now: NOW })).toMatchObject({
+      outcome: 'awaiting_visit', storefront: { primaryHost: 'www.brand.com', productUrl: 'https://www.brand.com/products/dress' } });
+    expect(await checkPasteShop(pending, { kind: 'owner' }, { scan: found, now: NOW })).toMatchObject({ storefront: { primaryHost: null } });
   });
 
   it("never lets a squatter's forged render displace the merchant: our fetch finds the merchant's code, not the squatter's", async () => {

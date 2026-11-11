@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { Accordion, Badge, Button, Group, Loader, Radio, SegmentedControl, Text, TextInput } from '@mantine/core';
 import { getPlacementCopy } from '@/lib/dashboard/tryon-studio-copy';
 import { validSpotSelector, type ButtonPlacement as Placement, type PlacementMode, type SpotPosition } from '@/lib/try-on/placement';
@@ -47,8 +48,10 @@ export function ButtonPlacement({
   const [choice, setChoice] = React.useState<PlacementMode>('auto');
   const [loadError, setLoadError] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
-  const [error, setError] = React.useState(false);
   const [notSaved, setNotSaved] = React.useState(false);
+  /* no_address: the store has no confirmed address to open yet, so the
+     merchant is sent to Store setup instead of being told to retry. */
+  const [error, setError] = React.useState<false | 'failed' | 'no_address'>(false);
   const [handoff, setHandoff] = React.useState<Handoff>({ state: 'idle' });
   const [selector, setSelector] = React.useState('');
   const [position, setPosition] = React.useState<SpotPosition>('after');
@@ -96,7 +99,7 @@ export function ButtonPlacement({
     if (!mounted.current) return;
     setBusy(false);
     if (result?.ok) apply(result.placement);
-    else { setChoice(previous); setError(true); }
+    else { setChoice(previous); setError('failed'); }
   }
 
   function startWatching(popup: Window | null, expiresAt: string, before: Placement['spot']) {
@@ -144,7 +147,7 @@ export function ButtonPlacement({
     if (!result?.ok) {
       popup?.close();
       setHandoff({ state: 'idle' });
-      setError(true);
+      setError(result && 'reason' in result && result.reason === 'no_store_address' ? 'no_address' : 'failed');
       return;
     }
     if (popup) {
@@ -236,7 +239,12 @@ export function ButtonPlacement({
       </Radio.Group>
 
       {notSaved ? <Text size="sm" role="status">{copy.notSaved}</Text> : null}
-      {error ? <Text size="sm" role="alert" className={classes.error}>{copy.failed}</Text> : null}
+      {error === 'no_address' ? (
+        <div role="alert" className={classes.handoff}>
+          <Text size="sm" component="span" className={classes.error}>{copy.noAddress}</Text>
+          <Button component={Link} href="/dashboard/store" size="compact-sm" variant="light" radius="pill">{copy.noAddressAction}</Button>
+        </div>
+      ) : error ? <Text size="sm" role="alert" className={classes.error}>{copy.failed}</Text> : null}
 
       <Accordion
         variant="default"

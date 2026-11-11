@@ -1,12 +1,12 @@
 import { getRequestLocale } from '@/lib/auth/locale';
 import { flagStoreOf, type ActiveStore } from '@/lib/dashboard/active-store';
-import { getActiveStore, getActiveStoreRole, getActiveStoreTimeZone } from '@/lib/dashboard/active-store-server';
+import { getActiveStore, getActiveStoreRole, getActiveStoreTimeZone, getPendingPasteShop } from '@/lib/dashboard/active-store-server';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { getTodayFacts } from '@/lib/dashboard/today-data';
 import { buildTodayView } from '@/lib/dashboard/today-model';
 import { getTodayCopy } from '@/lib/dashboard/today-copy';
 import { V16Today } from '@/components/dashboard/v16/today/v16-today';
-import { V16NoStore } from '@/components/dashboard/v16/states';
+import { V16FinishConfirming, V16NoStore } from '@/components/dashboard/v16/states';
 import { getTodaySetupFacts } from '@/lib/dashboard/today-setup-data';
 import { buildTodaySetupView } from '@/lib/dashboard/today-setup-model';
 import { getTodaySetupCopy } from '@/lib/dashboard/today-setup-copy';
@@ -43,7 +43,10 @@ export default async function DashboardOverviewPage() {
 
   // Days follow the active store's calendar, not UTC's (item 32).
   const timeZone = await getActiveStoreTimeZone(activeStore);
-  const [flags, storeCard] = await Promise.all([storeFlags(flagStore), yourStoreCard(activeStore, role, timeZone, locale)]);
+  const [flags, card, pending] = await Promise.all([storeFlags(flagStore), yourStoreCard(activeStore, role, timeZone, locale),
+    getPendingPasteShop(activeStore)]);
+  // Pasted code still being confirmed: the one step left leads the page.
+  const storeCard = pending ? <><V16FinishConfirming locale={locale} shop={pending} />{card}</> : card;
   /* While the store is not live yet (n5_preview_mode), its owner and
      admins, who can take each step, get the setup checklist instead
      (Today-Setup). */

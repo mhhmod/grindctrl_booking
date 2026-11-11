@@ -9,7 +9,7 @@ import type { SiteLocale } from '@/lib/landing/landing-i18n';
 const refresh = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh, push: vi.fn() }) }));
 
-import { V16YourStore, V16YourStoreNotConnected, V16YourStoreTodayCard, type YourStoreActions } from './v16-your-store';
+import { V16YourStore, V16YourStoreNotConnected, V16YourStoreTodayCard, WAITING_REFRESH_MS, type YourStoreActions } from './v16-your-store';
 
 const NOW = Date.parse('2026-11-10T12:14:00Z');
 
@@ -165,7 +165,7 @@ describe('V16YourStore, Store check', () => {
 
   it('waits for data before the code is first seen (A6.3), without a check time', () => {
     renderStore(facts({ code: { lastSeenAt: null, connected: false } }));
-    expect(screen.getByText("We'll check your store as soon as your code is live.")).toBeInTheDocument();
+    expect(screen.getByText("We'll check your store as soon as your code is live. This updates by itself.")).toBeInTheDocument();
     expect(screen.queryByText(/Checked today/)).toBeNull();
     expect(screen.getAllByText('Waiting for data')).toHaveLength(3);
   });
@@ -183,6 +183,37 @@ describe('V16YourStore, Store check', () => {
     expect(checkDomain).toHaveBeenCalledWith('site-1', 'd2');
     await act(async () => finish());
     await waitFor(() => expect(refresh).toHaveBeenCalled());
+  });
+
+  it('while the code is not live, points at the connect card and reads the page again by itself (m8)', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+    try {
+      renderStore(facts({ code: { lastSeenAt: null, connected: false } }));
+      const copy = getYourStoreCopy('en');
+      expect(screen.getByText(copy.check.waiting)).toHaveTextContent('updates by itself');
+      expect(screen.getByRole('link', { name: copy.check.waitingAction })).toHaveAttribute('href', '#connect');
+      expect(refresh).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(WAITING_REFRESH_MS); });
+      expect(refresh).toHaveBeenCalledTimes(1);
+      // Stops after half an hour.
+      await act(async () => { await vi.advanceTimersByTimeAsync(31 * 60_000); });
+      const calls = refresh.mock.calls.length;
+      await act(async () => { await vi.advanceTimersByTimeAsync(WAITING_REFRESH_MS * 4); });
+      expect(refresh.mock.calls.length).toBe(calls);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('never reads the page again by itself once the store check has results', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+    try {
+      renderStore(facts());
+      await act(async () => { await vi.advanceTimersByTimeAsync(WAITING_REFRESH_MS * 3); });
+      expect(refresh).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('only refreshes when there is no address to look at again', async () => {

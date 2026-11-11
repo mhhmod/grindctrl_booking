@@ -222,6 +222,9 @@ function CheckingRows({ copy }: { copy: YourStoreCopy }) {
   );
 }
 
+export const WAITING_REFRESH_MS = 30_000;
+const WAITING_WATCH_MS = 30 * 60_000;
+
 function StoreCheck({
   check,
   recheck,
@@ -239,6 +242,18 @@ function StoreCheck({
   const [pending, startTransition] = React.useTransition();
   const fixId = React.useId();
   const wellId = React.useId();
+
+  /* While the code is not live yet, read the page again every 30 seconds
+     (visible tab, 30 minutes at most), so the check appears by itself. */
+  React.useEffect(() => {
+    if (!check.waiting) return;
+    const until = Date.now() + WAITING_WATCH_MS;
+    const timer = window.setInterval(() => {
+      if (Date.now() > until) { window.clearInterval(timer); return; }
+      if (document.visibilityState === 'visible') router.refresh();
+    }, WAITING_REFRESH_MS);
+    return () => window.clearInterval(timer);
+  }, [check.waiting, router]);
 
   function runCheck() {
     startTransition(async () => {
@@ -278,6 +293,10 @@ function StoreCheck({
         <div className={`${classes.card} ${classes.waitingCard}`}>
           <StatusPill kind="waiting" copy={copy} />
           <p className={classes.waitingText}>{copy.check.waiting}</p>
+          {/* The connect card is at the top of this page. */}
+          <Button component="a" href="#connect" variant="default" radius="pill" h={44}>
+            {copy.check.waitingAction}
+          </Button>
         </div>
       ) : (
         <>

@@ -2,7 +2,9 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { getRequestLocale } from '@/lib/auth/locale';
-import { getActiveStore, getActiveStoreRole, getActiveStoreTimeZone, listDashboardShops } from '@/lib/dashboard/active-store-server';
+import {
+  getActiveStore, getActiveStoreRole, getActiveStoreTimeZone, getPendingPasteShop, listDashboardShops,
+} from '@/lib/dashboard/active-store-server';
 import { activeTenantKey } from '@/lib/dashboard/active-store';
 import { shopChoices } from '@/lib/dashboard/shell-model';
 import { roleCan } from '@/lib/rbac/dashboard-policy';
@@ -11,7 +13,7 @@ import { getPlanFacts } from '@/lib/dashboard/plan-data';
 import { buildPlanView, type PlanView } from '@/lib/dashboard/plan-model';
 import { getPlanCopy } from '@/lib/dashboard/plan-copy';
 import { V16Plan, V16PlanError } from '@/components/dashboard/v16/plan/v16-plan';
-import { V16NeedsStore } from '@/components/dashboard/v16/states';
+import { V16FinishConfirming, V16NeedsStore } from '@/components/dashboard/v16/states';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,8 +30,10 @@ export default async function DashboardPlanPage() {
   const shop = activeTenantKey(activeStore);
   if (!roleCan(await getActiveStoreRole(activeStore), 'billing')) redirect('/dashboard');
   if (!shop) {
-    const [locale, shops] = await Promise.all([getRequestLocale(), listDashboardShops().catch(() => [])]);
-    return <V16NeedsStore locale={locale} feature="plan" shops={shopChoices(shops)} />;
+    const [locale, shops, pending] = await Promise.all([getRequestLocale(), listDashboardShops().catch(() => []),
+      getPendingPasteShop(activeStore)]);
+    return pending ? <V16FinishConfirming locale={locale} shop={pending} />
+      : <V16NeedsStore locale={locale} feature="plan" shops={shopChoices(shops)} />;
   }
 
   const [locale, timeZone, cookieStore] = await Promise.all([getRequestLocale(), getActiveStoreTimeZone(activeStore), cookies()]);

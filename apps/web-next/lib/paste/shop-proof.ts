@@ -112,9 +112,12 @@ export async function checkPasteShop(connection: PasteConnection | null, trigger
   const cached = password ? null : cachedShopCheck(connection, SHOP_CHECK_RETRY_SECONDS[trigger.kind], now.getTime());
   if (cached) return cached;
 
+  // The owner's "Check my store" has its own budget: shopper visits to a
+  // pending store (render checks) must never use up the owner's first click.
+  const budget = trigger.kind === 'owner' ? 'owner:' : '';
   try {
-    await requireRateLimit(pasteShopCheckSiteRatelimit, `paste-shop-check:site:${connection.widget_site_id}`);
-    await requireRateLimit(pasteShopCheckShopRatelimit, `paste-shop-check:shop:${connection.shop_domain}`);
+    await requireRateLimit(pasteShopCheckSiteRatelimit, `paste-shop-check:${budget}site:${connection.widget_site_id}`);
+    await requireRateLimit(pasteShopCheckShopRatelimit, `paste-shop-check:${budget}shop:${connection.shop_domain}`);
   } catch (error) {
     if (error instanceof RequestRateLimitError && error.status === 429) {
       log(connection, trigger, 'rate_limited');
@@ -137,7 +140,8 @@ export async function checkPasteShop(connection: PasteConnection | null, trigger
     throw error instanceof PasteError ? error : new PasteError('unavailable');
   }
   if (scan.outcome === 'found') {
-    const result = await prove(connection, scan.evidence, now, { productUrl: scan.productUrl, passwordPage: scan.passwordPage });
+    const result = await prove(connection, scan.evidence, now, { productUrl: scan.productUrl, passwordPage: scan.passwordPage,
+      primaryHost: scan.host !== connection.shop_domain ? scan.host : null });
     log(connection, trigger, result.outcome);
     return result;
   }

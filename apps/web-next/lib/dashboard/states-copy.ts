@@ -19,6 +19,8 @@ export interface StatesCopy {
     pasteHint: string;
   };
   storeTaken: { title: string; body: string; action: string };
+  /** Pasted code on a Shopify store that is not confirmed yet. */
+  finishConfirming: { title: (shop: string) => string; body: string; action: string };
   backToSetUp: string;
   error: { title: string; body: string; retry: string; reference: string };
   loading: string;
@@ -57,6 +59,11 @@ const en: StatesCopy = {
     title: 'This store’s Store Chat is on another account',
     body: 'To move it here: in Try-On, choose “Connect or re-link a store” to get a code. Then in your Shopify admin, open Apps, then GrindCTRL, choose “Link a different account” and enter the code.',
     action: 'Get a linking code',
+  },
+  finishConfirming: {
+    title: (shop) => `Finish confirming ${shop}`,
+    body: 'One step is left: confirm in Store setup that this store is yours. Try-On, your plan and your results show here after that.',
+    action: 'Finish confirming',
   },
   backToSetUp: 'Back to Set up',
   error: {
@@ -99,6 +106,12 @@ const ar: StatesCopy = {
     title: 'محادثة المتجر لهذا المتجر على حساب آخر',
     body: 'لنقلها إلى هنا: من صفحة التجربة اختر "ربط متجر أو إعادة ربطه" للحصول على رمز. ثم في لوحة تحكم شوبيفاي افتح التطبيقات ثم جريند كنترول، واختر "ربط حساب آخر" وأدخل الرمز.',
     action: 'احصل على رمز الربط',
+  },
+  finishConfirming: {
+    // The shop is a Latin host: isolate it so it keeps its own direction.
+    title: (shop) => `أكمل تأكيد ⁨${shop}⁩`,
+    body: 'بقيت خطوة واحدة: أكّد من إعداد المتجر أن هذا المتجر لك. بعدها تظهر هنا التجربة الافتراضية وخطتك ونتائجك.',
+    action: 'أكمل التأكيد',
   },
   backToSetUp: 'العودة إلى الإعداد',
   error: {

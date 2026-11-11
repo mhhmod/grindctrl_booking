@@ -77,7 +77,7 @@ vi.mock('./actions', () => ({
   checkDomainAction: vi.fn(),
   removeDomainAction: vi.fn(),
 }));
-vi.mock('./woo-actions', () => ({ createWooPairingCodeAction: vi.fn() }));
+vi.mock('./woo-actions', () => ({ createWooPairingCodeAction: vi.fn(), readWooConnectionAction: vi.fn() }));
 vi.mock('@/components/dashboard/v16/store-setup/store-connect', () => ({ StoreConnect: ({ siteId, actions }: { siteId: string; actions?: object }) => <div data-testid="store-connect" data-actions={actions ? Object.keys(actions).sort().join(',') : ''}>{siteId}</div> }));
 // ChatStudio has its own tests (v16-chat-studio.test.tsx); here only what it is handed.
 vi.mock('@/components/dashboard/v16/store-chat/v16-chat-studio', () => ({

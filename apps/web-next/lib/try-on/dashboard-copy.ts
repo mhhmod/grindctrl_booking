@@ -29,6 +29,8 @@ export interface TryOnDashboardCopy {
   connectStoreInstructions: string;
   generateNewShopLinkCode: string;
   shopLinkCodeFailed: string;
+  /** The open code was entered in Shopify: the shop is on this account now. */
+  shopLinked: (shop: string) => string;
   columnShop: string;
   columnStatus: string;
   columnGenerations: string;
@@ -190,6 +192,7 @@ const en: TryOnDashboardCopy = {
     'In your Shopify admin, open Apps, then GrindCTRL. Under "Link to dashboard", enter this code. If the store is already connected to another account, choose "Link a different account" first.',
   generateNewShopLinkCode: 'Generate a new code',
   shopLinkCodeFailed: 'Could not generate a code. Try again.',
+  shopLinked: (shop) => `${shop} is connected to your account. Loading it now.`,
   columnShop: 'Shop',
   columnStatus: 'Status',
   columnGenerations: 'Generations',
@@ -326,6 +329,7 @@ const ar: TryOnDashboardCopy = {
     'في لوحة تحكم شوبيفاي، افتح التطبيقات ثم جريند كنترول. في قسم "الربط بلوحة التحكم" أدخل هذا الرمز. إذا كان المتجر مرتبطاً بحساب آخر، اختر أولاً "ربط حساب آخر".',
   generateNewShopLinkCode: 'أنشئ رمزاً جديداً',
   shopLinkCodeFailed: 'تعذّر إنشاء الرمز. حاول مرة أخرى.',
+  shopLinked: (shop) => `تم ربط ⁨${shop}⁩ بحسابك. جارٍ تحميله الآن.`,
   columnShop: 'المتجر',
   columnStatus: 'الحالة',
   columnGenerations: 'عمليات التوليد',

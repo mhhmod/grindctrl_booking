@@ -613,6 +613,95 @@ describe('messenger paste loading', () => {
     expect(configCalls()).toBe(2);
     expect(document.querySelectorAll('[data-gc-chat-launcher]')).toHaveLength(1);
   });
+  describe('Store Chat finishes a waiting Shopify store\'s proof by itself (M3)', () => {
+    const MAC = 'a'.repeat(64);
+    const chat = { v: 1, key: 'embed-key', active: true, available: true, aiEnabled: false, features: [],
+      appearance: { position: 'bottom-right', accentColor: '#222222', launcherIcon: 'chat', launcherLabel: { en: 'Chat', ar: 'محادثة' },
+        launcherSizePx: 56, radiusStyle: 'soft', languageMode: 'auto' },
+      behaviour: { greetingEnabled: false, proactiveEnabled: false, targetingMode: 'all', excludePatterns: [] } };
+    const proofCalls = () => pageFetch.mock.calls.filter(([url]) => String(url).includes('/api/try-on/paste-context'));
+    const configCalls = () => pageFetch.mock.calls.filter(([url]) => String(url).includes('/api/messenger/config')).length;
+    function waitingStore(answer: () => Response) {
+      let proven = false;
+      pageFetch.mockImplementation(async (url) => {
+        if (String(url).includes('/api/messenger/config')) return proven ? json(chat) : json({ error: 'origin_not_allowed' }, 403);
+        if (String(url).includes('/api/try-on/paste-context')) {
+          const response = answer();
+          proven = response.ok;
+          return response;
+        }
+        return json(null);
+      });
+    }
+
+    it('sends the product tag\'s signed render on a page Try-On never loads on, then starts Store Chat there', async () => {
+      // A quote-only theme: a product page without an add-to-cart form.
+      window.history.replaceState({}, '', '/products/dress');
+      document.body.innerHTML = '<main>Ask for a quote</main>';
+      vi.spyOn(document, 'currentScript', 'get').mockReturnValue(snippet('shopify', { gcSignature: MAC, gcV: '2' }));
+      waitingStore(() => json({ proven: true }));
+      (0, eval)(source('messenger'));
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+      await vi.waitFor(() => expect(document.querySelector('[data-gc-chat-launcher]')).not.toBeNull());
+      expect(document.querySelector('script[src*="tryon-"]')).toBeNull();
+      expect(proofCalls()).toHaveLength(1);
+      const [url, init] = proofCalls()[0];
+      expect(url).toBe(`${APP}/api/try-on/paste-context`);
+      expect(init).toMatchObject({ method: 'POST', credentials: 'omit' });
+      const sent = JSON.parse(String(init?.body));
+      expect(sent).toEqual({ key: 'embed-key', proof: true, productId: '42', variantId: '77', pageUrl: window.location.href,
+        visitorId: expect.any(String), codeVersion: 2,
+        signed: { siteId: 'site-id', shopDomain: 'shop.myshopify.com', productId: '42', variantId: '77', issuedAt: '123', customerId: '', signature: MAC } });
+      expect(sent.imageUrl).toBeUndefined();
+      expect(configCalls()).toBe(2);
+    });
+
+    it('uses the first signed product card on a listing, after Try-On\'s own start settled', async () => {
+      window.history.replaceState({}, '', '/collections/all');
+      document.body.innerHTML = `<script type="application/json" data-gc-cards="site-id">${JSON.stringify({ site: 'site-id', shop: 'shop.myshopify.com',
+        issuedAt: '456', customer: '', products: [{ id: 'x', variant: '1', signature: MAC }, { id: '51', variant: '52', handle: 'coat', signature: MAC }] })}</script>`;
+      vi.spyOn(document, 'currentScript', 'get').mockReturnValue(snippet('shopify', { gcProduct: '', gcVariant: '', gcSignature: MAC }));
+      let settle = (_value: boolean) => {};
+      globals.GRINDCTRL_TRYON_PASTE = { create: () => ({ prepare: () => new Promise<boolean>((resolve) => { settle = resolve; }) }) };
+      globals.GRINDCTRL_TRYON_ENGINE = { mount: vi.fn() };
+      waitingStore(() => json({ proven: true }));
+      (0, eval)(source('messenger'));
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+      await vi.waitFor(() => expect(configCalls()).toBe(1));
+      await tick();
+      expect(proofCalls()).toHaveLength(0);
+      settle(false);
+      await vi.waitFor(() => expect(document.querySelector('[data-gc-chat-launcher]')).not.toBeNull());
+      expect(JSON.parse(String(proofCalls()[0][1]?.body))).toMatchObject({ proof: true, productId: '51', variantId: '52',
+        signed: { productId: '51', variantId: '52', issuedAt: '456', signature: MAC } });
+    });
+
+    it('asks once and stays quiet when the proof is not complete, when the tag is unsigned, and for a website', async () => {
+      window.history.replaceState({}, '', '/pages/about');
+      document.body.innerHTML = '<main>About</main>';
+      vi.spyOn(document, 'currentScript', 'get').mockReturnValue(snippet('shopify', { gcSignature: MAC }));
+      waitingStore(() => json({ error: 'shop_proof_pending' }, 403));
+      (0, eval)(source('messenger'));
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+      await vi.waitFor(() => expect(proofCalls()).toHaveLength(1));
+      await tick(); await tick();
+      expect(configCalls()).toBe(1);
+      expect(document.querySelector('[data-gc-chat-launcher]')).toBeNull();
+    });
+
+    it('sends nothing without a verifiable signed render on the page', async () => {
+      window.history.replaceState({}, '', '/pages/about');
+      document.body.innerHTML = '<main>About</main>';
+      vi.spyOn(document, 'currentScript', 'get').mockReturnValue(snippet('shopify', { gcProduct: '', gcVariant: '', gcSignature: MAC }));
+      waitingStore(() => json({ proven: true }));
+      (0, eval)(source('messenger'));
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+      await vi.waitFor(() => expect(configCalls()).toBe(1));
+      await tick(); await tick();
+      expect(proofCalls()).toHaveLength(0);
+    });
+  });
+
   it('chat boots even when product adapter loading fails', async () => {
     shopifyPage();
     delete globals.GRINDCTRL_TRYON_PASTE;

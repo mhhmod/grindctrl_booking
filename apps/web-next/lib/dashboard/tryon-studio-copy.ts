@@ -301,6 +301,9 @@ export interface PlacementCopy {
   opening: string;
   finish: string;
   failed: string;
+  /** No confirmed store address to open yet (pasted code not confirmed, no verified domain). */
+  noAddress: string;
+  noAddressAction: string;
 }
 
 const placementEn: PlacementCopy = {
@@ -325,6 +328,8 @@ const placementEn: PlacementCopy = {
   opening: 'Opening your store…',
   finish: 'Finish in the new tab',
   failed: "Couldn't save. Check your connection and try again.",
+  noAddress: 'We don’t have a confirmed address for your store yet. Finish connecting it, then pick a spot.',
+  noAddressAction: 'Go to Store setup',
 };
 
 const placementAr: PlacementCopy = {
@@ -349,6 +354,8 @@ const placementAr: PlacementCopy = {
   opening: 'جارٍ فتح متجرك…',
   finish: 'أكمل في الصفحة الجديدة',
   failed: 'تعذّر الحفظ. تحقق من الاتصال وحاول مرة أخرى.',
+  noAddress: 'لا يوجد لدينا عنوان مؤكد لمتجرك بعد. أكمل ربط المتجر ثم اختر المكان.',
+  noAddressAction: 'اذهب إلى إعداد المتجر',
 };
 
 export function getPlacementCopy(locale: SiteLocale): PlacementCopy {
