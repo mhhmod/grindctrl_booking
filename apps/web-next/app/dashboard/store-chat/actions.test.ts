@@ -1,6 +1,10 @@
 // @vitest-environment node
 import { revalidatePath } from 'next/cache';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { scheduleStoreDisconnectedEmail } from '@/lib/email/store-journey-sender';
+import { storeHealthOwner } from '@/lib/store-health/owner';
+vi.mock('@/lib/email/store-journey-sender', () => ({ scheduleStoreDisconnectedEmail: vi.fn() }));
+vi.mock('@/lib/store-health/owner', () => ({ storeHealthOwner: vi.fn(async () => ({ email: 'owner@example.com', locale: 'en' as const })) }));
 import { syncSiteProducts } from '@/lib/messenger/products';
 vi.mock('@/lib/messenger/products', () => ({ syncSiteProducts: vi.fn(async () => ({ count: 2 })) }));
 import { requireMerchantRateLimit, RequestRateLimitError } from '@/lib/request-rate-limit';
@@ -125,6 +129,7 @@ const SITE = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(storeHealthOwner).mockResolvedValue({ email: 'owner@example.com', locale: 'en' });
   vi.mocked(syncSiteProducts).mockResolvedValue({ count: 2 });
   mocks.auth.mockResolvedValue({ userId: 'user_owner' });
   mocks.requireSiteAccess.mockResolvedValue(SITE);
@@ -522,6 +527,8 @@ describe('disconnectSiteAction', () => {
     expect(mocks.requireSiteAccess.mock.invocationCallOrder[0]).toBeLessThan(mocks.unclaimSite.mock.invocationCallOrder[0]);
     expect(vi.mocked(requireMerchantRateLimit).mock.invocationCallOrder[0]).toBeLessThan(mocks.unclaimSite.mock.invocationCallOrder[0]);
     expect(mocks.recordAudit).toHaveBeenCalledExactlyOnceWith({ siteId: SITE.id, actorClerkUserId: 'user_owner', action: 'store_disconnected', detail: { domain: SITE.domain } });
+    expect(scheduleStoreDisconnectedEmail).toHaveBeenCalledWith(SITE.id, expect.any(String), 'owner@example.com', expect.objectContaining({ address: SITE.domain }));
+    expect(vi.mocked(storeHealthOwner).mock.invocationCallOrder[0]).toBeLessThan(mocks.unclaimSite.mock.invocationCallOrder[0]);
     expect(mocks.unclaimSite.mock.invocationCallOrder[0]).toBeLessThan(mocks.recordAudit.mock.invocationCallOrder[0]);
     expect(revalidatePath).toHaveBeenCalledExactlyOnceWith('/dashboard', 'layout');
     expect(mocks.recordAudit.mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(revalidatePath).mock.invocationCallOrder[0]);

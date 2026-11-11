@@ -8,6 +8,7 @@ import { listMessengerSitesReadOnly } from '@/lib/messenger/provisioning';
 import {
   ACTIVE_STORE_COOKIE,
   ACTIVE_STORE_HEADER,
+  activeTenantKey,
   parseStoreChoice,
   resolveActiveStore,
   storeChoiceFromQuery,
@@ -20,7 +21,7 @@ import { getShopTimezone } from '@/lib/shopify/shop-timezone';
 import { getActiveWooSiteContext, listActiveWooSiteIds } from '@/lib/woo/connection';
 import { ensureWooFreePlan } from '@/lib/woo/free-plan';
 import { resolveTimeZone } from '@/lib/time/store-day';
-import { listActivePasteSiteIds } from '@/lib/paste/store';
+import { getPasteConnection, listActivePasteSiteIds, pasteTrust } from '@/lib/paste/store';
 
 /* Read once per request and shared by the layout, the page and anything
    else that asks, so every part of a page agrees on the store. Each lists
@@ -83,6 +84,20 @@ export async function getActiveStore(
     parseStoreChoice(headerList.get(ACTIVE_STORE_HEADER)),
     parseStoreChoice(cookieStore.get(ACTIVE_STORE_COOKIE)?.value),
   ]);
+}
+
+/** The Shopify shop the active store's pasted code is still being confirmed
+ *  on, or null. Such a store has no tenant yet, so pages that need one say
+ *  "finish confirming" instead of "connect your store". A failed read is
+ *  null: the page falls back to its ordinary connect state. */
+export async function getPendingPasteShop(active: ActiveStore): Promise<string | null> {
+  if (activeTenantKey(active) || !active.siteId) return null;
+  try {
+    const connection = await getPasteConnection(active.siteId);
+    return pasteTrust(connection) === 'shop_proof_pending' ? connection?.shop_domain ?? null : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Gives a paired WooCommerce store its free plan once it has a verified

@@ -1,4 +1,5 @@
 import 'server-only';
+import { freePlanReason } from '@/lib/woo/free-plan-reason';
 import { ACTIVE_INSTALL_WINDOW_MS } from '@/lib/adapters/install';
 import { siteTenantKey } from '@/lib/tenancy/tenant-key';
 import { getShopEntitlement, type ShopEntitlement } from '@/lib/try-on/entitlement';
@@ -138,10 +139,12 @@ export async function readPasteInstallStatus(site: { id: string; status: string 
   const turnstileConfigured = Boolean(process.env.TURNSTILE_SECRET_KEY?.trim() && pasteTurnstileSiteKey());
   // Website Try-On needs a domain our server confirmed the code on; a
   // Shopify store runs on its proven shop host meanwhile.
+  const claimReason = plan.status === 'none' && trusted ? await freePlanReason(site.id,
+    [...(shopHost ? [shopHost] : []), ...trustedDomains.filter((d) => d.domainVerified).map((d) => d.domain)]) : null;
   const reason = connectionReason ?? (!trustedDomains.length && !shopHost ? 'no_trusted_domain'
     : !shopHost && !trustedDomains.some((domain) => domain.domainVerified) ? 'domain_unverified'
     : !pasteCapabilitySecret(site.id) ? 'unavailable' : mode === 'setup' || mode === 'preview' ? 'preview'
-    : !turnstileConfigured ? 'turnstile_not_configured' : entitlement.reason);
+    : !turnstileConfigured ? 'turnstile_not_configured' : claimReason === 'apex_taken' ? claimReason : entitlement.reason);
   return {
     siteId: site.id, tenantKey, platform: connection?.platform ?? null, shopDomain: connection?.shop_domain ?? null,
     shopProof: shop ? (shop.status === 'active' && shop.shop_proven_at ? 'proven' : 'pending') : null,

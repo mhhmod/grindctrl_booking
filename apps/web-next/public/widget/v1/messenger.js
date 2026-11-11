@@ -69,7 +69,7 @@
     widgetLoads[name] = new Promise(function (resolve, reject) {
       var script = document.createElement('script');
       script.async = true;
-      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=1363491c4422';
+      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=903f9d4af03c';
       script.onload = resolve;
       script.onerror = function () { delete widgetLoads[name]; reject(new Error('widget_unavailable')); };
       document.head.appendChild(script);
@@ -186,13 +186,68 @@
     if (!productPage && !listing) return;
     window.__gcPasteTryOn = true;
     var adapter;
-    Promise.all([loadWidget('tryon-paste.js', 'GRINDCTRL_TRYON_PASTE').then(function () {
+    pasteTryOnSettled = Promise.all([loadWidget('tryon-paste.js', 'GRINDCTRL_TRYON_PASTE').then(function () {
       adapter = window.GRINDCTRL_TRYON_PASTE.create({ script: SCRIPT, appOrigin: APP_ORIGIN,
-        locale: pasteLocale(), visitorId: launchVisitorId(), preview: previewToken() });
+        locale: pasteLocale(), visitorId: launchVisitorId(), preview: previewToken(), onProven: chatAfterProof });
       return adapter.prepare();
     }), loadWidget('tryon-engine.js', 'GRINDCTRL_TRYON_ENGINE')]).then(function (ready) {
       if (ready[0] && (!adapter.injectButton || adapter.placementTarget())) window.GRINDCTRL_TRYON_ENGINE.mount(adapter);
     }).catch(function () { /* Store Chat remains available. */ });
+  }
+  /* Settles once this page's Try-On start has (or has not) sent its own
+     proof request; null when Try-On does not start on this page. */
+  var pasteTryOnSettled = null;
+
+  /* A Shopify store whose pasted code is not confirmed yet gets no Store
+     Chat config. This page's signed render (the product tag, or the first
+     signed product card of a listing) is the proof's second factor: send it
+     once, proof only, then start Store Chat on this same page. Try-On never
+     has to load for this, so a page without a buy form, a paused Try-On or
+     a store out of looks still finishes the proof. The server runs every
+     check of a Try-On request on it (rate limits, origin, signature, replay,
+     then its own storefront check). */
+  var SHOPIFY_ID_RE = /^[1-9]\d{0,19}$/;
+  var MAC_RE = /^[a-f0-9]{64}$/;
+  var proofSent = false;
+  var proofDone = false;
+  function signedPageClaim() {
+    var d = SCRIPT.dataset;
+    var site = d.gcSite || '';
+    var shop = d.gcShop || '';
+    if (SHOPIFY_ID_RE.test(d.gcProduct || '') && SHOPIFY_ID_RE.test(d.gcVariant || '') && MAC_RE.test(d.gcSignature || '')) {
+      return { siteId: site, shopDomain: shop, productId: d.gcProduct, variantId: d.gcVariant,
+        issuedAt: d.gcIssuedAt || '', customerId: d.gcCustomer || '', signature: d.gcSignature };
+    }
+    var node = document.querySelector('script[type="application/json"][data-gc-cards]');
+    if (!node || node.getAttribute('data-gc-cards') !== site) return null;
+    var data;
+    try { data = JSON.parse(node.textContent); } catch (_) { return null; }
+    if (!data || data.site !== site || data.shop !== shop || !Array.isArray(data.products)) return null;
+    for (var i = 0; i < data.products.length && i < 50; i++) {
+      var card = data.products[i];
+      if (card && SHOPIFY_ID_RE.test(card.id) && SHOPIFY_ID_RE.test(card.variant) && MAC_RE.test(card.signature)) {
+        return { siteId: site, shopDomain: shop, productId: card.id, variantId: card.variant, issuedAt: String(data.issuedAt),
+          customerId: String(data.customer == null ? '' : data.customer), signature: card.signature };
+      }
+    }
+    return null;
+  }
+  function proveShopFromPage() {
+    if (proofSent || proofDone || state.host || !KEY || !SCRIPT || SCRIPT.dataset.gcInstall !== 'paste' ||
+        SCRIPT.dataset.gcPlatform !== 'shopify') return;
+    var claim = signedPageClaim();
+    if (!claim) return;
+    proofSent = true;
+    var version = Number(SCRIPT.dataset.gcV);
+    fetch(APP_ORIGIN + '/api/try-on/paste-context', {
+      method: 'POST', credentials: 'omit', cache: 'no-store',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ key: KEY, proof: true, productId: claim.productId, variantId: claim.variantId,
+        pageUrl: window.location.href, visitorId: launchVisitorId(), signed: claim,
+        codeVersion: version >= 1 && version <= 99 && version % 1 === 0 ? version : 1 })
+    }).then(function (res) { return res.ok ? res.json() : null; }).then(function (data) {
+      if (data && data.proven === true) chatAfterProof();
+    }).catch(function () { /* The next page sends its own. */ });
   }
 
   /* Pick a spot (Pack B): the dashboard opened this tab with a one-time
@@ -1248,45 +1303,60 @@
     drainQueue(); // API available immediately; calls run when ready below.
     try { bootPasteTryOn(); } catch (_) { /* isolated from chat */ }
     try { bootPickSpot(); } catch (_) { /* isolated from chat */ }
-    fetchConfig(function (config) {
-      state.config = config;
-      if (!config || !config.active || pageExcluded(config) || launchHidden(config)) return;
-      state.locale = resolveLocale(config);
-      if (v16Chat()) state.lift = stickyCartLift();
-      // A website's client-side routes change the piece the panel shows.
-      if (v16Chat() && genericSite()) followPage(function () { sendPageProduct(true); });
-      buildLauncher();
-      attachShopperToken();
-      track('loader_initialized', {});
+    fetchConfig(startChat);
+  }
+  /* A Shopify store's first product page visit can confirm it (tryon-paste.js
+     onProven). Its config was refused a moment ago, so ask once more: Store
+     Chat then appears on this same page instead of the next one. */
+  function chatAfterProof() {
+    proofDone = true;
+    if (!state.host) fetchConfig(startChat);
+  }
+  function startChat(config) {
+    if (state.host) return;
+    state.config = config;
+    if (!config) {
+      // Refused (an unconfirmed Shopify paste store, among others): finish
+      // the proof from this page, after Try-On's own attempt if it makes one.
+      (pasteTryOnSettled || Promise.resolve()).then(proveShopFromPage);
+      return;
+    }
+    if (!config.active || pageExcluded(config) || launchHidden(config)) return;
+    state.locale = resolveLocale(config);
+    if (v16Chat()) state.lift = stickyCartLift();
+    // A website's client-side routes change the piece the panel shows.
+    if (v16Chat() && genericSite()) followPage(function () { sendPageProduct(true); });
+    buildLauncher();
+    attachShopperToken();
+    track('loader_initialized', {});
 
-      /* Respect Save-Data and 2g: on a metered or slow connection an unused
-         preload is a real cost to the shopper, and the click-time fetch is
-         the lesser evil. */
-      var conn = navigator.connection;
-      var frugal = conn && (conn.saveData === true || /(^|-)2g$/.test(conn.effectiveType || ''));
-      // v16 builds the panel on the first sign of intent, never on page load.
-      if (!frugal && !v16Chat()) {
-        var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 2500); };
-        idle(function () { warmPanel(); }, { timeout: 6000 });
-      }
+    /* Respect Save-Data and 2g: on a metered or slow connection an unused
+       preload is a real cost to the shopper, and the click-time fetch is
+       the lesser evil. */
+    var conn = navigator.connection;
+    var frugal = conn && (conn.saveData === true || /(^|-)2g$/.test(conn.effectiveType || ''));
+    // v16 builds the panel on the first sign of intent, never on page load.
+    if (!frugal && !v16Chat()) {
+      var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 2500); };
+      idle(function () { warmPanel(); }, { timeout: 6000 });
+    }
 
-      if (config.available && config.aiEnabled) {
-        if (config.behaviour.greetingEnabled) {
-          setTimeout(function () {
-            if (state.open) return;
-            showTeaser(pick(config.behaviour.greeting) ||
-              (state.locale === 'ar' ? 'مرحباً 👋 كيف نقدر نساعدك؟' : 'Hi 👋 How can we help?'), 'greeting');
-          }, clampDelay(config.behaviour.greetingDelaySeconds));
-        }
-        if (config.behaviour.proactiveEnabled) {
-          setTimeout(function () {
-            if (state.open) return;
-            showTeaser(pick(config.behaviour.welcomeSubtitle) ||
-              (state.locale === 'ar' ? 'اسألنا أي شيء.' : 'Ask us anything.'), 'proactive');
-          }, clampDelay(config.behaviour.proactiveDelaySeconds));
-        }
+    if (config.available && config.aiEnabled) {
+      if (config.behaviour.greetingEnabled) {
+        setTimeout(function () {
+          if (state.open) return;
+          showTeaser(pick(config.behaviour.greeting) ||
+            (state.locale === 'ar' ? 'مرحباً 👋 كيف نقدر نساعدك؟' : 'Hi 👋 How can we help?'), 'greeting');
+        }, clampDelay(config.behaviour.greetingDelaySeconds));
       }
-    });
+      if (config.behaviour.proactiveEnabled) {
+        setTimeout(function () {
+          if (state.open) return;
+          showTeaser(pick(config.behaviour.welcomeSubtitle) ||
+            (state.locale === 'ar' ? 'اسألنا أي شيء.' : 'Ask us anything.'), 'proactive');
+        }, clampDelay(config.behaviour.proactiveDelaySeconds));
+      }
+    }
   }
   function clampDelay(seconds) {
     var n = Number(seconds);

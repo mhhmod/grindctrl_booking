@@ -1,5 +1,6 @@
+import { recordSignatureHealth } from '@/lib/store-health/signature-signals';
 import { recordPhotoHealth } from '@/lib/store-health/signals';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { clientIp, publicApiRatelimit, proxyVisitorRatelimit, proxyShopMintRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { isJsonObject, readLimitedJson } from '@/lib/http/read-limited-body';
@@ -12,7 +13,7 @@ import { schedulePasteDomainCheck } from '@/lib/paste/domain-check';
 import { isAnyPlatformImageHost, platformImageHosts } from '@/lib/paste/platform-image-hosts';
 import { schedulePasteDomainPlatformCheck } from '@/lib/paste/platform-check';
 import { checkPasteShop } from '@/lib/paste/shop-proof';
-import { PasteError, type PasteContextResponse } from '@/lib/paste/types';
+import { PasteError, type PasteContextResponse, type PasteProofResponse } from '@/lib/paste/types';
 import { pasteCapabilitySecret, verifyLiquidSignature, type LiquidClaims } from '@/lib/paste/signing';
 import { pasteTurnstileConfig } from '@/lib/paste/turnstile';
 import { siteTenantKey } from '@/lib/tenancy/tenant-key';
@@ -60,12 +61,18 @@ async function mint(request: NextRequest): Promise<Response> {
     if (!parsed.ok) return json({ error: 'invalid_request' }, parsed.status);
     if (!isJsonObject(parsed.value)) return json({ error: 'invalid_request' }, 400);
     const b = parsed.value;
+    /* `proof`: messenger.js asking only to finish a pending Shopify shop's
+       proof with this page's signed render, so Store Chat can start without
+       Try-On (no image, no context minted). Every check below still runs:
+       rate limits, origin, signature and replay, then the storefront check. */
+    const proof = b.proof === true;
     // The public key selects a site; a tenant is ALWAYS server-derived.
     if (b.tenant !== undefined || b.shop !== undefined || b.siteId !== undefined || typeof b.key !== 'string'
+      || (b.proof !== undefined && !proof)
       || typeof b.productId !== 'string' || !validateProductId(b.productId).ok
       || typeof b.pageUrl !== 'string' || b.pageUrl.length > 2048
       || !URL.canParse(b.pageUrl)
-      || typeof b.imageUrl !== 'string' || b.imageUrl.length > 2048
+      || (!proof && (typeof b.imageUrl !== 'string' || b.imageUrl.length > 2048))
       || !launchVisitorId(b.visitorId) || (b.title !== undefined && typeof b.title !== 'string')
       || (b.preview !== undefined && (typeof b.preview !== 'string' || b.preview.length > 512))
       || (b.codeVersion !== undefined && !(Number.isInteger(b.codeVersion) && (b.codeVersion as number) >= 1 && (b.codeVersion as number) <= 99))) {
@@ -79,6 +86,7 @@ async function mint(request: NextRequest): Promise<Response> {
     const trust = pasteTrust(connection);
     if (!connection || trust === 'not_connected') return json({ error: 'paste_not_connected' }, 403);
     if (trust === 'shopify_app_installed') return json({ error: 'shopify_app_installed' }, 409);
+    if (proof && connection.platform !== 'shopify') return json({ error: 'invalid_request' }, 400);
     const tenant = siteTenantKey(site.id);
     await requireRateLimit(proxyVisitorRatelimit, `paste:${site.id}:${ip}:${b.visitorId}`);
     await requireRateLimit(proxyShopMintRatelimit, `paste:${site.id}`);
@@ -96,15 +104,20 @@ async function mint(request: NextRequest): Promise<Response> {
     }
     if (connection.platform === 'shopify') {
       const s = b.signed;
-      if (!s || typeof s !== 'object' || Array.isArray(s)) return json({ error: 'bad_signature' }, 401);
+      if (!s || typeof s !== 'object' || Array.isArray(s)) { after(() => recordSignatureHealth(site.id, 'bad_signature')); return json({ error: 'bad_signature' }, 401); }
       const claims = s as Record<string, unknown>;
       if (!['siteId', 'shopDomain', 'productId', 'variantId', 'issuedAt', 'customerId', 'signature']
         .every((key) => typeof claims[key] === 'string') || claims.productId !== b.productId || claims.variantId !== variantId) {
+        after(() => recordSignatureHealth(site.id, 'bad_signature'));
         return json({ error: 'bad_signature' }, 401);
       }
       const verified = await verifyLiquidSignature({ connection, claims: claims as unknown as LiquidClaims,
         signature: claims.signature as string });
-      if (!verified.ok) return json({ error: verified.code }, verified.code === 'unavailable' ? 503 : verified.code === 'replayed' ? 409 : 401);
+      if (!verified.ok) {
+        if (verified.code === 'bad_signature' || verified.code === 'stale_signature') { const code = verified.code; after(() => recordSignatureHealth(site.id, code)); }
+        return json({ error: verified.code }, verified.code === 'unavailable' ? 503 : verified.code === 'replayed' ? 409 : 401);
+      }
+      after(() => recordSignatureHealth(site.id, 'verified'));
       // Which snippet the store runs, for the dashboard's "copy the new code".
       // Unsigned, so only a hint, and only after this render verified.
       if (typeof b.codeVersion === 'number') await recordPasteCodeVersion(site.id, b.codeVersion);
@@ -113,16 +126,18 @@ async function mint(request: NextRequest): Promise<Response> {
         // render naming any shop. It triggers our storefront fetch, which
         // must find this site's signed snippet on the shop itself before
         // this site becomes the shop's holder and displaces other claims.
-        let proof;
+        let shopProof;
         try {
-          proof = await checkPasteShop(connection, { kind: 'render' });
+          shopProof = await checkPasteShop(connection, { kind: 'render' });
         } catch (error) {
           if (error instanceof PasteError && error.code === 'connection_conflict') return json({ error: 'shopify_app_installed' }, 409);
           if (error instanceof PasteError && error.code === 'not_found') return json({ error: 'paste_not_connected' }, 403);
           throw error;
         }
-        if (proof.shopProof !== 'proven') return json({ error: 'shop_proof_pending' }, 403);
+        if (shopProof.shopProof !== 'proven') return json({ error: 'shop_proof_pending' }, 403);
       }
+      // The shop is proven (now or before): that is all a proof request asks.
+      if (proof) return json({ proven: true } satisfies PasteProofResponse);
     }
     // Try-On runs only where our server confirmed this site's code: the
     // proven shop host, or a domain whose page it found the snippet on.
@@ -140,19 +155,21 @@ async function mint(request: NextRequest): Promise<Response> {
     });
     if (!audience.show) return json({ error: audience.reason }, 409);
     const siteHosts = [...hosts, ...(connection.platform === 'shopify' ? ['cdn.shopify.com'] : [])];
+    // Validated above for every request that is not proof-only (those returned).
+    const imageUrl = b.imageUrl as string;
     // Website pages may also use the image servers of the platform OUR
     // server fingerprinted on this page's own domain. Read only when needed.
-    const platforms = connection.platform === 'website' && !checkGarmentUrl(b.imageUrl, siteHosts)
+    const platforms = connection.platform === 'website' && !checkGarmentUrl(imageUrl, siteHosts)
       ? await readPasteDomainPlatforms(site.id) : null;
     const pageDomain = platforms && pasteDomainOf(platforms, page.hostname);
     let garment: Awaited<ReturnType<typeof assertSafeGarmentUrl>>;
     try {
-      garment = await assertSafeGarmentUrl(b.imageUrl, { site: siteHosts, exact: platformImageHosts(pageDomain?.platform) });
+      garment = await assertSafeGarmentUrl(imageUrl, { site: siteHosts, exact: platformImageHosts(pageDomain?.platform) });
     } catch (error) {
       if (!(error instanceof UnsafeGarmentUrlError)) throw error;
-      await recordPhotoHealth(site.id, b.imageUrl as string, false);
+      await recordPhotoHealth(site.id, imageUrl, false);
       const reason = garmentRefusalReason(error);
-      const imageHost = URL.canParse(b.imageUrl) ? new URL(b.imageUrl).hostname.toLowerCase() : null;
+      const imageHost = URL.canParse(imageUrl) ? new URL(imageUrl).hostname.toLowerCase() : null;
       console.warn('[paste] garment refused', { code: reason, site: site.id, host: imageHost, platform: pageDomain?.platform ?? null });
       // A platform image server on a domain never fingerprinted (an install
       // older than the check): look once, so the next look can pass.

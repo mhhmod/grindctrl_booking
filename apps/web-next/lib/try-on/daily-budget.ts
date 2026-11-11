@@ -15,12 +15,14 @@ export async function claimTryOnDailyBudget(tenant: string, options: { now?: Dat
   } catch { return 'unavailable'; }
 }
 
-export type TryOnDayStatus = { used: number; limit: number; reached: boolean };
+export type TryOnDayStatus = { used: number; limit: number; reached: boolean; cause?: 'store' | 'global' | null; resetAt?: string };
 export async function readTryOnDayStatus(tenant: string, now = new Date()): Promise<TryOnDayStatus> {
   const limits = await readSpendLimits(tenant);
   const limit = effectiveSpendLimit(limits.tryOnDailyLooks, siteDailyLooks());
   const [used, globalUsed] = await readDailyUsage(dailyKeys('tryon', tenant, now));
-  return { used, limit, reached: used >= limit || globalUsed >= globalDailyLooks() };
+  return { used, limit, reached: used >= limit || globalUsed >= globalDailyLooks(),
+    cause: used >= limit ? 'store' : globalUsed >= globalDailyLooks() ? 'global' : null,
+    resetAt: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)).toISOString() };
 }
 
 /** Fail closed for storefront availability, without calling Redis trouble

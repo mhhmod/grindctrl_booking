@@ -69,13 +69,7 @@ export async function getPasteConnection(siteId: string): Promise<PasteConnectio
     || (row.platform === 'shopify' && (typeof row.shop_domain !== 'string' || !SHOP_HOST_RE.test(row.shop_domain)))) {
     throw new PasteError('unavailable');
   }
-  let appInstalled = false;
-  if (row.platform === 'shopify' && row.status !== 'disconnected') {
-    const install = await db.from('shopify_installations').select('shop_domain')
-      .eq('shop_domain', row.shop_domain as string).eq('status', 'active').limit(1);
-    if (install.error) throw new PasteError('unavailable');
-    appInstalled = Array.isArray(install.data) && install.data.length > 0;
-  }
+  const appInstalled = row.platform === 'shopify' && row.status !== 'disconnected' && await shopAppInstalled(row.shop_domain as string);
   return {
     ...row, disconnected_reason: row.disconnected_reason === 'displaced' ? 'displaced' : null,
     shop_render_at: row.shop_render_at ?? null, shop_checked_at: row.shop_checked_at ?? null,
@@ -91,6 +85,27 @@ export async function enablePasteInstall(siteId: string, platform: PastePlatform
     p_site: siteId, p_platform: platform, p_shop_domain: shopDomain,
   }));
   if (result !== 'enabled') throw new PasteError(result === 'connection_conflict' ? result : 'invalid_platform');
+}
+
+/** The owner undoes the pasted install (20261111_paste_disconnect.sql): the
+ *  code stops verifying at once and the site's paste addresses are released.
+ *  Plan and history stay. Call only after an owner-only requireSiteAccess.
+ *  Throws PasteError not_found when nothing is connected. */
+export async function disconnectPasteInstall(siteId: string): Promise<{ platform: PastePlatform; shopDomain: string | null }> {
+  const result = checked(await getMessengerServiceClient().rpc('disconnect_paste_install', { p_site: siteId })) as {
+    code?: string; platform?: string; shop_domain?: string | null;
+  } | null;
+  if (result?.code === 'not_found') throw new PasteError('not_found');
+  if (result?.code !== 'ok' || (result.platform !== 'website' && result.platform !== 'shopify')) throw new PasteError('unavailable');
+  return { platform: result.platform, shopDomain: result.shop_domain ?? null };
+}
+
+/** Whether the Shopify app is installed on this shop (the app always wins it). */
+export async function shopAppInstalled(shop: string): Promise<boolean> {
+  const install = await getMessengerServiceClient().from('shopify_installations').select('shop_domain')
+    .eq('shop_domain', shop).eq('status', 'active').limit(1);
+  if (install.error) throw new PasteError('unavailable');
+  return Array.isArray(install.data) && install.data.length > 0;
 }
 
 type DomainRow = {
@@ -292,6 +307,16 @@ export function beginPasteShopCheck(connection: PasteConnection) {
 /** Stores a check that did not prove the shop and ends the lease. */
 export async function finishPasteShopCheck(connection: PasteConnection, outcome: Exclude<PasteShopCheckOutcome, 'proven'>): Promise<void> {
   await shopRpc('finish_paste_shop_check', connection, ['recorded'] as const, { p_outcome: outcome });
+}
+
+/** Ends the lease of a check that stores nothing: one that could not look at
+ *  the storefront while an earlier finding is still fresh. The finding and
+ *  its time stay exactly as they were. */
+export async function releasePasteShopCheck(connection: PasteConnection): Promise<void> {
+  if (connection.platform !== 'shopify' || !connection.shop_domain) return;
+  checked(await getMessengerServiceClient().from('paste_site_connections').update({ shop_check_started_at: null })
+    .eq('widget_site_id', connection.widget_site_id).eq('platform', 'shopify').eq('shop_domain', connection.shop_domain)
+    .eq('status', 'pending'));
 }
 
 export type PasteSignalResult = 'granted' | 'apex_taken' | 'recorded' | 'unverified' | 'ignored' | 'unavailable';

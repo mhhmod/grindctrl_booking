@@ -12,7 +12,7 @@ import type { SiteLocale } from '@/lib/landing/landing-i18n';
 export function V16TryOnApp({ locale, shop }: { locale: SiteLocale; shop: string }) {
   const copy = getTryOnDashboardCopy(locale);
   return (
-    <Paper withBorder radius="card" p="lg">
+    <Paper id="shopify-app" withBorder radius="card" p="lg">
       <Stack gap="md" align="flex-start">
         <Stack gap={4}>
           <Title order={2} size="h4">{copy.shopifyApp}</Title>

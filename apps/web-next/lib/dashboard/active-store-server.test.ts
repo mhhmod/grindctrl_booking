@@ -1,17 +1,22 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ shops: vi.fn(), sites: vi.fn(), woo: vi.fn(), wooContext: vi.fn(), freePlan: vi.fn(), paste: vi.fn() }));
+const mocks = vi.hoisted(() => ({ shops: vi.fn(), sites: vi.fn(), woo: vi.fn(), wooContext: vi.fn(), freePlan: vi.fn(), paste: vi.fn(), connection: vi.fn() }));
 vi.mock('server-only', () => ({}));
 vi.mock('next/headers', () => ({ headers: vi.fn(), cookies: vi.fn() }));
 vi.mock('@clerk/nextjs/server', () => ({ auth: async () => ({ userId: 'user_nour' }) }));
 vi.mock('@/lib/shopify/shops', () => ({ listManagedTryOnShops: mocks.shops }));
 vi.mock('@/lib/woo/connection', () => ({ listActiveWooSiteIds: mocks.woo, getActiveWooSiteContext: mocks.wooContext }));
 vi.mock('@/lib/woo/free-plan', () => ({ ensureWooFreePlan: mocks.freePlan }));
-vi.mock('@/lib/paste/store', () => ({ listActivePasteSiteIds: mocks.paste }));
+vi.mock('@/lib/paste/store', async (original) => ({
+  pasteTrust: (await original<typeof import('@/lib/paste/store')>()).pasteTrust,
+  listActivePasteSiteIds: mocks.paste, getPasteConnection: mocks.connection,
+}));
 vi.mock('@/lib/messenger/provisioning', () => ({ listMessengerSitesReadOnly: mocks.sites }));
 
-import { ensureActiveStorePlan, getActiveStoreRole, getActiveStoreTimeZone, listDashboardSites, storeLookupFailed } from './active-store-server';
+import {
+  ensureActiveStorePlan, getActiveStoreRole, getActiveStoreTimeZone, getPendingPasteShop, listDashboardSites, storeLookupFailed,
+} from './active-store-server';
 
 const SITE = '11111111-1111-4111-8111-111111111111';
 
@@ -108,5 +113,30 @@ describe('WooCommerce stores', () => {
     mocks.paste.mockResolvedValue(new Set([SITE]));
     expect(await listDashboardSites()).toEqual([expect.objectContaining({ id: SITE, paste: true, woo: false })]);
     expect(mocks.freePlan).not.toHaveBeenCalled();
+  });
+});
+
+/* M5: a pasted Shopify store waiting for its confirmation is connected, not missing. */
+describe('getPendingPasteShop', () => {
+  const pending = { widget_site_id: SITE, platform: 'shopify', shop_domain: 'maison.myshopify.com', status: 'pending',
+    shop_proven_at: null, app_installed: false };
+
+  it('names the shop of a site whose pasted code is still being confirmed', async () => {
+    mocks.connection.mockResolvedValue(pending);
+    expect(await getPendingPasteShop({ shopDomain: null, siteId: SITE, tenantKey: null, platform: null })).toBe('maison.myshopify.com');
+    expect(mocks.connection).toHaveBeenCalledWith(SITE);
+  });
+
+  it('is null for a store with a tenant, a proven, displaced or app-held shop, and a failed read', async () => {
+    mocks.connection.mockResolvedValue(pending);
+    expect(await getPendingPasteShop({ shopDomain: null, siteId: SITE, tenantKey: `site:${SITE}`, platform: 'paste' })).toBeNull();
+    expect(mocks.connection).not.toHaveBeenCalled();
+    for (const connection of [{ ...pending, status: 'active', shop_proven_at: '2026-11-10T00:00:00Z' },
+      { ...pending, status: 'disconnected' }, { ...pending, app_installed: true }, null]) {
+      mocks.connection.mockResolvedValueOnce(connection);
+      expect(await getPendingPasteShop({ shopDomain: null, siteId: SITE })).toBeNull();
+    }
+    mocks.connection.mockRejectedValueOnce(new Error('db down'));
+    expect(await getPendingPasteShop({ shopDomain: null, siteId: SITE })).toBeNull();
   });
 });

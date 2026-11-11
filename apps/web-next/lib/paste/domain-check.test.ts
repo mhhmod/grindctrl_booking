@@ -2,7 +2,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const m = vi.hoisted(() => ({ auto: vi.fn(), owner: vi.fn(), host: vi.fn(), list: vi.fn(), verify: vi.fn(), record: vi.fn(),
-  grant: vi.fn(), platform: vi.fn(), site: vi.fn(), after: vi.fn() }));
+  grant: vi.fn(), platform: vi.fn(), site: vi.fn(), after: vi.fn(), connectedEmail: vi.fn() }));
+vi.mock('@/lib/email/store-connected-sender', () => ({ scheduleStoreConnectedEmail: m.connectedEmail }));
 vi.mock('@/lib/ratelimit', () => ({
   pasteDomainCheckAutoRatelimit: { configured: true, limit: m.auto },
   pasteDomainCheckOwnerRatelimit: { configured: true, limit: m.owner },
@@ -81,6 +82,7 @@ describe('checkPasteDomain', () => {
     expect(m.verify.mock.invocationCallOrder[0]).toBeLessThan(m.grant.mock.invocationCallOrder[0]);
     expect(m.platform).toHaveBeenCalledWith(SITE, 'merchant.example', 'custom');
     expect(m.record).not.toHaveBeenCalled();
+    expect(m.connectedEmail).toHaveBeenCalledExactlyOnceWith(SITE, { path: 'website_paste', host: 'merchant.example' });
   });
 
   it.each([
@@ -92,6 +94,7 @@ describe('checkPasteDomain', () => {
     expect(result.domain).toMatchObject({ domainVerified: false, check: { outcome } });
     expect(m.record).toHaveBeenCalledExactlyOnceWith(SITE, 'domain-a', outcome);
     expect(m.verify).not.toHaveBeenCalled(); expect(m.grant).not.toHaveBeenCalled();
+    expect(m.connectedEmail).not.toHaveBeenCalled();
   });
 
   it('records an unreachable page (error status, private address) without verifying', async () => {

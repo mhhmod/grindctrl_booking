@@ -71,3 +71,10 @@ describe('override bounds', () => {
  });
  it.each([0, 1, 100000])('accepts %s', value => expect(spendLimits({ spend_limits: { tryOnDailyLooks: value } })).toEqual({ tryOnDailyLooks: value }));
 });
+
+it('M12: distinguishes store and all-stores ceilings with the next UTC reset instant', async () => {
+  mocks.usage.mockResolvedValue([1, 5000]);
+  expect(await readTryOnDayStatus('a', now)).toMatchObject({ cause: 'global', resetAt: '2026-11-12T00:00:00.000Z' });
+  mocks.usage.mockResolvedValue([300, 5000]);
+  expect(await readTryOnDayStatus('a', now)).toMatchObject({ cause: 'store' });
+});

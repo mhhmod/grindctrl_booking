@@ -12,7 +12,16 @@ export type PasteErrorCode =
   | 'invalid_domain' | 'limit_reached' | 'not_found' | 'proof_required'
   | 'proof_failed' | 'invalid_platform' | 'connection_conflict';
 
-export type PasteResult<T> = { ok: true; data: T } | { ok: false; code: PasteErrorCode; retryAfterSeconds?: number };
+/** What already holds this store when enabling pasted code answers
+ *  connection_conflict, so the dashboard can say which connection and what
+ *  to do. `store` is the shop or null when it is not known. */
+export type PasteConflictHolder =
+  | { kind: 'paste'; platform: PastePlatform; store: string | null }
+  | { kind: 'woocommerce' }
+  | { kind: 'shopify_app'; store: string | null };
+
+export type PasteResult<T> = { ok: true; data: T }
+  | { ok: false; code: PasteErrorCode; retryAfterSeconds?: number; heldBy?: PasteConflictHolder };
 
 export class PasteError extends Error {
   constructor(readonly code: PasteErrorCode) { super(code); this.name = 'PasteError'; }
@@ -113,6 +122,14 @@ export type PasteShopProof = {
   checkedAt: string | null;
   /** Seconds until another check can run; null when one can run now. */
   retryAfterSeconds: number | null;
+  /** Only from a check that just found the code: a product page the
+   *  storefront links to (null when none), and whether the storefront showed
+   *  its password page first. Never stored.
+   *  `primaryHost`: the host the shop sent our fetch to (its custom primary
+   *  domain), null when the code was found on the myshopify host itself.
+   *  `addedDomain`: that host, normalized, when "Check my store" just added
+   *  it as the store's domain row (provePasteShopAction). */
+  storefront?: { productUrl: string | null; passwordPage: boolean; primaryHost?: string | null; addedDomain?: string | null };
 };
 
 /** The result of a domain snippet check ("Check my store" on a website
@@ -159,6 +176,9 @@ export type PasteContextRequest = {
   /** Shopify: the snippet's `data-gc-v` (1 when absent). Unsigned; recorded
    *  after the render verifies, as a dashboard hint only. */
   codeVersion?: number;
+  /** Only finish the pending shop's proof (PasteProofResponse); `imageUrl`
+   *  and `title` are then not needed. */
+  proof?: true;
   signed?: {
     siteId: string; shopDomain: string; productId: string; variantId: string;
     issuedAt: string; customerId: string; signature: string;
@@ -171,6 +191,10 @@ export type PasteContextResponse = {
   settings: Record<string, unknown>;
   turnstile: { siteKey: string | null; action: 'paste_tryon' } | null;
 };
+
+/** A `proof: true` request (messenger.js, M3): the pending shop's proof is
+ *  complete, or the shop was already proven. Nothing else is returned. */
+export type PasteProofResponse = { proven: true };
 
 export type PasteContextFailure = {
   error: 'invalid_request' | 'not_found' | 'paste_not_connected' | 'site_disconnected' | 'origin_not_allowed'

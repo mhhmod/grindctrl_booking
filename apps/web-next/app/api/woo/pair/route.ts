@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import { scheduleStoreConnectedEmail } from '@/lib/email/store-connected-sender';
 import { readLimitedJson } from '@/lib/http/read-limited-body';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
@@ -254,6 +255,7 @@ export async function POST(request: NextRequest) {
       .update({ rest_base_url: input.restUrl })
       .eq('widget_site_id', siteId);
     if (restBaseWrite.error) console.warn('[woo] rest base not stored', { siteId });
+    scheduleStoreConnectedEmail(siteId, { path: 'woocommerce', host: new URL(input.homeUrl).hostname });
 
     return json({
       siteId,

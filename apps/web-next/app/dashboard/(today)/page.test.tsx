@@ -6,7 +6,7 @@ import { getRequestLocale } from '@/lib/auth/locale';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { getTodayFacts } from '@/lib/dashboard/today-data';
 import { getTodaySetupFacts } from '@/lib/dashboard/today-setup-data';
-import { getActiveStore, getActiveStoreRole } from '@/lib/dashboard/active-store-server';
+import { getActiveStore, getActiveStoreRole, getPendingPasteShop } from '@/lib/dashboard/active-store-server';
 import { getYourStoreFacts } from '@/lib/dashboard/your-store-data';
 import { createPreviewLink, setLaunchState } from '@/app/dashboard/try-on/launch-actions';
 import { renderWithMantine } from '@/components/mantine/test-utils';
@@ -16,6 +16,7 @@ vi.mock('@/lib/dashboard/active-store-server', () => ({
   getActiveStore: vi.fn(async () => ({ shopDomain: 'alpha.myshopify.com', siteId: null })),
   getActiveStoreTimeZone: vi.fn(async () => 'Africa/Cairo'),
   getActiveStoreRole: vi.fn(async () => 'owner'),
+  getPendingPasteShop: vi.fn(async () => null),
 }));
 vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: vi.fn(async () => []) }));
 vi.mock('@/lib/dashboard/today-data', () => ({ getTodayFacts: vi.fn() }));
@@ -65,6 +66,16 @@ describe('DashboardOverviewPage, v16 Today', () => {
     vi.mocked(getActiveStore).mockResolvedValueOnce({ shopDomain: null, siteId: 'site_1' });
     renderWithMantine(await DashboardOverviewPage());
     expect(storeFlags).toHaveBeenCalledWith({ widgetSiteId: 'site_1' });
+    expect(screen.getByRole('heading', { name: 'Needs you' })).toBeInTheDocument();
+  });
+
+  it('leads with "finish confirming" for pasted code still being confirmed, never "connect your store"', async () => {
+    vi.mocked(getActiveStore).mockResolvedValueOnce({ shopDomain: null, siteId: 'site_1', tenantKey: null, platform: null });
+    vi.mocked(getPendingPasteShop).mockResolvedValueOnce('maison.myshopify.com');
+    renderWithMantine(await DashboardOverviewPage());
+    expect(screen.getByRole('heading', { name: 'Finish confirming maison.myshopify.com' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Finish confirming' })).toHaveAttribute('href', '/dashboard/store#connect');
+    expect(screen.queryByRole('heading', { name: 'Connect your first store' })).toBeNull();
     expect(screen.getByRole('heading', { name: 'Needs you' })).toBeInTheDocument();
   });
 

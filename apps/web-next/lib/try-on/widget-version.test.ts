@@ -24,3 +24,7 @@ it('versions the hosted engine and paste adapter by their combined content', () 
 it('versions the Pick a spot edit chrome by its content', () => {
   expect(source('tryon-engine')).toContain("'pick-spot.js?v=" + tag('pick-spot') + "'");
 });
+
+it('versions the support runtime loaded by the stable loader', () => {
+  expect(source('loader')).toContain("var RUNTIME_VERSION = '" + tag('runtime') + "'");
+});

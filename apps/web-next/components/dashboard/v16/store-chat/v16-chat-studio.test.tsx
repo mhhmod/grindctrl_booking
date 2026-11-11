@@ -170,7 +170,7 @@ describe('V16ChatStudio', () => {
       fireEvent.click(within(dialog).getByRole('button', { name: en.disconnect.label }));
     });
     expect(a.disconnectSiteAction).toHaveBeenCalledWith('site_1');
-    expect(router.replace).toHaveBeenCalledWith('/dashboard/store-chat');
+    expect(router.replace).toHaveBeenCalledWith(`/dashboard/store-chat?disconnected=1&shop=${encodeURIComponent(META.domain!)}`);
   });
 
   it('directs WooCommerce installation to Store setup', () => {

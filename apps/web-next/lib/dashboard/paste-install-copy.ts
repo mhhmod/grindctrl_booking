@@ -1,4 +1,6 @@
-import type { PasteDomainVerificationReason, PasteErrorCode, PasteShopCheckOutcome, PasteStep } from '@/lib/paste/types';
+import type {
+  PasteConflictHolder, PasteDomainVerificationReason, PasteErrorCode, PasteShopCheckOutcome, PasteStep,
+} from '@/lib/paste/types';
 
 export type InstallPlatform = 'shopify' | 'woocommerce' | 'website';
 
@@ -35,6 +37,25 @@ export type PasteInstallCopy = {
   openStore: string;
   waiting: string;
   waitingHint: string;
+  /** Shopify: only a product page carries the signed render that finishes the check. */
+  waitingHintShopify: string;
+  openProductPage: string;
+  /** Shopify, when no product link is known: the store's all-products page. */
+  openProducts: string;
+  /** Shopify `not_found`: the check reads the published theme only. */
+  openLiveTheme: string;
+  /** The check followed the shop to its custom domain and added it. */
+  primaryDomainAdded: (domain: string) => string;
+  /** A password-protected Shopify store: what shoppers see until it is removed. */
+  passwordPageNote: string;
+  connectedTo: (shop: string) => string;
+  /** B5: undo the pasted install to connect another store. */
+  leaveAction: string;
+  leaveBody: (store: string | null) => string;
+  leaveConfirm: string;
+  leaveDone: string;
+  /** connection_conflict, when we can tell which connection holds the store. */
+  conflict: (holder: PasteConflictHolder) => string;
   chatLive: (domain: string) => string;
   tryOnLive: string;
   tryOnReason: (reason: string | null) => string;
@@ -110,17 +131,37 @@ const en: PasteInstallCopy = {
   copied: 'Copied',
   pasteSteps: (step) => {
     switch (step.kind) {
-      case 'open': return step.target === 'shopify_theme_editor' ? 'Open your theme editor.' : 'Open your site’s theme or HTML code.';
+      case 'open': return step.target === 'shopify_theme_editor' ? 'Open the theme editor of your live theme.' : 'Open your site’s theme or HTML code.';
       case 'select': return step.target === 'footer' ? 'In the Footer, select Add section.' : 'Choose Custom Liquid.';
       case 'paste': return step.target === 'custom_liquid' ? 'Paste your code into the Custom Liquid box.' : 'Paste your code just before </body>.';
       case 'save': return 'Save.';
-      case 'visit': return step.target === 'product_page' ? 'Open any product page on your store.' : 'Open your store.';
+      case 'visit': return step.target === 'product_page' ? 'Open a product page on your store.' : 'Open your store.';
     }
   },
   openThemeEditor: 'Open theme editor',
   openStore: 'Open my store',
   waiting: 'Waiting for your store',
   waitingHint: 'Open a page on your store. This updates by itself.',
+  waitingHintShopify: 'Open a product page on your store. This updates by itself.',
+  openProductPage: 'Open a product page',
+  openProducts: 'Open your products',
+  openLiveTheme: 'Open your live theme',
+  primaryDomainAdded: (domain) => `Your store opens at ${domain}, so we added it as your store address.`,
+  passwordPageNote: 'Shoppers can’t see Store Chat or Try-On until you remove the password page in Shopify under Online Store, then Preferences.',
+  connectedTo: (shop) => `Connected to ${shop}`,
+  leaveAction: 'Use a different store',
+  leaveBody: (store) => `This disconnects ${store ?? 'your store'}. The code on it stops working at once, so Store Chat and Try-On leave it. Your plan and looks stay. Then you connect the store you want.`,
+  leaveConfirm: 'Disconnect and start over',
+  leaveDone: 'Disconnected. The old code no longer works. Choose where your store is to connect it.',
+  conflict: (holder) => {
+    switch (holder.kind) {
+      case 'paste': return holder.store
+        ? `This account is already connected to ${holder.store} with pasted code. To connect another store, choose Use a different store.`
+        : 'This account is already connected to a website with pasted code. To connect another store, choose Use a different store.';
+      case 'woocommerce': return 'This account is connected to a WooCommerce store with our plugin. Store Chat and Try-On run from the plugin there.';
+      case 'shopify_app': return `${holder.store ?? 'This store'} uses the GRINDCTRL Shopify app. Manage Store Chat and Try-On from the app.`;
+    }
+  },
   chatLive: (domain) => `Your code is working on ${domain}.`,
   tryOnLive: 'Try-On shows on your product pages.',
   tryOnReason: (reason) => {
@@ -130,7 +171,8 @@ const en: PasteInstallCopy = {
       case 'no_trusted_domain': return 'Add your store address to turn on Try-On.';
       case 'paste_not_connected': return 'Finish the steps above to turn on Try-On.';
       case 'not_installed': return 'Turning on your free looks. This takes a moment.';
-      case 'plan_inactive': return 'Your plan isn’t active. Choose a plan to turn on Try-On.';
+      case 'apex_taken': return 'The free looks for this domain were already claimed by another store. Contact us to add looks.';
+      case 'plan_inactive': return 'Your plan is not active. Contact us to turn on Try-On.';
       case 'unavailable': return 'Try-On is unavailable right now. We’re looking into it.';
       case 'shop_proof_pending': return 'Confirm it’s your store to turn on Try-On.';
       case 'domain_unverified': return 'Try-On turns on once we find your code on your store. We check by ourselves.';
@@ -152,13 +194,13 @@ const en: PasteInstallCopy = {
   shopCheckTitle: 'Confirm it’s your store',
   shopCheck: (outcome, retryAfter) => {
     switch (outcome) {
-      case 'awaiting_visit': return 'We found your code. Open any page on your store to finish.';
-      case 'not_found': return 'We couldn’t find your code on your store yet. Check it’s saved in the theme, then try again.';
+      case 'awaiting_visit': return 'We found your code. Now open a product page on your store. Store Chat and the Try-On button appear there, and this step finishes by itself.';
+      case 'not_found': return 'We check your live theme and didn’t find your code there. If you pasted it into a theme that isn’t published, paste it into your live theme or publish that theme, then check again.';
       case 'outdated_code': return 'Your store has an older copy of your code. Copy it again and replace it.';
       case 'wrong_site': return 'Your store shows code from another account. Replace it with your code, then check again.';
-      case 'password_required': return 'Your store has a password page. Enter the storefront password so we can check it.';
+      case 'password_required': return 'Your store has a password page. Enter your storefront password once so we can check it.';
       case 'password_rejected': return 'That password didn’t open your store. Find it in Shopify under Online Store, then Preferences.';
-      case 'unreachable': return 'We couldn’t reach your store. Try again in a minute.';
+      case 'unreachable': return "We couldn't open your live store. Check it is published and its address opens over HTTPS without a redirect to another store. If it still fails, ask us to check it.";
       case 'rate_limited': return retryAfter ? `Too many checks. Try again in ${retryAfter} seconds.` : 'Too many checks. Try again shortly.';
       default: return 'After you paste and save your code, check your store. We confirm the code is on it before Try-On turns on.';
     }
@@ -234,17 +276,37 @@ const ar: PasteInstallCopy = {
   copied: 'تم النسخ',
   pasteSteps: (step) => {
     switch (step.kind) {
-      case 'open': return step.target === 'shopify_theme_editor' ? 'افتح محرر القالب.' : 'افتح كود القالب أو HTML في موقعك.';
+      case 'open': return step.target === 'shopify_theme_editor' ? 'افتح محرر القالب المنشور في متجرك.' : 'افتح كود القالب أو HTML في موقعك.';
       case 'select': return step.target === 'footer' ? 'في التذييل، اختر إضافة قسم.' : 'اختر Custom Liquid.';
       case 'paste': return step.target === 'custom_liquid' ? 'الصق الكود في مربع Custom Liquid.' : 'الصق الكود قبل </body> مباشرة.';
       case 'save': return 'احفظ.';
-      case 'visit': return step.target === 'product_page' ? 'افتح أي صفحة منتج في متجرك.' : 'افتح متجرك.';
+      case 'visit': return step.target === 'product_page' ? 'افتح صفحة منتج في متجرك.' : 'افتح متجرك.';
     }
   },
   openThemeEditor: 'افتح محرر القالب',
   openStore: 'افتح متجري',
   waiting: 'بانتظار متجرك',
   waitingHint: 'افتح أي صفحة في متجرك، وستتحدث هذه الحالة تلقائياً.',
+  waitingHintShopify: 'افتح صفحة منتج في متجرك، وستتحدث هذه الحالة تلقائياً.',
+  openProductPage: 'افتح صفحة منتج',
+  openProducts: 'افتح منتجاتك',
+  openLiveTheme: 'افتح القالب المنشور',
+  primaryDomainAdded: (domain) => `متجرك يفتح على ⁨${domain}⁩، لذا أضفناه كعنوان لمتجرك.`,
+  passwordPageNote: 'لن يرى المتسوقون دردشة المتجر أو التجربة الافتراضية حتى تزيل صفحة كلمة المرور من Shopify عبر المتجر الإلكتروني ثم التفضيلات.',
+  connectedTo: (shop) => `متصل بـ ⁨${shop}⁩`,
+  leaveAction: 'استخدم متجراً آخر',
+  leaveBody: (store) => `سيؤدي هذا إلى فصل ${store ? `⁨${store}⁩` : 'متجرك'}. يتوقف الكود فيه فوراً، فتختفي منه دردشة المتجر والتجربة الافتراضية. تبقى خطتك وإطلالاتك كما هي. بعدها تربط المتجر الذي تريده.`,
+  leaveConfirm: 'افصله وابدأ من جديد',
+  leaveDone: 'تم الفصل، ولم يعد الكود القديم يعمل. اختر مكان متجرك لربطه.',
+  conflict: (holder) => {
+    switch (holder.kind) {
+      case 'paste': return holder.store
+        ? `هذا الحساب متصل بالفعل بـ ⁨${holder.store}⁩ عبر الكود. لربط متجر آخر، اختر «استخدم متجراً آخر».`
+        : 'هذا الحساب متصل بالفعل بموقع عبر الكود. لربط متجر آخر، اختر «استخدم متجراً آخر».';
+      case 'woocommerce': return 'هذا الحساب متصل بمتجر WooCommerce عبر الإضافة. تعمل دردشة المتجر والتجربة الافتراضية من الإضافة هناك.';
+      case 'shopify_app': return `${holder.store ? `⁨${holder.store}⁩` : 'هذا المتجر'} يستخدم تطبيق GRINDCTRL على Shopify. أدر دردشة المتجر والتجربة الافتراضية من التطبيق.`;
+    }
+  },
   chatLive: (domain) => `الكود يعمل على ${domain}.`,
   tryOnLive: 'التجربة الافتراضية تظهر في صفحات منتجاتك.',
   tryOnReason: (reason) => {
@@ -254,7 +316,8 @@ const ar: PasteInstallCopy = {
       case 'no_trusted_domain': return 'أضف عنوان متجرك لتشغيل التجربة الافتراضية.';
       case 'paste_not_connected': return 'أكمل الخطوات أعلاه لتشغيل التجربة الافتراضية.';
       case 'not_installed': return 'نشغّل إطلالاتك المجانية. يستغرق ذلك لحظات.';
-      case 'plan_inactive': return 'خطتك غير مفعّلة. اختر خطة لتشغيل التجربة الافتراضية.';
+      case 'apex_taken': return 'حصل متجر آخر على الإطلالات المجانية لهذا النطاق. تواصل معنا لإضافة إطلالات.';
+      case 'plan_inactive': return 'خطتك غير مفعّلة. تواصل معنا لتفعيل التجربة الافتراضية.';
       case 'unavailable': return 'التجربة الافتراضية غير متاحة الآن. نعمل على ذلك.';
       case 'shop_proof_pending': return 'أكّد أن المتجر لك لتشغيل التجربة الافتراضية.';
       case 'domain_unverified': return 'تعمل التجربة الافتراضية بمجرد أن نجد الكود في متجرك، ونتحقق من ذلك تلقائياً.';
@@ -276,13 +339,13 @@ const ar: PasteInstallCopy = {
   shopCheckTitle: 'أكّد أن المتجر لك',
   shopCheck: (outcome, retryAfter) => {
     switch (outcome) {
-      case 'awaiting_visit': return 'وجدنا الكود. افتح أي صفحة في متجرك لإكمال التأكيد.';
-      case 'not_found': return 'لم نجد الكود في متجرك بعد. تأكد من حفظه في القالب ثم حاول مجدداً.';
+      case 'awaiting_visit': return 'وجدنا الكود. افتح الآن صفحة منتج في متجرك. ستظهر فيها دردشة المتجر وزر التجربة الافتراضية، وتكتمل هذه الخطوة تلقائياً.';
+      case 'not_found': return 'نتحقق من القالب المنشور ولم نجد الكود فيه. إذا لصقته في قالب غير منشور، الصقه في القالب المنشور أو انشر ذلك القالب، ثم تحقق مجدداً.';
       case 'outdated_code': return 'في متجرك نسخة قديمة من الكود. انسخه من جديد واستبدلها.';
       case 'wrong_site': return 'يظهر في متجرك كود من حساب آخر. استبدله بالكود الخاص بك ثم تحقق مجدداً.';
-      case 'password_required': return 'لمتجرك صفحة كلمة مرور. أدخل كلمة مرور واجهة المتجر لنتحقق منه.';
+      case 'password_required': return 'لمتجرك صفحة كلمة مرور. أدخل كلمة مرور واجهة المتجر مرة واحدة لنتحقق منه.';
       case 'password_rejected': return 'لم تفتح كلمة المرور هذه متجرك. تجدها في Shopify من المتجر الإلكتروني ثم التفضيلات.';
-      case 'unreachable': return 'لم نتمكن من الوصول إلى متجرك. حاول بعد دقيقة.';
+      case 'unreachable': return 'تعذّر فتح متجرك المنشور. تأكد أنه منشور وأن عنوانه يفتح عبر HTTPS دون تحويل لمتجر آخر. إن استمرت المشكلة، اطلب منا فحصه.';
       case 'rate_limited': return retryAfter ? `محاولات كثيرة. حاول بعد ${retryAfter} ثانية.` : 'محاولات كثيرة. حاول بعد قليل.';
       default: return 'بعد لصق الكود وحفظه، تحقق من متجرك. نتأكد من وجود الكود قبل تشغيل التجربة الافتراضية.';
     }

@@ -101,6 +101,9 @@ beforeAll(async () => {
   const verification = await read('supabase/20261109_paste_domain_verification.sql');
   await db.exec(verification);
   await db.exec(verification);
+  const disconnect = await read('supabase/20261111_paste_disconnect.sql');
+  await db.exec(disconnect);
+  await db.exec(disconnect);
 }, 60_000);
 afterAll(async () => { await db?.close(); });
 
@@ -485,6 +488,70 @@ describe('trigger guards and grants', () => {
     }
     expect(await as('service_role', () => db.query('select prove_paste_shop($1,$2) as value', [s, 'x.myshopify.com'])
       .then((r) => (r.rows[0] as { value: string }).value))).toBe('not_pending');
+  });
+});
+
+describe('owner disconnect (20261111, B5)', () => {
+  const disconnect = (id: string) => one<{ code: string; platform?: string; shop_domain?: string | null }>(
+    'select disconnect_paste_install($1) as value', [id]);
+  const secret = (id: string) => one<number>('select secret_version as value from paste_site_connections where widget_site_id=$1', [id]);
+  const domains = (id: string) => db.query<{ domain: string; verification_status: string; verification_method: string }>(
+    'select domain, verification_status, verification_method from widget_domains where widget_site_id=$1 order by domain', [id]).then((r) => r.rows);
+
+  it('lets a wrong pending shop be replaced: disconnect, then enable the right one, which starts over', async () => {
+    const s = await site();
+    await enable(s, 'shopify', 'typo.myshopify.com');
+    await render(s, 'typo.myshopify.com');
+    await finish(s, 'typo.myshopify.com', 'not_found');
+    expect(await enable(s, 'shopify', 'right.myshopify.com')).toBe('connection_conflict');
+    const before = await secret(s);
+    expect(await disconnect(s)).toEqual({ code: 'ok', platform: 'shopify', shop_domain: 'typo.myshopify.com' });
+    expect(await connection(s)).toMatchObject({ status: 'disconnected', disconnected_reason: null, shop_render_at: null,
+      shop_check_outcome: null, shop_checked_at: null, shop_proven_at: null });
+    // The pasted code stops at once: a new secret version with no overlap.
+    expect(await secret(s)).toBe(before + 1);
+    expect(await disconnect(s)).toEqual({ code: 'not_found' });
+    expect(await enable(s, 'shopify', 'right.myshopify.com')).toBe('enabled');
+    expect(await one('select shop_domain as value from paste_site_connections where widget_site_id=$1', [s])).toBe('right.myshopify.com');
+    expect(await connection(s)).toMatchObject({ status: 'pending', shop_check_outcome: null, last_seen_at: null });
+  });
+
+  it('releases a proven shop and its addresses, keeps another site\'s denial row, and can switch platform', async () => {
+    const s = await site(); const other = await site();
+    await enable(s, 'shopify', 'release.myshopify.com');
+    await prove(s, 'release.myshopify.com');
+    const own = await op(s, 'add', 'release-store.example');
+    expect(own.domain?.verification_status).toBe('trusted');
+    // s held contested.example until the other site's code was found there.
+    await op(s, 'add', 'contested.example');
+    await enable(other, 'website');
+    const contested = await op(other, 'add', 'contested.example');
+    await verify(other, contested.domain!.id);
+    await db.query("update paste_site_connections set last_seen_at = now() where widget_site_id=$1", [s]);
+
+    expect((await disconnect(s)).code).toBe('ok');
+    const rows = await domains(s);
+    expect(rows.find((row) => row.domain === 'release-store.example')).toMatchObject({ verification_status: 'disabled', verification_method: 'paste_removed' });
+    expect(rows.find((row) => row.domain === 'contested.example')).toMatchObject({ verification_status: 'disputed' });
+    // Another site may now claim the shop and the freed address.
+    const next = await site();
+    await enable(next, 'shopify', 'release.myshopify.com');
+    expect(await prove(next, 'release.myshopify.com')).toBe('proven');
+    expect((await op(next, 'add', 'release-store.example')).domain?.verification_status).toBe('trusted');
+    // The disconnected site may come back as a website.
+    expect(await enable(s, 'website')).toBe('enabled');
+    expect(await connection(s)).toMatchObject({ status: 'active', shop_check_outcome: null, last_seen_at: null });
+    expect(await one('select shop_domain as value from paste_site_connections where widget_site_id=$1', [s])).toBeNull();
+  });
+
+  it('still refuses switching a live connection, and keeps disconnect away from browser roles', async () => {
+    const s = await site();
+    await enable(s, 'website');
+    expect(await enable(s, 'shopify', 'live-switch.myshopify.com')).toBe('connection_conflict');
+    expect(await as('authenticated', () => db.query('select disconnect_paste_install($1)', [s])
+      .then(() => undefined, (e: { code?: string }) => e.code))).toBe('42501');
+    expect((await connection(s)).status).toBe('active');
+    expect(await disconnect(await site())).toEqual({ code: 'not_found' });
   });
 });
 

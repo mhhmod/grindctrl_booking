@@ -1,4 +1,5 @@
 import 'server-only';
+import { notifyStoreJourneyHealth } from '@/lib/email/store-journey-sender';
 import { randomUUID } from 'node:crypto';
 import { detectStoreProblems, storeHealthEmailsEnabled } from './problems';
 import { storeHealthRepository, STORE_HEALTH_BATCH } from './alerts-store';
@@ -23,6 +24,7 @@ export async function runStoreHealthAlerts(deps: HealthAlertDependencies = defau
       if (!(await repo.reconcile(site.id, token, detectStoreProblems(facts)))) continue;
       summary.checked++;
       if (!storeHealthEmailsEnabled(site.settings_json)) continue;
+      await notifyStoreJourneyHealth(site, facts);
       const pending = await repo.pending(site.id);
       if (pending.length === 0) continue;
       const owner = await deps.owner(site);

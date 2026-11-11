@@ -1,5 +1,5 @@
 /**
- * GRINDCTRL Try-On paste adapters v1.6.0 (website and Shopify paste installs).
+ * GRINDCTRL Try-On paste adapters v1.6.1 (website and Shopify paste installs).
  *
  * Loaded by messenger.js on pages of a `data-gc-install="paste"` snippet
  * that show a product or product cards, then mounted on the hosted engine
@@ -32,6 +32,10 @@
  *   buttonSettings          -> its owner's look from /api/try-on/paste-config, null when unread
  *   injectCards, cardSettings, findCards(rescan), cardTrigger -> product card pills (after prepare)
  *   followsPage, refresh()  -> website only: re-read the page after a client-side change
+ *
+ * create() options: script, appOrigin, locale, visitorId, preview, and
+ * onProven(), called once when this page's signed render confirmed a
+ * Shopify store that was waiting for it (the loader then starts Store Chat).
  */
 (function () {
   'use strict';
@@ -974,11 +978,31 @@
     function prepareButton(found) {
       return Promise.all([found, readPasteConfig()]).then(function (results) {
         var config = results[1];
-        if (!results[0] || (config && config.tryOn !== 'live')) return false;
+        if (!results[0]) return false;
+        if (config && config.tryOn !== 'live') return config.reason === 'shop_proof_pending' && platform === 'shopify' ? proveShop() : false;
         adapter.buttonSettings = config;
         adapter.injectButton = true;
         return true;
       });
+    }
+
+    /* A store not confirmed yet: this page's signed render is the proof's
+       second factor, and nothing else sends it. One request through the
+       ordinary context path; the server finishes the proof (it has also
+       found the code on the storefront) or refuses with shop_proof_pending.
+       Only a returned context shows the button, kept for the shopper's tap,
+       so an unconfirmed store never shows one. No retry on this page. */
+    function proveShop() {
+      var product = adapter.detectProduct();
+      if (!product) return false;
+      return adapter.getContext(product).then(function (data) {
+        adapter.buttonSettings = data.settings || null;
+        adapter.injectButton = true;
+        if (typeof options.onProven === 'function') {
+          try { options.onProven(); } catch (_) { /* the loader's own business */ }
+        }
+        return true;
+      }, function () { return false; });
     }
 
     function productPageHint() {
@@ -1201,5 +1225,5 @@
     return adapter;
   }
 
-  window.GRINDCTRL_TRYON_PASTE = { version: '1.5.0', create: create, detectWebsiteProduct: websiteProduct };
+  window.GRINDCTRL_TRYON_PASTE = { version: '1.6.1', create: create, detectWebsiteProduct: websiteProduct };
 })();

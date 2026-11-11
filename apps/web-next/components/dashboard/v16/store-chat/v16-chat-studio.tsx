@@ -453,7 +453,7 @@ export function V16ChatStudio({
       const result = await actions.disconnectSiteAction(siteId).catch((): ActionResult => ({ ok: false, error: 'failed' }));
       setBusy(null);
       if (result.ok) {
-        router.replace('/dashboard/store-chat');
+        router.replace(`/dashboard/store-chat?disconnected=1&shop=${encodeURIComponent(meta.domain ?? '')}`);
         router.refresh();
       } else setNote({ ok: false, text: copy.failed });
     }

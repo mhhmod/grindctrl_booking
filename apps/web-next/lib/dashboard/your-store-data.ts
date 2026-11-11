@@ -1,4 +1,7 @@
 import 'server-only';
+import { freePlanReason } from '@/lib/woo/free-plan-reason';
+import { verifiedSiteHosts } from '@/lib/woo/garment-url';
+import { readSignatureFailures } from '@/lib/store-health/signature-signals';
 import { readTryOnDayStatus } from '@/lib/try-on/daily-budget';
 
 import { getMessengerServiceClient } from '@/lib/messenger/db';
@@ -91,6 +94,7 @@ export async function getYourStoreFacts({
   if (!tenant) return null;
 
   let platform: YourStorePlatform;
+  let pluginOutdated = false;
   let paste: PasteInstallStatus | null = null;
   let siteStatus: string | null = null;
   let code: YourStoreFacts['code'];
@@ -108,6 +112,7 @@ export async function getYourStoreFacts({
     const [connection, status] = await Promise.all([getWooSiteConnection(siteId), readSiteStatus(siteId)]);
     if (connection?.status !== 'active') return null;
     platform = 'woocommerce';
+    pluginOutdated = connection.pluginOutdated;
     siteStatus = status;
     // The plugin's daily heartbeat is its signal.
     code = { lastSeenAt: connection.lastSeenAt, connected: true };
@@ -136,7 +141,15 @@ export async function getYourStoreFacts({
     platform === 'shopify_app' ? Promise.resolve(null) : readButtonPlacement(tenant).then((value) => value.placement, () => null),
   ]);
 
+  let reason = paste?.tryOnReason ?? null;
+  if (siteId && platform === 'woocommerce') {
+    const hosts = await verifiedSiteHosts(siteId);
+    if (!hosts.length || entitlement.status === 'none') reason = await freePlanReason(siteId, hosts);
+  }
+  const signatureFailures = siteId && platform === 'paste_shopify' ? await readSignatureFailures(siteId, now) : 0;
   return {
+    pluginOutdated,
+    signatureFailures,
     now,
     timeZone,
     platform,
@@ -152,7 +165,7 @@ export async function getYourStoreFacts({
     pillsOn,
     wooDetected: domainPlatforms?.some((domain) => domain.platform === 'woocommerce') ?? false,
     easyOrders: domainPlatforms?.some((domain) => domain.platform === 'easyorders') ?? false,
-    tryOn: { tenant, showButton, dailyLimitReached: day?.reached ?? false, ...looksOf(entitlement), pasteReason: paste?.tryOnReason ?? null },
+    tryOn: { tenant, showButton, dailyLimitReached: day?.reached ?? false, dailyLimitUnreadable: day === null, dailyLimitCause: day?.cause, dailyResetAt: day?.resetAt, ...looksOf(entitlement), pasteReason: reason },
     chat: siteId && siteStatus !== null ? { siteId, enabled: siteStatus === 'active' } : null,
     domains:
       platform === 'paste_website' && paste
