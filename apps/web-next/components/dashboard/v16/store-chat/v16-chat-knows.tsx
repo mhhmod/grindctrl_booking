@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Button, SegmentedControl, TextInput, Textarea } from '@mantine/core';
 import { GcIcon } from '@/components/icons';
 import { getChatKnowsCopy } from '@/lib/dashboard/chat-knows-copy';
-import type { ChatHead, KnowledgeRow, PagesAndNotes } from '@/lib/dashboard/chat-knows-model';
+import { buildProductsLine, type ChatHead, type KnowledgeRow, type PagesAndNotes, type ProductsLine } from '@/lib/dashboard/chat-knows-model';
 import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import { V16PageFrame } from '../page-frame';
@@ -254,6 +254,7 @@ export function V16ChatKnows({
   locale,
   head,
   pages,
+  products = null,
   siteId,
   actions,
   canSetUp = true,
@@ -261,6 +262,8 @@ export function V16ChatKnows({
   locale: SiteLocale;
   head: ChatHead;
   pages: PagesAndNotes;
+  /** What the last read of the store's products found (buildProductsLine). */
+  products?: ProductsLine | null;
   siteId: string;
   actions: KnowledgeActions;
   canSetUp?: boolean;
@@ -335,12 +338,28 @@ export function V16ChatKnows({
             </Button>
           )}
         </div>
-        {canSetUp && actions.syncKnowledgeProducts && (
-          <div className={classes.formActions}>
-            <Button variant="default" radius="pill" loading={syncing} onClick={() => startSync(async () => {
-              const result = await actions.syncKnowledgeProducts!(siteId).catch(() => ({ ok: false as const, error: '' }));
-              report(result.ok ? result.skipped ? copy.productsSkipped : copy.productsSynced(result.count ?? 0) : copy.actionFailed, result.ok);
-            })}>{copy.syncProducts}</Button>
+        {(products || (canSetUp && actions.syncKnowledgeProducts)) && (
+          <div className={classes.tile}>
+            <div className={classes.tileHead}>
+              <span className={classes.tileIcon} aria-hidden="true">
+                <GcIcon name="bag" size={18} />
+              </span>
+              <h3 className={classes.h3}>{copy.products}</h3>
+            </div>
+            {products && (
+              <p className={classes.muted} data-ok={products.ok}>
+                {products.text}
+              </p>
+            )}
+            {canSetUp && actions.syncKnowledgeProducts && (
+              <div className={classes.formActions}>
+                <Button variant="default" radius="pill" loading={syncing} onClick={() => startSync(async () => {
+                  const result = await actions.syncKnowledgeProducts!(siteId).catch(() => ({ ok: false as const, error: '' }));
+                  if (result.ok && result.outcome) report(buildProductsLine({ outcome: result.outcome, count: 0, at: '' }, copy)!.text, false);
+                  else report(result.ok ? result.skipped ? copy.productsSkipped : copy.productsSynced(result.count ?? 0) : copy.actionFailed, result.ok);
+                })}>{copy.syncProducts}</Button>
+              </div>
+            )}
           </div>
         )}
       </section>

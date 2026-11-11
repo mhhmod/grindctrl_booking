@@ -2,12 +2,14 @@ import type { TriageResult } from './attachments';
 import type { ActionResult } from './actions-core';
 import type { MessengerSection } from './config';
 import type { DomainView } from './domains';
+import type { ProductsOutcome } from './products-status';
 import type { InboxRequest, InboxPage, InboxChanges, InboxCursor } from '@/lib/dashboard/inbox-query';
 
 export type DomainActionResult =
   | { ok: true; domain?: DomainView; domains?: DomainView[] }
   | { ok: false; error: string };
-export type ProductSyncActionResult = ActionResult & { count?: number; skipped?: boolean };
+/** `outcome` is set when the store itself said why its products could not be read. */
+export type ProductSyncActionResult = ActionResult & { count?: number; skipped?: boolean; outcome?: Exclude<ProductsOutcome, 'ok'> };
 
 /** DNS-verified storefront domains (lib/messenger/domains.ts). Dashboard
  *  only: a Shopify store's domains come from Shopify. */

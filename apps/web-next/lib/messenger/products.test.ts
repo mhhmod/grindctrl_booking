@@ -48,6 +48,21 @@ describe('public catalogue sync', () => {
     expect(transport).toHaveBeenCalledTimes(5);
     await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, { transport: async () => response([], { body: Buffer.alloc(2 * 1024 * 1024) }), lookup })).rejects.toThrow('oversized');
   });
+  it('names a password-protected store, however its password page is served', async () => {
+    const page = '<form action="/password" method="post"><input type="password" name="password"></form>';
+    const html = (extra: Partial<StorefrontResponse> = {}) => ({ status: 200, location: null, contentType: 'text/html', setCookie: [], body: Buffer.from(page), ...extra });
+    // Shopify redirects /products.json to /password.
+    const redirected = vi.fn<StorefrontTransport>(async ({ url }) => url.pathname === '/password' ? html() : response([], { status: 302, location: '/password' }));
+    await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, { transport: redirected, lookup })).rejects.toMatchObject({ outcome: 'password_page' });
+    await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, { transport: async () => html(), lookup })).rejects.toMatchObject({ outcome: 'password_page' });
+  });
+  it('tells a missing, rate limited or unreachable catalogue apart', async () => {
+    const status = (code: number) => ({ transport: async () => response('', { status: code }), lookup });
+    await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, status(404))).rejects.toMatchObject({ outcome: 'not_found' });
+    await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, status(429))).rejects.toMatchObject({ outcome: 'rate_limited' });
+    await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, status(503))).rejects.toMatchObject({ outcome: 'unreachable' });
+    await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, { transport: async () => response({ nope: 1 }), lookup })).rejects.toMatchObject({ outcome: 'not_found' });
+  });
   it('aborts a stalled page within 10 seconds even if a transport never resolves', async () => {
     vi.useFakeTimers();
     // AbortSignal.timeout uses the native clock, so stub just its factory.

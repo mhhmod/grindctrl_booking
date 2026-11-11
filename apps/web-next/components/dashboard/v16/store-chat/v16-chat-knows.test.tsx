@@ -3,7 +3,8 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithMantine } from '@/components/mantine/test-utils';
 import { getChatKnowsCopy } from '@/lib/dashboard/chat-knows-copy';
-import { buildChatHead, buildPagesAndNotes } from '@/lib/dashboard/chat-knows-model';
+import { buildChatHead, buildPagesAndNotes, buildProductsLine } from '@/lib/dashboard/chat-knows-model';
+import type { ProductsStatus } from '@/lib/messenger/products-status';
 import type { KnowledgeEntry } from '@/lib/messenger/knowledge';
 import { V16ChatKnows, V16ChatKnowsError, type KnowledgeActions } from './v16-chat-knows';
 
@@ -29,13 +30,14 @@ const actions = {
   syncKnowledgeProducts: vi.fn(),
 } satisfies Record<keyof KnowledgeActions, ReturnType<typeof vi.fn>>;
 
-function draw(entries: KnowledgeEntry[], locale: 'en' | 'ar' = 'en') {
+function draw(entries: KnowledgeEntry[], locale: 'en' | 'ar' = 'en', productsStatus: ProductsStatus | null = null) {
   const copy = getChatKnowsCopy(locale);
   return renderWithMantine(
     <V16ChatKnows
       locale={locale}
       head={buildChatHead({ active: true, domain: 'maisonnoor.com', solved7: 120, handedOff7: 20 }, copy)}
       pages={buildPagesAndNotes(entries, copy, NOW)}
+      products={buildProductsLine(productsStatus, copy)}
       siteId={SITE}
       actions={actions as unknown as KnowledgeActions}
     />,
@@ -53,6 +55,24 @@ describe('the v16 Store Chat page, What it knows', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sync products now' }));
     await waitFor(() => expect(actions.syncKnowledgeProducts).toHaveBeenCalledWith(SITE));
     expect(await screen.findByText('12 products synced.')).toBeInTheDocument();
+  });
+  it('says what the last read of the store found, and why not when it could not', () => {
+    const at = '2026-10-22T03:00:00Z';
+    const { unmount } = draw([], 'en', { outcome: 'ok', count: 42, at });
+    expect(screen.getByRole('heading', { name: 'Products' })).toBeInTheDocument();
+    expect(screen.getByText('We read 42 products from your store.')).toBeInTheDocument();
+    unmount();
+    const waiting = draw([], 'en', { outcome: 'password_page', count: 0, at });
+    expect(screen.getByText("Your store has a password page, so we can't read your products yet. We'll read them as soon as it opens.")).toBeInTheDocument();
+    waiting.unmount();
+    draw([], 'ar', { outcome: 'password_page', count: 0, at });
+    expect(screen.getByText(getChatKnowsCopy('ar').productsPassword)).toBeInTheDocument();
+  });
+  it('tells a store that would not hand over its products why, when synced by hand', async () => {
+    actions.syncKnowledgeProducts.mockResolvedValue({ ok: true, count: 0, outcome: 'password_page' });
+    draw([]);
+    fireEvent.click(screen.getByRole('button', { name: 'Sync products now' }));
+    expect(await screen.findByRole('status')).toHaveTextContent("Your store has a password page");
   });
   it('explains skipped platforms in Arabic using the existing status line', async () => {
     actions.syncKnowledgeProducts.mockResolvedValue({ ok: true, count: 0, skipped: true }); draw([], 'ar');

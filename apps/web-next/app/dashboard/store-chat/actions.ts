@@ -56,7 +56,9 @@ import { saveDraftSectionForSite, saveDraftSectionsForSite, publishConfigForSite
 import type { ActionResult } from '@/lib/messenger/actions-core';
 import { RequestRateLimitError, requireMerchantRateLimit } from '@/lib/request-rate-limit';
 import { RoleNotAllowedError, type DashboardCapability } from '@/lib/rbac/dashboard-policy';
-import { syncSiteProducts } from '@/lib/messenger/products';
+import { CatalogueReadError, syncSiteProducts } from '@/lib/messenger/products';
+import { storeLauncherIcon } from '@/lib/messenger/launcher-icon';
+import { ICON_MAX_BYTES, type LauncherIconResult } from '@/lib/messenger/launcher-icon-check';
 import { readInboxPage, validInboxTimestamp, type InboxRequest, type InboxCursor, type InboxPage } from '@/lib/dashboard/inbox-query';
 
 export async function listInboxConversations(input: InboxRequest): Promise<InboxPage> {
@@ -103,7 +105,15 @@ export async function syncKnowledgeProducts(siteId: string): Promise<ProductSync
     const result = await syncSiteProducts(site);
     revalidateStoreChat();
     return { ok: true, count: result.count, skipped: Boolean(result.skipped), message: result.skipped ? 'Catalogue sync is available for Shopify and WooCommerce stores.' : `${result.count} products synced.` };
-  } catch (error) { return fail(error); }
+  } catch (error) {
+    // The store answered but would not hand over its products: its reason is
+    // already recorded, so What it knows can say it instead of "failed".
+    if (error instanceof CatalogueReadError) {
+      revalidateStoreChat();
+      return { ok: true, count: 0, outcome: error.outcome };
+    }
+    return fail(error);
+  }
 }
 
 /* What these actions change shows on What it knows and Set up
@@ -182,6 +192,25 @@ export async function saveDraftSections(
     return result;
   } catch (error) {
     return fail(error);
+  }
+}
+
+/** Stores a launcher icon and returns its public address. It does not touch
+ *  the draft: the caller puts the address in Appearance, so the icon goes
+ *  live only through Publish like every other change. */
+export async function uploadLauncherIconAction(formData: FormData): Promise<LauncherIconResult> {
+  try {
+    const userId = await currentUser();
+    const siteId = String(formData.get('siteId') ?? '');
+    const file = formData.get('icon');
+    if (!siteId || !(file instanceof File)) return { ok: false, error: 'unreadable' };
+    const site = await requireOwnedSite(userId, siteId, 'settings');
+    // Refuse a huge body before reading it; the check below measures the real bytes.
+    if (file.size > ICON_MAX_BYTES) return { ok: false, error: 'too_big' };
+    return await storeLauncherIcon(site.id, new Uint8Array(await file.arrayBuffer()));
+  } catch (error) {
+    const refused = fail(error);
+    return { ok: false, error: refused.ok ? 'failed' : refused.error === 'Action failed. Please try again.' ? 'failed' : refused.error };
   }
 }
 

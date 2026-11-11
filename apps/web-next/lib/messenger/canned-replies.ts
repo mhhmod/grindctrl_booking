@@ -4,18 +4,15 @@ import { getMessengerServiceClient } from './db';
 import { recordAudit } from './conversations';
 import type { MessengerSiteView } from './provisioning';
 
-export interface CannedReply {
-  id: string;
-  title: string;
-  content: string;
-  status: 'active' | 'disabled';
-  sort_order: number;
-  updated_at: string;
-}
+import {
+  CANNED_REPLIES_MAX_PER_SITE,
+  CANNED_REPLY_CONTENT_MAX,
+  CANNED_REPLY_TITLE_MAX,
+  type CannedReply,
+} from './canned-replies-limits';
 
-export const CANNED_REPLY_TITLE_MAX = 100;
-export const CANNED_REPLY_CONTENT_MAX = 2000;
-export const CANNED_REPLIES_MAX_PER_SITE = 50;
+export { CANNED_REPLIES_MAX_PER_SITE, CANNED_REPLY_CONTENT_MAX, CANNED_REPLY_TITLE_MAX };
+export type { CannedReply };
 
 function mapReply(row: Record<string, unknown>): CannedReply {
   return {

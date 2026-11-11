@@ -4,7 +4,6 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@mantine/core';
-import { GcIcon } from '@/components/icons';
 import { ConnectShopPanel } from '@/components/dashboard/connect-shop-panel';
 import type { ShopChoice } from '@/lib/dashboard/shell-model';
 import { getStatesCopy } from '@/lib/dashboard/states-copy';
@@ -123,24 +122,5 @@ export function V16FinishConfirming({ locale, shop }: { locale: SiteLocale; shop
         {copy.finishConfirming.action}
       </Button>
     </V16Notice>
-  );
-}
-
-/** The way back from More settings to the Set up board. */
-export function V16BackToSetUp({ locale }: { locale: SiteLocale }) {
-  const copy = getStatesCopy(locale);
-  return (
-    <div>
-      <Button
-        component={Link}
-        href="/dashboard/store-chat/setup"
-        variant="subtle"
-        radius="pill"
-        h={44}
-        leftSection={<GcIcon name="back" size={16} />}
-      >
-        {copy.backToSetUp}
-      </Button>
-    </div>
   );
 }

@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: mocks.refresh }) }));
 vi.mock('@/app/dashboard/connect-shop/actions', () => ({ generateShopLinkCode: vi.fn() }));
 
-import { V16BackToSetUp, V16NeedsStore, V16NoStore, V16StoreLookupFailed, V16StoreTaken } from './states';
+import { V16NeedsStore, V16NoStore, V16StoreLookupFailed, V16StoreTaken } from './states';
 import { getStatesCopy } from '@/lib/dashboard/states-copy';
 import { getTryOnDashboardCopy } from '@/lib/try-on/dashboard-copy';
 
@@ -55,15 +55,9 @@ describe.each(['en', 'ar'] as const)('the dashboard states in %s', (locale) => {
     expect(screen.getByRole('link', { name: copy.needsStore.wooAction })).toHaveAttribute('href', '/dashboard/store#connect');
   });
 
-  it('V16StoreTaken points at the linking code in Try-On, and V16BackToSetUp at Set up', () => {
-    render(
-      <>
-        <V16StoreTaken locale={locale} />
-        <V16BackToSetUp locale={locale} />
-      </>,
-    );
+  it('V16StoreTaken points at the linking code in Try-On', () => {
+    render(<V16StoreTaken locale={locale} />);
     expect(screen.getByRole('link', { name: copy.storeTaken.action })).toHaveAttribute('href', '/dashboard/try-on');
-    expect(screen.getByRole('link', { name: copy.backToSetUp })).toHaveAttribute('href', '/dashboard/store-chat/setup');
   });
 });
 

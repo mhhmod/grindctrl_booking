@@ -3,16 +3,14 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ActionIcon, Button, ColorInput, Modal, SegmentedControl, Switch, TextInput, Textarea } from '@mantine/core';
+import { ActionIcon, Button, ColorInput, Modal, NumberInput, SegmentedControl, Slider, Switch, TextInput, Textarea } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { GcIcon } from '@/components/icons';
 import { PreviewFrame } from '@/components/dashboard/messenger/preview-frame';
 import { getChatStudioCopy, type ChatStudioCopy } from '@/lib/dashboard/chat-studio-copy';
-import { MORE_SETTINGS } from '@/lib/dashboard/store-chat-legacy-tab';
 import {
   INSTRUCTIONS_MAX,
   hidePatch,
-  hoursLine,
   previewPayload,
   reviewRows,
   withPattern,
@@ -23,10 +21,13 @@ import type { DomainActions, MessengerHostActions } from '@/lib/messenger/dashbo
 import type { ActionResult } from '@/lib/messenger/actions-core';
 import type { MessengerConfig } from '@/lib/messenger/types';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
+import type { CannedReply } from '@/lib/messenger/canned-replies-limits';
+import type { LauncherIconResult } from '@/lib/messenger/launcher-icon-check';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import type { WooSiteConnectionSummary } from '@/lib/woo/connection';
 import { pluginSupportsOrderLookup, WOO_ORDER_LOOKUP_MIN_PLUGIN_VERSION } from '@/lib/woo/plugin-version';
 import type { PasteInstallActions } from './paste-install';
+import { HoursEditor, IconUpload, SavedReplies, type SavedReplyActions } from './studio-more';
 import type { CreateWooPairingCode } from './woocommerce-guide';
 import classes from './v16-chat-studio.module.css';
 
@@ -44,9 +45,11 @@ export type ChatStudioActions = Pick<
   'saveDraftSections' | 'publishConfig' | 'revertConfigAction' | 'setMessengerEnabled' | 'disconnectSiteAction'
 > & {
   discardDraft(siteId: string): Promise<ActionResult>;
+  uploadLauncherIconAction(data: FormData): Promise<LauncherIconResult>;
   createWooPairingCodeAction: CreateWooPairingCode;
   paste?: PasteInstallActions;
-} & Partial<DomainActions>;
+} & SavedReplyActions &
+  Partial<DomainActions>;
 
 export type ChatStudioMeta = {
   domain: string | null;
@@ -56,6 +59,10 @@ export type ChatStudioMeta = {
   canRevert: boolean;
   canDisconnect: boolean;
   ordersAuthorized: boolean;
+  /** How Shopify's order access approval ended, from the link it returns to. */
+  ordersGrant: 'connected' | 'failed' | null;
+  /** The store's own time zone, where opening hours start instead of UTC. */
+  shopTimezone: string | null;
   /** Minutes since the widget was last seen on the storefront, or null. */
   lastSeenMinutes: number | null;
   /** n25_handoff_rules: the extra handoff rules. */
@@ -308,6 +315,7 @@ export function V16ChatStudio({
   published,
   config,
   payload,
+  cannedReplies,
   meta,
   actions,
 }: {
@@ -318,6 +326,7 @@ export function V16ChatStudio({
   /** The draft over the published version, resolved; the published one when there is no draft. */
   config: MessengerConfig;
   payload: PublicMessengerPayload;
+  cannedReplies: CannedReply[];
   meta: ChatStudioMeta;
   actions: ChatStudioActions;
 }) {
@@ -652,10 +661,89 @@ export function V16ChatStudio({
               checked={b.greetingEnabled}
               onChange={(greetingEnabled) => update('behaviour', { greetingEnabled })}
             />
+            {b.greetingEnabled && (
+              <>
+                <div className={classes.block}>
+                  <NumberInput
+                    label={copy.helloDelay}
+                    className={classes.narrowInput}
+                    min={0}
+                    max={120}
+                    allowDecimal={false}
+                    clampBehavior="strict"
+                    value={b.greetingDelaySeconds}
+                    onChange={(seconds) => typeof seconds === 'number' && update('behaviour', { greetingDelaySeconds: seconds })}
+                  />
+                </div>
+                <Bilingual
+                  copy={copy}
+                  label={copy.helloText.label}
+                  body={copy.helloText.body}
+                  value={b.greeting ?? { en: '', ar: '' }}
+                  onChange={(greeting) => update('behaviour', { greeting: greeting.en || greeting.ar ? greeting : null })}
+                />
+              </>
+            )}
+            <SwitchRow
+              id={`${id}-reminder`}
+              label={copy.reminder.label}
+              body={copy.reminder.body}
+              checked={b.proactiveEnabled}
+              onChange={(proactiveEnabled) => update('behaviour', { proactiveEnabled })}
+            />
+            {b.proactiveEnabled && (
+              <div className={classes.block}>
+                <NumberInput
+                  label={copy.reminderDelay}
+                  className={classes.narrowInput}
+                  min={5}
+                  max={300}
+                  allowDecimal={false}
+                  clampBehavior="strict"
+                  value={b.proactiveDelaySeconds}
+                  onChange={(seconds) => typeof seconds === 'number' && update('behaviour', { proactiveDelaySeconds: seconds })}
+                />
+              </div>
+            )}
           </Section>
 
           <Section id={`${id}-look`} copy={copy.look}>
-            <ChoiceRow label={copy.launcherIcon} value={a.launcherIcon} options={copy.icons} onChange={(launcherIcon) => update('appearance', { launcherIcon })} />
+            <ChoiceRow
+              label={copy.launcherIcon}
+              value={a.launcherIcon}
+              options={copy.icons}
+              onChange={(launcherIcon) => update('appearance', { launcherIcon, launcherCustomIconUrl: null })}
+            />
+            <IconUpload
+              copy={copy}
+              siteId={siteId}
+              value={a.launcherCustomIconUrl}
+              upload={actions.uploadLauncherIconAction}
+              onChange={(launcherCustomIconUrl) => update('appearance', { launcherCustomIconUrl })}
+            />
+            <div className={classes.row}>
+              <div className={classes.rowText}>
+                <h3 className={classes.h3}>{copy.launcherSize.label}</h3>
+                <p className={classes.muted}>{copy.launcherSize.value(a.launcherSizePx)}</p>
+              </div>
+              <Slider
+                className={classes.slider}
+                thumbLabel={copy.launcherSize.label}
+                min={44}
+                max={72}
+                step={2}
+                label={null}
+                value={a.launcherSizePx}
+                onChange={(launcherSizePx) => update('appearance', { launcherSizePx })}
+              />
+            </div>
+            <ChoiceRow
+              label={copy.widgetLanguage.label}
+              body={copy.widgetLanguage.body}
+              value={a.languageMode}
+              options={copy.widgetLanguages}
+              onChange={(languageMode) => update('appearance', { languageMode })}
+            />
             <div className={classes.row}>
               <div className={classes.rowText}>
                 <h3 className={classes.h3}>{copy.brandColour.label}</h3>
@@ -799,10 +887,35 @@ export function V16ChatStudio({
                     {wooOrdersReady ? copy.wooOrderReady : copy.wooOrderUpdate(WOO_ORDER_LOOKUP_MIN_PLUGIN_VERSION)}
                   </p>
                 ) : (
-                  <p className={meta.ordersAuthorized ? classes.ok : classes.muted}>
-                    {meta.ordersAuthorized && <GcIcon name="check" size={14} />}
-                    {meta.ordersAuthorized ? copy.orderAccess : copy.noOrderAccess}
-                  </p>
+                  <>
+                    <p className={meta.ordersAuthorized ? classes.ok : classes.muted}>
+                      {meta.ordersAuthorized && <GcIcon name="check" size={14} />}
+                      {meta.ordersAuthorized ? copy.orderAccess : copy.noOrderAccess}
+                    </p>
+                    {shopify && meta.domain && (
+                      /* A real link, and a top-level navigation: Shopify's consent screen refuses to be framed, so
+                         inside the embedded app the click leaves the iframe. */
+                      <Button
+                        component="a"
+                        href={`/api/shopify/oauth/start?shop=${encodeURIComponent(meta.domain)}`}
+                        variant={meta.ordersAuthorized ? 'default' : 'filled'}
+                        radius="pill"
+                        className={classes.touch}
+                        onClick={(event: React.MouseEvent<HTMLAnchorElement>) => {
+                          if (window.top === window.self) return;
+                          event.preventDefault();
+                          window.top!.location.href = new URL(event.currentTarget.getAttribute('href') ?? '', window.location.origin).toString();
+                        }}
+                      >
+                        {meta.ordersAuthorized ? copy.orderGrant.reconnect : copy.orderGrant.connect}
+                      </Button>
+                    )}
+                    {meta.ordersGrant && (
+                      <p role="status" className={classes.note} data-ok={meta.ordersGrant === 'connected'}>
+                        {meta.ordersGrant === 'connected' ? copy.orderGrant.granted : copy.orderGrant.refused}
+                      </p>
+                    )}
+                  </>
                 )}
               </SwitchRow>
             )}
@@ -842,37 +955,18 @@ export function V16ChatStudio({
             </div>
           </Section>
 
-          <section aria-labelledby={`${id}-hours`} className={classes.card}>
+          <section id="hours" aria-labelledby={`${id}-hours`} className={classes.card}>
             <h2 id={`${id}-hours`} className={classes.h2}>
               {copy.hours}
             </h2>
-            <div className={classes.row}>
-              <div className={classes.rowText}>
-                <h3 className={classes.h3}>{copy.businessHours}</h3>
-                <p className={classes.muted}>{hoursLine(b, locale)}</p>
-                {b.availabilityMode === 'hours' && <p className={classes.muted}>{copy.hoursAfter}</p>}
-              </div>
-              <Button component={Link} href={`${MORE_SETTINGS}?section=behaviour`} variant="default" radius="pill">
-                {copy.change}
-              </Button>
-            </div>
+            <HoursEditor copy={copy} locale={locale} behaviour={b} shopTimezone={meta.shopTimezone} onChange={(patch) => update('behaviour', patch)} />
           </section>
+
+          <Section id={`${id}-replies`} copy={copy.savedReplies}>
+            <SavedReplies copy={copy} siteId={siteId} replies={cannedReplies} actions={actions} />
+          </Section>
 
           {!installFirst && installSection}
-
-          <section aria-labelledby={`${id}-more`} className={classes.card}>
-            <div className={classes.row}>
-              <div className={classes.rowText}>
-                <h2 id={`${id}-more`} className={classes.h3}>
-                  {copy.moreSettings.label}
-                </h2>
-                <p className={classes.muted}>{copy.moreSettings.body}</p>
-              </div>
-              <Button component={Link} href={`${MORE_SETTINGS}?section=appearance`} variant="default" radius="pill">
-                {copy.openMoreSettings}
-              </Button>
-            </div>
-          </section>
         </div>
 
         <section aria-labelledby={`${id}-preview`} className={classes.preview}>

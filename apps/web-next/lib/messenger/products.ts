@@ -1,5 +1,6 @@
 import 'server-only';
-import { fetchPublicPage } from '@/lib/paste/storefront-scan';
+import { fetchPublicPage, findPasswordForm } from '@/lib/paste/storefront-scan';
+import { parseProductsStatus, type ProductsOutcome, type ProductsStatus } from './products-status';
 import { loadActiveWooConnection } from '@/lib/woo/active-connection';
 import { getMessengerServiceClient } from './db';
 import { loadPublicSite, type ResolvedPublicSite } from './public-api';
@@ -41,6 +42,22 @@ export function parseCataloguePage(raw: unknown, platform: Platform, base: strin
   return { products, count: rows.length };
 }
 
+/** A catalogue that could not be read, with the reason the merchant is told. */
+export class CatalogueReadError extends Error {
+  constructor(readonly outcome: Exclude<ProductsOutcome, 'ok'>, message: string) { super(message); this.name = 'CatalogueReadError'; }
+}
+
+function isPasswordPage(response: { url: string; contentType: string; body: Buffer }): boolean {
+  if (new URL(response.url).pathname.replace(/\/+$/, '') === '/password') return true;
+  return response.contentType.includes('html') && findPasswordForm(response.body.toString('utf8')) !== null;
+}
+
+function readFailureOutcome(failure: string, status: number | undefined): Exclude<ProductsOutcome, 'ok'> {
+  if (failure !== 'status') return 'unreachable';
+  if (status === 429) return 'rate_limited';
+  return status === 404 || status === 410 ? 'not_found' : 'unreachable';
+}
+
 export async function fetchCatalogue(platform: Platform, base: string, trusted: (url: URL) => boolean, options: Pick<Parameters<typeof fetchPublicPage>[1], 'transport' | 'lookup'> = {}): Promise<ProductContext[]> {
   const unique = new Map<string, ProductContext>();
   const perPage = platform === 'woocommerce' ? 100 : 250;
@@ -48,12 +65,16 @@ export async function fetchCatalogue(platform: Platform, base: string, trusted: 
   for (let page = 1; page <= PRODUCT_LIMIT / perPage; page++) {
     const path = platform === 'woocommerce' ? `/wp-json/wc/store/v1/products?per_page=100&page=${page}` : `/products.json?limit=250&page=${page}`;
     const url = new URL(path, base);
-    if (!trusted(url)) throw new Error('Catalogue domain is not trusted.');
+    if (!trusted(url)) throw new CatalogueReadError('unreachable', 'Catalogue domain is not trusted.');
     const response = await fetchPublicPage(url.href, { ...options, accept: 'application/json', maxBytes: 2 * 1024 * 1024, timeoutMs: 10_000,
       allowedHost: (host) => trusted(new URL(`https://${host}/`)) });
-    if ('failure' in response) throw new Error(`Catalogue fetch failed: ${response.failure}`);
-    if (!response.contentType.includes('json') || response.body.length >= 2 * 1024 * 1024) throw new Error('Invalid or oversized catalogue response.');
-    const parsed = parseCataloguePage(JSON.parse(response.body.toString('utf8')), platform, response.url, trusted);
+    if ('failure' in response) throw new CatalogueReadError(readFailureOutcome(response.failure, response.status), `Catalogue fetch failed: ${response.failure}`);
+    // A password-protected Shopify store answers /products.json with its password page.
+    if (isPasswordPage(response)) throw new CatalogueReadError('password_page', 'Catalogue is behind the store password page.');
+    if (!response.contentType.includes('json') || response.body.length >= 2 * 1024 * 1024) throw new CatalogueReadError('not_found', 'Invalid or oversized catalogue response.');
+    let parsed: ReturnType<typeof parseCataloguePage>;
+    try { parsed = parseCataloguePage(JSON.parse(response.body.toString('utf8')), platform, response.url, trusted); }
+    catch { throw new CatalogueReadError('not_found', 'Invalid catalogue response.'); }
     for (const p of parsed.products) if (unique.size < PRODUCT_LIMIT) unique.set(p.url, p);
     if (parsed.count < perPage || unique.size >= PRODUCT_LIMIT) break;
   }
@@ -74,6 +95,22 @@ async function catalogueTarget(site: ResolvedPublicSite): Promise<{ platform: Pl
   return null;
 }
 
+/** Informational: a failed write (the column not migrated yet) never fails the refresh. */
+async function recordProductsStatus(siteId: string, lease: string, status: ProductsStatus | null): Promise<void> {
+  const saved = await getMessengerServiceClient().from('widget_sites').update({ products_sync_result: status })
+    .eq('id', siteId).eq('products_sync_attempted_at', lease);
+  if (saved.error) console.error('[products] refresh outcome not recorded', { site: siteId, code: saved.error.code });
+}
+
+/** What the last refresh found for this store, or null when none is recorded
+ *  (a website without a catalogue, a store not refreshed yet, or the column
+ *  not migrated yet). Never throws: What it knows must still load. */
+export async function readProductsStatus(siteId: string): Promise<ProductsStatus | null> {
+  const read = await getMessengerServiceClient().from('widget_sites').select('products_sync_result').eq('id', siteId).maybeSingle();
+  if (read.error) return null;
+  return parseProductsStatus((read.data as { products_sync_result?: unknown } | null)?.products_sync_result);
+}
+
 export async function syncSiteProducts(site: Pick<MessengerSiteView, 'id' | 'embed_key'>): Promise<{ count: number; skipped?: boolean }> {
   const resolved = await loadPublicSite(site.embed_key);
   if (!resolved || resolved.id !== site.id) throw new Error('Site unavailable.');
@@ -84,11 +121,21 @@ export async function syncSiteProducts(site: Pick<MessengerSiteView, 'id' | 'emb
   if (claim.error) throw new Error('Catalogue sync unavailable.');
   if (!claim.data?.length) throw new Error('Catalogue sync is already running or was just attempted.');
   const target = await catalogueTarget(resolved);
-  const products = target ? await fetchCatalogue(target.platform, target.base, (url) => productUrlTrusted(resolved, url)) : [];
+  let products: ProductContext[] = [];
+  if (target) {
+    try {
+      products = await fetchCatalogue(target.platform, target.base, (url) => productUrlTrusted(resolved, url));
+    } catch (error) {
+      // The previous catalogue stays; the merchant is told why it is not refreshing.
+      await recordProductsStatus(site.id, lease, { outcome: error instanceof CatalogueReadError ? error.outcome : 'unreachable', count: 0, at: lease });
+      throw error;
+    }
+  }
   // One transaction: failed fetches leave the previous catalogue intact;
   // disconnected/unsupported sites lose stale product grounding on refresh.
   const saved = await db.rpc('messenger_replace_products', { p_site: site.id, p_lease: lease, p_products: products });
   if (saved.error) throw new Error('Catalogue could not be saved.');
+  await recordProductsStatus(site.id, lease, target ? { outcome: 'ok', count: products.length, at: lease } : null);
   return { count: products.length, ...(!target ? { skipped: true } : {}) };
 }
 

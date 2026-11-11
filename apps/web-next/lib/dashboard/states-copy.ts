@@ -21,7 +21,6 @@ export interface StatesCopy {
   storeTaken: { title: string; body: string; action: string };
   /** Pasted code on a Shopify store that is not confirmed yet. */
   finishConfirming: { title: (shop: string) => string; body: string; action: string };
-  backToSetUp: string;
   error: { title: string; body: string; retry: string; reference: string };
   loading: string;
 }
@@ -65,7 +64,6 @@ const en: StatesCopy = {
     body: 'One step is left: confirm in Store setup that this store is yours. Try-On, your plan and your results show here after that.',
     action: 'Finish confirming',
   },
-  backToSetUp: 'Back to Set up',
   error: {
     title: 'This page did not load',
     body: 'Something went wrong on our side. Trying again usually works. The problem is often momentary.',
@@ -113,7 +111,6 @@ const ar: StatesCopy = {
     body: 'بقيت خطوة واحدة: أكّد من إعداد المتجر أن هذا المتجر لك. بعدها تظهر هنا التجربة الافتراضية وخطتك ونتائجك.',
     action: 'أكمل التأكيد',
   },
-  backToSetUp: 'العودة إلى الإعداد',
   error: {
     title: 'تعذّر تحميل هذه الصفحة',
     body: 'حدث خطأ من جانبنا. إعادة المحاولة تنجح عادةً، فالمشكلة غالباً مؤقتة.',

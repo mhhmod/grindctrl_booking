@@ -47,6 +47,7 @@ vi.mock('@/lib/messenger/conversations', () => ({
 }));
 vi.mock('@/lib/messenger/knowledge', () => ({ listKnowledge: vi.fn(async () => []) }));
 vi.mock('@/lib/messenger/canned-replies', () => ({ listCannedReplies: vi.fn(async () => []) }));
+vi.mock('@/lib/messenger/products', () => ({ readProductsStatus: vi.fn(async () => null) }));
 vi.mock('@/lib/shopify/shops', () => ({ listManagedTryOnShops: vi.fn(async () => []) }));
 vi.mock('@/lib/dashboard/active-store-server', () => ({
   getActiveStore: vi.fn(async () => ({ shopDomain: 'maison.myshopify.com', siteId: SITE.id })),
@@ -72,6 +73,10 @@ vi.mock('./actions', () => ({
   setMessengerEnabled: vi.fn(),
   disconnectSiteAction: vi.fn(),
   discardDraft: vi.fn(),
+  uploadLauncherIconAction: vi.fn(),
+  addCannedReply: vi.fn(),
+  updateCannedReplyStatus: vi.fn(),
+  deleteCannedReply: vi.fn(),
   listDomainsAction: vi.fn(),
   addDomainAction: vi.fn(),
   checkDomainAction: vi.fn(),
@@ -81,17 +86,18 @@ vi.mock('./woo-actions', () => ({ createWooPairingCodeAction: vi.fn(), readWooCo
 vi.mock('@/components/dashboard/v16/store-setup/store-connect', () => ({ StoreConnect: ({ siteId, actions }: { siteId: string; actions?: object }) => <div data-testid="store-connect" data-actions={actions ? Object.keys(actions).sort().join(',') : ''}>{siteId}</div> }));
 // ChatStudio has its own tests (v16-chat-studio.test.tsx); here only what it is handed.
 vi.mock('@/components/dashboard/v16/store-chat/v16-chat-studio', () => ({
-  V16ChatStudio: ({ meta, actions }: { meta: { version: number; domain: string | null; wooConnection: { status: string } | null }; actions: object }) => (
+  V16ChatStudio: ({
+    meta,
+    actions,
+    cannedReplies,
+  }: {
+    meta: { version: number; domain: string | null; wooConnection: { status: string } | null; shopTimezone: string | null; ordersGrant: string | null };
+    actions: object;
+    cannedReplies: unknown[];
+  }) => (
     <div data-testid="chat-studio" data-actions={Object.keys(actions).sort().join(',')}>
       {meta.domain}:{meta.version}:{meta.wooConnection?.status ?? 'none'}
-    </div>
-  ),
-}));
-// The editors' tabs are covered by messenger-tabs.test.tsx; here only which tab opens, and on which.
-vi.mock('@/components/dashboard/messenger/messenger-tabs', () => ({
-  MessengerTabs: ({ initialTab, sections, cannedReplies }: { initialTab: string; sections: string[]; cannedReplies: unknown[] }) => (
-    <div data-testid="more-settings" data-sections={sections.join(',')} data-replies={cannedReplies.length}>
-      {initialTab}
+      <span>{`replies:${cannedReplies.length}:${meta.shopTimezone}:${meta.ordersGrant ?? 'none'}`}</span>
     </div>
   ),
 }));
@@ -99,7 +105,7 @@ vi.mock('@/components/dashboard/messenger/messenger-tabs', () => ({
 import MessengerPage from './page';
 import { StoreChatPage } from './store-chat-page';
 import StoreChatSetupPage from './setup/page';
-import StoreChatMoreSettingsPage from './setup/more/page';
+import { listCannedReplies } from '@/lib/messenger/canned-replies';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { listKnowledge } from '@/lib/messenger/knowledge';
 import { listConversationsForSite } from '@/lib/messenger/conversations';
@@ -110,8 +116,6 @@ import { redirect } from 'next/navigation';
 type Query = { tab?: string; site?: string; orders?: string };
 const knows = (query: Query = {}) => MessengerPage({ searchParams: Promise.resolve(query) });
 const setup = (query: Query = {}) => StoreChatSetupPage({ searchParams: Promise.resolve(query) });
-const more = (query: { section?: string; site?: string; orders?: string } = {}) =>
-  StoreChatMoreSettingsPage({ searchParams: Promise.resolve(query) });
 const tabs = () => screen.queryByRole('navigation', { name: 'Store Chat' });
 
 beforeEach(() => {
@@ -150,9 +154,8 @@ describe('the Store Chat routes', () => {
     expect(screen.getByTestId('chat-studio')).toHaveTextContent('maison.myshopify.com:3:none');
     expect(screen.getByTestId('chat-studio')).toHaveAttribute(
       'data-actions',
-      'addDomainAction,checkDomainAction,createWooPairingCodeAction,discardDraft,disconnectSiteAction,listDomainsAction,paste,publishConfig,removeDomainAction,revertConfigAction,saveDraftSections,setMessengerEnabled',
+      'addCannedReply,addDomainAction,checkDomainAction,createWooPairingCodeAction,deleteCannedReply,discardDraft,disconnectSiteAction,listDomainsAction,paste,publishConfig,removeDomainAction,revertConfigAction,saveDraftSections,setMessengerEnabled,updateCannedReplyStatus,uploadLauncherIconAction',
     );
-    expect(screen.queryByTestId('more-settings')).not.toBeInTheDocument();
     expect(listConversationsForSite).not.toHaveBeenCalled();
   });
 
@@ -171,7 +174,7 @@ describe('the Store Chat routes', () => {
     await expect(knows({ tab: 'overview' })).rejects.toThrow('redirect:/dashboard/store-chat');
     await expect(knows({ tab: 'installation' })).rejects.toThrow('redirect:/dashboard/store-chat/setup');
     await expect(setup({ tab: 'behaviour', orders: 'connected' })).rejects.toThrow(
-      'redirect:/dashboard/store-chat/setup/more?section=behaviour&orders=connected',
+      'redirect:/dashboard/store-chat/setup?orders=connected',
     );
     // Nothing is read for a link that only redirects.
     expect(listKnowledge).not.toHaveBeenCalled();
@@ -193,23 +196,21 @@ describe('the Store Chat routes', () => {
     expect(screen.getByRole('status')).toHaveTextContent("What the assistant knows couldn't load just now.");
   });
 
-  it('draws More settings under Set up, with only the editors Set up lacks, opening on the one asked for', async () => {
-    render(await more({ section: 'appearance' }));
-    expect(within(tabs()!).getByRole('link', { name: 'Set up' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('link', { name: 'Back to Set up' })).toHaveAttribute('href', '/dashboard/store-chat/setup');
-    expect(screen.getByTestId('more-settings')).toHaveAttribute('data-sections', 'appearance,behaviour');
-    expect(screen.getByTestId('more-settings')).toHaveTextContent('appearance');
+  it('hands Set up the saved replies, the store’s time zone and the order access answer Shopify returned', async () => {
+    vi.mocked(listCannedReplies).mockResolvedValueOnce([{ id: 'r1' }, { id: 'r2' }] as never);
+    render(await setup({ orders: 'connected' }));
+    expect(screen.getByTestId('chat-studio')).toHaveTextContent('replies:2:Africa/Cairo:connected');
+    const given = screen.getByTestId('chat-studio').getAttribute('data-actions') ?? '';
+    for (const action of ['uploadLauncherIconAction', 'addCannedReply', 'updateCannedReplyStatus', 'deleteCannedReply']) expect(given).toContain(action);
     cleanup();
-
-    render(await more({ section: 'conversations' }));
-    expect(screen.getByTestId('more-settings')).toHaveTextContent('behaviour');
-    expect(listConversationsForSite).not.toHaveBeenCalled();
+    render(await setup({ orders: 'nonsense' }));
+    expect(screen.getByTestId('chat-studio')).toHaveTextContent('replies:0:Africa/Cairo:none');
   });
 
-  it('keeps More settings for owners and admins', async () => {
-    vi.mocked(listMessengerSites).mockResolvedValueOnce([]);
-    vi.mocked(listTeamSites).mockResolvedValueOnce([{ ...SITE, role: 'member' }] as never);
-    await expect(more()).rejects.toThrow('redirect:/dashboard/store-chat');
+  it('no longer has a More settings screen: its link is gone from Set up', async () => {
+    render(await setup());
+    expect(screen.queryByTestId('more-settings')).not.toBeInTheDocument();
+    expect(document.body.innerHTML).not.toContain('setup/more');
   });
 
   it('says another account owns the store, with the way to move it, instead of failing', async () => {

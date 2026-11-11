@@ -91,7 +91,6 @@ export interface ChatStudioCopy {
   hours: string;
   businessHours: string;
   hoursAfter: string;
-  change: string;
   installation: string;
   installMoved: string;
   openStoreSetup: string;
@@ -149,8 +148,44 @@ export interface ChatStudioCopy {
   disconnect: Pair;
   disconnectConfirm: string;
   cancel: string;
-  moreSettings: Pair;
-  openMoreSettings: string;
+  widgetLanguage: Pair;
+  widgetLanguages: Record<'auto' | 'en' | 'ar', string>;
+  launcherSize: { label: string; value: (px: number) => string };
+  customIcon: {
+    label: string;
+    body: string;
+    upload: string;
+    replace: string;
+    remove: string;
+    uploading: string;
+    inUse: string;
+    alt: string;
+    errors: Record<'too_big' | 'bad_type' | 'not_square' | 'unreadable' | 'unsafe' | 'failed', string>;
+  };
+  helloDelay: string;
+  helloText: Pair;
+  reminder: Pair;
+  reminderDelay: string;
+  hoursModes: Record<'always' | 'hours', string>;
+  timezone: string;
+  /** Sunday first, as the stored day numbers run. */
+  days: string[];
+  from: string;
+  to: string;
+  noDays: string;
+  savedReplies: Pair;
+  replyTitle: string;
+  replyText: string;
+  addReply: string;
+  replyAdded: string;
+  noReplies: string;
+  replyActive: string;
+  replyOff: string;
+  replyTurnOn: string;
+  replyTurnOff: string;
+  replyDelete: string;
+  replyFailed: string;
+  orderGrant: { connect: string; reconnect: string; granted: string; refused: string };
   preview: string;
   previewCaption: string;
   failed: string;
@@ -262,7 +297,6 @@ const en: ChatStudioCopy = {
   hours: 'Opening hours',
   businessHours: 'Business hours',
   hoursAfter: 'Outside them the assistant keeps answering and asks where the team should reply.',
-  change: 'Change',
   installation: 'Installation',
   installMoved: 'Installing and checking your store now live in Store setup.',
   openStoreSetup: 'Open Store setup',
@@ -341,11 +375,58 @@ const en: ChatStudioCopy = {
   disconnect: { label: 'Disconnect this store', body: 'This removes Store Chat from this dashboard. Store Chat in Shopify, Try-On, your plan and data stay in place.' },
   disconnectConfirm: 'Disconnect Store Chat from this dashboard? Store Chat in Shopify, Try-On, your plan and data stay in place. Reconnect from GRINDCTRL in Shopify using Claim this store or a dashboard link code.',
   cancel: 'Cancel',
-  moreSettings: {
-    label: 'More settings',
-    body: 'Saved replies, the second reminder, the widget’s language and a custom icon are still on the earlier screens.',
+  widgetLanguage: { label: 'Chat language', body: 'The language of the chat window on your store.' },
+  widgetLanguages: { auto: 'Match the shopper', en: 'English', ar: 'Arabic' },
+  launcherSize: { label: 'Bubble size', value: (px) => `${px} px` },
+  customIcon: {
+    label: 'Your own icon',
+    body: 'PNG, SVG or WebP. Square, up to 256 KB. It replaces the icon above.',
+    upload: 'Upload icon',
+    replace: 'Replace icon',
+    remove: 'Remove icon',
+    uploading: 'Uploading…',
+    inUse: 'Your icon is on the chat bubble.',
+    alt: 'Your icon',
+    errors: {
+      too_big: 'That file is over 256 KB. Use a smaller one.',
+      bad_type: 'Use a PNG, SVG or WebP file.',
+      not_square: 'The icon has to be square. Crop it and try again.',
+      unreadable: 'We couldn’t read that file. Try exporting it again.',
+      unsafe: 'That SVG contains scripts or outside links. Export a plain SVG.',
+      failed: 'The icon didn’t upload. Try again in a minute.',
+    },
   },
-  openMoreSettings: 'Open them',
+  helloDelay: 'Wait this long first (seconds)',
+  helloText: { label: 'What the first hello says', body: 'Leave empty for the standard hello.' },
+  reminder: {
+    label: 'Second reminder',
+    body: 'One more bubble if the shopper still hasn’t opened the chat. Shown once per shopper, and never again once closed.',
+  },
+  reminderDelay: 'Show it after (seconds)',
+  hoursModes: { always: 'Always available', hours: 'Business hours' },
+  timezone: 'Time zone',
+  days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+  from: 'From',
+  to: 'To',
+  noDays: 'With no days chosen, your team shows as away all week. The assistant still answers.',
+  savedReplies: { label: 'Saved replies', body: 'Short answers your team can send from the inbox in one click.' },
+  replyTitle: 'Title',
+  replyText: 'Reply',
+  addReply: 'Add reply',
+  replyAdded: 'Saved reply added.',
+  noReplies: 'No saved replies yet. Add the answers you send most.',
+  replyActive: 'On',
+  replyOff: 'Off',
+  replyTurnOn: 'Turn on',
+  replyTurnOff: 'Turn off',
+  replyDelete: 'Delete',
+  replyFailed: 'That didn’t work. Try again in a minute.',
+  orderGrant: {
+    connect: 'Approve order access',
+    reconnect: 'Approve again',
+    granted: 'Order access granted. Store Chat can now look up orders for this store.',
+    refused: 'Order access wasn’t granted. Nothing changed. You can try again.',
+  },
   preview: 'Preview',
   previewCaption: 'A preview of your store with your changes.',
   failed: 'That didn’t work. Try again in a minute.',
@@ -443,7 +524,6 @@ const ar: ChatStudioCopy = {
   hours: 'ساعات العمل',
   businessHours: 'مواعيد العمل',
   hoursAfter: 'خارج هذه الساعات يواصل المساعد الرد، ويسأل أين يرد الفريق.',
-  change: 'تغيير',
   installation: 'التثبيت',
   installMoved: 'التركيب وفحص المتجر أصبحا في «إعداد المتجر».',
   openStoreSetup: 'افتح إعداد المتجر',
@@ -522,11 +602,58 @@ const ar: ChatStudioCopy = {
   disconnect: { label: 'افصل هذا المتجر', body: 'تُزال محادثة المتجر من لوحة التحكم هذه. تبقى المحادثة في Shopify والقياس الافتراضي والباقة والبيانات كما هي.' },
   disconnectConfirm: 'هل تفصل محادثة المتجر عن لوحة التحكم هذه؟ تبقى المحادثة في Shopify والقياس الافتراضي والباقة والبيانات كما هي. أعد الربط من GRINDCTRL في Shopify باختيار المطالبة بهذا المتجر أو باستخدام رمز الربط.',
   cancel: 'إلغاء',
-  moreSettings: {
-    label: 'إعدادات أخرى',
-    body: 'الردود المحفوظة والتذكير الثاني ولغة الأداة والأيقونة المخصصة ما زالت في الشاشات السابقة.',
+  widgetLanguage: { label: 'لغة الدردشة', body: 'لغة نافذة الدردشة في متجرك.' },
+  widgetLanguages: { auto: 'حسب لغة المتسوق', en: 'الإنجليزية', ar: 'العربية' },
+  launcherSize: { label: 'حجم الفقاعة', value: (px) => `${px} بكسل` },
+  customIcon: {
+    label: 'أيقونتك الخاصة',
+    body: 'ملف PNG أو SVG أو WebP. مربعة الشكل وحتى 256 كيلوبايت. تحل محل الأيقونة أعلاه.',
+    upload: 'ارفع أيقونة',
+    replace: 'استبدل الأيقونة',
+    remove: 'أزل الأيقونة',
+    uploading: 'جارٍ الرفع…',
+    inUse: 'أيقونتك على فقاعة الدردشة.',
+    alt: 'أيقونتك',
+    errors: {
+      too_big: 'حجم الملف أكبر من 256 كيلوبايت. استخدم ملفاً أصغر.',
+      bad_type: 'استخدم ملف PNG أو SVG أو WebP.',
+      not_square: 'يجب أن تكون الأيقونة مربعة. اقتطعها وحاول مجدداً.',
+      unreadable: 'تعذّرت قراءة الملف. جرّب تصديره من جديد.',
+      unsafe: 'ملف SVG هذا يحتوي على سكربت أو روابط خارجية. صدّر ملف SVG بسيطاً.',
+      failed: 'لم تُرفع الأيقونة. حاول مجدداً بعد دقيقة.',
+    },
   },
-  openMoreSettings: 'افتحها',
+  helloDelay: 'انتظر هذه المدة أولاً (بالثواني)',
+  helloText: { label: 'نص التحية الأولى', body: 'اتركه فارغاً لاستخدام التحية المعتادة.' },
+  reminder: {
+    label: 'تذكير ثانٍ',
+    body: 'فقاعة أخرى إن لم يفتح المتسوق الدردشة بعد. تظهر مرة لكل متسوق، ولا تعود بعد إغلاقها.',
+  },
+  reminderDelay: 'أظهرها بعد (بالثواني)',
+  hoursModes: { always: 'متاح دائماً', hours: 'ساعات العمل' },
+  timezone: 'المنطقة الزمنية',
+  days: ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+  from: 'من',
+  to: 'إلى',
+  noDays: 'دون اختيار أي يوم، يظهر فريقك غير متاح طوال الأسبوع. ويظل المساعد يرد.',
+  savedReplies: { label: 'الردود المحفوظة', body: 'إجابات قصيرة يرسلها فريقك من الرسائل بنقرة واحدة.' },
+  replyTitle: 'العنوان',
+  replyText: 'الرد',
+  addReply: 'أضف رداً',
+  replyAdded: 'تمت إضافة الرد المحفوظ.',
+  noReplies: 'لا ردود محفوظة بعد. أضف الإجابات التي ترسلها أكثر.',
+  replyActive: 'مفعّل',
+  replyOff: 'متوقف',
+  replyTurnOn: 'فعّل',
+  replyTurnOff: 'أوقف',
+  replyDelete: 'احذف',
+  replyFailed: 'لم ينجح ذلك. حاول مجدداً بعد دقيقة.',
+  orderGrant: {
+    connect: 'وافق على الوصول إلى الطلبات',
+    reconnect: 'وافق مرة أخرى',
+    granted: 'تم منح صلاحية الطلبات. يمكن لدردشة المتجر الآن الاطلاع على طلبات هذا المتجر.',
+    refused: 'لم تُمنح صلاحية الطلبات. لم يتغير شيء. يمكنك المحاولة مرة أخرى.',
+  },
   preview: 'معاينة',
   previewCaption: 'معاينة لمتجرك مع تغييراتك.',
   failed: 'لم ينجح ذلك. حاول مجدداً بعد دقيقة.',

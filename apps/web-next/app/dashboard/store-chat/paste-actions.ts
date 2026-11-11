@@ -3,6 +3,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { scheduleStoreConnectedEmail } from '@/lib/email/store-connected-sender';
 import { recordAudit } from '@/lib/messenger/conversations';
+import { scheduleProductsRefresh } from '@/lib/messenger/products-refresh';
 import { requireSiteAccess, UnauthorizedError } from '@/lib/messenger/provisioning';
 import { RoleNotAllowedError, type DashboardCapability } from '@/lib/rbac/dashboard-policy';
 import { requireMerchantRateLimit, RequestRateLimitError } from '@/lib/request-rate-limit';
@@ -105,7 +106,10 @@ async function afterProof(siteId: string, domain: PasteDomain): Promise<PasteDom
   if (domain.state !== 'trusted') return domain;
   await grantPasteDomainPlan(siteId, domain.domain);
   schedulePasteDomainPlatformCheck(siteId, domain.domain);
-  if (domain.domainVerified) scheduleStoreConnectedEmail(siteId, { path: 'website_paste', host: domain.domain });
+  if (domain.domainVerified) {
+    scheduleStoreConnectedEmail(siteId, { path: 'website_paste', host: domain.domain });
+    scheduleProductsRefresh(siteId);
+  }
   return domain;
 }
 

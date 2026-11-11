@@ -59,7 +59,7 @@ describe('V16Team', () => {
     const hours = screen.getByRole('region', { name: 'Opening hours' });
     expect(hours).toHaveTextContent('Friday 2 pm to 10 pm, Cairo time.');
     expect(hours).toHaveTextContent('Outside your opening hours nobody is alerted.');
-    expect(within(hours).getByRole('link', { name: 'Change' })).toHaveAttribute('href', '/dashboard/store-chat/setup/more?section=behaviour');
+    expect(within(hours).getByRole('link', { name: 'Change' })).toHaveAttribute('href', '/dashboard/store-chat/setup#hours');
   });
 
   it('offers to open Store Chat when the store has none, with no hours', () => {

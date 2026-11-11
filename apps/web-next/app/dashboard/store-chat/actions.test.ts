@@ -5,8 +5,15 @@ import { scheduleStoreDisconnectedEmail } from '@/lib/email/store-journey-sender
 import { storeHealthOwner } from '@/lib/store-health/owner';
 vi.mock('@/lib/email/store-journey-sender', () => ({ scheduleStoreDisconnectedEmail: vi.fn() }));
 vi.mock('@/lib/store-health/owner', () => ({ storeHealthOwner: vi.fn(async () => ({ email: 'owner@example.com', locale: 'en' as const })) }));
-import { syncSiteProducts } from '@/lib/messenger/products';
-vi.mock('@/lib/messenger/products', () => ({ syncSiteProducts: vi.fn(async () => ({ count: 2 })) }));
+import { CatalogueReadError, syncSiteProducts } from '@/lib/messenger/products';
+vi.mock('@/lib/messenger/products', () => ({
+  syncSiteProducts: vi.fn(async () => ({ count: 2 })),
+  CatalogueReadError: class CatalogueReadError extends Error {
+    constructor(readonly outcome: string, message: string) { super(message); }
+  },
+}));
+import { storeLauncherIcon } from '@/lib/messenger/launcher-icon';
+vi.mock('@/lib/messenger/launcher-icon', () => ({ storeLauncherIcon: vi.fn() }));
 import { requireMerchantRateLimit, RequestRateLimitError } from '@/lib/request-rate-limit';
 vi.mock('@/lib/request-rate-limit', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/lib/request-rate-limit')>(),
@@ -138,6 +145,27 @@ beforeEach(() => {
 });
 
 describe('messenger server actions — authorization', () => {
+  it('stores a launcher icon for the owner of the store and hands back its address, leaving the draft alone', async () => {
+    vi.mocked(storeLauncherIcon).mockResolvedValue({ ok: true, url: 'https://files.example/messenger-icons/site-1/abc.png' });
+    const form = new FormData();
+    form.set('siteId', SITE.id);
+    form.set('icon', new File([new Uint8Array([1, 2, 3])], 'icon.png', { type: 'image/png' }));
+    expect(await actions.uploadLauncherIconAction(form)).toEqual({ ok: true, url: 'https://files.example/messenger-icons/site-1/abc.png' });
+    expect(mocks.requireSiteAccess).toHaveBeenCalledWith('user_owner', SITE.id, 'settings');
+    expect(storeLauncherIcon).toHaveBeenCalledWith(SITE.id, new Uint8Array([1, 2, 3]));
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+  it('refuses a file over 256 KB before reading it', async () => {
+    const form = new FormData();
+    form.set('siteId', SITE.id);
+    form.set('icon', new File([new Uint8Array(256 * 1024 + 1)], 'big.png', { type: 'image/png' }));
+    expect(await actions.uploadLauncherIconAction(form)).toEqual({ ok: false, error: 'too_big' });
+    expect(storeLauncherIcon).not.toHaveBeenCalled();
+  });
+  it('reports why a store would not hand over its products instead of a generic failure', async () => {
+    vi.mocked(syncSiteProducts).mockRejectedValue(new CatalogueReadError('password_page', 'Catalogue is behind the store password page.'));
+    expect(await actions.syncKnowledgeProducts(SITE.id)).toEqual({ ok: true, count: 0, outcome: 'password_page' });
+  });
   it('syncs products only after settings permission and the existing write limit', async () => {
     const result = await actions.syncKnowledgeProducts(SITE.id);
     expect(result).toMatchObject({ ok: true, message: '2 products synced.' });
@@ -567,8 +595,15 @@ describe('roles on a team store', () => {
     form.set('content', 'Within 14 days.');
     return form;
   };
+  const iconForm = () => {
+    const form = new FormData();
+    form.set('siteId', 'site-1');
+    form.set('icon', new File([new Uint8Array(8)], 'icon.png', { type: 'image/png' }));
+    return form;
+  };
   const cases: Array<[string, DashboardCapability, () => Promise<unknown>]> = [
     ['syncKnowledgeProducts', 'settings', () => actions.syncKnowledgeProducts('site-1')],
+    ['uploadLauncherIconAction', 'settings', () => actions.uploadLauncherIconAction(iconForm())],
     ['listInboxConversations', 'chats', () => actions.listInboxConversations({ siteId: 'site-1' })],
     ['inboxChangesSince', 'chats', () => actions.inboxChangesSince('site-1', '2026-11-11T00:00:00Z')],
     ['inboxHandoffsSince', 'chats', () => actions.inboxHandoffsSince('site-1', '2026-11-11T00:00:00Z')],

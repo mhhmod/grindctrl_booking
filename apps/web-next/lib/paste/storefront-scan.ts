@@ -89,7 +89,7 @@ export class StorefrontTooLargeError extends Error {
 }
 
 class ScanStop extends Error {
-  constructor(readonly failure: StorefrontFailure) { super(failure); this.name = 'ScanStop'; }
+  constructor(readonly failure: StorefrontFailure, readonly status?: number) { super(failure); this.name = 'ScanStop'; }
 }
 
 const defaultLookup: StorefrontLookup = (hostname) => dns.lookup(hostname, { all: true, verbatim: true });
@@ -404,7 +404,7 @@ function withAbort<T>(work: Promise<T>, signal: AbortSignal): Promise<T> {
 export async function fetchPublicPage(raw: string, options: {
   maxBytes: number; accept: string; transport?: StorefrontTransport; lookup?: StorefrontLookup;
   timeoutMs?: number; allowedHost?: (hostname: string) => boolean;
-}): Promise<PublicPage | { failure: StorefrontFailure }> {
+}): Promise<PublicPage | { failure: StorefrontFailure; /** The HTTP status, for failure 'status'. */ status?: number }> {
   const transport = options.transport ?? pinnedStorefrontTransport;
   const lookup = options.lookup ?? defaultLookup;
   const signal = AbortSignal.timeout(options.timeoutMs ?? STOREFRONT_TOTAL_TIMEOUT_MS);
@@ -432,11 +432,12 @@ export async function fetchPublicPage(raw: string, options: {
         url = next;
         continue;
       }
-      if (response.status < 200 || response.status > 299) throw new ScanStop('status');
+      if (response.status < 200 || response.status > 299) throw new ScanStop('status', response.status);
       return { url: url.toString(), contentType: response.contentType, body: response.body.subarray(0, options.maxBytes) };
     }
   } catch (error) {
-    return { failure: error instanceof ScanStop ? error.failure : 'network' };
+    if (!(error instanceof ScanStop)) return { failure: 'network' };
+    return error.status ? { failure: error.failure, status: error.status } : { failure: error.failure };
   }
 }
 

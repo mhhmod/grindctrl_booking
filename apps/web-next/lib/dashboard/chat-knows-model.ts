@@ -6,12 +6,15 @@
    with the line saying the assistant stays in sync with the store. */
 
 import type { KnowledgeEntry } from '@/lib/messenger/knowledge';
+import type { ProductsStatus } from '@/lib/messenger/products-status';
 import type { FrameBadge } from '@/components/dashboard/v16/page-frame';
 import type { ChatKnowsCopy } from './chat-knows-copy';
 
 const DAY = 86_400_000;
 /** Titles named in the Pages and notes line before "and 3 more". */
 const NAMED_TITLES = 2;
+/** Fewer finished chats than this are counted, not turned into a percentage. */
+const MIN_CHATS_FOR_SHARE = 5;
 
 export type ChatHeadFacts = {
   active: boolean;
@@ -57,7 +60,13 @@ export function buildChatHead(facts: ChatHeadFacts, copy: ChatKnowsCopy): ChatHe
   const finished = (facts.solved7 ?? 0) + (facts.handedOff7 ?? 0);
   let subtitle: string | null = null;
   if (facts.solved7 !== null && facts.handedOff7 !== null) {
-    subtitle = finished > 0 ? copy.answeredShare(Math.round(((facts.solved7 ?? 0) / finished) * 100), finished) : copy.noChatsYet;
+    const solved = facts.solved7 ?? 0;
+    subtitle =
+      finished === 0
+        ? copy.noChatsYet
+        : finished < MIN_CHATS_FOR_SHARE
+          ? copy.answeredCount(solved, finished)
+          : copy.answeredShare(Math.round((solved / finished) * 100), finished);
   }
   return {
     badge: !facts.active
@@ -68,6 +77,26 @@ export function buildChatHead(facts: ChatHeadFacts, copy: ChatKnowsCopy): ChatHe
     subtitle,
     storeUrl: domain ? `https://${domain}` : null,
   };
+}
+
+export type ProductsLine = { ok: boolean; text: string };
+
+/** What the Products row says: what was read, or why not and what happens
+ *  next. Null when no refresh is recorded (nothing to say, never a guess). */
+export function buildProductsLine(status: ProductsStatus | null, copy: ChatKnowsCopy): ProductsLine | null {
+  if (!status) return null;
+  switch (status.outcome) {
+    case 'ok':
+      return { ok: true, text: copy.productsRead(status.count) };
+    case 'password_page':
+      return { ok: false, text: copy.productsPassword };
+    case 'not_found':
+      return { ok: false, text: copy.productsNotFound };
+    case 'rate_limited':
+      return { ok: false, text: copy.productsRateLimited };
+    case 'unreachable':
+      return { ok: false, text: copy.productsUnreachable };
+  }
 }
 
 function wholeDaysSince(iso: string | null, now: number): number | null {
