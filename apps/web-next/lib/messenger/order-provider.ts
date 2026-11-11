@@ -206,6 +206,9 @@ export async function wooConnectionFor(site: { id: string; domain?: string | nul
   }
 }
 
-export async function resolveOrderProvider(site: { id: string; domain?: string | null }): Promise<OrderProvider | null> {
-  return orderProviderFor(site, await wooConnectionFor(site));
+export async function resolveOrderProvider(site: { id: string; domain?: string | null }, options?: { strict?: boolean }): Promise<OrderProvider | null> {
+  // A config snapshot must not cache a transient connection failure as "no provider".
+  const connection = options?.strict && !orderShopDomain(site.domain)
+    ? await loadActiveWooConnection(site.id) : await wooConnectionFor(site);
+  return orderProviderFor(site, connection);
 }

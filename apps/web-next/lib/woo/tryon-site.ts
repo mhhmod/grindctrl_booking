@@ -14,7 +14,7 @@ import { siteTenantKey } from '@/lib/tenancy/tenant-key';
 // markets we sell into; add a suffix here (or adopt the PSL) when a
 // merchant on another one is refused or double-granted.
 
-export type SiteByEmbedKey = { id: string; status: string };
+export type SiteByEmbedKey = { id: string; status: string; settings_version?: number };
 
 const EMBED_KEY_RE = /^[A-Za-z0-9_-]{8,128}$/;
 
@@ -26,7 +26,7 @@ export async function siteByEmbedKey(key: unknown): Promise<SiteByEmbedKey | nul
   try {
     const { data, error } = await getMessengerServiceClient()
       .from('widget_sites')
-      .select('id, status')
+      .select('id, status, settings_version')
       .eq('embed_key', key)
       .maybeSingle();
     return error || !data ? null : (data as SiteByEmbedKey);

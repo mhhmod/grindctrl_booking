@@ -1,5 +1,5 @@
 /**
- * GRINDCTRL Try-On paste adapters v1.5.0 (website and Shopify paste installs).
+ * GRINDCTRL Try-On paste adapters v1.6.0 (website and Shopify paste installs).
  *
  * Loaded by messenger.js on pages of a `data-gc-install="paste"` snippet
  * that show a product or product cards, then mounted on the hosted engine
@@ -387,6 +387,11 @@
 
   /* Woo's own page markers, never its address. The page's cart form owns
      the allowed product/variation ids, just as in the plugin adapter. */
+  function wooPage() {
+    var form = document.querySelector('form.cart');
+    return !!(window.woocommerce_params || window.wc_add_to_cart_params ||
+      (form && (form.matches('.variations_form') || form.querySelector('.single_add_to_cart_button'))));
+  }
   function wooProduct(product) {
     if (!product || product.card) return null;
     var form = document.querySelector('form.cart');
@@ -889,6 +894,36 @@
         claimed.push(node);
         found.push({ host: pillHost(node), productId: id, title: cardsById[id].title });
       }
+      // Woo's own runtime/form markers establish the platform, never /shop/ in the URL.
+      // Explicit merchant tags take precedence over platform discovery.
+      if (!tagged.length && wooPage()) {
+        var loops = document.querySelectorAll('li.product, .wc-block-grid__product, .wc-block-product');
+        for (var w = 0; w < loops.length && found.length < CARD_LIMIT; w++) {
+          var loop = loops[w];
+          if (loop.closest('.gc-tryon-sheet') || loop.querySelector('.gc-tryon-pill')) continue;
+          var cart = loop.querySelector('a.add_to_cart_button[data-product_id]');
+          var wooId = cart && productId(cart.getAttribute('data-product_id'));
+          var permalink = loop.querySelector('a.woocommerce-LoopProduct-link, a.wc-block-grid__product-link, .wc-block-components-product-name a, a.wc-block-components-product-name');
+          if (!permalink) {
+            var candidates = loop.querySelectorAll('a[href]');
+            for (var c = 0; c < candidates.length; c++) {
+              if (!candidates[c].matches('.add_to_cart_button, .added_to_cart') && !/[?&]add-to-cart=/.test(candidates[c].getAttribute('href'))) {
+                permalink = candidates[c]; break;
+              }
+            }
+          }
+          var wooHref = permalink && permalink.getAttribute('href');
+          var wooKey = wooHref && pageKey(wooHref);
+          var wooPhoto = cardPhoto(loop);
+          var titleNode = loop.querySelector('.woocommerce-loop-product__title, .wc-block-grid__product-title, .wc-block-components-product-name');
+          var img = loop.querySelector('img');
+          var wooTitle = String((titleNode && titleNode.textContent) || (img && img.getAttribute('alt')) || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+          if (!wooId || !wooKey || !wooPhoto || claimed.some(function (other) { return other.contains(loop) || loop.contains(other); }) ||
+              !remember({ id: wooId, title: wooTitle, imageUrl: wooPhoto, url: wooKey })) continue;
+          claimed.push(loop);
+          found.push({ host: pillHost(loop), productId: wooId, title: wooTitle });
+        }
+      }
       var entries = itemListEntries();
       if (!entries.length) return found;
       var byKey = {};
@@ -911,7 +946,7 @@
       return found;
     }
     function hasWebsiteCards() {
-      return !!document.querySelector('[data-grindctrl-card]') || itemListEntries().length > 0;
+      return !!document.querySelector('[data-grindctrl-card]') || wooPage() || itemListEntries().length > 0;
     }
     function websiteContext(product) {
       var key = (product.card ? 'card:' : 'page:') + product.id + '|' + product.imageUrl;

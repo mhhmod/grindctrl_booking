@@ -44,11 +44,12 @@ vi.mock('@/lib/flags/store-flags', async (original) => ({
   storeFlags: mocks.storeFlags,
 }));
 
+import { StorefrontConfigCache } from '@/lib/storefront-config-cache';
 import { GET } from './route';
 import { signPreviewToken } from '@/lib/launch/preview-token';
 
 const SITE = { id: 'site-1' };
-const PAYLOAD = { v: 1, site: { id: 'site-1' } };
+const PAYLOAD = { v: 1, site: { id: 'site-1' }, active: true };
 
 function req(url: string) {
   return new NextRequest(new Request(url));
@@ -56,28 +57,34 @@ function req(url: string) {
 
 describe('GET /api/messenger/config', () => {
   it('profiles independent config reads without a network', async () => {
-    vi.useFakeTimers();
     const delayed = <T,>(value: T, ms: number) => new Promise<T>((resolve) => setTimeout(() => resolve(value), ms));
-    mocks.loadPublicSite.mockImplementation(() => delayed({ id: 'site-1', domain: 'store.myshopify.com' }, 50));
-    mocks.storeFlags.mockImplementation(() => delayed(['v16_chat', 'n5_preview_mode'], 35));
-    mocks.signal.mockImplementation(() => delayed('verified', 40));
-    mocks.orderProvider.mockImplementation(() => delayed(null, 65));
-    mocks.getStoreLaunch.mockImplementation(() => delayed(null, 45));
+    mocks.loadPublicSite.mockImplementation(() => delayed({ id: 'site-1', domain: 'store.myshopify.com', status: 'active' }, 150));
+    mocks.storeFlags.mockImplementation(() => delayed(['v16_chat', 'n5_preview_mode'], 150));
+    mocks.signal.mockImplementation(() => delayed('verified', 80));
+    mocks.orderProvider.mockImplementation(() => delayed(null, 350));
+    mocks.getStoreLaunch.mockImplementation(() => delayed(null, 100));
+    let coldMs = 0;
     {
-      const start = Date.now();
+      const start = performance.now();
       const response = GET(new NextRequest('https://app.example/api/messenger/config?key=gc_test_key', { headers: { Origin: 'https://store.example' } }));
-      await vi.runAllTimersAsync();
       expect((await response).status).toBe(200);
-      expect(Date.now() - start).toBe(160);
+      coldMs = performance.now() - start;
     }
-    vi.useRealTimers();
+    const hitStart = performance.now();
+    const hit = GET(new NextRequest('https://app.example/api/messenger/config?key=gc_test_key', { headers: { Origin: 'https://store.example' } }));
+    expect((await hit).status).toBe(200);
+    const hitMs = performance.now() - hitStart;
+    expect(mocks.orderProvider).toHaveBeenCalledTimes(1);
+    process.stdout.write(JSON.stringify({ route: 'messenger-config', uncachedMs: Math.round(coldMs), cachedMs: Math.round(hitMs) }) + '\n');
   });
   beforeEach(() => {
+    StorefrontConfigCache.clearAll();
     vi.resetAllMocks();
     mocks.rateLimit.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     mocks.originAllowed.mockReturnValue(true);
-    mocks.toPublicPayload.mockReturnValue(PAYLOAD);
+    mocks.toPublicPayload.mockImplementation(() => ({ ...PAYLOAD, active: true }));
     mocks.recordEvent.mockResolvedValue(undefined);
+    StorefrontConfigCache.clearAll();
     mocks.storeFlags.mockResolvedValue([]);
   });
 
@@ -88,7 +95,7 @@ describe('GET /api/messenger/config', () => {
 
     await GET(req('https://app.example.com/api/messenger/config?shop=grindctrl.myshopify.com'));
 
-    expect(mocks.storeFlags).toHaveBeenCalledWith({ shopDomain: 'grindctrl.myshopify.com' });
+    expect(mocks.storeFlags).toHaveBeenCalledWith({ shopDomain: 'grindctrl.myshopify.com' }, expect.any(Number), { fresh: true, strict: true });
     expect(mocks.toPublicPayload).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'site-1' }),
       expect.any(Date),
@@ -343,6 +350,7 @@ describe('GET /api/messenger/config launch state (N5)', () => {
   const URL_BASE = 'https://app.example.com/api/messenger/config?shop=maison.myshopify.com';
 
   beforeEach(() => {
+    StorefrontConfigCache.clearAll();
     vi.resetAllMocks();
     process.env.SHOPIFY_API_KEY = 'client';
     process.env.SHOPIFY_API_SECRET = 'secret';
@@ -385,6 +393,7 @@ describe('GET /api/messenger/config launch state for a WooCommerce store', () =>
   const URL_BASE = 'https://app.example.com/api/messenger/config?key=gc_test_key&vid=visitor_1_abcdefghijkl';
 
   beforeEach(() => {
+    StorefrontConfigCache.clearAll();
     vi.resetAllMocks();
     process.env.GRINDCTRL_CAPABILITY_SECRET = 'test-only-independent-core-signing-key-2026';
     mocks.rateLimit.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
@@ -415,5 +424,54 @@ describe('GET /api/messenger/config launch state for a WooCommerce store', () =>
     mocks.isActiveTenant.mockResolvedValue(false);
     expect((await (await GET(req(URL_BASE))).json()).launch).toBeUndefined();
     expect(mocks.getStoreLaunch).not.toHaveBeenCalled();
+  });
+});
+
+describe('config site cache boundaries', () => {
+  beforeEach(() => {
+    StorefrontConfigCache.clearAll(); vi.resetAllMocks();
+    mocks.rateLimit.mockResolvedValue({ success: true, reset: Date.now() + 10000 });
+    mocks.originAllowed.mockReturnValue(true);
+    mocks.loadPublicSite.mockResolvedValue({ id: 'site-cache', settings_version: 1, status: 'active', domain: 'store.myshopify.com' });
+    mocks.storeFlags.mockResolvedValue([]); mocks.orderProvider.mockResolvedValue(null);
+    mocks.recordEvent.mockResolvedValue(undefined); mocks.toPublicPayload.mockImplementation(() => ({ ...PAYLOAD }));
+  });
+  const request = (params = '') => GET(new NextRequest('https://app.example/api/messenger/config?key=gc_test_key' + params,
+    { headers: { Origin: 'https://store.example' } }));
+  it('hits the site cache, rechecks origin and rate limit, and invalidates by settings version', async () => {
+    expect((await request()).headers.get('server-timing')).toMatch(/site;dur=[0-9.]+, settings;dur=[0-9.]+, plan;dur=[0-9.]+, flags;dur=[0-9.]+/);
+    await request(); expect(mocks.storeFlags).toHaveBeenCalledTimes(1);
+    expect(mocks.originAllowed).toHaveBeenCalledTimes(2); expect(mocks.rateLimit).toHaveBeenCalledTimes(2);
+    mocks.loadPublicSite.mockResolvedValue({ id: 'site-cache', settings_version: 2, status: 'active', patterns: [] });
+    await request(); expect(mocks.storeFlags).toHaveBeenCalledTimes(2);
+    mocks.originAllowed.mockReturnValue(false);
+    expect((await request()).status).toBe(403);
+  });
+  it('assigns holdout by vid on a cache hit', async () => {
+    const { holdoutBucket } = await import('@/lib/launch/audience');
+    const visitors = Array.from({ length: 100 }, (_, i) => 'visitor_abcdefghijkl_' + i);
+    const on = visitors.find((id) => holdoutBucket(id, 'salt', 0.5) === 'on')!;
+    const off = visitors.find((id) => holdoutBucket(id, 'salt', 0.5) === 'off')!;
+    mocks.storeFlags.mockResolvedValue(['n5_preview_mode', 'n6_holdout']);
+    mocks.getStoreLaunch.mockResolvedValue({ state: 'holdout', holdoutShare: 0.5, holdoutEndsAt: new Date(Date.now() + 86400000).toISOString(), salt: 'salt' });
+    expect(await (await request('&vid=' + on)).json()).toMatchObject({ launch: { show: true, bucket: 'on' } });
+    expect(await (await request('&vid=' + off)).json()).toMatchObject({ launch: { show: false, bucket: 'off' } });
+    expect(mocks.storeFlags).toHaveBeenCalledTimes(1);
+  });
+  it('does not cache errors', async () => {
+    mocks.storeFlags.mockRejectedValueOnce(new Error('temporary'));
+    expect((await request()).status).toBe(503);
+    expect((await request()).status).toBe(200);
+    expect(mocks.storeFlags).toHaveBeenCalledTimes(2);
+  });
+  it('still applies preview and visitor targeting on a hit', async () => {
+    vi.stubEnv('GRINDCTRL_CAPABILITY_SECRET', 'test-core-secret-at-least-thirty-two-characters');
+    mocks.storeFlags.mockResolvedValue(['n5_preview_mode']);
+    mocks.getStoreLaunch.mockResolvedValue({ state: 'preview', salt: 'salt' });
+    const token = signPreviewToken('test-core-secret-at-least-thirty-two-characters', 'store.myshopify.com').token;
+    expect(await (await request('&preview=' + token)).json()).toMatchObject({ launch: { show: true, test: true } });
+    expect(await (await request('&vid=visitor_abcdefghijkl')).json()).toMatchObject({ launch: { show: false, test: false } });
+    expect(mocks.storeFlags).toHaveBeenCalledTimes(1);
+    vi.unstubAllEnvs();
   });
 });

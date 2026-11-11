@@ -82,12 +82,12 @@ describe('store flags', () => {
     expect(fake.queries[0].filters[0]).toEqual(['widget_site_id', SITE.widgetSiteId]);
   });
 
-  it('caches for a minute, then reads again', async () => {
+  it('caches for five seconds, then reads again', async () => {
     const fake = use(() => ({ data: [{ flag: 'n23_after_hours' }], error: null }));
     await storeFlags(SHOP, NOW);
-    await storeFlags(SHOP, NOW + 59_000);
+    await storeFlags(SHOP, NOW + 4_999);
     expect(fake.queries).toHaveLength(1);
-    await storeFlags(SHOP, NOW + 60_001);
+    await storeFlags(SHOP, NOW + 5_001);
     expect(fake.queries).toHaveLength(2);
   });
 

@@ -1,3 +1,4 @@
+import { StorefrontConfigCache, configTiming } from '@/lib/storefront-config-cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
@@ -27,12 +28,18 @@ function claimedPasteHost(site: ResolvedPublicSite, host: string): boolean {
 }
 
 /* GET /api/messenger/config?key=<embed_key>&origin=<page origin>
-   Public, cacheable, fail-quiet: the loader keeps its last-known-good copy
+   Public, with a short server-side site snapshot: the loader keeps its last-known-good copy
    in localStorage, and an unreachable dashboard must never break a store. */
 
 export const dynamic = 'force-dynamic';
+const configs = new StorefrontConfigCache<{ features: Awaited<ReturnType<typeof storeFlags>>; orderAvailable: boolean }>();
 
 export async function GET(request: NextRequest) {
+  const timing = configTiming();
+  return timing.finish(await getConfig(request, timing));
+}
+
+async function getConfig(request: NextRequest, timing: ReturnType<typeof configTiming>) {
   try {
     await requireRateLimit(publicApiRatelimit, `mconfig:${clientIp(request) ?? 'unknown'}`);
   } catch (error) {
@@ -43,7 +50,7 @@ export async function GET(request: NextRequest) {
     // successful config still requires the existing origin authorization.
     if (origin) response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Vary', 'Origin');
-    response.headers.set('Access-Control-Expose-Headers', 'Retry-After');
+    response.headers.set('Access-Control-Expose-Headers', 'Retry-After, Server-Timing');
     return response;
   }
 
@@ -68,9 +75,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const site = shopParam
-      ? await loadPublicSiteByDomain(shopParam)
-      : await loadPublicSite(key);
+    const site = await timing.measure('site', () => shopParam ? loadPublicSiteByDomain(shopParam) : loadPublicSite(key));
     if (!site) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
     if (!originAllowed(site, origin, { trusted: headerOrigin !== null })) {
@@ -90,22 +95,27 @@ export async function GET(request: NextRequest) {
     // here: it only schedules our own check of the domain's page.
     // Store Chat off leaves the site in `draft`; the pasted code still runs
     // Try-On there, so only an operator-disabled site is left out.
-    const [features, orderProvider] = await Promise.all([
-      storeFlags(flagStore),
-      resolveOrderProvider(site),
+    const cacheKey = JSON.stringify([site.id, site.settings_version, site.status, site.domain, site.pasteShopDomain]);
+    const [{ features, orderAvailable }] = await Promise.all([
+      configs.read(cacheKey, async () => {
+        const [features, provider] = await Promise.all([
+          timing.measure('flags', () => storeFlags(flagStore, Date.now(), { fresh: true, strict: true })),
+          timing.measure('plan', () => resolveOrderProvider(site, { strict: true })),
+        ]);
+        return { features, orderAvailable: Boolean(provider) };
+      }, () => site.status === 'active' ? 20_000 : 5_000),
       headerOrigin && site.status !== 'disabled'
         ? Promise.resolve(recordPasteSignal(site.id, headerOrigin)).then((signal) => {
           if (signal === 'unverified') schedulePasteDomainCheck(site.id, new URL(headerOrigin).hostname);
         }) : Promise.resolve(),
     ]);
     const now = new Date();
-    const payload = features.includes('v16_chat')
-      ? toPublicPayload(site, now, features, { orderProviderAvailable: Boolean(orderProvider) })
-      : toPublicPayload(site, now, features);
+    const payload = await timing.measure('settings', async () => features.includes('v16_chat')
+      ? toPublicPayload(site, now, features, { orderProviderAvailable: orderAvailable })
+      : toPublicPayload(site, now, features));
     /* Who sees Store Chat on a Shopify store or a paired WooCommerce store
        (phase zero item 9): only the owner's preview link while it is in
-       setup or preview, and not the holdout's off arm. The query names the
-       visitor, so a shared cache keeps one answer per visitor. Any other
+       setup or preview, and not the holdout's off arm. The audience is computed per request above the site cache. Any other
        site is always shown. */
     if (features.includes('n5_preview_mode')) {
       const siteKey = normalizeTenantKey(`site:${site.id}`);
@@ -114,7 +124,7 @@ export async function GET(request: NextRequest) {
         : (siteKey && await isActiveTenant(siteKey) ? siteKey : null);
       if (tenant) {
         payload.launch = launchAudience({
-          launch: await getStoreLaunch(tenant),
+          launch: await timing.measure('plan', () => getStoreLaunch(tenant)),
           features,
           preview: verifyPreviewTokenAnyApp(request.nextUrl.searchParams.get('preview'), tenant),
           visitorId: launchVisitorId(request.nextUrl.searchParams.get('vid')),
@@ -122,6 +132,7 @@ export async function GET(request: NextRequest) {
         });
       }
     }
+    if (!payload.active || payload.launch?.show === false) configs.delete(cacheKey);
     void recordEvent({ siteId: site.id, eventName: 'config_served', payload: { v: payload.v } }).catch(() => {});
 
     /* The widget fetches this from the merchant's storefront, so the response
@@ -133,16 +144,17 @@ export async function GET(request: NextRequest) {
 
        Echo the specific caller rather than "*": that is what originAllowed
        just approved, and it keeps the response scoped to that store. Vary is
-       not optional here — this response is `public` and cacheable, so without
+       not optional here — the response varies with the visitor and origin, so without
        it a shared cache could hand one store's response, and its
        Access-Control-Allow-Origin, to another. */
     const cors: Record<string, string> = headerOrigin
-      ? { 'Access-Control-Allow-Origin': headerOrigin }
+      ? { 'Access-Control-Allow-Origin': headerOrigin, 'Timing-Allow-Origin': headerOrigin }
       : {};
 
     return NextResponse.json(payload, {
       headers: {
-        'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
+        'Cache-Control': 'no-store',
+        'Access-Control-Expose-Headers': 'Server-Timing',
         Vary: 'Origin',
         ...cors,
       },
