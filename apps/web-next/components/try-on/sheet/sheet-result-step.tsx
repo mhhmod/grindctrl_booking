@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Download, MessageCircle, RefreshCw, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Download, Maximize2, MessageCircle, RefreshCw, ShoppingBag } from 'lucide-react';
 import type { ResultControls } from '../try-on-result';
 import type { TryOnLocale, TryOnTranslator } from '@/lib/try-on/i18n';
 import type { SheetCopy } from '@/lib/try-on/sheet-copy';
@@ -13,6 +13,7 @@ import {
 } from '@/lib/try-on/store-product';
 import type { TryOnJob } from '@/lib/try-on/types';
 import { SheetCompareSlider } from './sheet-compare-slider';
+import { LookViewer } from './look-viewer';
 import { useMediaQuery } from './use-media-query';
 
 /* TryOn-Result (02-try-on.md): "Your look is ready" with the piece and its
@@ -60,6 +61,7 @@ export function SheetResultStep({
 }) {
   const wide = useMediaQuery('(min-width: 768px)');
   const [view, setView] = useState<'look' | 'photo'>('look');
+  const [fullScreen, setFullScreen] = useState(false);
   const [pickedId, setPickedId] = useState<string | null>(null);
   const [cart, setCart] = useState<{ state: 'idle' | 'adding' | 'added' | 'failed'; added: string; message: string }>({
     state: 'idle',
@@ -161,14 +163,20 @@ export function SheetResultStep({
       </div>
     ) : (
       <div className="relative mx-auto w-fit max-w-full overflow-hidden rounded-2xl border bg-muted/30">
-        {view === 'look' ? (
-          // The look lives in this page as a data or blob URL.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={job.resultImageUrl ?? ''} alt={copy.lookAlt(productName)} onError={onImageError} className="block aspect-[3/4] h-[clamp(10rem,calc(100dvh-24rem),24rem)] w-auto max-w-full object-cover" />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={photoDataUrl ?? ''} alt={copy.originalPhotoAlt} className="block aspect-[3/4] h-[clamp(10rem,calc(100dvh-24rem),24rem)] w-auto max-w-full object-cover" />
-        )}
+        {/* A tap opens the look full screen (LookViewer). */}
+        <button type="button" onClick={() => setFullScreen(true)} aria-label={copy.viewFullScreen} className="block cursor-zoom-in focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-ring">
+          {view === 'look' ? (
+            // The look lives in this page as a data or blob URL.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={job.resultImageUrl ?? ''} alt={copy.lookAlt(productName)} onError={onImageError} className="block aspect-[3/4] h-[clamp(10rem,calc(100dvh-24rem),24rem)] w-auto max-w-full object-cover" />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={photoDataUrl ?? ''} alt={copy.originalPhotoAlt} className="block aspect-[3/4] h-[clamp(10rem,calc(100dvh-24rem),24rem)] w-auto max-w-full object-cover" />
+          )}
+          <span aria-hidden="true" className="absolute bottom-3 end-3 grid size-9 place-items-center rounded-full bg-background/90 text-foreground shadow-sm backdrop-blur">
+            <Maximize2 className="size-4" />
+          </span>
+        </button>
 
         <div role="group" aria-label={copy.compare} className="absolute end-3 top-3 flex rounded-full bg-background/90 p-1 text-sm shadow-sm backdrop-blur">
           {(['look', 'photo'] as const).map((option) => (
@@ -297,10 +305,13 @@ export function SheetResultStep({
               href={`https://wa.me/?text=${encodeURIComponent(t.whatsappMsg(productName))}`}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={t.whatsapp}
               className={SECONDARY}
             >
               <MessageCircle className="size-4" aria-hidden="true" />
-              {t.whatsapp}
+              {/* One line beside Save photo on a phone; the icon and the full
+                  name for screen readers carry the rest. */}
+              <span aria-hidden="true">{copy.whatsappShort}</span>
             </a>
           )}
         </div>
@@ -331,6 +342,17 @@ export function SheetResultStep({
       <div className="sticky bottom-0 shrink-0 space-y-2 border-t bg-background pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {details}
       </div>
+      {fullScreen && job.resultImageUrl && (
+        <LookViewer
+          lookSrc={job.resultImageUrl}
+          photoSrc={photoDataUrl}
+          initial={view}
+          labels={{ title: copy.viewerTitle, close: copy.closeViewer, look: copy.viewLook, photo: copy.yourPhoto, save: show.download ? copy.savePhoto : null,
+            lookAlt: copy.lookAlt(productName), photoAlt: copy.originalPhotoAlt, zoomHint: copy.zoomHint }}
+          onSave={show.download ? saveLook : undefined}
+          onClose={() => setFullScreen(false)}
+        />
+      )}
     </div>
   );
 }

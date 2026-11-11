@@ -78,6 +78,11 @@ export type SheetCopy = {
   originalPhotoAlt: string;
   lookAlt: (product: string) => string;
   aiPreview: string;
+  viewFullScreen: string;
+  whatsappShort: string;
+  viewerTitle: string;
+  closeViewer: string;
+  zoomHint: string;
   changePhoto: string;
   /** "Add to cart · Black, M"; the plain label for a product without variants. */
   addToCart: (variant: string) => string;
@@ -159,6 +164,11 @@ const EN: SheetCopy = {
   originalPhotoAlt: 'Your original photo',
   lookAlt: (product) => `You wearing the ${product}`,
   aiPreview: 'AI preview',
+  viewFullScreen: 'See it full screen',
+  whatsappShort: 'WhatsApp',
+  viewerTitle: 'Your look, full screen',
+  closeViewer: 'Close',
+  zoomHint: 'Tap to zoom in, tap again to fit.',
   changePhoto: 'Change photo',
   addToCart: (variant) => (variant ? `Add to cart · ${variant}` : 'Add to cart'),
   adding: 'Adding to cart',
@@ -211,6 +221,11 @@ const AR_COMMON = {
   compare: 'مقارنة',
   viewLook: 'الإطلالة',
   aiPreview: 'معاينة بالذكاء الاصطناعي',
+  viewFullScreen: 'عرض بملء الشاشة',
+  whatsappShort: 'واتساب',
+  viewerTitle: 'إطلالتك بملء الشاشة',
+  closeViewer: 'إغلاق',
+  zoomHint: 'اضغط للتكبير، واضغط مرة أخرى للملاءمة.',
   adding: 'جارٍ الإضافة إلى السلة',
   soldOut: 'نفدت الكمية',
   soldOutOption: (value: string) => `${value}، نفدت الكمية`,
