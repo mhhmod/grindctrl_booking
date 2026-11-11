@@ -396,6 +396,22 @@ describe('product cards on a listing', () => {
     await wait(400);
     expect(pills()).toHaveLength(ids.length);
   });
+  /* A stock WooCommerce shop page has no ItemList and no card tags: the
+     loader must still start on it (the owner's test store showed no pills
+     because only the adapter knew WooCommerce cards). */
+  it('woocommerce-shop.html: the loader starts on a WooCommerce shop page and gives each card its pill', async () => {
+    const fixture = load('woocommerce-shop.html');
+    (window as unknown as { wc_add_to_cart_params?: object }).wc_add_to_cart_params = {};
+    try {
+      boot();
+      await vi.waitFor(() => expect(pills().map((pill) => pill.dataset.productId).sort()).toEqual(['14', '15']));
+      expect(fixture.expect).toBe('cards:2');
+      document.querySelector<HTMLButtonElement>('.gc-tryon-pill[data-product-id="14"]')!.click();
+      await vi.waitFor(() => expect(contextBodies.at(-1)).toMatchObject({ productId: '14', imageUrl: 'https://store.example/wp-content/uploads/linen.jpg' }));
+    } finally {
+      delete (window as unknown as { wc_add_to_cart_params?: object }).wc_add_to_cart_params;
+    }
+  });
 });
 
 describe('loading the snippet', () => {
