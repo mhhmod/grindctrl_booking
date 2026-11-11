@@ -190,7 +190,7 @@
   if (window.GRINDCTRL_TRYON_ENGINE) { start(); return; }
   // The engine is served beside this file, from the same versioned directory.
   var script = document.createElement('script');
-  script.src = new URL('tryon-engine.js?v=dd7c27019797', document.currentScript ? document.currentScript.src : 'https://grindctrl.cloud/widget/v1/tryon-woo.js').href;
+  script.src = new URL('tryon-engine.js?v=d7f53b3782d1', document.currentScript ? document.currentScript.src : 'https://grindctrl.cloud/widget/v1/tryon-woo.js').href;
   script.async = true;
   script.onload = start;
   // Without the engine a button would do nothing: take them away instead.
