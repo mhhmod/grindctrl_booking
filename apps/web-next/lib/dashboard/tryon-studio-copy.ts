@@ -275,3 +275,79 @@ const ar: TryOnStudioCopy = {
 export function getTryOnStudioCopy(locale: SiteLocale): TryOnStudioCopy {
   return locale === 'ar' ? ar : en;
 }
+
+/* Button placement on Set up (Pack B, B1 and B2), word for word from the
+   Pick a spot handoff. Store check's B7.4 row lives in your-store-copy.ts. */
+export interface PlacementCopy {
+  section: string;
+  auto: string;
+  recommended: string;
+  autoSub: string;
+  spot: string;
+  spotSub: string;
+  pick: string;
+  /** The saved spot: "Below "Add to cart"". */
+  saved: (position: 'before' | 'after', label: string) => string;
+  change: string;
+  reset: string;
+  floating: string;
+  floatingSub: string;
+  advanced: string;
+  selector: string;
+  above: string;
+  below: string;
+  test: string;
+  opening: string;
+  finish: string;
+  failed: string;
+}
+
+const placementEn: PlacementCopy = {
+  section: 'Button placement',
+  auto: 'Next to your Buy button',
+  recommended: 'Recommended',
+  autoSub: 'We find your Add to cart or Buy now button.',
+  spot: 'Pick a spot on my store',
+  spotSub: 'Tap the exact place on your product page.',
+  pick: 'Pick a spot',
+  saved: (position, label) => `${position === 'before' ? 'Above' : 'Below'} "${label}"`,
+  change: 'Change',
+  reset: 'Reset to automatic',
+  floating: 'Floating button',
+  floatingSub: 'A small button at the bottom corner of product pages.',
+  advanced: 'Advanced (for developers)',
+  selector: 'CSS selector',
+  above: 'Above',
+  below: 'Below',
+  test: 'Test on my store',
+  opening: 'Opening your store…',
+  finish: 'Finish in the new tab',
+  failed: "Couldn't save. Check your connection and try again.",
+};
+
+const placementAr: PlacementCopy = {
+  section: 'مكان الزر',
+  auto: 'بجوار زر الشراء',
+  recommended: 'مستحسن',
+  autoSub: 'نجد زر «أضف للسلة» أو «اشترِ الآن» تلقائيًا.',
+  spot: 'اختر مكانًا في متجري',
+  spotSub: 'اضغط على المكان الذي تريده في صفحة المنتج.',
+  pick: 'اختر المكان',
+  saved: (position, label) => `${position === 'before' ? 'فوق' : 'تحت'} «${label}»`,
+  change: 'تغيير',
+  reset: 'العودة للتلقائي',
+  floating: 'زر عائم',
+  floatingSub: 'زر صغير في زاوية صفحة المنتج السفلية.',
+  advanced: 'متقدم (للمطورين)',
+  selector: 'محدد CSS',
+  above: 'فوق',
+  below: 'تحت',
+  test: 'جرّبه على متجري',
+  opening: 'جارٍ فتح متجرك…',
+  finish: 'أكمل في الصفحة الجديدة',
+  failed: 'تعذّر الحفظ. تحقق من الاتصال وحاول مرة أخرى.',
+};
+
+export function getPlacementCopy(locale: SiteLocale): PlacementCopy {
+  return locale === 'ar' ? placementAr : placementEn;
+}

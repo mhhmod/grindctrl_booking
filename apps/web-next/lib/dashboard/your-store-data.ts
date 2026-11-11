@@ -13,6 +13,7 @@ import { activeTenantKey, flagStoreOf, type ActiveStore } from './active-store';
 import { listDashboardShops } from './active-store-server';
 import { readHealthCounts } from '@/lib/store-health/signals';
 import { readPasteDomainPlatforms } from '@/lib/paste/store';
+import { readButtonPlacement } from '@/lib/try-on/placement-store';
 import type { YourStoreFacts, YourStorePlatform } from './your-store-model';
 
 /* The facts behind Your store, for the active store only (resolved among
@@ -122,13 +123,15 @@ export async function getYourStoreFacts({
     return null;
   }
 
-  const [showButton, entitlement, launchState, health, pillsOn, domainPlatforms] = await Promise.all([
+  const [showButton, entitlement, launchState, health, pillsOn, domainPlatforms, placement] = await Promise.all([
     readTryOnShowButton(tenant),
     paste ? Promise.resolve(paste.plan) : getShopEntitlement(tenant),
     paste ? Promise.resolve(paste.mode) : readLaunchState(activeStore, tenant, now),
     readHealthCounts(siteId ? [siteId] : [], now),
     readTryOnShowCardPill(tenant),
     platform === 'paste_website' && siteId ? readPasteDomainPlatforms(siteId) : Promise.resolve(null),
+    // The Shopify app block is placed in the theme editor. A failed read only softens Store check.
+    platform === 'shopify_app' ? Promise.resolve(null) : readButtonPlacement(tenant).then((value) => value.placement, () => null),
   ]);
 
   return {
@@ -143,6 +146,7 @@ export async function getYourStoreFacts({
     launchState,
     codeOutdated: paste?.codeOutdated ?? false,
     health,
+    ...(placement ? { placement } : {}),
     pillsOn,
     wooDetected: domainPlatforms?.some((domain) => domain.platform === 'woocommerce') ?? false,
     easyOrders: domainPlatforms?.some((domain) => domain.platform === 'easyorders') ?? false,

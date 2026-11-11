@@ -31,6 +31,7 @@ type SetTryOnCardPill = (input: { shop: string; showCardPill: boolean }) => Prom
 type SetTryOnButton = (input: { shop: string; showButton: boolean }) => Promise<{ ok: true } | (MerchantActionFailure & { reason?: string })>;
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import classes from './v16-tryon-studio.module.css';
+import { ButtonPlacement, type PlacementActions } from './button-placement';
 
 /* The v16 Try-On Set up tab (04-dashboard.md, the TryOnStudio board) on
    today's settings and today's save, which is live within a minute. Each
@@ -83,6 +84,7 @@ export function V16TryOnStudio({
   wpAdmin = null,
   settings,
   saveSettings,
+  placementActions,
   buttonStatus = null,
   setButton,
   cardPill = null,
@@ -95,6 +97,8 @@ export function V16TryOnStudio({
   wpAdmin?: { siteEditor: string; customizer: string } | null;
   settings: TryOnWidgetSettings;
   saveSettings: SaveTryOnSettings;
+  /** Button placement (Pack B): pasted code and WooCommerce stores only. */
+  placementActions?: PlacementActions;
   /** The storefront button switch and its status, saved through setButton. */
   buttonStatus?: TryOnButtonStatus | null;
   setButton?: SetTryOnButton;
@@ -188,6 +192,7 @@ export function V16TryOnStudio({
   return (
     <div ref={studioRef} tabIndex={-1} className={classes.studio}>
       {buttonStatus ? <ButtonSwitch copy={copy.storefrontSwitch} shop={shop} status={buttonStatus} setButton={setButton} cardPill={cardPill ?? true} setCardPill={setCardPill} /> : null}
+      {placementActions ? <ButtonPlacement shop={shop} locale={locale} actions={placementActions} loadFailed={copy.couldNotLoad} /> : null}
       {(dirty || status !== 'idle') && (
         <div ref={barRef} tabIndex={-1} role="region" aria-label={copy.unsavedLabel} className={classes.bar} data-state={dirty ? 'dirty' : status}>
           <span className={classes.barMessage}>

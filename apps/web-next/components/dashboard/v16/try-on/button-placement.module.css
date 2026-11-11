@@ -1,0 +1,155 @@
+/* Button placement (Pack B, B1): the same card as the storefront switch above it. */
+.section {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  min-width: 0;
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-lg);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--mantine-color-body);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.choices {
+  display: grid;
+  gap: var(--mantine-spacing-sm);
+}
+
+/* As the install platform picker. */
+.choice {
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  min-height: 44px;
+}
+
+.choice[data-checked] {
+  border-color: var(--mantine-primary-color-filled);
+}
+
+.choiceText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.choiceTitle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* A product page in miniature: the floating pill at the bottom start, the chat bubble at the other corner. */
+.miniPage {
+  position: relative;
+  display: block;
+  block-size: 44px;
+  max-inline-size: 12rem;
+  margin-block-start: 6px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: 8px;
+}
+
+.miniPill,
+.miniChat {
+  position: absolute;
+  inset-block-end: 6px;
+  background: var(--mantine-color-text);
+}
+
+.miniPill {
+  inset-inline-start: 6px;
+  inline-size: 34px;
+  block-size: 10px;
+  border-radius: 999px;
+}
+
+.miniChat {
+  inset-inline-end: 6px;
+  inline-size: 14px;
+  block-size: 14px;
+  border-radius: 50%;
+  opacity: 0.45;
+}
+
+/* The saved spot and its actions sit under the spot card, aligned with its text. */
+.spotDetail {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  min-width: 0;
+  padding-inline-start: calc(var(--mantine-spacing-md) + 20px + var(--mantine-spacing-sm));
+}
+
+.spotDetail:empty {
+  display: none;
+}
+
+.spot {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  justify-items: start;
+  min-width: 0;
+}
+
+.savedSpot {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.handoff {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+
+.error {
+  color: var(--gc-danger, var(--mantine-color-red-7));
+}
+
+.advanced {
+  border-block-start: 1px solid var(--mantine-color-default-border);
+}
+
+.advancedItem {
+  border-block-end: 0;
+}
+
+.advancedControl {
+  padding-inline: 0;
+  min-height: 44px;
+}
+
+.advancedContent {
+  padding-inline: 0;
+}
+
+.advancedBody {
+  display: grid;
+  gap: var(--mantine-spacing-sm);
+  justify-items: start;
+}
+
+.advancedBody > :first-child {
+  justify-self: stretch;
+}
+
+.code {
+  font-family: var(--mantine-font-family-monospace);
+}
+
+.test {
+  min-height: 44px;
+}
+
+@media (max-width: 40em) {
+  .section {
+    padding: var(--mantine-spacing-md);
+  }
+}
