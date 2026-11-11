@@ -35,7 +35,7 @@ describe('getWooSiteConnection', () => {
       data: {
         platform: 'woocommerce',
         status: 'active',
-        plugin_version: '0.2.0',
+        plugin_version: '0.4.0',
         last_seen_at: '2026-11-04T10:30:00.000Z',
         paired_at: '2026-11-04T10:00:00.000Z',
         home_url: 'https://shop.example.com',
@@ -47,7 +47,7 @@ describe('getWooSiteConnection', () => {
     await expect(getWooSiteConnection('site-1')).resolves.toEqual({
       platform: 'woocommerce',
       status: 'active',
-      pluginVersion: '0.2.0',
+      pluginVersion: '0.4.0',
       lastSeenAt: '2026-11-04T10:30:00.000Z',
       pairedAt: '2026-11-04T10:00:00.000Z',
       homeUrl: 'https://shop.example.com',

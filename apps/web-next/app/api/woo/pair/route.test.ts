@@ -181,7 +181,7 @@ describe('POST /api/woo/pair', () => {
       embedKey: EMBED_KEY,
       secret,
       secretVersion: 1,
-      minPluginVersion: '0.2.0',
+      minPluginVersion: '0.4.0',
     });
 
     // The plaintext code never reaches the database, only its hash.
