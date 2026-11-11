@@ -51,6 +51,9 @@ export default async function DashboardInboxPage({ searchParams }: Props) {
         releaseConversation: conversationActions.releaseConversation,
         closeConversationAction: conversationActions.closeConversationAction,
         markConversationRead: conversationActions.markConversationRead,
+        listInboxConversations: conversationActions.listInboxConversations,
+        inboxChangesSince: conversationActions.inboxChangesSince,
+        inboxHandoffsSince: conversationActions.inboxHandoffsSince,
       }}
       fetchCustomer={fetchInboxCustomer}
     />

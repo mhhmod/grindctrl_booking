@@ -13,6 +13,8 @@ import { PillToggle } from './appearance-editor';
 import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 import type { CannedReply } from '@/lib/messenger/canned-replies';
 import { MessageText } from '@/components/messenger/message-text';
+import { useInboxLive, type InboxLiveActions } from './use-inbox-live';
+import { normalizeSearch } from '@/lib/messenger/product-context';
 
 /* Focused staff view: list + one thread. Progressive disclosure — customer
    details stay one click away in the store admin, not crammed here. */
@@ -170,6 +172,7 @@ const MESSAGE_WINDOW = 50;
 const TYPING_PING_INTERVAL_MS = 3000;
 
 export interface ConversationListItem {
+  updatedAt?: string;
   id: string;
   status: string;
   startedAt: string;
@@ -264,7 +267,7 @@ function relativeTime(iso: string | null, t: (typeof COPY)['en']): string {
 export function ConversationsPanel({
   locale,
   siteId,
-  conversations,
+  conversations: initialConversations,
   cannedReplies = [],
   actions,
   currentProfileId,
@@ -287,7 +290,7 @@ export function ConversationsPanel({
     | 'releaseConversation'
     | 'closeConversationAction'
     | 'markConversationRead'
-  >;
+  > & InboxLiveActions;
   /** Signed-in dashboard viewer's profile id. When absent (the embedded
    *  Shopify surface has no per-staff-member identity) the "assigned to me"
    *  filter is not rendered at all — there is no "me" to filter by. */
@@ -303,7 +306,7 @@ export function ConversationsPanel({
   aside?: { label: string; closeLabel: string; render: (conversationId: string) => React.ReactNode };
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
-  const [selectedId, setSelectedId] = useState<string | null>(conversations[0]?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialConversations[0]?.id ?? null);
   const [mobileThreadOpen, setMobileThreadOpen] = useState(false);
   const [asideOpen, setAsideOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(MESSAGE_WINDOW);
@@ -312,6 +315,8 @@ export function ConversationsPanel({
   const asideButtonRef = useRef<HTMLButtonElement>(null);
   const selectedRowRef = useRef<HTMLButtonElement | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const listAnchor = useRef<{ id: string; offset: number } | null>(null);
   const followLatest = useRef(true);
   const olderScroll = useRef<{ height: number; top: number } | null>(null);
   /* Last staff-typing ping sent. A plain timestamp check is enough — no
@@ -321,9 +326,9 @@ export function ConversationsPanel({
      server round trip and a revalidate meant the badge sat there for as long
      as the whole page took to re-render, which read as the click not having
      registered at all. */
-  const [readLocally, setReadLocally] = useState<Set<string>>(new Set());
+  const [readLocally, setReadLocally] = useState<Map<string, string | null>>(new Map());
   const unreadFor = (c: ConversationListItem) =>
-    readLocally.has(c.id) ? 0 : c.unreadCount ?? 0;
+    readLocally.has(c.id) && readLocally.get(c.id) === c.lastMessageAt ? 0 : c.unreadCount ?? 0;
   /* Client-side only: the list is already fully loaded, so no round trip is
      needed — and the toggle only exists when a viewer identity was passed. */
   const canFilterByMe = currentProfileId != null;
@@ -333,6 +338,18 @@ export function ConversationsPanel({
   const [search, setSearch] = useState('');
   type StatusFilter = 'all' | 'needs_reply' | 'in_progress' | 'resolved' | 'needs_you' | 'assistant';
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(inboxTabs ? 'needs_you' : 'all');
+  const live = useInboxLive(initialConversations, siteId, actions, search, statusFilter, mineOnly, selectedId, t.waitingTeam);
+  const conversations = live.rows;
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- select the first conversation arriving in an initially empty Inbox
+    if (!selectedId && conversations[0]) setSelectedId(conversations[0].id);
+  }, [selectedId, conversations]);
+  useLayoutEffect(() => {
+    const list = listRef.current, anchor = listAnchor.current;
+    if (!list || !anchor) return;
+    const row = Array.from(list.querySelectorAll<HTMLElement>('[data-conversation-id]')).find((r) => r.dataset.conversationId === anchor.id);
+    if (row) list.scrollTop += row.getBoundingClientRect().top - list.getBoundingClientRect().top - anchor.offset;
+  }, [conversations]);
   const matchesStatus = (s: string, filter: StatusFilter = statusFilter) =>
     filter === 'all'
       ? true
@@ -348,18 +365,16 @@ export function ConversationsPanel({
   /* The Inbox tabs count what each would show, Assigned to me included, so
      a tab's number is the rows it opens on. */
   const tabCount = (filter: StatusFilter) =>
-    conversations.filter(
+    live.knownRows.filter(
       (c) => matchesStatus(c.status, filter) && (!mineOnly || !currentProfileId || c.assigneeId === currentProfileId),
     ).length;
   const visibleConversations = conversations.filter((c) => {
     if (mineOnly && currentProfileId && c.assigneeId !== currentProfileId) return false;
     if (!matchesStatus(c.status)) return false;
-    const q = search.trim().toLowerCase();
+    const q = normalizeSearch(search);
     if (!q) return true;
     return (
-      (c.visitorName ?? '').toLowerCase().includes(q) ||
-      (c.visitorEmail ?? '').toLowerCase().includes(q) ||
-      (c.preview ?? '').toLowerCase().includes(q)
+      normalizeSearch(`${c.visitorName ?? ''} ${c.visitorEmail ?? ''} ${c.preview ?? ''}`).includes(q)
     );
   });
   const totalUnread = visibleConversations.reduce((sum, c) => sum + unreadFor(c), 0);
@@ -413,7 +428,7 @@ export function ConversationsPanel({
       viewport?.removeEventListener('resize', measure);
       viewport?.removeEventListener('scroll', measure);
     };
-  }, [mobileThreadOpen, selectedId, conversations.length]);
+  }, [mobileThreadOpen, selectedId]);
 
   useLayoutEffect(() => {
     const log = logRef.current;
@@ -464,12 +479,15 @@ export function ConversationsPanel({
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- async loader; state settles after awaits
-    void load();
+    if (document.visibilityState === 'visible') void load();
     const timer = setInterval(() => {
       if (document.visibilityState === 'visible') void load();
-    }, 15000);
+    }, 5000);
+    const resume = () => { if (document.visibilityState === 'visible') void load(); };
+    document.addEventListener('visibilitychange', resume);
     return () => {
       clearInterval(timer);
+      document.removeEventListener('visibilitychange', resume);
       loadSeq.current += 1;
     };
   }, [load]);
@@ -507,11 +525,19 @@ export function ConversationsPanel({
     });
   }
 
+  const notificationControl = actions.listInboxConversations ? (
+    <Button type="button" variant="outline" size="sm" className="min-h-11 max-w-full whitespace-normal" onClick={() => {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'default') void Notification.requestPermission().catch(() => {});
+    }}>{locale === 'ar' ? 'تفعيل الإشعارات' : 'Enable notifications'}</Button>
+  ) : null;
+
   if (conversations.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border p-10 text-center">
-        <p className="text-sm font-semibold">{t.empty}</p>
+        <h2 className="text-sm font-semibold">{t.empty}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t.emptyBody}</p>
+        {notificationControl && <div className="mt-3">{notificationControl}</div>}
+        {live.failed && <Button type="button" variant="outline" size="sm" onClick={() => void live.retry()}>{t.retry}</Button>}
       </div>
     );
   }
@@ -615,12 +641,21 @@ export function ConversationsPanel({
         </div>
       ) : (
       <ul
+        ref={listRef}
+        onScroll={() => {
+          const list = listRef.current;
+          if (!list || list.scrollTop === 0) { listAnchor.current = null; return; }
+          const top = list.getBoundingClientRect().top;
+          const row = Array.from(list.querySelectorAll<HTMLElement>('[data-conversation-id]')).find((r) => r.getBoundingClientRect().bottom > top);
+          if (row) listAnchor.current = { id: row.dataset.conversationId!, offset: row.getBoundingClientRect().top - top };
+        }}
         className="flex min-h-0 flex-1 flex-col divide-y divide-border overflow-y-auto overscroll-contain"
         aria-label={t.title}
       >
         {visibleConversations.map((conversation) => (
           <li key={conversation.id} className="shrink-0">
             <button
+              data-conversation-id={conversation.id}
               type="button"
               onClick={(event) => {
                 selectedRowRef.current = event.currentTarget;
@@ -642,7 +677,7 @@ export function ConversationsPanel({
                    convenience, and a failed write must not block the thread
                    from opening. The count clears on the next server read. */
                 if (unreadFor(conversation) > 0) {
-                  setReadLocally((prev) => new Set(prev).add(conversation.id));
+                  setReadLocally((prev) => new Map(prev).set(conversation.id, conversation.lastMessageAt));
                   void actions.markConversationRead(siteId, conversation.id);
                 }
               }}
@@ -740,8 +775,13 @@ export function ConversationsPanel({
             </button>
           </li>
         ))}
+        {live.cursor && <li className="shrink-0 p-3"><Button type="button" variant="outline" size="sm" disabled={live.busy} onClick={() => void live.loadMore()}>{locale === 'ar' ? 'تحميل المزيد' : 'Load more'}</Button></li>}
       </ul>
       )}
+      {actions.listInboxConversations && <div className="flex shrink-0 flex-wrap gap-2 p-3">
+        {live.failed && <Button type="button" variant="outline" size="sm" onClick={() => void live.retry()}>{t.retry}</Button>}
+        {notificationControl}
+      </div>}
       </div>
 
       {/* Thread */}

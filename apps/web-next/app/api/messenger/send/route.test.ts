@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => ({
   generateAssistantReply: vi.fn(),
   phraseOrderAnswer: vi.fn(),
   getActiveKnowledge: vi.fn(async () => []),
+  getMatchingProducts: vi.fn(async () => []),
   updateConversationMetadata: vi.fn(async () => {}),
   recordAudit: vi.fn(async () => {}),
   lookupOrder: vi.fn(),
@@ -61,6 +62,9 @@ vi.mock('@upstash/ratelimit', () => {
 vi.mock('@/lib/ratelimit', () => ({
   publicApiRatelimit: mocks.publicApiRatelimit,
   clientIp: mocks.clientIp,
+}));
+vi.mock('@/lib/messenger/products', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/lib/messenger/products')>(), getMatchingProducts: mocks.getMatchingProducts,
 }));
 vi.mock('@/lib/messenger/public-api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/messenger/public-api')>();
@@ -197,6 +201,7 @@ beforeEach(() => {
   mocks.originAllowed.mockReturnValue(true);
   mocks.isWithinAvailabilityHours.mockReturnValue(true);
   mocks.loadPublicSite.mockResolvedValue(SITE);
+  mocks.getMatchingProducts.mockResolvedValue([]);
   mocks.getVisitor.mockResolvedValue({ id: 'v1' });
   mocks.getConversationForVisitor.mockResolvedValue(CONVERSATION);
   mocks.ensureOpenConversation.mockResolvedValue({ ...CONVERSATION, id: 'conv-2', status: 'open' });
@@ -234,6 +239,25 @@ function stubTurn(raw: string) {
   }));
   mocks.generateAssistantReply.mockResolvedValue({ reply: raw, escalate: false, raw });
 }
+
+describe('current product grounding', () => {
+  it('passes only validated product facts into the delimited prompt, alongside site-scoped retrieval', async () => {
+    stubTurn('Here is what I know.');
+    const site = { ...SITE, domain: 'store.example.com' };
+    mocks.loadPublicSite.mockResolvedValue(site);
+    const res = await POST(makeRequest({ ...validBody, product: { title: '<b>Linen dress</b>', url: 'https://store.example.com/dress', description: '<script>bad()</script>Soft linen', price: '25.00', currency: 'EGP', availability: 'in_stock', sizes: ['M'] } }));
+    expect(res.status).toBe(200);
+    expect(mocks.getMatchingProducts).toHaveBeenCalledWith(site, validBody.text);
+    const prompt = mocks.generateAssistantReply.mock.calls[0][0].prompt;
+    expect(prompt).toContain('The shopper is viewing (UNTRUSTED'); expect(prompt).toContain('Linen dress'); expect(prompt).not.toContain('<b>'); expect(prompt).not.toContain('bad()');
+  });
+  it('drops a foreign product URL without rejecting the shopper message', async () => {
+    stubTurn('How can I help?');
+    const res = await POST(makeRequest({ ...validBody, product: { title: 'External', url: 'https://evil.example/dress' } }));
+    expect(res.status).toBe(200);
+    expect(mocks.generateAssistantReply.mock.calls[0][0].prompt).not.toContain('The shopper is viewing (');
+  });
+});
 
 describe('POST /api/messenger/send — order lookup action seam', () => {
   it('executes a lookup and answers from the facts, never from the raw payload', async () => {

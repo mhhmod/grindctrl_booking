@@ -29,7 +29,7 @@ import {
   replyTimeLine,
 } from './v16/handoff-states';
 import type { OrderCard } from '@/lib/messenger/order-card';
-import { parsePageProduct, type PageProduct } from './v16/page-product';
+import { parsePageProduct, pageProductHint, type PageProduct } from './v16/page-product';
 import { SpeechButton } from './v16/speech-button';
 import { v16StatusLine } from './v16/status-line';
 
@@ -469,7 +469,7 @@ export function MessengerPanel({
         return;
       }
       if (data?.type === 'grindctrl-messenger:page-product') {
-        if (v16Chat) setPageProduct(parsePageProduct(data.product));
+        setPageProduct(parsePageProduct(data.product));
         return;
       }
       if (data?.type === 'grindctrl-messenger:opened') {
@@ -590,6 +590,7 @@ export function MessengerPanel({
           text,
           clientKey,
           shopperToken: shopperTokenRef.current ?? undefined,
+          product: pageProductHint(pageProduct),
           locale,
         }),
       });

@@ -46,13 +46,62 @@ import {
   listSiteDomains,
   removeSiteDomain,
 } from '@/lib/messenger/domains';
-import type { DomainActionResult } from '@/lib/messenger/dashboard-actions-contract';
+import type { DomainActionResult, ProductSyncActionResult } from '@/lib/messenger/dashboard-actions-contract';
 import type { MessengerSection } from '@/lib/messenger/config';
 import type { MessengerConfig } from '@/lib/messenger/types';
 import { saveDraftSectionForSite, saveDraftSectionsForSite, publishConfigForSite, revertConfigForSite, setMessengerEnabledForSite } from '@/lib/messenger/actions-core';
 import type { ActionResult } from '@/lib/messenger/actions-core';
 import { RequestRateLimitError, requireMerchantRateLimit } from '@/lib/request-rate-limit';
 import { RoleNotAllowedError, type DashboardCapability } from '@/lib/rbac/dashboard-policy';
+import { syncSiteProducts } from '@/lib/messenger/products';
+import { readInboxPage, validInboxTimestamp, type InboxRequest, type InboxCursor, type InboxPage } from '@/lib/dashboard/inbox-query';
+
+export async function listInboxConversations(input: InboxRequest): Promise<InboxPage> {
+  try {
+    const userId = await currentUser();
+    await requireOwnedSite(userId, input.siteId, 'chats', 'read');
+    return await readInboxPage(userId, input);
+  } catch { return { ok: false }; }
+}
+
+export async function inboxChangesSince(siteId: string, since: string, cursor?: InboxCursor | null, until?: string): Promise<InboxPage> {
+  try {
+    const userId = await currentUser();
+    await requireOwnedSite(userId, siteId, 'chats', 'read');
+    return await readInboxPage(userId, { siteId }, { since, cursor, until });
+  } catch { return { ok: false }; }
+}
+
+/** Hidden tabs only need handoff ids, not messages or list hydration. */
+export async function inboxHandoffsSince(siteId: string, since: string, cursor?: InboxCursor | null, until?: string): Promise<{ ok: true; ids: string[]; checkedAt: string; cursor: InboxCursor | null } | { ok: false }> {
+  try {
+    const userId = await currentUser();
+    await requireOwnedSite(userId, siteId, 'chats', 'read');
+    if (!validInboxTimestamp(since)) return { ok: false };
+    const checkedAt = until ?? new Date().toISOString();
+    if (!validInboxTimestamp(checkedAt) || (cursor && (!/^[0-9a-f-]{36}$/i.test(cursor.id) || !cursor.at || !validInboxTimestamp(cursor.at)))) return { ok: false };
+    let query = getMessengerServiceClient().from('widget_conversations').select('id, inbox_handoff_at').eq('widget_site_id', siteId)
+      .eq('status', 'handoff_requested').gte('inbox_handoff_at', since).lte('inbox_handoff_at', checkedAt).order('inbox_handoff_at').order('id').limit(50);
+    if (cursor) {
+      // Timestamp and UUID validated above; preserve microseconds for ties.
+      query = query.or(`inbox_handoff_at.gt.${cursor.at},and(inbox_handoff_at.eq.${cursor.at},id.gt.${cursor.id})`);
+    }
+    const { data, error } = await query;
+    if (error) return { ok: false };
+    const last = data?.at(-1);
+    return { ok: true, ids: (data ?? []).map((r) => r.id as string), checkedAt, cursor: data?.length === 50 && last ? { id: last.id as string, at: last.inbox_handoff_at as string } : null };
+  } catch { return { ok: false }; }
+}
+
+export async function syncKnowledgeProducts(siteId: string): Promise<ProductSyncActionResult> {
+  try {
+    const userId = await currentUser();
+    const site = await requireOwnedSite(userId, siteId, 'settings');
+    const result = await syncSiteProducts(site);
+    revalidateStoreChat();
+    return { ok: true, count: result.count, skipped: Boolean(result.skipped), message: result.skipped ? 'Catalogue sync is available for Shopify and WooCommerce stores.' : `${result.count} products synced.` };
+  } catch (error) { return fail(error); }
+}
 
 /* What these actions change shows on What it knows and Set up
    (/dashboard/store-chat/setup), the Inbox, and the shell's waiting count,

@@ -17,7 +17,7 @@ import classes from './v16-chat-knows.module.css';
 
 export type KnowledgeActions = Pick<
   MessengerHostActions,
-  'addKnowledge' | 'updateKnowledgeStatus' | 'deleteKnowledge' | 'syncKnowledge'
+  'addKnowledge' | 'updateKnowledgeStatus' | 'deleteKnowledge' | 'syncKnowledge' | 'syncKnowledgeProducts'
 >;
 
 /** Rows shown before "Show all". */
@@ -269,6 +269,7 @@ export function V16ChatKnows({
   const [adding, setAdding] = React.useState(false);
   const [showAll, setShowAll] = React.useState(false);
   const [note, setNote] = React.useState<{ text: string; ok: boolean } | null>(null);
+  const [syncing, startSync] = React.useTransition();
   const rows = showAll ? pages.rows : pages.rows.slice(0, FIRST_ROWS);
 
   const report = (text: string | null, ok: boolean) => setNote(text ? { text, ok } : null);
@@ -334,6 +335,14 @@ export function V16ChatKnows({
             </Button>
           )}
         </div>
+        {canSetUp && actions.syncKnowledgeProducts && (
+          <div className={classes.formActions}>
+            <Button variant="default" radius="pill" loading={syncing} onClick={() => startSync(async () => {
+              const result = await actions.syncKnowledgeProducts!(siteId).catch(() => ({ ok: false as const, error: '' }));
+              report(result.ok ? result.skipped ? copy.productsSkipped : copy.productsSynced(result.count ?? 0) : copy.actionFailed, result.ok);
+            })}>{copy.syncProducts}</Button>
+          </div>
+        )}
       </section>
     </V16ChatFrame>
   );

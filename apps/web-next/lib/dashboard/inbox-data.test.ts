@@ -28,6 +28,7 @@ const row = (id: string, over: Record<string, unknown> = {}) => ({
   status: 'handoff_requested',
   started_at: '2026-10-22T09:00:00Z',
   last_message_at: '2026-10-22T09:05:00Z',
+  inbox_updated_at: '2026-10-22T09:06:00Z',
   visitor_email: 'salma@example.com',
   visitor_name: 'Salma',
   handoff_reason: 'shopper_requested_human',
@@ -54,6 +55,7 @@ describe('getInboxData', () => {
     expect(m.names).toHaveBeenCalledWith('ws_1', ['profile_nour']);
     expect(data.siteId).toBe('site_1');
     expect(data.currentProfileId).toBe('profile_me');
+    expect(data.conversations[0].updatedAt).toBe('2026-10-22T09:06:00Z');
     expect(data.conversations).toEqual([
       expect.objectContaining({ id: 'c1', status: 'handoff_requested', visitorName: 'Salma', unreadCount: 2, preview: 'Can I exchange the M?', assigneeName: null, tags: undefined }),
       expect.objectContaining({ id: 'c2', status: 'handoff_active', assigneeId: 'profile_nour', assigneeName: 'Nour Saleh', unreadCount: 0, preview: null }),

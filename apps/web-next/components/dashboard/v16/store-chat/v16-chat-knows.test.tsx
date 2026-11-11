@@ -26,6 +26,7 @@ const actions = {
   updateKnowledgeStatus: vi.fn(),
   deleteKnowledge: vi.fn(),
   syncKnowledge: vi.fn(),
+  syncKnowledgeProducts: vi.fn(),
 } satisfies Record<keyof KnowledgeActions, ReturnType<typeof vi.fn>>;
 
 function draw(entries: KnowledgeEntry[], locale: 'en' | 'ar' = 'en') {
@@ -46,6 +47,18 @@ beforeEach(() => {
 });
 
 describe('the v16 Store Chat page, What it knows', () => {
+  it('syncs products through the settings-protected action and displays its count', async () => {
+    actions.syncKnowledgeProducts.mockResolvedValue({ ok: true, count: 12, skipped: false });
+    draw([]);
+    fireEvent.click(screen.getByRole('button', { name: 'Sync products now' }));
+    await waitFor(() => expect(actions.syncKnowledgeProducts).toHaveBeenCalledWith(SITE));
+    expect(await screen.findByText('12 products synced.')).toBeInTheDocument();
+  });
+  it('explains skipped platforms in Arabic using the existing status line', async () => {
+    actions.syncKnowledgeProducts.mockResolvedValue({ ok: true, count: 0, skipped: true }); draw([], 'ar');
+    fireEvent.click(screen.getByRole('button', { name: getChatKnowsCopy('ar').syncProducts }));
+    expect(await screen.findByText(getChatKnowsCopy('ar').productsSkipped)).toBeInTheDocument();
+  });
   it('has the live badge, the 7-day line, the store link and the two tabs', () => {
     draw([]);
     expect(screen.getByText('Live on maisonnoor.com')).toBeInTheDocument();

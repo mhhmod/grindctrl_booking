@@ -80,6 +80,16 @@ async function boot(config: PublicMessengerPayload = CONFIG) {
 }
 
 describe('the v16 panel', () => {
+  it('sends the bounded current product hint with the shopper message', async () => {
+    await boot();
+    act(() => window.dispatchEvent(new MessageEvent('message', { source: parentWindow, data: { type: 'grindctrl-messenger:page-product', product: {
+      handle: 'linen', title: 'Linen dress', imageUrl: '', variantId: '42', variantTitle: 'M', priceMinor: 2500, currency: 'EGP', tryOn: false,
+      url: 'https://store.example/dress', description: 'Soft linen', availability: 'in_stock', sizes: ['M'],
+    } } })));
+    fireEvent.click(await screen.findByRole('button', { name: 'Sizes and fit' }));
+    await waitFor(() => expect(sentBodies).toHaveLength(1));
+    expect(sentBodies[0].product).toEqual({ title: 'Linen dress', url: 'https://store.example/dress', description: 'Soft linen', availability: 'in_stock', sizes: ['M'], price: '25.00', currency: 'EGP' });
+  });
   it('asks the store page to close it on Escape', async () => {
     const posted = vi.spyOn(parentWindow, 'postMessage');
     await boot();

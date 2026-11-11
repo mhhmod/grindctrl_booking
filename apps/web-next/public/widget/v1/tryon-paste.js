@@ -291,7 +291,10 @@
     var heading = firstTitle();
     var title = String(node.name || source.name || meta('og:title') || (heading && heading.textContent) || '').replace(/\s+/g, ' ').trim();
     return { id: id, variantId: selected ? variantKey(selected) || null : null, title: title.slice(0, 200), imageUrl: photo,
-      price: price != null && price !== '' ? price : null, currency: offer.priceCurrency || null };
+      price: price != null && price !== '' ? price : null, currency: offer.priceCurrency || null,
+      description: String(source.description || node.description || meta('og:description') || '').replace(/<[^>]*>/g, ' ').slice(0, 600),
+      availability: /(?:^|\/)InStock$/i.test(String(offer.availability || '')) ? 'in_stock' : /(?:^|\/)(OutOfStock|SoldOut)$/i.test(String(offer.availability || '')) ? 'out_of_stock' : 'unknown',
+      sizes: [].concat(node.sizes || source.size || node.size || []).slice(0, 30).map(function (size) { return String(size && size.name || size).slice(0, 80); }) };
   }
 
   /* JSON-LD: arrays, @graph, mainEntity, ProductGroup.hasVariant and
@@ -305,7 +308,9 @@
       // The group's id, else its first variant's: the same id whichever variant is picked.
       var merged = { productGroupID: node.productGroupID || node.sku || node.productID ||
           variants[0].productID || variants[0].sku || variants[0].mpn,
-        name: node.name || base.name, image: [].concat(selected ? selected.image || [] : [], node.image || [], base.image || []),
+        name: node.name || base.name, description: node.description || base.description,
+        sizes: variants.map(function (variant) { return variant.size || variant.name || ''; }),
+        image: [].concat(selected ? selected.image || [] : [], node.image || [], base.image || []),
         offers: offersOf(base).length ? offersOf(base) : offersOf(node) };
       return productFrom(merged, selected);
     }
@@ -355,10 +360,10 @@
       if (!/schema\.org\/Product(\s|$)/.test(scopes[i].getAttribute('itemtype'))) continue;
       var p = props(scopes[i]);
       var first = function (name) { var list = p[name] || []; return typeof list[0] === 'string' ? list[0] : ''; };
-      var product = productFrom({ name: first('name'), sku: first('sku'), productID: first('productID'), mpn: first('mpn'),
+      var product = productFrom({ name: first('name'), description: first('description'), size: first('size'), sku: first('sku'), productID: first('productID'), mpn: first('mpn'),
         image: (p.image || []).filter(function (entry) { return typeof entry === 'string'; }),
         offers: (p.offers || []).filter(function (offer) { return offer && typeof offer === 'object'; }).map(function (offer) {
-          return { price: (offer.price || [])[0], lowPrice: (offer.lowPrice || [])[0], priceCurrency: (offer.priceCurrency || [])[0] };
+          return { price: (offer.price || [])[0], lowPrice: (offer.lowPrice || [])[0], priceCurrency: (offer.priceCurrency || [])[0], availability: (offer.availability || [])[0] };
         }) }, null);
       if (product) return product;
     }
@@ -367,8 +372,8 @@
 
   function openGraphProduct() {
     if (!meta('product:retailer_item_id') && !meta('product:price:amount') && !/^(product|og:product)$/.test(meta('og:type'))) return null;
-    return productFrom({ productID: meta('product:retailer_item_id'), name: meta('og:title'), image: meta('og:image'),
-      offers: { price: meta('product:price:amount'), priceCurrency: meta('product:price:currency') } }, null);
+    return productFrom({ productID: meta('product:retailer_item_id'), name: meta('og:title'), image: meta('og:image'), description: meta('og:description'),
+      offers: { price: meta('product:price:amount'), priceCurrency: meta('product:price:currency'), availability: meta('product:availability') } }, null);
   }
 
   function tagProduct() {

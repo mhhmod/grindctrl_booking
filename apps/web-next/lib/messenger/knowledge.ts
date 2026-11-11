@@ -41,6 +41,7 @@ export async function listKnowledge(siteId: string): Promise<KnowledgeEntry[]> {
     .from('messenger_knowledge')
     .select('*')
     .eq('widget_site_id', siteId)
+    .neq('source', 'product')
     .order('sort_order', { ascending: true })
     .order('updated_at', { ascending: false })
     .limit(KNOWLEDGE_MAX_ENTRIES_PER_SITE);
@@ -61,6 +62,7 @@ export async function getActiveKnowledge(siteId: string): Promise<KnowledgeEntry
     .select('*')
     .eq('widget_site_id', siteId)
     .eq('status', 'active')
+    .neq('source', 'product')
     .order('updated_at', { ascending: false })
     .limit(KNOWLEDGE_MAX_ENTRIES_PER_SITE * 2);
   if (res.error) throw new Error(`active knowledge failed: ${res.error.message}`);

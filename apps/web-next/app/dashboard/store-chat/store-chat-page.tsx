@@ -198,6 +198,7 @@ export async function StoreChatPage({
           updateKnowledgeStatus: messengerActions.updateKnowledgeStatus,
           deleteKnowledge: messengerActions.deleteKnowledge,
           syncKnowledge: messengerActions.syncKnowledge,
+          ...(canSetUp ? { syncKnowledgeProducts: messengerActions.syncKnowledgeProducts } : {}),
         }}
       />
     );

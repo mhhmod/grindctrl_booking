@@ -32,6 +32,7 @@ function mapConversation(row: Record<string, unknown>): ConversationRecord {
     status: row.status as ConversationStatus,
     started_at: row.started_at as string,
     last_message_at: isoOrNull(row.last_message_at),
+    inbox_updated_at: isoOrNull(row.inbox_updated_at),
     assigned_profile_id: (row.assigned_profile_id as string | null) ?? null,
     handoff_reason: (row.handoff_reason as string | null) ?? null,
     handoff_summary: (row.handoff_summary as string | null) ?? null,

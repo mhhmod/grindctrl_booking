@@ -183,6 +183,8 @@ export interface ConversationRecord {
   status: ConversationStatus;
   started_at: string;
   last_message_at: string | null;
+  /** Shared version for SSR and incremental Inbox reads. */
+  inbox_updated_at?: string | null;
   assigned_profile_id: string | null;
   handoff_reason: string | null;
   handoff_summary: string | null;

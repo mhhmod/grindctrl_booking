@@ -2,10 +2,12 @@ import type { TriageResult } from './attachments';
 import type { ActionResult } from './actions-core';
 import type { MessengerSection } from './config';
 import type { DomainView } from './domains';
+import type { InboxRequest, InboxPage, InboxChanges, InboxCursor } from '@/lib/dashboard/inbox-query';
 
 export type DomainActionResult =
   | { ok: true; domain?: DomainView; domains?: DomainView[] }
   | { ok: false; error: string };
+export type ProductSyncActionResult = ActionResult & { count?: number; skipped?: boolean };
 
 /** DNS-verified storefront domains (lib/messenger/domains.ts). Dashboard
  *  only: a Shopify store's domains come from Shopify. */
@@ -29,6 +31,9 @@ export interface FetchMessagesResult {
  *  passes a fetch-backed adapter hitting /api/shopify/store-chat/* instead.
  *  Same components either way — this interface is the only seam. */
 export interface MessengerHostActions {
+  listInboxConversations?(input: InboxRequest): Promise<InboxPage>;
+  inboxChangesSince?(siteId: string, since: string, cursor?: InboxCursor | null, until?: string): Promise<InboxChanges>;
+  inboxHandoffsSince?(siteId: string, since: string, cursor?: InboxCursor | null, until?: string): Promise<{ ok: true; ids: string[]; checkedAt: string; cursor: InboxCursor | null } | { ok: false }>;
   saveDraftSection(siteId: string, section: MessengerSection, payload: object): Promise<ActionResult>;
   publishConfig(siteId: string): Promise<ActionResult>;
   revertConfigAction(siteId: string): Promise<ActionResult>;
@@ -39,6 +44,7 @@ export interface MessengerHostActions {
   updateKnowledgeStatus(siteId: string, entryId: string, status: 'active' | 'disabled'): Promise<ActionResult>;
   deleteKnowledge(siteId: string, entryId: string): Promise<ActionResult>;
   syncKnowledge(siteId: string, entryId: string): Promise<ActionResult>;
+  syncKnowledgeProducts?(siteId: string): Promise<ProductSyncActionResult>;
   addCannedReply(siteId: string, title: string, content: string): Promise<ActionResult>;
   updateCannedReplyStatus(siteId: string, replyId: string, status: 'active' | 'disabled'): Promise<ActionResult>;
   deleteCannedReply(siteId: string, replyId: string): Promise<ActionResult>;

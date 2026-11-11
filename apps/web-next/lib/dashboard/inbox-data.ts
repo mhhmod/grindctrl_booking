@@ -28,6 +28,7 @@ export function toConversationListItems(
     status: c.status,
     startedAt: c.started_at,
     lastMessageAt: c.last_message_at,
+    updatedAt: c.inbox_updated_at ?? undefined,
     visitorEmail: c.visitor_email,
     visitorName: c.visitor_name,
     handoffReason: c.handoff_reason,

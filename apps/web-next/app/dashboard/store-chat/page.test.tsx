@@ -65,6 +65,7 @@ vi.mock('./actions', () => ({
   updateKnowledgeStatus: vi.fn(),
   deleteKnowledge: vi.fn(),
   syncKnowledge: vi.fn(),
+  syncKnowledgeProducts: vi.fn(),
   saveDraftSections: vi.fn(),
   publishConfig: vi.fn(),
   revertConfigAction: vi.fn(),

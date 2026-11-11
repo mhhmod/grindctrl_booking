@@ -62,9 +62,48 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe('ConversationsPanel', () => {
+  it('keeps the open thread, scroll position and local read marker when list changes arrive', async () => {
+    const one = { ...CONVERSATIONS[0], visitorName: 'Amira', unreadCount: 2, updatedAt: '2026-11-11T00:00:00Z' };
+    let changes: ConversationListItem[] = [];
+    const liveActions = { ...actions,
+      listInboxConversations: vi.fn(async () => ({ ok: true as const, conversations: [one], cursor: null, checkedAt: new Date().toISOString() })),
+      inboxChangesSince: vi.fn(async () => ({ ok: true as const, conversations: changes, cursor: null, checkedAt: new Date().toISOString() })),
+    };
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={[one]} actions={liveActions} />);
+    await screen.findByText('Where is my order?');
+    await waitFor(() => expect(liveActions.listInboxConversations).toHaveBeenCalled());
+    fireEvent.click(inList().getByText('Amira'));
+    expect(screen.getByText('All caught up')).toBeInTheDocument();
+    const list = screen.getByRole('list', { name: 'Conversations' }); list.scrollTop = 125; fireEvent.scroll(list);
+    changes = [{ ...one, visitorName: 'Amira updated', updatedAt: '2026-11-11T01:00:00Z' }];
+    // A visibility resume performs the same changes read as the five-second tick.
+    await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
+    expect(screen.getByText('Where is my order?')).toBeInTheDocument();
+    expect(inList().getByText('Amira updated').closest('button')).toHaveAttribute('aria-current', 'true');
+    expect(screen.getByText('All caught up')).toBeInTheDocument(); expect(list.scrollTop).toBe(125);
+    changes = [{ ...one, visitorName: 'Amira updated', lastMessageAt: '2026-11-11T02:00:00Z', updatedAt: '2026-11-11T02:00:00Z', unreadCount: 3 }];
+    await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
+    expect(screen.getByText('3 unread')).toBeInTheDocument();
+  });
+  it('polls the open thread every five seconds only while visible, and requests notification permission only on a click', async () => {
+    vi.useFakeTimers();
+    let visibility = 'visible'; vi.spyOn(document, 'visibilityState', 'get').mockImplementation(() => visibility as DocumentVisibilityState);
+    const notifications = Object.assign(vi.fn(), { permission: 'default', requestPermission: vi.fn(async () => 'granted') }); vi.stubGlobal('Notification', notifications);
+    const liveActions = { ...actions, listInboxConversations: vi.fn(async () => ({ ok: true as const, conversations: CONVERSATIONS, cursor: null, checkedAt: new Date().toISOString() })) };
+    const { unmount } = render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={liveActions} />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(300); });
+    expect(notifications.requestPermission).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Enable notifications' })); expect(notifications.requestPermission).toHaveBeenCalledTimes(1);
+    fetchConversationMessages.mockClear();
+    await act(async () => { await vi.advanceTimersByTimeAsync(5000); }); expect(fetchConversationMessages).toHaveBeenCalledTimes(1);
+    visibility = 'hidden'; await act(async () => { await vi.advanceTimersByTimeAsync(10_000); }); expect(fetchConversationMessages).toHaveBeenCalledTimes(1);
+    unmount(); vi.unstubAllGlobals(); vi.restoreAllMocks();
+  });
   it('loads messages through the injected actions prop, not a direct import', async () => {
     render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={actions} />);
 

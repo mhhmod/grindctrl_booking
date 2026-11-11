@@ -33,6 +33,9 @@ export type InboxActions = Pick<
   | 'releaseConversation'
   | 'closeConversationAction'
   | 'markConversationRead'
+  | 'listInboxConversations'
+  | 'inboxChangesSince'
+  | 'inboxHandoffsSince'
 >;
 
 function Notice({ title, body, action }: { title: string; body: string; action?: React.ReactNode }) {
@@ -59,7 +62,7 @@ export function V16Inbox({
 }) {
   const copy = getInboxCopy(locale);
   const customerCopy = getInboxCustomerCopy(locale);
-  if (data.conversations.length === 0) return <Notice title={copy.emptyTitle} body={copy.emptyBody} />;
+  if (data.conversations.length === 0 && !actions.listInboxConversations) return <Notice title={copy.emptyTitle} body={copy.emptyBody} />;
   return (
     <div className={classes.inbox}>
       <ConversationsPanel
