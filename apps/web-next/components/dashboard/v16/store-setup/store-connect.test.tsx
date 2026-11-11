@@ -7,6 +7,7 @@ import { getChatStudioCopy } from '@/lib/dashboard/chat-studio-copy';
 import { StoreConnect, type StoreConnectActions, type StoreConnectMeta } from './store-connect';
 
 vi.mock('../store-chat/paste-install', () => ({ PasteInstall: () => <div data-testid="paste-install">Paste install flow</div> }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 const meta: StoreConnectMeta = { domain: 'shop.example.com', embedKey: 'test', lastSeenMinutes: null, wooConnection: null, platformDetected: null };
 const actions: StoreConnectActions = { createWooPairingCodeAction: vi.fn(async () => ({ ok: true as const, code: 'CODE', expiresAt: '2026-11-04T10:15:00Z' })) };

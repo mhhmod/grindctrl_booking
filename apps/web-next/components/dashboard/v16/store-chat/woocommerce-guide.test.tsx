@@ -1,15 +1,17 @@
 import React from 'react';
 import fs from 'node:fs';
 import path from 'node:path';
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithMantine } from '@/components/mantine/test-utils';
 import { getChatStudioCopy } from '@/lib/dashboard/chat-studio-copy';
 import type { WooSiteConnectionSummary } from '@/lib/woo/connection';
 import {
+  PAIRING_POLL_MS,
   WOO_PLUGIN_ZIP,
   WoocommerceGuide,
   type CreateWooPairingCode,
+  type ReadWooConnection,
 } from './woocommerce-guide';
 
 const SITE_ID = '11111111-1111-4111-8111-111111111111';
@@ -20,10 +22,14 @@ function successfulAction(): CreateWooPairingCode {
   return vi.fn(async () => ({ ok: true as const, code: CODE, expiresAt: EXPIRES_AT }));
 }
 
+const router = vi.hoisted(() => ({ refresh: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
+
 function draw(
   locale: 'en' | 'ar',
   createPairingCode = successfulAction(),
   connection: WooSiteConnectionSummary | null = null,
+  readConnection?: ReadWooConnection,
 ) {
   const copy = getChatStudioCopy(locale);
   renderWithMantine(
@@ -32,6 +38,7 @@ function draw(
       siteId={SITE_ID}
       connection={connection}
       createPairingCode={createPairingCode}
+      readConnection={readConnection}
       copy={copy.woocommerce}
       copyLabels={copy.domains}
     />,
@@ -113,6 +120,53 @@ describe('WoocommerceGuide', () => {
       connection.lastSeenAt,
     );
     cleanup();
+  });
+
+  it('watches for the plugin to pair while the code is on screen and shows Connected without a reload (M4)', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+    vi.setSystemTime(Date.parse('2026-11-04T10:00:00.000Z'));
+    router.refresh.mockClear();
+    const paired: WooSiteConnectionSummary = {
+      platform: 'woocommerce', status: 'active', pluginVersion: '0.4.0', lastSeenAt: '2026-11-04T10:00:09.000Z',
+      pairedAt: '2026-11-04T10:00:08.000Z', homeUrl: 'https://shop.example.com', cloneSuspected: false, pluginOutdated: false,
+    };
+    const read = vi.fn<ReadWooConnection>(async () => ({ ok: true as const, connection: null }));
+    try {
+      const { copy } = draw('en', successfulAction(), null, read);
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: copy.woocommerce.getCode })); });
+      expect(screen.getByText(CODE)).toBeInTheDocument();
+      await act(async () => { await vi.advanceTimersByTimeAsync(PAIRING_POLL_MS); });
+      expect(read).toHaveBeenCalledExactlyOnceWith(SITE_ID);
+      expect(screen.queryByText(copy.woocommerce.connected)).not.toBeInTheDocument();
+
+      read.mockResolvedValue({ ok: true, connection: paired });
+      await act(async () => { await vi.advanceTimersByTimeAsync(PAIRING_POLL_MS); });
+      expect(screen.getByRole('status')).toHaveTextContent(copy.woocommerce.connected);
+      expect(screen.queryByText(CODE)).not.toBeInTheDocument();
+      expect(router.refresh).toHaveBeenCalledTimes(1);
+      await act(async () => { await vi.advanceTimersByTimeAsync(PAIRING_POLL_MS * 3); });
+      expect(read).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+      cleanup();
+    }
+  });
+
+  it('stops watching once the code expired, and never reads without a code', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+    vi.setSystemTime(Date.parse('2026-11-04T10:14:58.000Z'));
+    const read = vi.fn<ReadWooConnection>(async () => ({ ok: true as const, connection: null }));
+    try {
+      const { copy } = draw('en', successfulAction(), null, read);
+      await act(async () => { await vi.advanceTimersByTimeAsync(PAIRING_POLL_MS * 2); });
+      expect(read).not.toHaveBeenCalled();
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: copy.woocommerce.getCode })); });
+      await act(async () => { await vi.advanceTimersByTimeAsync(PAIRING_POLL_MS * 4); });
+      expect(read).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+      cleanup();
+    }
   });
 
   it('warns about a cloned site and an outdated plugin only while the connection is active', () => {

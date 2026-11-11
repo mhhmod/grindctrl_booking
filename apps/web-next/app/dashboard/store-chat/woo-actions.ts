@@ -10,6 +10,7 @@ import {
   requireMerchantRateLimit,
 } from '@/lib/request-rate-limit';
 import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
+import { getWooSiteConnection, type WooSiteConnectionSummary } from '@/lib/woo/connection';
 
 const PAIRING_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const PAIRING_CODE_LENGTH = 8;
@@ -33,6 +34,23 @@ function generatePairingCode(): string {
 
 function sha256Hex(value: string): string {
   return createHash('sha256').update(value, 'utf8').digest('hex');
+}
+
+export type WooConnectionReadResult = { ok: true; connection: WooSiteConnectionSummary | null } | { ok: false };
+
+/** The site's WooCommerce connection, for the pairing panel that watches
+ * for the plugin to pair while its code is on screen. Same people and same
+ * data as Store setup's own read. */
+export async function readWooConnectionAction(siteId: string): Promise<WooConnectionReadResult> {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { ok: false };
+    const site = await requireSiteAccess(userId, siteId, 'settings');
+    await requireMerchantRateLimit(`site:${site.id}`, 'read');
+    return { ok: true, connection: await getWooSiteConnection(site.id) };
+  } catch {
+    return { ok: false };
+  }
 }
 
 /** Creates a short-lived code for a site the signed-in merchant may manage.

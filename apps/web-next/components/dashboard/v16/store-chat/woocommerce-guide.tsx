@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { Button, CopyButton } from '@mantine/core';
 import { GcIcon } from '@/components/icons';
 import type { ChatStudioCopy } from '@/lib/dashboard/chat-studio-copy';
@@ -33,11 +34,23 @@ function formatDateTime(value: string, locale: SiteLocale, timeOnly = false): st
   ).format(date);
 }
 
+export type ReadWooConnection = (siteId: string) => Promise<
+  { ok: true; connection: WooSiteConnectionSummary | null } | { ok: false }
+>;
+
+export const PAIRING_POLL_MS = 5_000;
+
+/** A pairing newer than the one the page was drawn with. */
+function newlyPaired(next: WooSiteConnectionSummary | null, before: WooSiteConnectionSummary | null): boolean {
+  return next?.status === 'active' && (before?.status !== 'active' || next.pairedAt !== before.pairedAt);
+}
+
 export function WoocommerceGuide({
   locale,
   siteId,
-  connection,
+  connection: initialConnection,
   createPairingCode,
+  readConnection,
   copy,
   copyLabels,
 }: {
@@ -45,12 +58,38 @@ export function WoocommerceGuide({
   siteId: string;
   connection: WooSiteConnectionSummary | null;
   createPairingCode: CreateWooPairingCode;
+  /** Watches for the plugin to pair while a code is on screen. */
+  readConnection?: ReadWooConnection;
   copy: ChatStudioCopy['woocommerce'];
   copyLabels: Pick<ChatStudioCopy['domains'], 'copy' | 'copied'>;
 }) {
   const [pairing, setPairing] = React.useState<{ code: string; expiresAt: string } | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState(false);
+  /* The connection the plugin made while this panel was open. */
+  const [paired, setPaired] = React.useState<WooSiteConnectionSummary | null>(null);
+  const connection = paired ?? initialConnection;
+  const router = useRouter();
+
+  /* While a code is on screen and unexpired, look every 5 seconds for the
+     plugin to pair with it; then show Connected and reload the page's data. */
+  React.useEffect(() => {
+    if (!pairing || paired || !readConnection) return;
+    let reading = false;
+    const timer = window.setInterval(async () => {
+      if (Date.now() >= Date.parse(pairing.expiresAt)) { window.clearInterval(timer); return; }
+      if (reading || document.visibilityState !== 'visible') return;
+      reading = true;
+      const result = await readConnection(siteId).catch(() => null);
+      reading = false;
+      if (!result?.ok || !newlyPaired(result.connection, initialConnection)) return;
+      window.clearInterval(timer);
+      setPaired(result.connection);
+      setPairing(null);
+      router.refresh();
+    }, PAIRING_POLL_MS);
+    return () => window.clearInterval(timer);
+  }, [pairing, paired, readConnection, siteId, initialConnection, router]);
 
   const getCode = async () => {
     setBusy(true);
@@ -72,7 +111,7 @@ export function WoocommerceGuide({
       <p className={classes.muted}>{copy.body}</p>
 
       {connection && (
-        <div className={classes.connectionState} data-state={connection.status}>
+        <div className={classes.connectionState} data-state={connection.status} role={paired ? 'status' : undefined}>
           <p className={classes.connectionStatus}>
             <GcIcon name={connection.status === 'active' ? 'check' : 'x'} size={14} />
             {connection.status === 'active' ? copy.connected : copy.disconnected}

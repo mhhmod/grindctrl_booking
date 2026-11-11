@@ -6,6 +6,9 @@ import type { PasteInstallStatus } from '@/lib/paste/status';
 import type { PasteDomain } from '@/lib/paste/types';
 import { PasteInstall, type PasteInstallActions } from './paste-install';
 
+const router = vi.hoisted(() => ({ refresh: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
+
 /** A trusted address our server has not confirmed the code on yet. */
 const domain = (over: Partial<PasteDomain> = {}): PasteDomain => ({
   id: 'd1', domain: 'shop.example', state: 'trusted', domainVerified: false, verifiedAt: null,
@@ -204,11 +207,34 @@ describe('paste install journey', () => {
       expect(screen.queryByText(copy.passwordPageNote)).not.toBeInTheDocument();
     });
 
-    it('falls back to the store itself when no product page is known', async () => {
+    it('falls back to the store\'s products, not its home or password page, when no product page is known (M2)', async () => {
       const a = actions(shopify({ shopCheck: { outcome: 'awaiting_visit', checkedAt: new Date().toISOString(), retryAfterSeconds: null } }));
       renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
       expect(await screen.findByText(copy.shopCheck('awaiting_visit', null))).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: copy.openStore })).toHaveAttribute('href', 'https://my-store.myshopify.com');
+      expect(screen.getByRole('link', { name: copy.openProducts })).toHaveAttribute('href', 'https://my-store.myshopify.com/collections/all');
+      expect(copy.pasteSteps({ kind: 'visit', target: 'product_page' })).toBe('Open a product page on your store.');
+      expect(pasteInstallCopy('ar').pasteSteps({ kind: 'visit', target: 'product_page' })).not.toMatch(/أي/);
+    });
+
+    it('says the check reads the live theme and links to it when the code is not found (B1)', async () => {
+      const a = actions(shopify());
+      a.proveShop = vi.fn(async () => ({ ok: true as const, data: { ...found, outcome: 'not_found' as const, storefront: undefined } }));
+      renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+      fireEvent.click(await screen.findByRole('button', { name: copy.checkStore }));
+      expect(await screen.findByText(copy.shopCheck('not_found', null))).toHaveTextContent(/live theme.*isn’t published/);
+      const link = screen.getByRole('link', { name: copy.openLiveTheme });
+      expect(link).toHaveAttribute('href', 'https://my-store.myshopify.com/admin/themes/current/editor');
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    });
+
+    it('says when the check added the store\'s own domain (B2)', async () => {
+      const a = actions(shopify());
+      a.proveShop = vi.fn(async () => ({ ok: true as const, data: { ...found,
+        storefront: { productUrl: 'https://www.brand.com/products/dress', passwordPage: false, primaryHost: 'www.brand.com', addedDomain: 'brand.com' } } }));
+      renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+      fireEvent.click(await screen.findByRole('button', { name: copy.checkStore }));
+      expect(await screen.findByText(copy.primaryDomainAdded('brand.com'))).toBeInTheDocument();
+      expect(screen.getAllByRole('link', { name: copy.openProductPage })[0]).toHaveAttribute('href', 'https://www.brand.com/products/dress');
     });
 
     it('says a password-protected store needs its password once and is hidden from shoppers until the page is removed', async () => {
@@ -228,6 +254,7 @@ describe('paste install journey', () => {
 
     it('turns into the success state by itself when the visit proves the store, then stops polling', async () => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
+      router.refresh.mockClear();
       try {
         const a = actions(shopify({ shopCheck: { outcome: 'awaiting_visit', checkedAt: new Date().toISOString(), retryAfterSeconds: null } }));
         renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
@@ -237,14 +264,71 @@ describe('paste install journey', () => {
           tryOnReady: true, tryOnReason: null, shopCheck: { outcome: 'proven', checkedAt: new Date().toISOString(), retryAfterSeconds: null } });
         await vi.advanceTimersByTimeAsync(5000);
         expect(await screen.findByText(copy.installedTitle('my-store.myshopify.com'))).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: copy.seeOnStore })).toHaveAttribute('href', 'https://my-store.myshopify.com');
+        expect(screen.getByRole('link', { name: copy.seeOnStore })).toHaveAttribute('href', 'https://my-store.myshopify.com/collections/all');
         expect(screen.queryByText(copy.shopCheckTitle)).not.toBeInTheDocument();
+        // M4: the server-drawn rest of the page (header, switches, Store check) reads again once.
+        await vi.waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
         const reads = vi.mocked(a.status).mock.calls.length;
         await vi.advanceTimersByTimeAsync(15_000);
         expect(vi.mocked(a.status).mock.calls.length).toBe(reads);
+        expect(router.refresh).toHaveBeenCalledTimes(1);
       } finally {
         vi.useRealTimers();
       }
+    });
+  });
+
+  describe('using a different store (B5)', () => {
+    const pendingShop = () => status({ platform: 'shopify', shopDomain: 'typo-store.myshopify.com', shopProof: 'pending', trusted: false,
+      connectionReason: 'shop_proof_pending', tryOnReason: 'shop_proof_pending' });
+
+    it('undoes a wrong Shopify address after a confirmation, then asks for the right one', async () => {
+      router.refresh.mockClear();
+      const a = actions(pendingShop());
+      a.disconnect = vi.fn(async () => { a.current.value = status({ connected: false, trusted: false, platform: null, connectionReason: 'paste_not_connected' }); return { ok: true as const, data: null }; });
+      renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+      expect(await screen.findByText('typo-store.myshopify.com')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: copy.leaveAction }));
+      expect(screen.getByText(copy.leaveBody('typo-store.myshopify.com'))).toBeInTheDocument();
+      expect(a.disconnect).not.toHaveBeenCalled();
+      // Cancel keeps everything.
+      fireEvent.click(screen.getByRole('button', { name: copy.cancel }));
+      expect(screen.queryByText(copy.leaveBody('typo-store.myshopify.com'))).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: copy.leaveAction }));
+      fireEvent.click(screen.getByRole('button', { name: copy.leaveConfirm }));
+      await waitFor(() => expect(a.disconnect).toHaveBeenCalledExactlyOnceWith('s1'));
+      expect(await screen.findByText(copy.leaveDone)).toBeInTheDocument();
+      expect(screen.getByLabelText(copy.shopifyLabel)).toBeInTheDocument();
+      expect(screen.queryByText('<script data-key="k"></script>')).not.toBeInTheDocument();
+      expect(router.refresh).toHaveBeenCalled();
+    });
+
+    it('names the connection that holds the store and offers the way out from the refusal (m4)', async () => {
+      const a = actions(status({ domains: [domain()] }));
+      a.enable = vi.fn(async () => ({ ok: false as const, code: 'connection_conflict' as const,
+        heldBy: { kind: 'paste' as const, platform: 'website' as const, store: null } }));
+      a.disconnect = vi.fn(async () => ({ ok: true as const, data: null }));
+      renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+      fireEvent.click(await screen.findByRole('radio', { name: /Shopify/ }));
+      fireEvent.change(screen.getByLabelText(copy.shopifyLabel), { target: { value: 'my-store' } });
+      fireEvent.click(screen.getByRole('button', { name: copy.shopifyContinue }));
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent(copy.conflict({ kind: 'paste', platform: 'website', store: null }));
+      expect(alert).not.toHaveTextContent(copy.errors.connection_conflict);
+      fireEvent.click(screen.getByRole('button', { name: copy.leaveAction }));
+      fireEvent.click(screen.getByRole('button', { name: copy.leaveConfirm }));
+      await waitFor(() => expect(a.disconnect).toHaveBeenCalledWith('s1'));
+    });
+
+    it('never offers to undo what the merchant cannot (no action, or another kind of connection)', async () => {
+      const a = actions(pendingShop());
+      renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+      expect(await screen.findByText('typo-store.myshopify.com')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: copy.leaveAction })).not.toBeInTheDocument();
+      expect(copy.conflict({ kind: 'woocommerce' })).toMatch(/plugin/);
+      expect(copy.conflict({ kind: 'shopify_app', store: 'x.myshopify.com' })).toMatch(/^x\.myshopify\.com uses the GRINDCTRL Shopify app/);
+      expect(pasteInstallCopy('ar').conflict({ kind: 'paste', platform: 'shopify', store: 'x.myshopify.com' })).toContain('⁨x.myshopify.com⁩');
     });
   });
 

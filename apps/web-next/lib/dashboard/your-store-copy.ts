@@ -44,6 +44,8 @@ export interface YourStoreCopy {
     moreYouCanAdd: string;
     workingWell: string;
     waiting: string;
+    /** The way forward while waiting: the connect card on the same page. */
+    waitingAction: string;
   };
   rows: {
     productPages: string;
@@ -154,7 +156,8 @@ const en: YourStoreCopy = {
     whatToFix: 'What to fix',
     moreYouCanAdd: 'More you can add',
     workingWell: 'Working well',
-    waiting: "We'll check your store as soon as your code is live.",
+    waiting: "We'll check your store as soon as your code is live. This updates by itself.",
+    waitingAction: 'Finish connecting your store',
   },
   rows: {
     productPages: "Product pages",
@@ -269,7 +272,8 @@ const ar: YourStoreCopy = {
     whatToFix: 'ما يحتاج إصلاحًا',
     moreYouCanAdd: 'يمكنك إضافة المزيد',
     workingWell: 'يعمل جيدًا',
-    waiting: 'سنفحص متجرك فور أن يعمل الكود.',
+    waiting: 'سنفحص متجرك فور أن يعمل الكود، وتتحدث هذه الصفحة تلقائياً.',
+    waitingAction: 'أكمل ربط متجرك',
   },
   rows: {
     productPages: "صفحات المنتجات",

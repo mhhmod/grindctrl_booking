@@ -315,6 +315,49 @@ describe('pending Shopify shop proof', () => {
     expect((await shopPost()).status).toBe(503);
     expect(m.signal).not.toHaveBeenCalled(); expect(m.active).not.toHaveBeenCalled();
   });
+  describe('a proof-only request from Store Chat (M3)', () => {
+    const proofPost = (over: Record<string, unknown> = {}, origin = 'https://merchant.myshopify.com') =>
+      post({ proof: true, imageUrl: undefined, title: undefined, signed, pageUrl: 'https://merchant.myshopify.com/collections/all', ...over }, origin);
+
+    it('finishes the proof with the page\'s signed render and mints nothing else, whatever Try-On would say', async () => {
+      // Try-On itself is paused and the plan inactive: the proof still completes.
+      m.launch.mockResolvedValue({ launch: { tryOn: 'hidden', reason: 'paused' }, unsubscribed: true });
+      const response = await proofPost();
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ proven: true });
+      expect(m.signature).toHaveBeenCalledWith(expect.objectContaining({ connection: pending, claims: signed }));
+      expect(m.prove).toHaveBeenCalledExactlyOnceWith(pending, { kind: 'render' });
+      expect(m.visitor).toHaveBeenCalled(); expect(m.siteLimit).toHaveBeenCalled(); expect(m.network).toHaveBeenCalled();
+      for (const later of [m.active, m.signal, m.launch, m.tryOnHosts]) expect(later).not.toHaveBeenCalled();
+    });
+
+    it('keeps every check: signature, replay, origin, pending outcome and the signed product', async () => {
+      m.signature.mockResolvedValue({ ok: false, code: 'replayed' });
+      expect((await proofPost()).status).toBe(409);
+      m.signature.mockResolvedValue({ ok: false, code: 'bad_signature' });
+      expect((await proofPost()).status).toBe(401);
+      m.signature.mockResolvedValue({ ok: true });
+      expect((await proofPost({}, 'https://evil.example')).status).toBe(403);
+      expect((await proofPost({ signed: undefined })).status).toBe(401);
+      expect((await proofPost({ productId: '43' })).status).toBe(401);
+      expect(m.prove).not.toHaveBeenCalled();
+      m.prove.mockResolvedValue({ shopProof: 'pending', outcome: 'not_found' });
+      expect(await (await proofPost()).json()).toEqual({ error: 'shop_proof_pending' });
+      // Only `true`; and only for Shopify.
+      expect((await proofPost({ proof: 'yes' })).status).toBe(400);
+      m.connection.mockResolvedValue(connection);
+      expect((await proofPost({}, 'https://merchant.example')).status).toBe(400);
+    });
+
+    it('answers proven for a shop that is already proven, without a storefront check', async () => {
+      m.connection.mockResolvedValue(shopify);
+      m.site.mockResolvedValue({ ...site, patterns: [], pasteShopDomain: 'merchant.myshopify.com' });
+      m.hosts.mockResolvedValue(['merchant.myshopify.com']);
+      expect(await (await proofPost()).json()).toEqual({ proven: true });
+      expect(m.prove).not.toHaveBeenCalled();
+    });
+  });
+
   it('refuses a connection the Shopify app already holds before checking any signature', async () => {
     m.connection.mockResolvedValue({ ...shopify, app_installed: true });
     const response = await shopPost();

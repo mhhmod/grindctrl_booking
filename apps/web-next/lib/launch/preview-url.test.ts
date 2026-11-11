@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ rows: vi.fn(), context: vi.fn() }));
+const mocks = vi.hoisted(() => ({ rows: vi.fn(), context: vi.fn(), paste: vi.fn(), hosts: vi.fn() }));
 vi.mock('server-only', () => ({}));
 vi.mock('@/lib/messenger/db', () => ({
   getMessengerServiceClient: () => {
@@ -12,6 +12,11 @@ vi.mock('@/lib/messenger/db', () => ({
   },
 }));
 vi.mock('@/lib/woo/connection', () => ({ getActiveWooSiteContext: mocks.context }));
+vi.mock('@/lib/paste/store', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/paste/store')>()),
+  getPasteConnection: mocks.paste,
+  pasteTryOnHosts: mocks.hosts,
+}));
 
 import { previewOriginFor, previewUrl } from './preview-url';
 
@@ -21,6 +26,13 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.rows.mockResolvedValue({ data: [], error: null });
   mocks.context.mockResolvedValue(null);
+  mocks.paste.mockResolvedValue(null);
+  mocks.hosts.mockResolvedValue([]);
+});
+
+const pasted = (over: Record<string, unknown> = {}) => ({
+  widget_site_id: '11111111-1111-4111-8111-111111111111', platform: 'shopify', shop_domain: 'alpha.myshopify.com',
+  status: 'active', shop_proven_at: '2026-11-10T00:00:00Z', app_installed: false, ...over,
 });
 
 describe('previewOriginFor', () => {
@@ -38,6 +50,30 @@ describe('previewOriginFor', () => {
     await expect(previewOriginFor(KEY)).resolves.toBe('https://example.com/store/');
     mocks.context.mockResolvedValue(null);
     await expect(previewOriginFor(KEY)).resolves.toBeNull();
+  });
+});
+
+describe('previewOriginFor, pasted code', () => {
+  it('opens a confirmed domain of a pasted store before its shop host', async () => {
+    mocks.paste.mockResolvedValue(pasted());
+    mocks.hosts.mockResolvedValue(['alpha.myshopify.com', 'brand.com', 'www.brand.com']);
+    await expect(previewOriginFor(KEY)).resolves.toBe('https://brand.com/');
+    expect(mocks.rows).not.toHaveBeenCalled();
+  });
+
+  it('opens the proven shop host when the store has no confirmed domain', async () => {
+    mocks.paste.mockResolvedValue(pasted());
+    mocks.hosts.mockResolvedValue(['alpha.myshopify.com']);
+    await expect(previewOriginFor(KEY)).resolves.toBe('https://alpha.myshopify.com/');
+  });
+
+  it('has no address while the shop is being confirmed, or a website has no confirmed domain', async () => {
+    mocks.paste.mockResolvedValue(pasted({ status: 'pending', shop_proven_at: null }));
+    await expect(previewOriginFor(KEY)).resolves.toBeNull();
+    expect(mocks.hosts).not.toHaveBeenCalled();
+    mocks.paste.mockResolvedValue(pasted({ platform: 'website', shop_domain: null }));
+    await expect(previewOriginFor(KEY)).resolves.toBeNull();
+    expect(mocks.context).not.toHaveBeenCalled();
   });
 });
 

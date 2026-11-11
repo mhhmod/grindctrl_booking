@@ -36,7 +36,7 @@ import { minutesSince } from '@/lib/dashboard/chat-studio-model';
 import { legacyStoreChatHref, MORE_SETTINGS } from '@/lib/dashboard/store-chat-legacy-tab';
 import { V16BackToSetUp, V16StoreTaken } from '@/components/dashboard/v16/states';
 import { getWooSiteConnection } from '@/lib/woo/connection';
-import { createWooPairingCodeAction } from './woo-actions';
+import { createWooPairingCodeAction, readWooConnectionAction } from './woo-actions';
 import * as pasteActions from './paste-actions';
 import { readPasteDomainPlatforms } from '@/lib/paste/store';
 import { StoreConnect } from '@/components/dashboard/v16/store-setup/store-connect';
@@ -232,6 +232,7 @@ export async function StoreChatPage({
           canSetUp
             ? {
                 createWooPairingCodeAction,
+                readWooConnectionAction,
                 listDomainsAction: messengerActions.listDomainsAction,
                 addDomainAction: messengerActions.addDomainAction,
                 checkDomainAction: messengerActions.checkDomainAction,
@@ -247,6 +248,7 @@ export async function StoreChatPage({
                   status: pasteActions.getPasteInstallStatusAction,
                   proveShop: pasteActions.provePasteShopAction,
                   checkDomain: pasteActions.checkPasteDomainAction,
+                  disconnect: pasteActions.disconnectPasteInstallAction,
                 },
               }
             : undefined
@@ -329,6 +331,7 @@ export async function StoreChatPage({
               status: pasteActions.getPasteInstallStatusAction,
               proveShop: pasteActions.provePasteShopAction,
               checkDomain: pasteActions.checkPasteDomainAction,
+              disconnect: pasteActions.disconnectPasteInstallAction,
             },
           }}
         />

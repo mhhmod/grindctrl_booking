@@ -75,6 +75,21 @@ export async function createShopLinkCode(): Promise<ShopLinkCode> {
   return { code, expiresAt };
 }
 
+/** The shop this account's link code connected, or null while it is unused
+ *  (or is not this account's code). Read by the open code panel. */
+export async function shopLinkedByCode(code: string): Promise<string | null> {
+  const clerkUserId = await requireDashboardOwner();
+  const { data, error } = await getServiceClient()
+    .from('tryon_shop_links')
+    .select('consumed_at, consumed_shop_domain')
+    .eq('code_hash', codeHash(code))
+    .eq('clerk_user_id', clerkUserId)
+    .maybeSingle();
+  if (error) throw new Error(`Unable to read shop link code: ${error.message}`);
+  const row = data as { consumed_at: string | null; consumed_shop_domain: string | null } | null;
+  return row?.consumed_at ? row.consumed_shop_domain ?? null : null;
+}
+
 async function markCodeConsumed(
   code: string,
   shopDomain: string,
