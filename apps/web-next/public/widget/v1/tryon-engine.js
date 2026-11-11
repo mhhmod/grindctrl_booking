@@ -66,6 +66,17 @@
     var style = window.getComputedStyle(node);
     return style.display !== 'none' && style.visibility !== 'hidden';
   }
+  /* A spot on a run of text (the price's <bdi>, a <strong>) means the line it
+     sits in: placing a block button inside an inline element breaks the line
+     and can push the page wider than a phone. */
+  function blockAnchor(node) {
+    for (var n = node; n && n.parentElement && n !== document.body; n = n.parentElement) {
+      if (/^(BUTTON|INPUT|SELECT|TEXTAREA|IMG|PICTURE|VIDEO|SVG)$/i.test(n.tagName)) return n;
+      var display = window.getComputedStyle(n).display;
+      if (display !== 'inline' && display !== 'contents') return n;
+    }
+    return node;
+  }
   function chosenPlacement(settings) {
     var s = settings || {};
     if (s.placement === 'floating') return { node: null, mode: 'float' };
@@ -77,7 +88,7 @@
     } catch (_) { nodes = []; }
     if (nodes.length <= SPOT_MATCHES) {
       for (var i = 0; i < nodes.length; i++) {
-        if (shown(nodes[i])) return { node: nodes[i], mode: spot.position === 'before' ? 'before' : 'after' };
+        if (shown(nodes[i])) return { node: blockAnchor(nodes[i]), mode: spot.position === 'before' ? 'before' : 'after' };
       }
     }
     return { missing: true };
@@ -99,7 +110,7 @@
   var PICK_TOKEN = /^[0-9a-f-]{36}\.(\d{13})\.[A-Za-z0-9_-]{43}$/;
   var PICK_CLAIM = /^[A-Za-z0-9_-]{43}$/;
   // The edit chrome, versioned by its content like this file (widget-version.test.ts).
-  var PICK_SCRIPT = 'pick-spot.js?v=5f9b47883520';
+  var PICK_SCRIPT = 'pick-spot.js?v=f5db9ed9f471';
   var pickStarted = false;
   var pickPreview = null;
 

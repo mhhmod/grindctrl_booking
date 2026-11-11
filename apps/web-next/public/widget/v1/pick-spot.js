@@ -229,6 +229,11 @@
     if (!target || target.nodeType !== 1 || target === host) return { node: null, refused: false };
     if (refusedArea(target)) return { node: null, refused: true };
     var node = target.closest(MEANINGFUL) || target;
+    // Text inside a line (a price's <bdi>, a <strong>) chooses the line itself.
+    while (node.parentElement && node.parentElement !== document.body && !/^(BUTTON|INPUT|SELECT|TEXTAREA|IMG|PICTURE|VIDEO|SVG)$/i.test(node.tagName) &&
+      /^(inline|contents)$/.test(window.getComputedStyle(node).display)) {
+      node = node.parentElement;
+    }
     // A tiny icon or a hidden layer: the nearest parent that can be chosen.
     for (var up = 0; node && up < 4 && !selectable(node); up++) node = node.parentElement;
     if (node && selectable(node)) return { node: node, refused: false };
@@ -333,6 +338,7 @@
     '.callout{inline-size:min(320px,calc(100vw - 32px));padding:16px;display:grid;gap:12px}',
     '.head{display:flex;align-items:center;justify-content:space-between;gap:8px}',
     '.callout h2{margin:0;font:inherit;font-size:16px;font-weight:700;line-height:1.4}',
+    '.callout h2:focus{outline:none}',
     '.quiet{border-color:transparent;padding-inline:10px}',
     '.actions{display:flex;flex-wrap:wrap;gap:8px}.actions .primary{flex:1 1 auto}',
     '.message{margin:0;color:#8a1c1c;font-weight:600;overflow-wrap:anywhere}.message:empty{display:none}',

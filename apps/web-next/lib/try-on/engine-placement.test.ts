@@ -62,6 +62,15 @@ describe('engine placement per mode', () => {
     expect(sentFacts()).toEqual({ key: 'public-key', kind: 'product_page', productDetected: true, placement: 'inline' });
   });
 
+  // Live bug 2026-11-11: a spot saved on the price's <bdi> put the button inside
+  // the price line, which pushed a phone page sideways.
+  it('spot on text inside a line: placed after the whole line, never inside it', () => {
+    document.querySelector('.price')!.innerHTML = '<span class="amount"><bdi>350 EGP</bdi></span>';
+    engine().mount(adapter({ buttonSettings: { placement: 'spot', spot: { selector: '.price bdi', position: 'after' } } }));
+    expect(button().parentElement).toBe(document.querySelector('main'));
+    expect(document.querySelector('.price')!.nextElementSibling).toBe(button());
+  });
+
   it('spot: the first shown of up to three matches', () => {
     document.querySelector('main')!.insertAdjacentHTML('afterbegin', '<p class="fit" hidden>Hidden</p>');
     engine().mount(adapter({ buttonSettings: { placement: 'spot', spot: { selector: 'p.fit', position: 'after' } } }));
