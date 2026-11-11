@@ -188,9 +188,16 @@
     }
     return false;
   }
+  /* naturalWidth is density-corrected (srcset w descriptors, sizes="auto"): a
+     600px product photo shown at 154 CSS px on a 3x phone reads as 154, which
+     dropped every card on phones. The photo's own size is what tells a product
+     image from an icon, so take the largest of what the browser, the markup
+     and the screen say. */
   function imageSize(img) {
-    var width = img.naturalWidth || Number(img.getAttribute('width')) || 0;
-    var height = img.naturalHeight || Number(img.getAttribute('height')) || 0;
+    var ratio = window.devicePixelRatio || 1;
+    var box = img.getBoundingClientRect();
+    var width = Math.max(img.naturalWidth || 0, Number(img.getAttribute('width')) || 0, Math.round(box.width * ratio));
+    var height = Math.max(img.naturalHeight || 0, Number(img.getAttribute('height')) || 0, Math.round(box.height * ratio));
     return width >= MIN_IMAGE_PX && height >= MIN_IMAGE_PX ? width * height : 0;
   }
   function firstTitle() {

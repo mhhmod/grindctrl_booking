@@ -328,6 +328,24 @@ describe('WooCommerce loops through pasted website code', () => {
     await tick();
     expect(contextBody()).toMatchObject({ productId: '14', title: 'Linen shirt', imageUrl: 'https://store.example/wp-content/uploads/linen.jpg' });
   });
+  it('keeps every card on a phone, where the browser reports photos at their small on-screen size', async () => {
+    woo();
+    // What a 3x phone reports for a 600px photo picked from srcset with sizes="auto".
+    for (const img of document.querySelectorAll('img')) {
+      img.removeAttribute('width'); img.removeAttribute('height');
+      Object.defineProperty(img, 'naturalWidth', { configurable: true, value: 154 });
+      Object.defineProperty(img, 'naturalHeight', { configurable: true, value: 192 });
+      img.getBoundingClientRect = () => ({ width: 154, height: 192, top: 0, left: 0, right: 154, bottom: 192, x: 0, y: 0, toJSON() {} }) as DOMRect;
+    }
+    const ratio = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
+    Object.defineProperty(window, 'devicePixelRatio', { configurable: true, value: 3 });
+    try {
+      await start(LIVE, {}, 'website');
+      expect(pills().map((p) => p.dataset.productId)).toEqual(['14', '15', '16']);
+    } finally {
+      if (ratio) Object.defineProperty(window, 'devicePixelRatio', ratio);
+    }
+  });
   it('requires Woo markers even on /shop/ with identical loop markup', async () => {
     woo(false);
     const { found } = await start(LIVE, {}, 'website');
