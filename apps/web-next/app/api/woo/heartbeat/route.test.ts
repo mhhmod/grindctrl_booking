@@ -80,7 +80,7 @@ describe('POST /api/woo/heartbeat', () => {
     expect(await response.json()).toEqual({
       ok: true,
       homeUrlMismatch: false,
-      minPluginVersion: '0.2.0',
+      minPluginVersion: '0.4.0',
     });
     expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({
       last_home_url: 'https://shop.example.com',

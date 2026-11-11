@@ -5,7 +5,8 @@ import { Redis } from '@upstash/redis';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { deriveWooSiteSecret } from '@/lib/woo/site-secret';
 
-export const WOO_MIN_PLUGIN_VERSION = '0.2.0';
+// 0.4.0 is the first version that updates itself; older stores see a one-time update notice.
+export const WOO_MIN_PLUGIN_VERSION = '0.4.0';
 export const WOO_SITE_HEADER = 'X-GC-Site';
 export const WOO_TIMESTAMP_HEADER = 'X-GC-Timestamp';
 export const WOO_NONCE_HEADER = 'X-GC-Nonce';
