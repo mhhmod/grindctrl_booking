@@ -29,6 +29,7 @@ function grindctrl_sc_delete_options() {
 		'grindctrl_sc_tryon_product',
 		'grindctrl_sc_tryon_catalog',
 		'grindctrl_sc_tryon_ip_header',
+		'grindctrl_sc_installed_version',
 	) as $name ) {
 		delete_option( $name );
 	}
@@ -38,6 +39,11 @@ function grindctrl_sc_delete_options() {
 	$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( 'gc_sc_n_' ) . '%' ) );
 	$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( 'gc_sc_tv_' ) . '%' ) );
 }
+
+delete_site_transient( 'grindctrl_sc_plugin_release' );
+delete_site_option( 'grindctrl_sc_autoupdate_defaulted' );
+$grindctrl_sc_auto_updates = (array) get_site_option( 'auto_update_plugins', array() );
+update_site_option( 'auto_update_plugins', array_values( array_diff( $grindctrl_sc_auto_updates, array( grindctrl_sc_plugin_basename() ) ) ) );
 
 if ( is_multisite() ) {
 	$grindctrl_sc_sites = get_sites(
