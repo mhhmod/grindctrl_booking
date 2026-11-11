@@ -25,6 +25,13 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 describe('paste read model and dashboard tenant', () => {
+  it('shows a deletion deadline only while the stored paste connection is disconnected', async () => {
+    const deadline = '2026-12-12T12:00:00Z';
+    m.connection.mockResolvedValue({ status: 'disconnected', platform: 'website', redact_after: deadline });
+    expect(await readPasteInstallStatus({ id: SITE, status: 'disabled' }, NOW)).toMatchObject({ connected: false, redactAfter: deadline });
+    m.connection.mockResolvedValue({ status: 'active', platform: 'website', redact_after: deadline });
+    expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).toMatchObject({ connected: true, redactAfter: null });
+  });
   it('does not call typing a domain a live chat install', async () => {
     const result = await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW);
     expect(result).toMatchObject({ chatLive: false, tryOnReady: true, tenantKey: `site:${SITE}`, mode: 'live' });

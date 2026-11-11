@@ -49,12 +49,18 @@ export type WpExportItem = {
   data: Array<{ name: string; value: string }>;
 };
 
-type ExportMessage = { role: string; content: string; createdAt: string };
+type ExportMessage = { role: string; content: string; createdAt: string; metadata?: Record<string, unknown> };
 type ExportConversation = {
   id: string;
   startedAt: string;
   status: string;
   lastPageUrl: string | null;
+  lastReferrer?: string | null;
+  metadata?: Record<string, unknown>;
+  inboxUpdatedAt?: string;
+  inboxHandoffAt?: string | null;
+  events?: unknown[];
+  audit?: unknown[];
   messages: ExportMessage[];
   attachments: Array<{ id: string; mime: string; bytes: number; createdAt: string }>;
   feedback: Array<{ rating: string; comment: string | null }>;
@@ -62,8 +68,8 @@ type ExportConversation = {
 };
 type ExportPayload = {
   conversations: ExportConversation[];
-  visitors: Array<{ name: string | null; email: string | null; firstSeenAt: string; lastSeenAt: string }>;
-  leads: Array<{ name: string | null; email: string | null; phone: string | null; company: string | null; createdAt: string }>;
+  visitors: Array<{ name: string | null; email: string | null; firstSeenAt: string; lastSeenAt: string; metadata?: Record<string, unknown> }>;
+  leads: Array<{ name: string | null; email: string | null; phone: string | null; company: string | null; createdAt: string; sourceDomain?: string | null; audit?: unknown[] }>;
   total: number;
   done: boolean;
 };
@@ -87,6 +93,7 @@ export function toWordPressExport(payload: ExportPayload): { items: WpExportItem
         ...field('Email', visitor.email),
         ...field('First seen', visitor.firstSeenAt),
         ...field('Last seen', visitor.lastSeenAt),
+        ...field('Visitor details', visitor.metadata ? JSON.stringify(visitor.metadata) : null),
       ],
     });
   });
@@ -100,6 +107,8 @@ export function toWordPressExport(payload: ExportPayload): { items: WpExportItem
         ...field('Phone', lead.phone),
         ...field('Company', lead.company),
         ...field('Captured', lead.createdAt),
+        ...field('Source domain', lead.sourceDomain),
+        ...field('Contact activity', lead.audit?.length ? JSON.stringify(lead.audit) : null),
       ],
     });
   });
@@ -111,12 +120,20 @@ export function toWordPressExport(payload: ExportPayload): { items: WpExportItem
         ...field('Started', conversation.startedAt),
         ...field('Status', conversation.status),
         ...field('Last page', conversation.lastPageUrl),
+        ...field('Last referrer', conversation.lastReferrer),
+        ...field('Conversation details', conversation.metadata ? JSON.stringify(conversation.metadata) : null),
+        ...field('Inbox updated', conversation.inboxUpdatedAt),
+        ...field('Handoff requested', conversation.inboxHandoffAt),
+        ...field('Events', conversation.events?.length ? JSON.stringify(conversation.events) : null),
+        ...field('Conversation activity', conversation.audit?.length ? JSON.stringify(conversation.audit) : null),
         {
           name: 'Messages',
           value: conversation.messages
             .map((message) => `[${message.createdAt}] ${message.role}: ${message.content}`)
             .join('\n'),
         },
+        ...field('Message details', conversation.messages.some(m => m.metadata && Object.keys(m.metadata).length)
+          ? JSON.stringify(conversation.messages.map(m => ({ createdAt: m.createdAt, metadata: m.metadata }))) : null),
         ...field(
           'Attachments',
           conversation.attachments
@@ -221,12 +238,20 @@ function isPrivacySchemaMissing(error: { code?: string; message?: string }): boo
  * Idempotent: the SQL function re-checks the due condition under a row lock
  * and a finished site clears redact_after. */
 export async function redactDueWooSites(): Promise<WooRedactionSummary> {
+  return redactDueSites('woo');
+}
+
+export async function redactDuePasteSites(): Promise<WooRedactionSummary> {
+  return redactDueSites('paste');
+}
+
+async function redactDueSites(kind: 'woo' | 'paste'): Promise<WooRedactionSummary> {
   const client = getMessengerServiceClient();
   const summary: WooRedactionSummary = { sites: 0, completed: 0, pending: 0, storageRemoved: 0, failed: 0 };
 
-  const due = await client.rpc('woo_sites_due_for_redaction', { p_limit: REDACT_SITES_PER_RUN });
+  const due = await client.rpc(`${kind}_sites_due_for_redaction`, { p_limit: REDACT_SITES_PER_RUN });
   if (due.error && isPrivacySchemaMissing(due.error)) {
-    console.warn('[woo-site-redaction] skipped: privacy migration not applied');
+    console.warn(`[${kind}-site-redaction] skipped: privacy migration not applied`);
     return { ...summary, notReady: true };
   }
   if (due.error || !Array.isArray(due.data)) {
@@ -241,7 +266,7 @@ export async function redactDueWooSites(): Promise<WooRedactionSummary> {
       try {
         let done = false;
         for (let batch = 0; batch < REDACT_BATCHES_PER_SITE && !done; batch += 1) {
-          const result = await client.rpc('woo_site_redact', { p_site: siteId });
+          const result = await client.rpc(`${kind}_site_redact`, { p_site: siteId });
           const data = result.data as { done?: unknown; redacted?: unknown } | null;
           if (result.error || !data || typeof data.done !== 'boolean') throw new Error('woo_site_redact_failed');
           // redacted:false means the site was re-paired or already handled

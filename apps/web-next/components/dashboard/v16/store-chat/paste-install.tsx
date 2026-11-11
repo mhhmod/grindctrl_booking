@@ -7,6 +7,7 @@ import { ShopifyLogo, WooCommerceLogo, WordPressMark } from '@/components/brand-
 import { GcIcon } from '@/components/icons';
 import type { InstallPlatform, PasteInstallCopy } from '@/lib/dashboard/paste-install-copy';
 import type { PasteInstallStatus } from '@/lib/paste/status';
+import { pasteRetentionDate } from '@/lib/dashboard/paste-retention-date';
 import type {
   PasteDomain, PasteDomainCheck, PasteErrorCode, PastePlatform, PasteResult, PasteShopCheckOutcome, PasteShopProof, PasteSnippet,
 } from '@/lib/paste/types';
@@ -207,9 +208,15 @@ export function PasteInstall({
   const storeUrl = `https://${storeHost ?? ''}`;
   /* Our code has run on the store: the install part is done. */
   const installed = everSeen && status?.connectionReason !== 'shopify_app_installed';
+  const deletionDate = status && !status.connected ? pasteRetentionDate(status.redactAfter, locale === 'ar' ? 'ar' : 'en') : null;
 
   return (
     <Stack gap="lg" className={classes.root}>
+      {deletionDate && (
+        <Text size="sm" c="dimmed" role="status">
+          {copy.deletionDate(deletionDate)}
+        </Text>
+      )}
       {installed && status ? (
         /* The moment it works, say so plainly and point at what to do next. */
         <section className={classes.success} aria-live="polite">

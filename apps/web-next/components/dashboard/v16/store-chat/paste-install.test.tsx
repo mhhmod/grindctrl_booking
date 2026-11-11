@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { renderWithMantine } from '@/components/mantine/test-utils';
 import { pasteInstallCopy } from '@/lib/dashboard/paste-install-copy';
+import { pasteRetentionDate } from '@/lib/dashboard/paste-retention-date';
 import type { PasteInstallStatus } from '@/lib/paste/status';
 import type { PasteDomain } from '@/lib/paste/types';
 import { PasteInstall, type PasteInstallActions } from './paste-install';
@@ -53,6 +54,15 @@ const copy = pasteInstallCopy('en');
 const ago = (m: number) => `${m} min ago`;
 
 describe('paste install journey', () => {
+  it.each(['en', 'ar'] as const)('shows the disconnected deadline in %s until reconnect', async locale => {
+    const copy = pasteInstallCopy(locale), deadline = '2026-12-12T12:00:00Z';
+    const a = actions(status({ connected: false, trusted: false, redactAfter: deadline }));
+    renderWithMantine(<PasteInstall siteId="s1" locale={locale} copy={copy} ago={ago} actions={a} woocommerce={null} />);
+    const notice = copy.deletionDate(pasteRetentionDate(deadline, locale)!);
+    expect(await screen.findByText(notice)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('radio', { name: new RegExp(copy.platforms.website.name) }));
+    await waitFor(() => expect(screen.queryByText(notice)).not.toBeInTheDocument());
+  });
   it('connects a website, adds its address, then shows the code and waits for the store', async () => {
     const a = actions(null);
     renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={<p>woo guide</p>} />);

@@ -16,6 +16,8 @@ import { renderWithMantine } from '@/components/mantine/test-utils';
 import { resolveMessengerConfig } from '@/lib/messenger/config';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import { getChatStudioCopy } from '@/lib/dashboard/chat-studio-copy';
+import { pasteInstallCopy } from '@/lib/dashboard/paste-install-copy';
+import { pasteRetentionDate } from '@/lib/dashboard/paste-retention-date';
 import { V16ChatStudio, type ChatStudioActions, type ChatStudioMeta } from './v16-chat-studio';
 
 const en = getChatStudioCopy('en');
@@ -58,6 +60,18 @@ function draw(a = actions(), locale: 'en' | 'ar' = 'en', meta: Partial<ChatStudi
 }
 
 describe('V16ChatStudio', () => {
+  it.each(['en', 'ar'] as const)('shows the thirty-day confirmation and disconnected deadline in %s', async locale => {
+    const copy = getChatStudioCopy(locale);
+    const retention = pasteInstallCopy(locale);
+    const deadline = '2026-12-12T12:00:00Z';
+    draw(actions(), locale, { active: false, pasteRetention: { disconnected: true, redactAfter: deadline } });
+    expect(screen.getByText(retention.deletionDate(pasteRetentionDate(deadline, locale)!))).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: copy.disconnect.label }));
+    const dialog = await screen.findByRole('dialog', { name: copy.disconnect.label });
+    expect(dialog).toHaveTextContent(retention.disconnectRetention);
+    expect(dialog).not.toHaveTextContent(copy.disconnectConfirm);
+    expect(screen.queryByText(copy.disconnect.body)).not.toBeInTheDocument();
+  }, 20000);
   // This full Mantine board can exceed the default timeout under parallel Windows load.
   it('lays out the board’s cards on today’s settings', () => {
     draw();

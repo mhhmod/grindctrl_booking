@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const m = vi.hoisted(() => ({ auth: vi.fn(), access: vi.fn(), limit: vi.fn(), enable: vi.fn(), add: vi.fn(), remove: vi.fn(), prove: vi.fn(), proveMeta: vi.fn(), rotate: vi.fn(),
-  connection: vi.fn(), status: vi.fn(), invalidate: vi.fn(), check: vi.fn(), fingerprint: vi.fn(), domainCheck: vi.fn(), grant: vi.fn(), list: vi.fn(), audit: vi.fn() }));
+  connection: vi.fn(), status: vi.fn(), invalidate: vi.fn(), check: vi.fn(), fingerprint: vi.fn(), domainCheck: vi.fn(), grant: vi.fn(), list: vi.fn(), audit: vi.fn(), privacy: vi.fn() }));
+vi.mock('@/lib/paste/privacy', () => ({ pasteShopperPrivacy: m.privacy, disconnectPasteSite: m.privacy }));
 vi.mock('@/lib/messenger/conversations', () => ({ recordAudit: m.audit }));
 vi.mock('@/lib/paste/platform-check', () => ({ schedulePasteDomainPlatformCheck: m.fingerprint }));
 vi.mock('@/lib/paste/domain-check', () => ({ checkPasteDomain: m.domainCheck }));
@@ -15,7 +16,7 @@ vi.mock('@/lib/paste/store', async (original) => ({ pasteTrust: (await original<
 vi.mock('@/lib/paste/status', () => ({ readPasteInstallStatus: m.status }));
 vi.mock('@/lib/paste/shop-proof', () => ({ checkPasteShop: m.check }));
 vi.mock('@/lib/shopify/proxy-config-cache', () => ({ invalidateProxyConfig: m.invalidate }));
-import { enablePasteInstallAction, addPasteDomainAction, removePasteDomainAction, provePasteDomainAction, provePasteDomainMetaAction, rotatePasteSecretAction, getPasteSnippetAction, getPasteInstallStatusAction, provePasteShopAction, checkPasteDomainAction } from '@/app/dashboard/store-chat/paste-actions';
+import { enablePasteInstallAction, addPasteDomainAction, removePasteDomainAction, provePasteDomainAction, provePasteDomainMetaAction, rotatePasteSecretAction, getPasteSnippetAction, getPasteInstallStatusAction, provePasteShopAction, checkPasteDomainAction, pastePrivacyRequestAction, disconnectPasteInstallAction } from '@/app/dashboard/store-chat/paste-actions';
 import { PasteError } from '@/lib/paste/types';
 import { UnauthorizedError } from '@/lib/messenger/provisioning';
 import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
@@ -32,6 +33,27 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 describe('owner-authorized paste plumbing actions', () => {
+  it('requires the store capability before either privacy operation', async () => {
+    m.privacy.mockResolvedValue({ done: true });
+    expect(await pastePrivacyRequestAction(SITE, 'erase', { email: 'a@example.com' })).toEqual({ ok: true, data: { done: true } });
+    expect(m.access).toHaveBeenCalledWith('owner', SITE, 'store');
+    expect(m.privacy).toHaveBeenCalledWith(SITE, 'erase', { email: 'a@example.com' });
+    m.privacy.mockClear();
+    m.access.mockRejectedValue(new RoleNotAllowedError('store'));
+    expect(await pastePrivacyRequestAction(SITE, 'export', {})).toMatchObject({ ok: false, code: 'forbidden' });
+    expect(m.privacy).not.toHaveBeenCalled();
+  });
+
+  it('requires the owner and passes the authenticated actor for explicit paste disconnect', async () => {
+    m.privacy.mockResolvedValue(true);
+    expect(await disconnectPasteInstallAction(SITE)).toEqual({ ok: true, data: null });
+    expect(m.privacy).toHaveBeenCalledWith(SITE, 'owner');
+    m.privacy.mockClear();
+    m.access.mockRejectedValueOnce(new RoleNotAllowedError('store'));
+    expect(await disconnectPasteInstallAction(SITE)).toMatchObject({ ok: false, code: 'forbidden' });
+    expect(m.privacy).not.toHaveBeenCalled();
+  });
+
   it('audits domain changes and key rotation with actor and target, excluding secrets', async () => {
     await addPasteDomainAction(SITE, 'merchant.example');
     await removePasteDomainAction(SITE, 'domain-a');

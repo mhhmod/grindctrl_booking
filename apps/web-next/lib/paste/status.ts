@@ -67,6 +67,8 @@ export type PasteInstallStatus = {
   /** Paste install is enabled for this site (a pending Shopify shop included):
    *  show the snippet and steps. */
   connected: boolean;
+  /** Scheduled shopper removal, only while explicitly disconnected. */
+  redactAfter?: string | null;
   /** Our code is trusted on this site's hosts: origins, signals, Try-On. */
   trusted: boolean;
   connectionReason: PasteConnectionReason | null;
@@ -152,7 +154,8 @@ export async function readPasteInstallStatus(site: { id: string; status: string 
     } : null,
     shopFirstSeenAt: shopHost ? connection?.first_seen_at ?? null : null,
     shopLastSeenAt: shopHost ? connection?.last_seen_at ?? null : null,
-    connected, trusted, connectionReason, domains, seen, seenHost: seen ? signals[0].host : null,
+    connected, redactAfter: connected ? null : connection?.redact_after ?? null,
+    trusted, connectionReason, domains, seen, seenHost: seen ? signals[0].host : null,
     chatLive: site.status === 'active' && seen && (mode === 'live' || mode === 'holdout'),
     tryOnReady: site.status !== 'disabled' && !reason,
     tryOnReason: site.status === 'disabled' ? 'site_disabled' : reason,

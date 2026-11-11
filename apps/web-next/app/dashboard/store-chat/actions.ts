@@ -1,5 +1,8 @@
 'use server';
 
+import { disconnectPasteSite } from '@/lib/paste/privacy';
+import { invalidateProxyConfig } from '@/lib/shopify/proxy-config-cache';
+import { siteTenantKey } from '@/lib/tenancy/tenant-key';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
@@ -210,6 +213,12 @@ export async function disconnectSiteAction(siteId: string): Promise<ActionResult
   try {
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId, 'store');
+    if (await disconnectPasteSite(site.id, userId)) {
+      invalidateProxyConfig(siteTenantKey(site.id));
+      revalidateStoreChat();
+      revalidatePath('/dashboard/store');
+      return { ok: true };
+    }
     const profileId = await getProfileId(userId);
     const result = await unclaimSite(site, profileId);
     if (!result) throw new Error('Store state changed. Refresh and try again.');

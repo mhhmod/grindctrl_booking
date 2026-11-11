@@ -2,9 +2,9 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ cleanup: vi.fn(), woo: vi.fn() }));
+const mocks = vi.hoisted(() => ({ cleanup: vi.fn(), woo: vi.fn(), paste: vi.fn() }));
 vi.mock('@/lib/shopify/chat-retention', () => ({ CHAT_RETENTION_BATCH_LIMIT: 25, cleanupInactiveStoreChat: mocks.cleanup }));
-vi.mock('@/lib/woo/privacy', () => ({ redactDueWooSites: mocks.woo }));
+vi.mock('@/lib/woo/privacy', () => ({ redactDueWooSites: mocks.woo, redactDuePasteSites: mocks.paste }));
 import { POST } from './route';
 
 const secret = 'r'.repeat(40);
@@ -19,6 +19,7 @@ describe('Store Chat retention cron', () => {
     vi.stubEnv('TRYON_CLEANUP_SECRET', secret);
     mocks.cleanup.mockReset().mockResolvedValue(summary);
     mocks.woo.mockReset().mockResolvedValue(wooSummary);
+    mocks.paste.mockReset().mockResolvedValue(wooSummary);
     vi.spyOn(console, 'info').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
@@ -40,7 +41,7 @@ describe('Store Chat retention cron', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('cache-control')).toBe('no-store');
     expect(mocks.cleanup).toHaveBeenCalledWith(25);
-    expect(await response.json()).toEqual({ ok: true, data: summary, woo: wooSummary });
+    expect(await response.json()).toEqual({ ok: true, data: summary, woo: wooSummary, paste: wooSummary });
     expect(console.info).toHaveBeenCalledWith('[store-chat-retention] completed', summary);
   });
 
@@ -75,6 +76,14 @@ describe('Store Chat retention cron', () => {
 
   it('reports a Woo redaction failure as a failed run', async () => {
     mocks.woo.mockResolvedValue({ ...wooSummary, failed: 1 });
+    expect((await call(`Bearer ${secret}`)).status).toBe(500);
+  });
+
+  it('runs paste redaction even when Woo fails, and reports paste failure', async () => {
+    mocks.woo.mockRejectedValueOnce(new Error('unavailable'));
+    expect((await call(`Bearer ${secret}`)).status).toBe(500);
+    expect(mocks.paste).toHaveBeenCalledTimes(1);
+    mocks.paste.mockResolvedValueOnce({ ...wooSummary, failed: 1 });
     expect((await call(`Bearer ${secret}`)).status).toBe(500);
   });
 });

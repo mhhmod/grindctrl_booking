@@ -64,6 +64,8 @@ export type PasteInstallCopy = {
   resetConfirm: string;
   resetDone: (time: string) => string;
   cancel: string;
+  disconnectRetention: string;
+  deletionDate: (date: string) => string;
   errors: Record<PasteErrorCode, string>;
 };
 
@@ -176,7 +178,10 @@ const en: PasteInstallCopy = {
   resetConfirm: 'Yes, reset',
   resetDone: (time) => `New code ready. Paste it before ${time}.`,
   cancel: 'Cancel',
+  disconnectRetention: "Your shoppers' chats and details are kept for 30 days, then deleted. Reconnect before then to keep them.",
+  deletionDate: (date) => `Data will be deleted on ${date}.`,
   errors: {
+    invalid_request: 'Check the request details and try again.',
     forbidden: 'Only the store owner can change this.',
     unavailable: 'This is not available right now. Try again in a minute.',
     schema_not_ready: 'Installing by code is almost ready. Check back soon.',
@@ -300,7 +305,10 @@ const ar: PasteInstallCopy = {
   resetConfirm: 'نعم، أعد التعيين',
   resetDone: (time) => `الكود الجديد جاهز. الصقه قبل ${time}.`,
   cancel: 'إلغاء',
+  disconnectRetention: 'نحتفظ بمحادثات المتسوقين وبياناتهم لمدة 30 يومًا ثم نحذفها. أعد الربط قبل ذلك للاحتفاظ بها.',
+  deletionDate: (date) => `سيتم حذف البيانات في ${date}.`,
   errors: {
+    invalid_request: 'تحقق من تفاصيل الطلب وحاول مجدداً.',
     forbidden: 'صاحب المتجر وحده يستطيع تغيير هذا.',
     unavailable: 'هذا غير متاح الآن. حاول بعد دقيقة.',
     schema_not_ready: 'التثبيت بالكود أوشك على الجاهزية. عُد قريباً.',

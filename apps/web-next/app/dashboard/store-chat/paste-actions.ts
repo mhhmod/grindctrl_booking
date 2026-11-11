@@ -1,6 +1,7 @@
 'use server';
 
 import { auth } from '@clerk/nextjs/server';
+import { disconnectPasteSite, pasteShopperPrivacy } from '@/lib/paste/privacy';
 import { recordAudit } from '@/lib/messenger/conversations';
 import { requireSiteAccess, UnauthorizedError } from '@/lib/messenger/provisioning';
 import { RoleNotAllowedError, type DashboardCapability } from '@/lib/rbac/dashboard-policy';
@@ -142,4 +143,21 @@ export async function provePasteShopAction(siteId: string, storefrontPassword?: 
 export async function getPasteInstallStatusAction(siteId: string): Promise<PasteResult<PasteInstallStatus>> {
   // Includes the complete billing state, so it is the owner's alone.
   return authorized(siteId, 'store', 'read', (site) => readPasteInstallStatus(site));
+}
+/** Owner-only privacy fulfilment, reusing the plugin's bounded export/erase
+ * and durable Storage queue. Each call handles one page/batch. */
+export async function pastePrivacyRequestAction(siteId: string, operation: 'export' | 'erase', request: unknown) {
+  return authorized(siteId, 'store', operation === 'export' ? 'read' : 'write', async (site) => {
+    if (operation !== 'export' && operation !== 'erase') throw new PasteError('invalid_request');
+    return pasteShopperPrivacy(site.id, operation, request);
+  });
+}
+
+/** Explicit paste disconnect, distinct from Shopify's dashboard-only unclaim.
+ * The SQL transaction also records the actor and schedules shopper redaction. */
+export async function disconnectPasteInstallAction(siteId: string): Promise<PasteResult<null>> {
+  return authorized(siteId, 'store', 'write', async (site, userId) => {
+    if (!(await disconnectPasteSite(site.id, userId))) throw new PasteError('not_found');
+    return null;
+  });
 }
