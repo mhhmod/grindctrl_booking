@@ -10,14 +10,83 @@ const read = (file: string) => fs.readFileSync(path.join(PLUGIN_DIR, file), 'utf
 const main = read('grindctrl-store-chat.php');
 const orders = read('includes/orders.php');
 const tryon = read('includes/tryon.php');
+const updates = read('includes/updates.php');
 
 describe('GRINDCTRL Store Chat plugin source', () => {
   it('declares one version in the header, the constant and the readme', () => {
     const header = /\* Version:\s+(\S+)/.exec(main)?.[1];
-    expect(header).toBe('0.3.7');
+    expect(header).toBe('0.4.0');
     expect(main).toContain(`define( 'GRINDCTRL_SC_VERSION', '${header}' );`);
     expect(read('readme.txt')).toMatch(new RegExp(`Stable tag: ${header}\\b`));
     expect(read('readme.txt')).toContain(`= ${header} =`);
+  });
+
+  it('uses the native private update URI and scopes both metadata hooks to our plugin', () => {
+    expect(main).toMatch(/\* Update URI:\s+https:\/\/grindctrl\.cloud\s/);
+    expect(main).toContain("require_once __DIR__ . '/includes/updates.php'");
+    expect(updates).toContain("add_filter( 'update_plugins_grindctrl.cloud', 'grindctrl_sc_plugin_update', 10, 4 )");
+    expect(updates).toContain("add_filter( 'plugins_api', 'grindctrl_sc_plugin_information', 10, 3 )");
+    expect(updates).toContain('function grindctrl_sc_plugin_update( $update, $plugin_data, $plugin_file, $locales )');
+    expect(updates).toContain('grindctrl_sc_plugin_basename() !== $plugin_file');
+    expect(updates).toContain("'plugin_information' !== $action");
+    expect(updates).toContain("'grindctrl-store-chat' !== $args->slug");
+    for (const field of ['id', 'slug', 'version', 'url', 'package', 'tested', 'requires_php', 'requires', 'sha256', 'sections', 'download_link']) {
+      expect(updates).toContain(`'${field}'`);
+    }
+  });
+
+  it('validates release metadata and accepts only HTTPS packages from the configured API host', () => {
+    const allowed = updates.slice(updates.indexOf('function grindctrl_sc_update_package_allowed'), updates.indexOf('function grindctrl_sc_validate_release'));
+    expect(allowed).toContain('wp_parse_url( GRINDCTRL_SC_API_BASE )');
+    expect(allowed).toContain("'https' === strtolower( $package['scheme'] )");
+    expect(allowed).toContain("strtolower( $package['host'] ) === strtolower( $api['host'] )");
+    for (const field of ['user', 'pass', 'fragment']) expect(allowed).toContain(`! isset( $package['${field}'] )`);
+    expect(updates).toContain('grindctrl_sc_valid_version( $data[ $field ] )');
+    expect(updates).toContain("'/^[a-f0-9]{64}$/'");
+    expect(updates).toContain("wp_kses_post( $data['changelog_html'] )");
+    expect(updates).toContain('checkdate(');
+  });
+
+  it('bounds anonymous metadata requests and negatively caches failures', () => {
+    expect(updates).toContain("grindctrl_sc_api_url( '/api/woo/plugin/update' )");
+    expect(updates).toMatch(/'timeout'\s+=> 5/);
+    expect(updates).toMatch(/'cookies'\s+=> array\(\)/);
+    expect(updates).toMatch(/'redirection'\s+=> 0/);
+    expect(updates).toContain("'GRINDCTRL-Store-Chat/' . GRINDCTRL_SC_VERSION . '; '");
+    expect(updates).toContain("$data ? $data : 'unavailable', $data ? 12 * HOUR_IN_SECONDS : HOUR_IN_SECONDS");
+    expect(updates).toContain('return grindctrl_sc_validate_release( $cached )');
+  });
+
+  it('verifies the exact advertised package with SHA-256 before handing it to the upgrader', () => {
+    expect(updates).toContain("add_filter( 'upgrader_pre_download', 'grindctrl_sc_verify_update_download', 10, 4 )");
+    const download = updates.slice(updates.indexOf('function grindctrl_sc_verify_update_download'), updates.indexOf('function grindctrl_sc_version_changed'));
+    expect(download).toContain("get_site_transient( 'update_plugins' )");
+    expect(download).toContain("array( 'response', 'no_update' )");
+    expect(download).toContain("$package !== $record['package']");
+    expect(download).toContain("new WP_Error( 'grindctrl_sc_unsigned_update'");
+    expect(download).toContain('download_url( $package )');
+    expect(download).toContain("hash_file( 'sha256', $file )");
+    expect(download).toContain("hash_equals( $record['sha256'], $hash )");
+    expect(download).toMatch(/wp_delete_file\( \$file \);\s+return new WP_Error\( 'grindctrl_sc_update_checksum'/);
+    expect(download).toContain('return $file;');
+  });
+
+  it('defaults auto-updates once and keeps upgrades separate from connection and Try-On settings', () => {
+    const lifecycle = updates.slice(updates.indexOf('function grindctrl_sc_version_changed'));
+    expect(lifecycle).toContain("GRINDCTRL_SC_VERSION === get_option( 'grindctrl_sc_installed_version', '' )");
+    expect(lifecycle).toContain("false === get_site_option( 'grindctrl_sc_autoupdate_defaulted', false )");
+    expect(lifecycle).toContain("get_site_option( 'auto_update_plugins', array() )");
+    expect(lifecycle).toContain("update_site_option( 'auto_update_plugins', $plugins )");
+    expect(lifecycle).toContain("update_site_option( 'grindctrl_sc_autoupdate_defaulted', true )");
+    expect(lifecycle).toContain('grindctrl_sc_schedule_heartbeat();');
+    expect(lifecycle).not.toMatch(/forget_connection|disconnect_remote|grindctrl_sc_secret|grindctrl_sc_embed_key|grindctrl_sc_tryon_/);
+    expect(main).toContain('grindctrl_sc_version_changed( true )');
+    expect(lifecycle).toContain("add_action( 'plugins_loaded', 'grindctrl_sc_version_changed' )");
+    expect(updates).not.toContain("add_filter( 'auto_update_plugin'");
+    const uninstall = read('uninstall.php');
+    expect(uninstall).toContain("delete_site_transient( 'grindctrl_sc_plugin_release' )");
+    expect(uninstall).toContain("delete_site_option( 'grindctrl_sc_autoupdate_defaulted' )");
+    expect(uninstall).toContain("'grindctrl_sc_installed_version'");
   });
 
   it('claims each inbound nonce atomically, never read-then-write', () => {

@@ -4,9 +4,12 @@
    plugin source: edit the plugin, run `npm run build:woo-plugin`. */
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
+import { createHash } from 'node:crypto';
 import { crc32, inflateRawSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
-import { PLUGIN_DIR, PLUGIN_SLUG, ZIP_PATH, buildWooPluginZip } from './build-woo-plugin-zip.mjs';
+import { PLUGIN_DIR, PLUGIN_SLUG, ZIP_PATH, RELEASE_PATH, buildWooPluginZip, pluginRelease, writeWooPluginRelease } from './build-woo-plugin-zip.mjs';
+import { WOO_PLUGIN_RELEASE } from '@/lib/woo/plugin-release';
 
 /** Reads the central directory, then inflates each entry through its local header. */
 function readZip(zip: Buffer) {
@@ -49,10 +52,32 @@ describe('grindctrl-store-chat.zip', () => {
       'grindctrl-store-chat/includes/orders.php',
       'grindctrl-store-chat/includes/privacy.php',
       'grindctrl-store-chat/includes/tryon.php',
+      'grindctrl-store-chat/includes/updates.php',
       'grindctrl-store-chat/readme.txt',
       'grindctrl-store-chat/uninstall.php',
     ]);
     expect(readZip(committed).map((entry) => entry.name)).toEqual(sourceFiles);
+  });
+
+  it('keeps the generated release, plugin header and exact committed ZIP hash in agreement', () => {
+    expect(WOO_PLUGIN_RELEASE).toEqual(pluginRelease(committed, PLUGIN_DIR, new Date(`${WOO_PLUGIN_RELEASE.last_updated}T00:00:00Z`)));
+    expect(WOO_PLUGIN_RELEASE.sha256).toBe(createHash('sha256').update(committed).digest('hex'));
+    expect(fs.readFileSync(path.join(PLUGIN_DIR, 'grindctrl-store-chat.php'), 'utf8')).toMatch(new RegExp(`\\* Version:\\s+${WOO_PLUGIN_RELEASE.version.replaceAll('.', '\\.')}\\s`));
+  });
+
+  it('writes a consistent ZIP and TypeScript manifest through the real build entry point', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gc-woo-release-'));
+    try {
+      const zipPath = path.join(dir, 'downloads/plugin.zip');
+      const releasePath = path.join(dir, 'lib/plugin-release.ts');
+      const date = new Date(`${WOO_PLUGIN_RELEASE.last_updated}T00:00:00Z`);
+      const { release } = writeWooPluginRelease({ zipPath, releasePath, date });
+      expect(fs.readFileSync(zipPath).equals(committed)).toBe(true);
+      expect(release).toEqual(WOO_PLUGIN_RELEASE);
+      expect(fs.readFileSync(releasePath, 'utf8')).toBe(fs.readFileSync(RELEASE_PATH, 'utf8'));
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it('carries each file as it is in the source, with correct checksums', () => {
