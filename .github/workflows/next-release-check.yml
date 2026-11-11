@@ -260,6 +260,11 @@ jobs:
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3101
         run: npx playwright test golden-standard- mobile-overflow.spec.ts landing-translate-resilience.spec.ts
+      # Fixtures are intentionally absent from the production candidate.
+      # The same job runs their layout proof against Next dev, without secrets.
+      - name: Shopper sheet scroll checks (dev fixtures)
+        working-directory: apps/web-next
+        run: npx playwright test sheet-scroll.spec.ts sheet-scroll-guards.spec.ts
       - name: Upload Playwright report on failure
         if: failure()
         uses: actions/upload-artifact@v4
