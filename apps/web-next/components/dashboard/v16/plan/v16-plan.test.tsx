@@ -61,6 +61,36 @@ function renderPlan(locale: SiteLocale = 'en', over: Partial<PlanFacts['plan']> 
 }
 
 describe('V16Plan', () => {
+  it('keeps both run-out glyphs at the same declared size', () => {
+    renderPlan();
+    const rows = within(screen.getByRole('region', { name: 'If you run out' })).getAllByRole('listitem');
+    expect(rows).toHaveLength(2);
+    for (const row of rows) {
+      expect(row.querySelector('svg')).toHaveAttribute('width', '18');
+      expect(row.querySelector('svg')).toHaveAttribute('height', '18');
+    }
+  });
+
+  it.each(['en', 'ar'] as const)('states Store Chat inclusion and catalogue price/looks on every card in %s', (locale) => {
+    const f = facts();
+    f.plans = [
+      item({ id: 'f', planKey: 'free-v2', name: 'Free', priceMinor: 0, rendersIncluded: 15, isFree: true, sortOrder: 10 }),
+      ...f.plans,
+      item({ id: 'p', planKey: 'pro-v1', name: 'Pro', priceMinor: 5900, rendersIncluded: 750, sortOrder: 40 }),
+    ];
+    const copy = getPlanCopy(locale);
+    const view = buildPlanView(f, copy, locale);
+    render(<V16Plan view={view} locale={locale} />);
+    const cards = within(screen.getByRole('region', { name: copy.plans })).getAllByRole('listitem');
+    expect(cards).toHaveLength(4);
+    cards.forEach((card, i) => {
+      expect(card).toHaveTextContent(view.plans[i].name);
+      expect(card).toHaveTextContent(view.plans[i].price);
+      expect(card).toHaveTextContent(view.plans[i].looks);
+      expect(within(card).getByText(locale === 'en' ? 'Store Chat included' : 'دردشة المتجر مشمولة')).toBeInTheDocument();
+    });
+  });
+
   it('leads with the looks left, when they run out, and what happens then', () => {
     renderPlan();
     const looks = screen.getByRole('region', { name: 'Try-on looks this cycle' });
@@ -123,8 +153,8 @@ describe('V16Plan', () => {
 
     const plans = screen.getByRole('region', { name: 'Plans' });
     expect(within(plans).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
-      'Launch$15 a month150 looks a month',
-      'GrowthYour plan$29 a month350 looks a month',
+      'Launch$15 a month150 looks a monthStore Chat included',
+      'GrowthYour plan$29 a month350 looks a monthStore Chat included',
     ]);
     for (const link of screen.getAllByRole('link', { name: /Talk to us to add looks/ })) {
       expect(link).toHaveAttribute('href', BOOKING_URL);

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Button } from '@mantine/core';
+import { Button, Group, Text } from '@mantine/core';
 import { GcIcon } from '@/components/icons';
 import { BOOKING_URL } from '@/lib/booking';
 import { getPlanCopy } from '@/lib/dashboard/plan-copy';
@@ -335,12 +335,15 @@ export function V16Plan({ view, locale }: { view: PlanView; locale: SiteLocale }
           <ul className={classes.plans}>
             {view.plans.map((plan) => (
               <li key={plan.key} className={classes.planCard} data-current={plan.current}>
-                <span className={classes.planCardName}>
-                  <bdi>{plan.name}</bdi>
-                  {plan.current && <span className={classes.current}>{copy.current}</span>}
-                </span>
-                <span className={classes.planCardPrice}>{plan.price}</span>
+                <Group justify="space-between" gap="xs" align="start">
+                  <span className={classes.planCardName}>
+                    <bdi>{plan.name}</bdi>
+                    {plan.current && <span className={classes.current}>{copy.current}</span>}
+                  </span>
+                  <span className={classes.planCardPrice}>{plan.price}</span>
+                </Group>
                 <span className={classes.muted}>{plan.looks}</span>
+                <Text size="sm" c="dimmed">{copy.storeChatIncluded}</Text>
               </li>
             ))}
           </ul>
