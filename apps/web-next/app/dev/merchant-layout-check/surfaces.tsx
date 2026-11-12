@@ -75,7 +75,7 @@ const todayFacts = (calm: boolean): TodayFacts => ({
 
 const SETUP: TodaySetupFacts = {
   store: 'Maison Noor Modest Fashion & Abayas Boutique', shop: LONG_STORE,
-  chatSeenAt: ago(12), storeLook: false, testLook: false, holdoutAvailable: true,
+  chatSeenAt: ago(12), storeLook: false, testLook: false, tryOnMounted: false, holdoutAvailable: true,
 };
 
 /* Try-On */
