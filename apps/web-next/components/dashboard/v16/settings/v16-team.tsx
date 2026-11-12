@@ -324,7 +324,14 @@ export function V16Team({
             <span className={classes.rowIcon} aria-hidden="true">
               <GcIcon name="mail" size={16} />
             </span>
-            <p className={classes.rowText}>{view.alerts ?? copy.noStoreChat}</p>
+            <div className={classes.rowText}>
+              <p className={classes.muted}>{view.alerts ?? copy.noStoreChat}</p>
+              {view.alertRecipients.length > 0 && (
+                <ul className={classes.alertAddresses}>
+                  {view.alertRecipients.map((address) => <li key={address}><Address value={address} /></li>)}
+                </ul>
+              )}
+            </div>
             <ChangeLink href={view.alerts ? STORE_CHAT_ALERTS : '/dashboard/store-chat'}>
               {view.alerts ? copy.changeInStoreChat : copy.openStoreChat}
             </ChangeLink>

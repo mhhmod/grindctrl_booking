@@ -13,6 +13,8 @@ const PRIORITY_ROUTES: Array<{ path: string; priority: number }> = [
   { path: '/operations', priority: 0.7 },
   { path: '/integrations', priority: 0.6 },
   { path: '/security', priority: 0.5 },
+  { path: '/privacy', priority: 0.3 },
+  { path: '/terms', priority: 0.3 },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

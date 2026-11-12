@@ -24,6 +24,22 @@ const arDays = (n: number) => arCount(n, { one: 'يوم', two: 'يومين', few
 const arChats = (n: number) =>
   arCount(n, { one: 'محادثة واحدة', two: 'محادثتين', few: (m) => `${m} محادثات`, many: (m) => `${m.toLocaleString('ar-EG-u-nu-latn')} محادثة` });
 
+/** Compact measured duration. Unit thresholds use the unrounded duration. */
+export function formatReplyDuration(minutes: number, locale: SiteLocale): string {
+  if (!Number.isFinite(minutes) || minutes < 0) return '–';
+  if (minutes < 60) {
+    const whole = Math.max(1, Math.round(minutes));
+    const value = Math.min(59, whole <= 10 ? whole : Math.round(whole / 5) * 5);
+    return locale === 'ar' ? arMinutes(value) : `${value} min`;
+  }
+  if (minutes < 48 * 60) {
+    const value = Math.floor(minutes / 60);
+    return locale === 'ar' ? arHours(value) : `${value} h`;
+  }
+  const value = Math.floor(minutes / DAY_MINUTES);
+  return locale === 'ar' ? arDays(value) : `${value} d`;
+}
+
 export interface TodayCopy {
   storeHealth: string;
   everythingWorking: string;
@@ -69,7 +85,7 @@ export interface TodayCopy {
   ofChats: (n: number) => string;
   noFinishedChats: string;
   teamFirstReply: string;
-  minutesValue: (n: number) => string;
+  durationValue: (minutes: number) => string;
   duringOpeningHours: string;
   notEnoughHandoffs: string;
   details: {
@@ -156,7 +172,7 @@ const en: TodayCopy = {
   ofChats: (n) => (n === 1 ? 'Of 1 chat, the rest went to the team' : `Of ${n.toLocaleString('en-US')} chats, the rest went to the team`),
   noFinishedChats: 'No finished chats yet',
   teamFirstReply: 'Team first reply',
-  minutesValue: (n) => `${n} min`,
+  durationValue: (n) => formatReplyDuration(n, 'en'),
   duringOpeningHours: 'During opening hours',
   notEnoughHandoffs: 'Shown once your team has answered 5 handoffs',
   details: {
@@ -257,7 +273,7 @@ const ar: TodayCopy = {
   ofChats: (n) => `من ${arChats(n)}، والباقي حُوِّل إلى الفريق`,
   noFinishedChats: 'لا محادثات منتهية بعد',
   teamFirstReply: 'أول رد من الفريق',
-  minutesValue: (n) => arMinutes(n),
+  durationValue: (n) => formatReplyDuration(n, 'ar'),
   duringOpeningHours: 'خلال ساعات العمل',
   notEnoughHandoffs: 'يظهر بعد أن يرد فريقك على 5 تحويلات',
   details: {

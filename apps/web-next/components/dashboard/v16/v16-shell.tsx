@@ -7,6 +7,7 @@ import { useClerk } from '@clerk/nextjs';
 import { useTheme } from 'next-themes';
 import { ActionIcon, Badge, Button, Drawer, Menu, Progress } from '@mantine/core';
 import { BrandLogo } from '@/components/brand-logo';
+import { LegalLinks } from '@/components/legal-links';
 import { GcIcon, type GcIconName } from '@/components/icons';
 import { getShellCopy } from '@/lib/dashboard/shell-copy';
 import type { ShellRole } from '@/lib/dashboard/shell-copy';
@@ -298,6 +299,7 @@ export function V16ShellView({
         </nav>
         <div className={classes.spacer} />
         {meterCard}
+        <LegalLinks locale={locale} />
         <Menu position="top-start" width="target" withinPortal>
           <Menu.Target>
             <button type="button" className={classes.person}>
@@ -431,6 +433,7 @@ export function V16ShellView({
           <button type="button" className={classes.navLink} onClick={() => clerk.signOut({ redirectUrl: '/' })}>
             {copy.signOut}
           </button>
+          <LegalLinks locale={locale} />
         </div>
       </Drawer>
     </div>

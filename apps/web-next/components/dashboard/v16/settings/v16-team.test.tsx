@@ -40,7 +40,8 @@ describe('V16Team', () => {
     renderTeam();
     const people = screen.getByRole('region', { name: 'People' });
     expect(people).toHaveTextContent('Owners see everything, including billing.');
-    expect(within(people).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+    const teamList = within(people).getAllByRole('list')[0];
+    expect(within(teamList).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
       'HAHana Adelhana@maisonnoor.comOwner',
       'NSNour Samirnour@maisonnoor.comMember',
     ]);
@@ -50,8 +51,26 @@ describe('V16Team', () => {
 
   it('says who gets email alerts, with a way to change it in Store Chat', () => {
     renderTeam();
-    expect(screen.getByText('Email alerts go to hana@maisonnoor.com when a shopper needs a person.')).toBeInTheDocument();
+    expect(screen.getByText('When a shopper needs a person, email alerts go to:')).toBeInTheDocument();
+    expect(screen.getAllByTitle('hana@maisonnoor.com')).toHaveLength(2);
     expect(screen.getByRole('link', { name: 'Change in Store Chat' })).toHaveAttribute('href', '/dashboard/store-chat/setup');
+  });
+
+  it.each(['en', 'ar'] as const)('puts each alert address in an isolated, truncating row in %s', (locale) => {
+    const addresses = ['averylonglocalpart.for.the.alerts@averylongmerchantdomain.example.com', 'another.long.address@merchant.example.com'];
+    renderTeam(locale, { ...FACTS, site: { ...FACTS.site!, recipients: addresses } });
+    const sentence = screen.getByText(getTeamCopy(locale).alertsTo);
+    expect(sentence.textContent).not.toContain('@');
+    const list = within(sentence.parentElement!).getByRole('list');
+    expect(within(list).getAllByRole('listitem')).toHaveLength(2);
+    for (const address of addresses) {
+      const node = within(list).getByTitle(address);
+      expect(node.tagName).toBe('BDI');
+      expect(node).toHaveAttribute('dir', 'ltr');
+      expect(node).toHaveAttribute('data-truncate', 'end');
+      expect(node).toHaveTextContent(address);
+    }
+    expect(screen.getByRole('link', { name: getTeamCopy(locale).changeInStoreChat })).toHaveAttribute('href', '/dashboard/store-chat/setup');
   });
 
   it('states the opening hours and what happens outside them', () => {
@@ -97,7 +116,7 @@ describe('V16Team, managing the team', () => {
     render(<V16Team locale={locale} view={buildTeamView(f, getTeamCopy(locale), locale)}
       roles={{ admin: 'Admin', member: 'Member' }} actions={{ invite: ok, resend: ok, revoke: ok, changeRole: ok, remove: ok }} />);
     for (const address of [email, `invited.${email}`]) {
-      const node = screen.getByTitle(address);
+      const node = within(screen.getByRole('region', { name: locale === 'ar' ? 'الأشخاص' : 'People' })).getAllByTitle(address)[0];
       expect(node).toHaveAttribute('dir', 'ltr');
       expect(node).toHaveAttribute('data-truncate', 'end');
       expect(node).toHaveTextContent(address);
