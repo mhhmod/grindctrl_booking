@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Button, Modal, Radio, Stack, TextInput } from '@mantine/core';
+import { Button, Modal, Radio, Stack, Text, TextInput } from '@mantine/core';
 import { GcIcon } from '@/components/icons';
 import { getTeamCopy, type TeamCopy } from '@/lib/dashboard/team-copy';
 import { MORE_SETTINGS } from '@/lib/dashboard/store-chat-legacy-tab';
@@ -29,16 +29,12 @@ export type TeamActions = {
 
 type Status = { tone: 'ok' | 'error'; text: string } | null;
 
-/** An address that may wrap only before its @, never mid-word. */
+/** Keep addresses LTR within Arabic rows; bound the ellipsis to their track. */
 function Address({ value }: { value: string }) {
-  const at = value.indexOf('@');
-  if (at <= 0) return <>{value}</>;
   return (
-    <>
-      {value.slice(0, at)}
-      <wbr />
-      {value.slice(at)}
-    </>
+    <Text component="bdi" dir="ltr" inherit truncate="end" title={value} className={classes.address}>
+      {value}
+    </Text>
   );
 }
 

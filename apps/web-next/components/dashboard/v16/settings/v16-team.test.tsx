@@ -86,6 +86,25 @@ describe('V16TeamError', () => {
 });
 
 describe('V16Team, managing the team', () => {
+  it.each(['en', 'ar'] as const)('keeps long people/invite addresses LTR with their full value available in %s', (locale) => {
+    const email = 'mostafasabrymohamed121@gmail.com';
+    const f: TeamFacts = {
+      ...FACTS,
+      people: [{ ...FACTS.people[0], email }],
+      invites: [{ id: 'i-long', email: `invited.${email}`, role: 'admin', invitedAt: '2026-11-11T09:00:00Z', expiresAt: '2026-11-18T09:00:00Z' }],
+    };
+    const ok = async () => ({ ok: true as const });
+    render(<V16Team locale={locale} view={buildTeamView(f, getTeamCopy(locale), locale)}
+      roles={{ admin: 'Admin', member: 'Member' }} actions={{ invite: ok, resend: ok, revoke: ok, changeRole: ok, remove: ok }} />);
+    for (const address of [email, `invited.${email}`]) {
+      const node = screen.getByTitle(address);
+      expect(node).toHaveAttribute('dir', 'ltr');
+      expect(node).toHaveAttribute('data-truncate', 'end');
+      expect(node).toHaveTextContent(address);
+      expect(node.closest('li')).toHaveTextContent(locale === 'ar' ? (address === email ? 'المالك' : 'مسؤول') : (address === email ? 'Owner' : 'Admin'));
+    }
+  });
+
   const NOW = Date.parse('2026-10-22T09:00:00Z');
   const MANAGED: TeamFacts = {
     ...FACTS,
