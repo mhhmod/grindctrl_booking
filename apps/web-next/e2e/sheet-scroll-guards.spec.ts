@@ -21,9 +21,12 @@ test('touch scrollbars are hidden and body contains overscroll', async ({ browse
 test('the actual engine frame contains wheel scroll and restores the store position', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.route('https://fixture.invalid/**', (route) => route.fulfill({ contentType: 'text/html', body: `<!doctype html><html><body>Fixture frame<script>addEventListener('keydown',function(e){if(e.key==='Escape')parent.postMessage({type:'grindctrl-tryon:close'},'*')})</script></body></html>` }));
-  await page.goto('/dev/sheet-scroll-check');
-  // Stand in for a long merchant page, then run the shipped classic script.
-  await page.setContent('<!doctype html><html><body style="margin:0;min-height:4000px"><button id="buy" style="margin-top:1000px">Buy</button></body></html>');
+  /* A long merchant page on an origin of its own, then the shipped classic
+     script. Not setContent over a Next page: document.open keeps that
+     page's window, and a React still hydrating (a cold dev server) renders
+     its fixture back over the store, button and all. */
+  await page.route('https://store.fixture.invalid/**', (route) => route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><body style="margin:0;min-height:4000px"><button id="buy" style="margin-top:1000px">Buy</button></body></html>' }));
+  await page.goto('https://store.fixture.invalid/product');
   await page.addScriptTag({ path: path.resolve('public/widget/v1/tryon-engine.js') });
   await page.evaluate(() => {
     const engine = (window as unknown as { GRINDCTRL_TRYON_ENGINE: { mount: (adapter: object) => void } }).GRINDCTRL_TRYON_ENGINE;

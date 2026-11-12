@@ -323,6 +323,7 @@ export function ConversationsPanel({
   const listRef = useRef<HTMLUListElement>(null);
   const listAnchor = useRef<{ id: string; offset: number } | null>(null);
   const followLatest = useRef(true);
+  const logTop = useRef(0);
   const olderScroll = useRef<{ height: number; top: number } | null>(null);
   /* Last staff-typing ping sent. A plain timestamp check is enough — no
      debounce utility needed for presence data this coarse. */
@@ -897,8 +898,14 @@ export function ConversationsPanel({
           aria-busy={!status && !error}
           tabIndex={0}
           onScroll={(event) => {
+            /* Only scrolling up leaves the newest message. A shrinking box (a
+               phone keyboard) or growing content also fires scroll events far
+               from the bottom with scrollTop unchanged, and they arrive before
+               the resize observer that would re-pin the thread. */
             const log = event.currentTarget;
-            followLatest.current = log.scrollHeight - log.scrollTop - log.clientHeight < 48;
+            if (log.scrollHeight - log.scrollTop - log.clientHeight < 48) followLatest.current = true;
+            else if (log.scrollTop < logTop.current - 1) followLatest.current = false;
+            logTop.current = log.scrollTop;
           }}
         >
           {/* The host fetch contract has no history cursor. Keep its existing
