@@ -38,7 +38,7 @@ import { V16StoreTaken } from '@/components/dashboard/v16/states';
 import { getWooSiteConnection } from '@/lib/woo/connection';
 import { createWooPairingCodeAction, readWooConnectionAction } from './woo-actions';
 import * as pasteActions from './paste-actions';
-import { readPasteDomainPlatforms } from '@/lib/paste/store';
+import { getPasteConnection, readPasteDomainPlatforms } from '@/lib/paste/store';
 import { StoreConnect } from '@/components/dashboard/v16/store-setup/store-connect';
 
 /* The Store Chat page (04-dashboard.md), drawn by two routes:
@@ -258,14 +258,15 @@ export async function StoreChatPage({
 
   /* Set up is ChatStudio, on the same draft and publish. */
   if (!canSetUp) redirect('/dashboard/store-chat');
-  const [statsRead, detectedRead, ordersRead, wooConnectionRead, cannedRead] = await Promise.allSettled([
+  const [statsRead, detectedRead, ordersRead, wooConnectionRead, cannedRead, pasteRead] = await Promise.allSettled([
     getOverviewStats(selected.id),
     getWidgetLastSeenAt(selected.id),
     selected.domain ? hasShopOrderAccess(selected.domain) : Promise.resolve(false),
     selected.domain?.endsWith('.myshopify.com') ? Promise.resolve(null) : getWooSiteConnection(selected.id),
     listCannedReplies(selected.id),
+    getPasteConnection(selected.id),
   ]);
-  for (const failed of [statsRead, detectedRead, ordersRead, wooConnectionRead, cannedRead]) {
+  for (const failed of [statsRead, detectedRead, ordersRead, wooConnectionRead, cannedRead, pasteRead]) {
     if (failed.status === 'rejected') console.error('[store chat] set up failed:', failed.reason);
   }
   const stats = statsRead.status === 'fulfilled' ? statsRead.value : null;
@@ -299,7 +300,11 @@ export async function StoreChatPage({
           active: selected.status === 'active',
           version: selected.settings_version,
           canRevert,
-          canDisconnect,
+          canDisconnect: canDisconnect && pasteRead.status === 'fulfilled' && !pasteRead.value,
+          pasteRetention: pasteRead.status === 'fulfilled' && pasteRead.value ? {
+            disconnected: pasteRead.value.status === 'disconnected',
+            redactAfter: pasteRead.value.redact_after ?? null,
+          } : null,
           ordersAuthorized: ordersRead.status === 'fulfilled' ? ordersRead.value : false,
           ordersGrant: params.orders === 'connected' || params.orders === 'failed' ? params.orders : null,
           shopTimezone,

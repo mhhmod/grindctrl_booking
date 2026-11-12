@@ -68,6 +68,8 @@ export type PasteInstallStatus = {
   /** Paste install is enabled for this site (a pending Shopify shop included):
    *  show the snippet and steps. */
   connected: boolean;
+  /** Scheduled shopper removal, only while explicitly disconnected. */
+  redactAfter?: string | null;
   /** Our code is trusted on this site's hosts: origins, signals, Try-On. */
   trusted: boolean;
   connectionReason: PasteConnectionReason | null;
@@ -119,6 +121,7 @@ export async function readPasteInstallStatus(site: { id: string; status: string 
   const trust = pasteTrust(connection);
   const connected = connection?.status === 'active' || connection?.status === 'pending';
   const trusted = trust === 'trusted';
+  const ownerDisconnected = connection?.status === 'disconnected' && connection.disconnected_reason == null;
   const connectionReason: PasteConnectionReason | null = trusted ? null
     : trust === 'not_connected' ? (connection?.disconnected_reason === 'displaced' ? 'shop_proven_elsewhere' : 'paste_not_connected')
     : trust;
@@ -155,10 +158,13 @@ export async function readPasteInstallStatus(site: { id: string; status: string 
     } : null,
     shopFirstSeenAt: shopHost ? connection?.first_seen_at ?? null : null,
     shopLastSeenAt: shopHost ? connection?.last_seen_at ?? null : null,
-    connected, trusted, connectionReason, domains, seen, seenHost: seen ? signals[0].host : null,
+    connected, redactAfter: connected ? null : connection?.redact_after ?? null,
+    trusted, connectionReason, domains, seen, seenHost: seen ? signals[0].host : null,
     chatLive: site.status === 'active' && seen && (mode === 'live' || mode === 'holdout'),
     tryOnReady: site.status !== 'disabled' && !reason,
-    tryOnReason: site.status === 'disabled' ? 'site_disabled' : reason,
+    // An owner disconnect disables serving, but setup stays available so
+    // enable_paste_install can reactivate the site through the privacy trigger.
+    tryOnReason: site.status === 'disabled' && !ownerDisconnected ? 'site_disabled' : reason,
     showButton,
     codeVersion: code?.version ?? null,
     codeVersionSeenAt: code?.seenAt ?? null,

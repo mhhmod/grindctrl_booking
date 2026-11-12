@@ -8,6 +8,8 @@ import { useMediaQuery } from '@mantine/hooks';
 import { GcIcon } from '@/components/icons';
 import { PreviewFrame } from '@/components/dashboard/messenger/preview-frame';
 import { getChatStudioCopy, type ChatStudioCopy } from '@/lib/dashboard/chat-studio-copy';
+import { pasteInstallCopy } from '@/lib/dashboard/paste-install-copy';
+import { pasteRetentionDate } from '@/lib/dashboard/paste-retention-date';
 import {
   INSTRUCTIONS_MAX,
   hidePatch,
@@ -69,6 +71,7 @@ export type ChatStudioMeta = {
   handoffRules: boolean;
   /** WordPress/WooCommerce plugin pairing for this widget site. */
   wooConnection: WooSiteConnectionSummary | null;
+  pasteRetention?: { disconnected: boolean; redactAfter: string | null } | null;
 };
 
 type Pair = { label: string; body: string };
@@ -331,6 +334,8 @@ export function V16ChatStudio({
   actions: ChatStudioActions;
 }) {
   const copy = getChatStudioCopy(locale);
+  const retentionCopy = pasteInstallCopy(locale);
+  const deletionDate = meta.pasteRetention?.disconnected ? pasteRetentionDate(meta.pasteRetention.redactAfter, locale) : null;
   const id = React.useId();
   const [base, setBase] = React.useState(published);
   const [draft, setDraft] = React.useState(config);
@@ -515,7 +520,10 @@ export function V16ChatStudio({
                 </Button>
               )}
             </div>
-            {meta.canDisconnect && actions.disconnectSiteAction && (
+            {deletionDate && (
+              <p className={classes.muted} role="status">{retentionCopy.deletionDate(deletionDate)}</p>
+            )}
+            {meta.canDisconnect && !meta.pasteRetention && actions.disconnectSiteAction && (
               <div className={classes.row}>
                 <div className={classes.rowText}>
                   <Button variant="subtle" color="danger" className={classes.inlineButton} loading={busy === 'disconnect'} onClick={() => setConfirm('disconnect')}>
@@ -613,7 +621,9 @@ export function V16ChatStudio({
         title={confirm === 'disconnect' ? copy.disconnect.label : copy.revert}
         closeButtonProps={{ 'aria-label': copy.close }}
       >
-        <p className={classes.confirmText}>{confirm === 'disconnect' ? copy.disconnectConfirm : copy.revertConfirm}</p>
+        <p className={classes.confirmText}>{confirm === 'disconnect'
+          ? copy.disconnectConfirm
+          : copy.revertConfirm}</p>
         <div className={classes.confirmActions}>
           <Button variant="default" radius="pill" onClick={() => setConfirm(null)}>
             {copy.cancel}

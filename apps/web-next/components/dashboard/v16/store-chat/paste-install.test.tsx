@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { renderWithMantine } from '@/components/mantine/test-utils';
 import { pasteInstallCopy } from '@/lib/dashboard/paste-install-copy';
+import { pasteRetentionDate } from '@/lib/dashboard/paste-retention-date';
 import type { PasteInstallStatus } from '@/lib/paste/status';
 import type { PasteDomain } from '@/lib/paste/types';
 import { PasteInstall, type PasteInstallActions } from './paste-install';
@@ -56,6 +57,15 @@ const copy = pasteInstallCopy('en');
 const ago = (m: number) => `${m} min ago`;
 
 describe('paste install journey', () => {
+  it.each(['en', 'ar'] as const)('shows the disconnected deadline in %s until reconnect', async locale => {
+    const copy = pasteInstallCopy(locale), deadline = '2026-12-12T12:00:00Z';
+    const a = actions(status({ connected: false, trusted: false, redactAfter: deadline }));
+    renderWithMantine(<PasteInstall siteId="s1" locale={locale} copy={copy} ago={ago} actions={a} woocommerce={null} />);
+    const notice = copy.deletionDate(pasteRetentionDate(deadline, locale)!);
+    expect(await screen.findByText(notice)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('radio', { name: new RegExp(copy.platforms.website.name) }));
+    await waitFor(() => expect(screen.queryByText(notice)).not.toBeInTheDocument());
+  });
   it('connects a website, adds its address, then shows the code and waits for the store', async () => {
     const a = actions(null);
     renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={<p>woo guide</p>} />);
@@ -302,6 +312,35 @@ describe('paste install journey', () => {
       expect(screen.getByLabelText(copy.shopifyLabel)).toBeInTheDocument();
       expect(screen.queryByText('<script data-key="k"></script>')).not.toBeInTheDocument();
       expect(router.refresh).toHaveBeenCalled();
+    });
+
+    it.each(['en', 'ar'] as const)('disconnects, shows the removal date and enables another shop in %s', async locale => {
+      const copy = pasteInstallCopy(locale), deadline = '2026-12-12T12:00:00Z';
+      const a = actions(pendingShop());
+      a.disconnect = vi.fn(async () => {
+        a.current.value = status({ connected: false, trusted: false, platform: 'shopify', shopDomain: 'typo-store.myshopify.com',
+          connectionReason: 'paste_not_connected', tryOnReason: 'paste_not_connected', redactAfter: deadline });
+        return { ok: true as const, data: null };
+      });
+      a.enable = vi.fn(async (_id, platform, shop) => {
+        a.current.value = status({ platform, shopDomain: shop ?? null, connected: true, trusted: false,
+          shopProof: 'pending', connectionReason: 'shop_proof_pending', tryOnReason: 'shop_proof_pending', redactAfter: null });
+        return { ok: true as const, data: { tenantKey: 'site:s1' } };
+      });
+      renderWithMantine(<PasteInstall siteId="s1" locale={locale} copy={copy} ago={ago} actions={a} woocommerce={null} />);
+      fireEvent.click(await screen.findByRole('button', { name: copy.leaveAction }));
+      expect(screen.getByText(copy.disconnectRetention)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: copy.leaveConfirm }));
+      const notice = copy.deletionDate(pasteRetentionDate(deadline, locale)!);
+      expect(await screen.findByText(notice)).toBeInTheDocument();
+      expect(screen.getByLabelText(copy.shopifyLabel)).toBeEnabled();
+      expect(screen.getByRole('button', { name: copy.shopifyContinue })).toBeDisabled();
+      fireEvent.change(screen.getByLabelText(copy.shopifyLabel), { target: { value: 'another-store' } });
+      expect(screen.getByRole('button', { name: copy.shopifyContinue })).toBeEnabled();
+      fireEvent.click(screen.getByRole('button', { name: copy.shopifyContinue }));
+      await waitFor(() => expect(a.enable).toHaveBeenCalledWith('s1', 'shopify', 'another-store.myshopify.com'));
+      await waitFor(() => expect(screen.queryByText(notice)).not.toBeInTheDocument());
+      expect(await screen.findByText('another-store.myshopify.com')).toBeInTheDocument();
     });
 
     it('names the connection that holds the store and offers the way out from the refusal (m4)', async () => {

@@ -8,6 +8,7 @@ import { ShopifyLogo, WooCommerceLogo, WordPressMark } from '@/components/brand-
 import { GcIcon } from '@/components/icons';
 import type { InstallPlatform, PasteInstallCopy } from '@/lib/dashboard/paste-install-copy';
 import type { PasteInstallStatus } from '@/lib/paste/status';
+import { pasteRetentionDate } from '@/lib/dashboard/paste-retention-date';
 import type {
   PasteConflictHolder, PasteDomain, PasteDomainCheck, PasteErrorCode, PastePlatform, PasteResult, PasteShopCheckOutcome, PasteShopProof,
   PasteSnippet,
@@ -249,6 +250,7 @@ export function PasteInstall({
   const storeUrl = `https://${storeHost ?? ''}`;
   /* Our code has run on the store: the install part is done. */
   const installed = everSeen && status?.connectionReason !== 'shopify_app_installed';
+  const deletionDate = status && !status.connected ? pasteRetentionDate(status.redactAfter, locale === 'ar' ? 'ar' : 'en') : null;
   /* The owner's own check answers until the store records a newer one (a
      product page visit runs a check of its own). */
   const ownCheck = checked && !(Date.parse(status?.shopCheck?.checkedAt ?? '') > checked.at) ? checked : null;
@@ -277,6 +279,7 @@ export function PasteInstall({
   const leaveConfirm = (store: string | null) => (
     <Stack gap="xs" className={classes.proof} role="group" aria-label={copy.leaveAction}>
       <Text size="sm">{copy.leaveBody(store)}</Text>
+      <Text size="sm" c="dimmed">{copy.disconnectRetention}</Text>
       <Group gap="xs">
         <Button color="red" size="compact-sm" radius="pill" loading={busy === 'leave'} onClick={() => void leave()}>
           {copy.leaveConfirm}
@@ -290,6 +293,11 @@ export function PasteInstall({
 
   return (
     <Stack gap="lg" className={classes.root}>
+      {deletionDate && (
+        <Text size="sm" c="dimmed" role="status">
+          {copy.deletionDate(deletionDate)}
+        </Text>
+      )}
       {installed && status ? (
         /* The moment it works, say so plainly and point at what to do next. */
         <section className={classes.success} aria-live="polite">
