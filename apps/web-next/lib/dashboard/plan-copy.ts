@@ -57,6 +57,7 @@ export interface PlanCopy {
   chatKeepsWorkingLine: string;
   plans: string;
   plansLine: string;
+  storeChatIncluded: string;
   current: string;
   changePlan: string;
   couldNotLoad: string;
@@ -138,6 +139,8 @@ const en: PlanCopy = {
   chatKeepsWorkingLine: 'It doesn’t use looks.',
   plans: 'Plans',
   plansLine: 'Every plan has Store Chat.',
+  // AI budgets are per site/environment, not plan entitlements (messenger/ai-budget.ts).
+  storeChatIncluded: 'Store Chat included',
   current: 'Your plan',
   changePlan: 'To change plans, book a call with us.',
   couldNotLoad: "Your plan couldn't load just now. Refresh in a minute.",
@@ -212,6 +215,7 @@ const ar: PlanCopy = {
   chatKeepsWorkingLine: 'لا تستهلك أي إطلالات.',
   plans: 'الباقات',
   plansLine: 'كل الباقات تشمل دردشة المتجر.',
+  storeChatIncluded: 'دردشة المتجر مشمولة',
   current: 'باقتك',
   changePlan: 'لتغيير الباقة، احجز مكالمة معنا.',
   couldNotLoad: 'تعذّر تحميل باقتك الآن. حدّث الصفحة بعد دقيقة.',

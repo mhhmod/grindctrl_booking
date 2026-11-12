@@ -59,7 +59,7 @@
   border-block-start: 1px solid var(--border);
 }
 
-/* The role stays beside the name at every width; a long address wraps. */
+/* The role stays beside the name; addresses truncate inside their track. */
 .person {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -175,18 +175,26 @@
 
 .who {
   display: grid;
-  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  min-inline-size: 0;
 }
 
 .name {
   font-weight: 700;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.address {
+  display: block;
+  min-inline-size: 0;
+  max-inline-size: 100%;
 }
 
 .email {
+  min-inline-size: 0;
   color: var(--muted-foreground);
   font-size: 0.875rem;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
 }
 
 .role {
