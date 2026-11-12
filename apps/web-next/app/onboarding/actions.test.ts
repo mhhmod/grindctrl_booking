@@ -20,6 +20,14 @@ it('m2: saves the platform and address before continuing to Store setup', async 
   await expect(submitOnboarding({ errors: {} }, form())).rejects.toThrow('redirect:/dashboard/store');
   expect(m.save).toHaveBeenCalledWith('owner', 'owner@example.com', expect.objectContaining({ storePlatform: 'Shopify', website: 'shop.example' }), expect.any(Object));
 });
+it('continues to the page a new account was going to, when it is a safe same-site page', async () => {
+  const withNext = form();
+  withNext.set('next', '/claim?token=abc');
+  await expect(submitOnboarding({ errors: {} }, withNext)).rejects.toThrow('redirect:/claim?token=abc');
+  const offSite = form();
+  offSite.set('next', 'https://evil.example');
+  await expect(submitOnboarding({ errors: {} }, offSite)).rejects.toThrow('redirect:/dashboard/store');
+});
 it('keeps the form and next action when saving fails', async () => {
   m.save.mockResolvedValue({ ok: false, message: 'Try again' });
   expect(await submitOnboarding({ errors: {} }, form())).toMatchObject({ message: 'Try again', values: { website: 'shop.example' } });

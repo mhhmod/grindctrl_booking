@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({
   usePathname: () => pathname,
   useRouter: () => ({ refresh, push: vi.fn() }),
 }));
-const clerk = { openUserProfile: vi.fn(), signOut: vi.fn() };
+const clerk = { openUserProfile: vi.fn(), signOut: vi.fn(async (_options: { redirectUrl: string }) => undefined) };
 vi.mock('@clerk/nextjs', () => ({ useClerk: () => clerk }));
 const setTheme = vi.fn();
 vi.mock('next-themes', () => ({ useTheme: () => ({ resolvedTheme: 'light', setTheme }) }));
@@ -101,6 +101,19 @@ describe('V16Shell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
     const menu = screen.getByRole('dialog', { name: 'Menu' });
     expect(within(menu).getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/dashboard/settings');
+  });
+
+  it('signs out once, to a sign-in page that confirms it', () => {
+    clerk.signOut.mockClear();
+    clerk.signOut.mockImplementation(() => new Promise<undefined>(() => {}));
+    render(<V16Shell {...props()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
+    const signOut = within(screen.getByRole('dialog', { name: 'Menu' })).getByRole('button', { name: getShellCopy('en').signOut });
+    fireEvent.click(signOut);
+    fireEvent.click(signOut);
+    expect(clerk.signOut).toHaveBeenCalledTimes(1);
+    expect(clerk.signOut).toHaveBeenCalledWith({ redirectUrl: '/sign-in?signed_out=1' });
+    expect(signOut).toBeDisabled();
   });
 
   /* Store setup sits after Store Chat in the sidebar and opens from the phone

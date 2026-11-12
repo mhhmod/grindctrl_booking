@@ -66,6 +66,48 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+describe('ConversationsPanel when the session ends', () => {
+  const two: ConversationListItem[] = [
+    CONVERSATIONS[0],
+    { ...CONVERSATIONS[0], id: 'conv-2', visitorEmail: 'second@example.com' },
+  ];
+
+  it('keeps an unsent reply with its conversation, raises the sign-in prompt and brings it back after', async () => {
+    staffReply.mockResolvedValue({ ok: false, error: 'Your session ended. Sign in again to continue.', signedOut: true });
+    const ended = vi.fn();
+    window.addEventListener('gc:session-ended', ended);
+    const first = render(<ConversationsPanel locale="en" siteId="site-1" conversations={two} actions={actions} />);
+    await screen.findByText('Where is my order?');
+    fireEvent.click(inList().getByText('second@example.com'));
+    const box = await screen.findByLabelText('Type your reply…');
+    fireEvent.change(box, { target: { value: 'It ships tomorrow.' } });
+    // From here the session is gone, for the thread's own reads too.
+    fetchConversationMessages.mockResolvedValue({ ok: false, signedOut: true });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    });
+    await waitFor(() => expect(ended).toHaveBeenCalled());
+    expect(staffReply).toHaveBeenCalledWith('site-1', 'conv-2', 'It ships tomorrow.');
+    // The text stays in the open page, and the reason is said.
+    expect(box).toHaveValue('It ships tomorrow.');
+    expect(screen.getByText('Your session ended. Sign in again to continue.')).toBeInTheDocument();
+    window.removeEventListener('gc:session-ended', ended);
+
+    // Back after signing in: same conversation, same text.
+    first.unmount();
+    fetchConversationMessages.mockResolvedValue({
+      ok: true,
+      status: 'open',
+      messages: [{ id: 'm-1', role: 'user', content: 'Where is my order?', createdAt: '2026-08-30T10:00:00.000Z' }],
+      attachments: {},
+    });
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={two} actions={actions} />);
+    await waitFor(() => expect(screen.getByLabelText('Type your reply…')).toHaveValue('It ships tomorrow.'));
+    expect(inList().getByText('second@example.com').closest('[aria-current], [aria-selected="true"], [data-selected]')).not.toBeNull();
+    expect(window.sessionStorage.length).toBe(0);
+  });
+});
+
 describe('ConversationsPanel', () => {
   it('keeps the open thread, scroll position and local read marker when list changes arrive', async () => {
     const one = { ...CONVERSATIONS[0], visitorName: 'Amira', unreadCount: 2, updatedAt: '2026-11-11T00:00:00Z' };

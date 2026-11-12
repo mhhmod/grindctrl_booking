@@ -21,7 +21,7 @@ describe('store health alert settings action', () => {
   });
   it('refuses missing auth, invalid booleans and rate failures', async () => {
     mocks.auth.mockResolvedValueOnce({ userId: null });
-    expect(await setStoreHealthAlertsAction('site', false)).toEqual({ ok: false });
+    expect(await setStoreHealthAlertsAction('site', false)).toEqual({ ok: false, signedOut: true });
     expect(await setStoreHealthAlertsAction('site', 'false' as unknown as boolean)).toEqual({ ok: false });
     mocks.rate.mockRejectedValueOnce(new Error('unavailable'));
     expect(await setStoreHealthAlertsAction('site', false)).toEqual({ ok: false }); expect(mocks.rpc).not.toHaveBeenCalled();

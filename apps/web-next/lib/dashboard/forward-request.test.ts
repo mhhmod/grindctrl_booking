@@ -20,6 +20,12 @@ describe('withPathname', () => {
     expect(forwarded(forward('/dashboard/try-on'), 'x-pathname')).toBe('/dashboard/try-on');
   });
 
+  it('passes the full address on for a return after sign-in, never the client’s own copy', () => {
+    const response = forward('/dashboard/inbox?shop=a.myshopify.com', { 'x-return-to': 'https://evil.example' });
+    expect(forwarded(response, 'x-return-to')).toBe('/dashboard/inbox?shop=a.myshopify.com');
+    expect(forwarded(forward('/dashboard'), 'x-return-to')).toBe('/dashboard');
+  });
+
   it('passes a dashboard link’s shop on and remembers it', () => {
     const response = forward('/dashboard/try-on?shop=Alpha.myshopify.com');
     expect(forwarded(response, ACTIVE_STORE_HEADER)).toBe('shop:alpha.myshopify.com');

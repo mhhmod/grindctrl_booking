@@ -13,6 +13,7 @@ import type {
   PasteConflictHolder, PasteDomain, PasteDomainCheck, PasteErrorCode, PastePlatform, PasteResult, PasteShopCheckOutcome, PasteShopProof,
   PasteSnippet,
 } from '@/lib/paste/types';
+import { announceSessionEnded, isSignedOutResult } from '@/lib/auth/session-ended';
 import classes from './paste-install.module.css';
 
 export type PasteInstallActions = {
@@ -101,6 +102,7 @@ export function PasteInstall({
     try {
       const result = await call();
       if (!result.ok) {
+        if (isSignedOutResult(result)) announceSessionEnded();
         setError(result.code);
         setHeldBy(result.heldBy ?? null);
         return null;

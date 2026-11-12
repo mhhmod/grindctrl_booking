@@ -29,7 +29,7 @@ async function authorized<T>(siteId: string, capability: DashboardCapability, mo
   work: (site: Awaited<ReturnType<typeof requireSiteAccess>>, userId: string) => Promise<T>): Promise<PasteResult<T>> {
   try {
     const { userId } = await auth();
-    if (!userId) return { ok: false, code: 'forbidden' };
+    if (!userId) return { ok: false, code: 'forbidden', signedOut: true };
     const site = await requireSiteAccess(userId, siteId, capability);
     await requireMerchantRateLimit(`paste:${site.id}:${userId}`, mode);
     const data = await work(site, userId);

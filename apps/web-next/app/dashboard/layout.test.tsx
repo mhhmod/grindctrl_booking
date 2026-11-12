@@ -16,10 +16,15 @@ const mocks = vi.hoisted(() => ({
   active: vi.fn(),
   lookupFailed: vi.fn(async () => false),
   shell: vi.fn(),
+  headers: {} as Record<string, string>,
+  requireUser: vi.fn(async (_returnTo: string) => 'user_1'),
 }));
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }));
-vi.mock('next/headers', () => ({ headers: async () => ({ get: () => '/dashboard' }) }));
-vi.mock('@/lib/auth/dashboard', () => ({ requireDashboardUser: vi.fn(async () => 'user_1') }));
+vi.mock('next/headers', () => ({ headers: async () => ({ get: (name: string) => mocks.headers[name] ?? null }) }));
+vi.mock('@/lib/auth/dashboard', () => ({ requireDashboardUser: mocks.requireUser }));
+vi.mock('@/components/auth/session-guard', () => ({
+  SessionGuard: ({ children }: { children: React.ReactNode }) => <div data-testid="session-guard">{children}</div>,
+}));
 vi.mock('@/lib/auth/locale', () => ({ getRequestLocale: vi.fn(async () => 'en') }));
 vi.mock('@/lib/auth/dashboard-locale', () => ({ rememberDashboardLocale: vi.fn() }));
 vi.mock('@/lib/onboarding/profile', () => ({ hasCompletedOnboarding: mocks.onboarded }));
@@ -49,6 +54,7 @@ import DashboardLayout from './layout';
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.headers = { 'x-pathname': '/dashboard' };
   mocks.onboarded.mockResolvedValue(true);
   mocks.memberships.mockResolvedValue([]);
   mocks.lookupFailed.mockResolvedValue(false);
@@ -65,6 +71,20 @@ describe('DashboardLayout', () => {
   it('sends someone who has not onboarded and is on no team to onboarding', async () => {
     mocks.onboarded.mockResolvedValue(false);
     await expect(DashboardLayout({ children: <p>Page</p> })).rejects.toThrow('redirect:/onboarding');
+  });
+
+  it('keeps the exact page, query included, through sign-in and onboarding', async () => {
+    mocks.headers = { 'x-pathname': '/dashboard/inbox', 'x-return-to': '/dashboard/inbox?shop=maison.myshopify.com' };
+    mocks.onboarded.mockResolvedValue(false);
+    await expect(DashboardLayout({ children: <p>Page</p> })).rejects.toThrow(
+      'redirect:/onboarding?next=%2Fdashboard%2Finbox%3Fshop%3Dmaison.myshopify.com',
+    );
+    expect(mocks.requireUser).toHaveBeenCalledWith('/dashboard/inbox?shop=maison.myshopify.com');
+  });
+
+  it('watches the session around the whole shell', async () => {
+    render(await DashboardLayout({ children: <p>Page</p> }));
+    expect(screen.getByTestId('session-guard')).toContainElement(screen.getByTestId('v16-shell'));
   });
 
   it('lets a team member in without onboarding a store of their own', async () => {

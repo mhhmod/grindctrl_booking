@@ -5,12 +5,30 @@ import { renderWithMantine as render } from '@/components/mantine/test-utils';
 
 const sentry = vi.hoisted(() => ({ captureException: vi.fn() }));
 vi.mock('@sentry/nextjs', () => sentry);
+const session = vi.hoisted(() => ({ ended: false }));
+vi.mock('@/components/auth/session-guard', () => ({ useSessionEnded: () => session.ended }));
 
 import DashboardError from './error';
 
 beforeEach(() => {
   sentry.captureException.mockClear();
+  session.ended = false;
   document.cookie = 'gc-locale=; max-age=0';
+});
+
+describe('the dashboard error boundary after the session ended', () => {
+  it('offers a sign-in back to this page instead of a generic error, and reports nothing', () => {
+    session.ended = true;
+    window.history.replaceState(null, '', '/dashboard/settings?tab=team');
+    render(<DashboardError error={new Error('unexpected response')} reset={vi.fn()} />);
+    expect(screen.getByRole('heading', { name: 'You were signed out' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Sign in again' })).toHaveAttribute(
+      'href',
+      '/sign-in?redirect_url=%2Fdashboard%2Fsettings%3Ftab%3Dteam',
+    );
+    expect(screen.queryByRole('heading', { name: 'This page did not load' })).not.toBeInTheDocument();
+    expect(sentry.captureException).not.toHaveBeenCalled();
+  });
 });
 
 describe('the dashboard error boundary', () => {

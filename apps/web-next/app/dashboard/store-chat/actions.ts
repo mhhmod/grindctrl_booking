@@ -4,8 +4,9 @@ import { scheduleStoreDisconnectedEmail } from '@/lib/email/store-journey-sender
 import { storeHealthOwner } from '@/lib/store-health/owner';
 
 import { revalidatePath } from 'next/cache';
-import { auth } from '@clerk/nextjs/server';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
+import { SIGNED_OUT_MESSAGE } from '@/lib/auth/session-ended';
+import { requireSessionUserId, SignedOutError } from '@/lib/auth/session-user';
 import {
   requireSiteAccess,
   getProfileId,
@@ -145,12 +146,11 @@ async function requireOwnedSite(
 }
 
 async function currentUser(): Promise<string> {
-  const { userId } = await auth();
-  if (!userId) throw new UnauthorizedError();
-  return userId;
+  return requireSessionUserId();
 }
 
 function fail(error: unknown): ActionResult {
+  if (error instanceof SignedOutError) return { ok: false, error: SIGNED_OUT_MESSAGE, signedOut: true };
   if (error instanceof RequestRateLimitError) return { ok: false, error: error.message };
   const message = error instanceof Error ? error.message : 'Something went wrong.';
   if (error instanceof UnauthorizedError || error instanceof RoleNotAllowedError) return { ok: false, error: message };
@@ -497,7 +497,7 @@ export async function fetchConversationMessages(
        *  member owns the site the attachment belongs to. */
       attachments: Record<string, { url: string; mime: string; triage: TriageResult | null }>;
     }
-  | { ok: false }
+  | { ok: false; signedOut?: true }
 > {
   try {
     const { site, conversation } = await ownedConversation(siteId, conversationId, 'read');
@@ -539,6 +539,7 @@ export async function fetchConversationMessages(
       attachments,
     };
   } catch (error) {
+    if (error instanceof SignedOutError) return { ok: false, signedOut: true };
     console.error('[messenger] fetchConversationMessages:', error instanceof Error ? error.message : error);
     return { ok: false };
   }

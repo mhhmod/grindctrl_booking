@@ -14,6 +14,9 @@ vi.mock('@clerk/nextjs/server', () => ({
   currentUser: vi.fn(),
 }));
 
+const signOut = vi.hoisted(() => vi.fn(async () => undefined));
+vi.mock('@clerk/nextjs', () => ({ useClerk: () => ({ signOut }) }));
+
 vi.mock('@/lib/auth/dashboard', () => ({
   requireDashboardUser: vi.fn(),
 }));
@@ -154,6 +157,23 @@ describe('ClaimPage', () => {
     );
     expect(ensureMessengerSite).not.toHaveBeenCalled();
     expect(redirectMock).not.toHaveBeenCalled();
+  });
+
+  it('names the signed-in account on a mismatch and switches accounts back to the same claim link', async () => {
+    vi.mocked(verifyClaimToken).mockReturnValue({ shop: 'demo.myshopify.com' });
+    vi.mocked(requireDashboardUser).mockResolvedValue('user_1');
+    vi.mocked(getShopOwnerEmail).mockResolvedValue('different@example.com');
+    signOut.mockResolvedValue(undefined);
+
+    render(await ClaimPage({ searchParams: Promise.resolve({ token: 'good token' }) }));
+
+    expect(screen.getByText(/signed in as owner@example\.com/)).toBeInTheDocument();
+    // The store owner's address is the store's, never shown to this account.
+    expect(screen.queryByText(/different@example\.com/)).not.toBeInTheDocument();
+    screen.getByRole('button', { name: 'Use a different account' }).click();
+    expect(signOut).toHaveBeenCalledWith({
+      redirectUrl: '/sign-in?redirect_url=%2Fclaim%3Ftoken%3Dgood%2520token',
+    });
   });
 
   it('fails closed with a retry-first message (not a hard mismatch) when the owner email cannot be checked yet', async () => {

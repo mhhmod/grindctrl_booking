@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { MantineUiProvider } from '@/components/mantine/provider';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { getRequestLocale } from '@/lib/auth/locale';
+import { onboardingPath } from '@/lib/auth/redirect';
+import { RETURN_TO_HEADER } from '@/lib/dashboard/forward-request';
 import { rememberDashboardLocale } from '@/lib/auth/dashboard-locale';
 import { getDir } from '@/lib/landing/landing-i18n';
 import { hasCompletedOnboarding } from '@/lib/onboarding/profile';
@@ -13,15 +15,16 @@ import { ensureActiveStorePlan, getActiveStore, getActiveStoreRole, storeLookupF
 import { activeTenantKey } from '@/lib/dashboard/active-store';
 import { getV16ShellData } from '@/lib/dashboard/shell-data';
 import { V16Shell } from '@/components/dashboard/v16/v16-shell';
+import { SessionGuard } from '@/components/auth/session-guard';
 import { V16StoreLookupFailed } from '@/components/dashboard/v16/states';
 import { acceptInvitesForSignedIn } from '@/lib/team/accept';
 import { listTeamMemberships } from '@/lib/rbac/store-role';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const headerList = await headers();
-  const pathname = headerList.get('x-pathname') ?? '/dashboard';
+  const returnTo = headerList.get(RETURN_TO_HEADER) ?? headerList.get('x-pathname') ?? '/dashboard';
 
-  const clerkUserId = await requireDashboardUser(pathname);
+  const clerkUserId = await requireDashboardUser(returnTo);
 
   // Someone a team invited joins it on their first visit (N21).
   await acceptInvitesForSignedIn();
@@ -32,7 +35,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
      team member works on their team's stores, so the questions about a
      store of their own do not stand in their way. */
   if (!(await hasCompletedOnboarding(clerkUserId)) && (await listTeamMemberships(clerkUserId)).length === 0) {
-    redirect('/onboarding');
+    redirect(onboardingPath(returnTo));
   }
 
   /* Same gc-locale cookie the marketing site and storefront demo use, so a
@@ -72,15 +75,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <MantineUiProvider dir={getDir(locale)}>
       <div dir={getDir(locale)} lang={locale}>
-        <V16Shell
-          locale={locale}
-          permissions={permissions}
-          hasTenant={Boolean(activeTenantKey(activeStore))}
-          waitingCount={awaitingHandoff}
-          {...shell}
-        >
-          {lookupFailed ? <V16StoreLookupFailed locale={locale} /> : children}
-        </V16Shell>
+        <SessionGuard locale={locale}>
+          <V16Shell
+            locale={locale}
+            permissions={permissions}
+            hasTenant={Boolean(activeTenantKey(activeStore))}
+            waitingCount={awaitingHandoff}
+            {...shell}
+          >
+            {lookupFailed ? <V16StoreLookupFailed locale={locale} /> : children}
+          </V16Shell>
+        </SessionGuard>
       </div>
     </MantineUiProvider>
   );

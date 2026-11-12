@@ -15,6 +15,10 @@ import type { CannedReply } from '@/lib/messenger/canned-replies';
 import { MessageText } from '@/components/messenger/message-text';
 import { useInboxLive, type InboxLiveActions } from './use-inbox-live';
 import { normalizeSearch } from '@/lib/messenger/product-context';
+import { announceSessionEnded, isSignedOutResult } from '@/lib/auth/session-ended';
+import { saveDraft, takeDraft } from '@/lib/dashboard/session-draft';
+
+const inboxDraftKey = (siteId: string) => `inbox:${siteId}`;
 
 /* Focused staff view: list + one thread. Progressive disclosure — customer
    details stay one click away in the store admin, not crammed here. */
@@ -496,6 +500,10 @@ export function ConversationsPanel({
       setAttachments(result.attachments ?? {});
       setStatus(result.status);
       setError(null);
+    } else if (isSignedOutResult(result)) {
+      // Not a retryable failure: the sign-in prompt says what to do, and a
+      // reply's own message stays on screen.
+      announceSessionEnded();
     } else {
       setError(t.errorRetry);
     }
@@ -523,6 +531,34 @@ export function ConversationsPanel({
     });
   }
 
+  /* The session ended while a reply was being written: keep it for after
+     the sign-in (this tab only), with its conversation and its mode, so it
+     comes back exactly where it was and a note never returns as a reply. */
+  function keepUnsent(conversationId: string, mode: 'reply' | 'note', text: string) {
+    saveDraft(inboxDraftKey(siteId), JSON.stringify({ conversationId, mode, text }));
+    announceSessionEnded();
+  }
+
+  useEffect(() => {
+    const kept = takeDraft(inboxDraftKey(siteId));
+    if (!kept) return;
+    try {
+      const saved = JSON.parse(kept) as { conversationId?: unknown; mode?: unknown; text?: unknown };
+      if (typeof saved.text !== 'string' || typeof saved.conversationId !== 'string') return;
+      if (!initialConversations.some((conversation) => conversation.id === saved.conversationId)) return;
+      /* eslint-disable react-hooks/set-state-in-effect -- one-time restore of
+         a draft kept in sessionStorage, which the server render cannot see */
+      setSelectedId(saved.conversationId);
+      setComposerMode(saved.mode === 'note' ? 'note' : 'reply');
+      setDraft(saved.text.slice(0, 2000));
+      /* eslint-enable react-hooks/set-state-in-effect */
+    } catch {
+      // A malformed draft is dropped; there is nothing to restore.
+    }
+    // Restored once, for the store the panel opened on.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [siteId]);
+
   function sendReply() {
     const text = draft.trim();
     if (!text || !selectedId) return;
@@ -531,8 +567,10 @@ export function ConversationsPanel({
       if (result.ok) {
         setDraft('');
         followLatest.current = true;
+        return;
       }
-      else setError(result.error);
+      if (isSignedOutResult(result)) keepUnsent(selectedId, 'reply', draft);
+      setError(result.error);
     });
   }
 
@@ -544,8 +582,10 @@ export function ConversationsPanel({
       if (result.ok) {
         setDraft('');
         followLatest.current = true;
+        return;
       }
-      else setError(result.error);
+      if (isSignedOutResult(result)) keepUnsent(selectedId, 'note', draft);
+      setError(result.error);
     });
   }
 

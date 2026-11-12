@@ -3,12 +3,13 @@ import { useState } from 'react';
 import { Switch } from '@mantine/core';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import { getYourStoreCopy } from '@/lib/dashboard/your-store-copy';
+import { announceSessionEnded, isSignedOutResult } from '@/lib/auth/session-ended';
 import classes from './v16-your-store.module.css';
 
 export type StoreHealthAlertsProps = {
   siteId: string;
   enabled: boolean;
-  save: (siteId: string, enabled: boolean) => Promise<{ ok: boolean }>;
+  save: (siteId: string, enabled: boolean) => Promise<{ ok: boolean; signedOut?: true }>;
 };
 
 export function StoreHealthAlerts({ siteId, enabled, save, locale, canChange }: StoreHealthAlertsProps & { locale: SiteLocale; canChange: boolean }) {
@@ -20,6 +21,7 @@ export function StoreHealthAlerts({ siteId, enabled, save, locale, canChange }: 
     setChecked(next); setSaving(true); setError(false);
     const result = await save(siteId, next).catch(() => ({ ok: false }));
     if (!result.ok) { setChecked(!next); setError(true); }
+    if (isSignedOutResult(result)) announceSessionEnded();
     setSaving(false);
   }
   return (

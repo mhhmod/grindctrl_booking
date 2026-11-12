@@ -115,8 +115,9 @@ describe('the Team actions', () => {
     mocks.role.mockResolvedValue('admin');
     mocks.workspace.mockRejectedValue(new RoleNotAllowedError('team'));
     expect(await changeRoleAction({ profileId: 'p2', role: 'admin' })).toEqual({ ok: false, error: 'not_allowed' });
+    // Signed out is not "not allowed": it is typed so the page offers a sign-in.
     mocks.auth.mockResolvedValue({ userId: null });
-    expect(await resendInviteAction({ inviteId: 'i1' })).toEqual({ ok: false, error: 'not_allowed' });
+    expect(await resendInviteAction({ inviteId: 'i1' })).toEqual({ ok: false, error: 'signed_out', signedOut: true });
     expect(mocks.invite).not.toHaveBeenCalled();
     expect(mocks.remove).not.toHaveBeenCalled();
     expect(mocks.revalidate).not.toHaveBeenCalled();

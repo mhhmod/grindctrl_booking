@@ -21,7 +21,7 @@ export type PasteConflictHolder =
   | { kind: 'shopify_app'; store: string | null };
 
 export type PasteResult<T> = { ok: true; data: T }
-  | { ok: false; code: PasteErrorCode; retryAfterSeconds?: number; heldBy?: PasteConflictHolder };
+  | { ok: false; code: PasteErrorCode; retryAfterSeconds?: number; heldBy?: PasteConflictHolder; signedOut?: true };
 
 export class PasteError extends Error {
   constructor(readonly code: PasteErrorCode) { super(code); this.name = 'PasteError'; }

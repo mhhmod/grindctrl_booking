@@ -6,6 +6,7 @@ import { OnboardingForm } from '@/components/onboarding/onboarding-form';
 import { getAuthCopy } from '@/lib/auth/auth-i18n';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { getRequestLocale } from '@/lib/auth/locale';
+import { onboardingPath, resolveOnboardingNext } from '@/lib/auth/redirect';
 import { getDir } from '@/lib/landing/landing-i18n';
 import { getOnboardingProfile } from '@/lib/onboarding/profile';
 import { acceptInvitesForSignedIn } from '@/lib/team/accept';
@@ -15,11 +16,19 @@ export const metadata: Metadata = {
   description: 'Tell us about your store so we can set up the right AI for it.',
 };
 
-export default async function OnboardingPage() {
-  const clerkUserId = await requireDashboardUser('/onboarding');
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ next?: string }>;
+} = {}) {
+  /* A new account carries the page it was on its way to (sign-up's
+     redirect_url) through here, so a claim link or a deep link survives
+     sign-up, email verification and these questions. */
+  const next = resolveOnboardingNext((await searchParams)?.next);
+  const clerkUserId = await requireDashboardUser(onboardingPath(next));
   // Someone who signed up from a team's invite goes straight to that team (N21).
   if ((await acceptInvitesForSignedIn()).length > 0) {
-    redirect('/dashboard');
+    redirect(next ?? '/dashboard');
   }
   const locale = await getRequestLocale();
   const copy = getAuthCopy(locale);
@@ -27,7 +36,7 @@ export default async function OnboardingPage() {
 
   // Already done: no reason to make them fill it twice.
   if (profile?.onboardedAt) {
-    redirect('/dashboard');
+    redirect(next ?? '/dashboard');
   }
 
   return (
@@ -47,7 +56,7 @@ export default async function OnboardingPage() {
           <p className="text-sm text-muted-foreground sm:text-base">{copy.onboardingLead}</p>
         </div>
 
-        <OnboardingForm profile={profile} copy={copy} />
+        <OnboardingForm profile={profile} copy={copy} next={next} />
       </main>
     </>
   );

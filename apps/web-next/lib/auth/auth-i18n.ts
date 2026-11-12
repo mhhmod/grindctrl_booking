@@ -26,6 +26,19 @@ export interface AuthCopy {
   signUpSubtitle: string;
   signUpFooterPrompt: string;
   signUpFooterCta: string;
+  /** Shown on sign-in after signing out, so the person knows it worked. */
+  signedOutNotice: string;
+  /** Screen-reader name of the placeholder shown while the form loads. */
+  formLoading: string;
+  formSlowTitle: string;
+  formSlowBody: string;
+  formFailedTitle: string;
+  formFailedBody: string;
+  retry: string;
+  contactSupport: string;
+  /** Production with no auth configured: non-technical, no env names. */
+  unavailableTitle: string;
+  unavailableBody: string;
   onboardingTitle: string;
   onboardingLead: string;
   fieldName: string;
@@ -69,6 +82,16 @@ const en: AuthCopy = {
   signUpSubtitle: 'Set up your store once, then run try-on and the rest from one dashboard.',
   signUpFooterPrompt: 'Already have an account?',
   signUpFooterCta: 'Sign in',
+  signedOutNotice: 'You’re signed out.',
+  formLoading: 'Loading the form',
+  formSlowTitle: 'This is taking longer than usual',
+  formSlowBody: 'Check your connection and try again. If it keeps happening, contact support.',
+  formFailedTitle: 'The form didn’t load',
+  formFailedBody: 'Something stopped it from loading. Try again, or contact support if it keeps happening.',
+  retry: 'Try again',
+  contactSupport: 'Contact support',
+  unavailableTitle: 'Signing in isn’t available right now',
+  unavailableBody: 'We’re working on it. Try again in a few minutes, or contact support.',
   onboardingTitle: 'Tell us about your store',
   onboardingLead:
     'Six quick answers. We use them to set up your account and to prepare before we speak, so nothing on the call is a blank page.',
@@ -117,6 +140,16 @@ const ar: AuthCopy = {
   signUpSubtitle: 'جهّز متجرك مرة واحدة، ثم شغّل التجربة الافتراضية وغيرها من لوحة واحدة.',
   signUpFooterPrompt: 'لديك حساب بالفعل؟',
   signUpFooterCta: 'سجّل الدخول',
+  signedOutNotice: 'تم تسجيل خروجك.',
+  formLoading: 'جارٍ تحميل النموذج',
+  formSlowTitle: 'يستغرق هذا وقتًا أطول من المعتاد',
+  formSlowBody: 'تحقّق من اتصالك وحاول مرة أخرى. إذا تكرر ذلك، تواصل مع الدعم.',
+  formFailedTitle: 'لم يتم تحميل النموذج',
+  formFailedBody: 'حدث ما منع تحميله. حاول مرة أخرى، أو تواصل مع الدعم إذا تكرر ذلك.',
+  retry: 'أعد المحاولة',
+  contactSupport: 'تواصل مع الدعم',
+  unavailableTitle: 'تسجيل الدخول غير متاح الآن',
+  unavailableBody: 'نعمل على حل المشكلة. حاول مرة أخرى بعد دقائق، أو تواصل مع الدعم.',
   onboardingTitle: 'عرّفنا على متجرك',
   onboardingLead:
     'ست إجابات سريعة. نستخدمها لتجهيز حسابك وللتحضير قبل التحدث معك، حتى لا نبدأ المكالمة من صفحة فارغة.',
@@ -150,6 +183,21 @@ const ar: AuthCopy = {
   errorNoStorage: 'التخزين غير مهيأ. تواصل مع الدعم.',
   errorSaveFailed: 'تعذّر حفظ بياناتك. حاول مرة أخرى.',
 };
+
+/** The support inbox already used on the claim and store pages. */
+export const AUTH_SUPPORT_HREF = 'mailto:grindctrlnow@gmail.com';
+
+/** What the client-side form states need, so the whole dictionary is not
+ *  serialized into the page. */
+export type AuthFormStateCopy = Pick<
+  AuthCopy,
+  'formLoading' | 'formSlowTitle' | 'formSlowBody' | 'formFailedTitle' | 'formFailedBody' | 'retry' | 'contactSupport'
+>;
+
+export function authFormStateCopy(copy: AuthCopy): AuthFormStateCopy {
+  const { formLoading, formSlowTitle, formSlowBody, formFailedTitle, formFailedBody, retry, contactSupport } = copy;
+  return { formLoading, formSlowTitle, formSlowBody, formFailedTitle, formFailedBody, retry, contactSupport };
+}
 
 export function getAuthCopy(locale: SiteLocale): AuthCopy {
   return locale === 'ar' ? ar : en;

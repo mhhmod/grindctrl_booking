@@ -35,6 +35,19 @@ describe('OnboardingPage', () => {
     expect(mocks.profile).not.toHaveBeenCalled();
   });
 
+  it('sends a finished or invited account on to the page it was going to', async () => {
+    const searchParams = Promise.resolve({ next: '/claim?token=abc' });
+    mocks.profile.mockResolvedValue({ onboardedAt: '2026-10-01T00:00:00Z' });
+    await expect(OnboardingPage({ searchParams })).rejects.toThrow('redirect:/claim?token=abc');
+    mocks.accept.mockResolvedValue(['ws_1']);
+    await expect(OnboardingPage({ searchParams })).rejects.toThrow('redirect:/claim?token=abc');
+  });
+
+  it('ignores an off-site next', async () => {
+    mocks.profile.mockResolvedValue({ onboardedAt: '2026-10-01T00:00:00Z' });
+    await expect(OnboardingPage({ searchParams: Promise.resolve({ next: '//evil.example' }) })).rejects.toThrow('redirect:/dashboard');
+  });
+
   it('asks everyone else about their store, as before', async () => {
     render(await OnboardingPage());
     expect(screen.getByRole('form', { name: 'onboarding' })).toBeInTheDocument();

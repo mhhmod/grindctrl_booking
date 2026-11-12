@@ -19,6 +19,7 @@ import { AssistantLauncher } from '@/components/assistant/launcher';
 import { ClientBoundary } from '@/components/client-boundary';
 import { showLauncherFor } from '@/lib/assistant/launcher-visibility';
 import { getRequestLocale } from '@/lib/auth/locale';
+import { SIGNED_OUT_PATH } from '@/lib/auth/redirect';
 import { getDir } from '@/lib/landing/landing-i18n';
 import { siteUrl } from '@/lib/site-metadata';
 import { BROWSER_RESILIENCE_SCRIPT } from '@/lib/landing/browser-resilience';
@@ -79,7 +80,9 @@ export default async function RootLayout({children}: {children: React.ReactNode}
         <ThemeProvider>
           <GcSpotlight />
           {clerkConfigured ? (
-            <ClerkProvider localization={locale === 'ar' ? arSA : enUS}>
+            /* afterSignOutUrl: a sign-out Clerk starts itself (its account
+               dialog) lands where the dashboard's own sign-out does. */
+            <ClerkProvider localization={locale === 'ar' ? arSA : enUS} afterSignOutUrl={SIGNED_OUT_PATH}>
               {children}
               {launcher}
             </ClerkProvider>

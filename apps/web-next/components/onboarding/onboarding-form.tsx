@@ -16,9 +16,12 @@ const FIELD = { radius: 'input', size: 'md', styles: { input: { minHeight: 44 } 
 export function OnboardingForm({
   profile,
   copy,
+  next,
 }: {
   profile: OnboardingProfile | null;
   copy: AuthCopy;
+  /** The page this account was on its way to; the action checks it again. */
+  next?: string | null;
 }) {
   const [state, formAction] = useActionState(submitOnboarding, INITIAL_STATE);
   const formRef = useRef<HTMLFormElement>(null);
@@ -38,6 +41,7 @@ export function OnboardingForm({
 
   return (
     <form ref={formRef} action={formAction}>
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <Stack gap="md">
         {state.message ? (
           <Alert color="danger" variant="light" role="alert">

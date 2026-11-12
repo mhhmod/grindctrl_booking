@@ -59,7 +59,7 @@ export interface TeamCopy {
   saved: string;
   removed: (name: string) => string;
   canceled: string;
-  errors: Record<'already_member' | 'not_allowed' | 'invite_expired' | 'not_found' | 'invalid_email' | 'daily_limit' | 'failed', string>;
+  errors: Record<'already_member' | 'not_allowed' | 'invite_expired' | 'not_found' | 'invalid_email' | 'daily_limit' | 'failed' | 'signed_out', string>;
 }
 
 function twelveHour(minute: number): { time: string; pm: boolean } {
@@ -134,6 +134,7 @@ const en: TeamCopy = {
     invalid_email: 'Enter a full email address.',
     daily_limit: 'You’ve sent 20 invites today. Try again tomorrow.',
     failed: 'That didn’t work. Try again in a minute.',
+    signed_out: 'You were signed out. Sign in again to continue.',
   },
 };
 
@@ -207,6 +208,7 @@ const ar: TeamCopy = {
     invalid_email: 'أدخل عنوان بريد إلكتروني كاملاً.',
     daily_limit: 'أرسلت 20 دعوة اليوم. حاول مجدداً غداً.',
     failed: 'لم ينجح ذلك. حاول مجدداً بعد دقيقة.',
+    signed_out: 'تم تسجيل خروجك. سجّل الدخول مرة أخرى للمتابعة.',
   },
 };
 
