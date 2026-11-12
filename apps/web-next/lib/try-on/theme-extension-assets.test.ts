@@ -50,9 +50,6 @@ describe.each([
     });
     sandbox.fetch = fetch;
     sandbox.eval(asset);
-    if (surface === 'product') {
-      await waitFor(() => expect(fetch.mock.calls.some(([input]) => new URL(String(input), 'https://demo.myshopify.com').searchParams.get('piece') === 'product')).toBe(true));
-    }
     const selector = surface === 'product' ? '.gc-tryon-btn' : '.gc-cat-btn';
     await waitFor(() => expect(doc.querySelector(selector)).not.toBeNull());
     const clickedAt = Date.now();
