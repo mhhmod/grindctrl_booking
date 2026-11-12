@@ -142,6 +142,7 @@ describe('DashboardOverviewPage, v16 Today while setting up', () => {
     shop: 'alpha.myshopify.com',
     chatSeenAt: '2026-10-02T10:58:00Z',
     storeLook: false,
+    tryOnMounted: false,
     testLook: false,
     holdoutAvailable: true,
   };

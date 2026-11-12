@@ -21,6 +21,7 @@ import { storeFlags } from '@/lib/flags/store-flags';
 import { launchAudience, launchVisitorId, type LaunchAudience } from '@/lib/launch/audience';
 import { getStoreLaunch } from '@/lib/launch/store-launch';
 import { verifyPreviewTokenAnyApp } from '@/lib/launch/preview-token';
+import { recordShopifyThemePiece } from '@/lib/dashboard/today-theme-data';
 
 /* Shopify App Proxy target: storefront calls /apps/grindctrl/config and
    Shopify forwards here, appending ?shop=<domain>&signature=... .
@@ -80,6 +81,10 @@ export async function GET(request: NextRequest) {
   }
 
   const requested = params.get('locale');
+  // Native product block only. Catalog config reads cannot tick this step.
+  if (shop && params.get('piece') === 'product') {
+    await recordShopifyThemePiece(shop).catch(() => console.error('[today setup] theme signal failed'));
+  }
   const locale: TryOnLocale = isTryOnLocale(requested) ? requested : DEFAULT_TRYON_LOCALE;
 
   const visitorId = launchVisitorId(params.get('vid'));

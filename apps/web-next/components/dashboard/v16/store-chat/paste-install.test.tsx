@@ -57,6 +57,47 @@ const copy = pasteInstallCopy('en');
 const ago = (m: number) => `${m} min ago`;
 
 describe('paste install journey', () => {
+  it('B4: a repeated poll result and rate-limited check do not count as a second failure', async () => {
+    const d = domain({ verificationReason: 'code_not_found', check: { outcome: 'not_found', checkedAt: '2026-11-12T10:00:00Z' } });
+    const a = actions(status({ domains: [d] }));
+    renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+    fireEvent.click(await screen.findByRole('button', { name: copy.checkStore }));
+    await waitFor(() => expect(a.status).toHaveBeenCalledTimes(2));
+    expect(screen.queryByRole('button', { name: copy.otherProof })).not.toBeInTheDocument();
+  });
+  it.each(['en', 'ar'])('B4: offers DNS and meta after two distinct missing-code checks in %s', async (locale) => {
+    const c = pasteInstallCopy(locale);
+    const a = actions(status({ domains: [domain()] }));
+    let checks = 0;
+    a.checkDomain = vi.fn(async () => {
+      const d = domain({ verificationReason: 'code_not_found', check: { outcome: 'not_found', checkedAt: `2026-11-12T10:00:0${++checks}Z` } });
+      a.current.value = status({ domains: [d] });
+      return { ok: true as const, data: { domain: d, outcome: 'not_found' as const, retryAfterSeconds: null } };
+    });
+    renderWithMantine(<PasteInstall siteId="s1" locale={locale} copy={c} ago={ago} actions={a} woocommerce={null} />);
+    fireEvent.click(await screen.findByRole('button', { name: c.checkStore }));
+    await screen.findByText(c.domainReason('code_not_found'));
+    expect(screen.queryByRole('button', { name: c.otherProof })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: c.checkStore }));
+    fireEvent.click(await screen.findByRole('button', { name: c.otherProof }));
+    expect(screen.getByText(c.injectedCodeProof)).toBeInTheDocument();
+    expect(screen.getByText(c.proofMeta)).toBeInTheDocument();
+    expect(screen.getByText(c.proofDns)).toBeInTheDocument();
+    expect(a.proveDns).not.toHaveBeenCalled();
+    expect(a.proveMeta).not.toHaveBeenCalled();
+  });
+
+  it.each(['shopify', 'website'] as const)('m2: prefills the %s address without connecting until submit', async (platform) => {
+    const a = actions(null);
+    const website = platform === 'shopify' ? 'https://demo.myshopify.com' : 'https://shop.example';
+    renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} initialPlatform={platform} initialWebsite={website} />);
+    const input = screen.getByLabelText(platform === 'shopify' ? copy.shopifyLabel : copy.domainLabel);
+    expect(input).toHaveValue(website);
+    expect(a.enable).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: platform === 'shopify' ? copy.shopifyContinue : copy.addDomain }));
+    await waitFor(() => expect(a.enable).toHaveBeenCalledWith('s1', platform, ...(platform === 'shopify' ? ['demo.myshopify.com'] : [])));
+    if (platform === 'website') await waitFor(() => expect(a.addDomain).toHaveBeenCalledWith('s1', website));
+  });
   it.each(['en', 'ar'] as const)('shows the disconnected deadline in %s until reconnect', async locale => {
     const copy = pasteInstallCopy(locale), deadline = '2026-12-12T12:00:00Z';
     const a = actions(status({ connected: false, trusted: false, redactAfter: deadline }));

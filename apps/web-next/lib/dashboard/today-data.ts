@@ -10,6 +10,8 @@ import { getShopEntitlement } from '@/lib/try-on/entitlement';
 import { withoutTestLooks } from '@/lib/try-on/test-looks';
 import { roleCan, type DashboardWorkspaceRole } from '@/lib/rbac/dashboard-policy';
 import { startOfStoreDay } from '@/lib/time/store-day';
+import { isActiveTenant } from '@/lib/shopify/tokens';
+import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
 import { activeTenantKey, type ActiveStore } from './active-store';
 import { listDashboardShops } from './active-store-server';
 import type { TodayFacts } from './today-model';
@@ -62,10 +64,12 @@ async function looksCounts(shop: string, now: number, timeZone: string) {
   return { last7, prev7, today };
 }
 
-async function tryOnFacts(shop: string, now: number, timeZone: string, paired: boolean): Promise<TodayFacts['tryOn']> {
+async function tryOnFacts(shop: string, now: number, timeZone: string): Promise<TodayFacts['tryOn']> {
   /* An uninstalled shop has no Try it on to report on. A WooCommerce store
      is the active store only while its plugin connection is active. */
-  if (!paired) {
+  if (isSiteTenantKey(shop)) {
+    if (!(await isActiveTenant(shop))) return null;
+  } else {
     const shops = await listDashboardShops().catch(() => []);
     if (shops.find((candidate) => candidate.domain === shop)?.status !== 'installed') return null;
   }
@@ -166,7 +170,7 @@ export async function getTodayFacts({
 }): Promise<TodayFacts> {
   const tenant = activeTenantKey(activeStore);
   const [tryOn, chat] = await Promise.all([
-    tenant ? tried(() => tryOnFacts(tenant, now, timeZone, activeStore.platform === 'woocommerce'), 'try-on') : null,
+    tenant ? tried(() => tryOnFacts(tenant, now, timeZone), 'try-on') : null,
     activeStore.siteId ? tried(() => chatFacts(activeStore.siteId!, now, timeZone), 'store chat') : null,
   ]);
   return { now, timeZone, canBilling: roleCan(role, 'billing'), tryOn, chat };

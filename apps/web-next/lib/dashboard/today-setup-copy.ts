@@ -23,6 +23,11 @@ export interface TodaySetupCopy {
   checkAgain: string;
   addButtonHint: string;
   chatPlugin: string;
+  chatCode: string;
+  tryOnCode: string;
+  addButtonHintPaste: string;
+  choosePosition: string;
+  storeSetup: string;
   addButtonHintWoo: string;
   tryIt: string;
   tryItBody: string;
@@ -49,8 +54,13 @@ const en: TodaySetupCopy = {
   openThemeEditor: 'Open theme editor',
   addButton: 'Add the button to product pages',
   checkAgain: 'Check again',
-  addButtonHint: 'Opens your theme editor with the button added under your product details. Press Save and you’re done.',
+  addButtonHint: 'Save the button in your theme editor. Open a product page with the preview link below, then check again. Shoppers see the button after you go live.',
   chatPlugin: 'Store Chat (GRINDCTRL plugin for WordPress)',
+  chatCode: 'Store Chat code',
+  tryOnCode: 'Try it on button on product pages',
+  addButtonHintPaste: 'Choose the button position in Try-On setup. Open a product page with your preview link, then check again. Shoppers will see the button after you go live.',
+  choosePosition: 'Choose button position',
+  storeSetup: 'Open Store setup',
   addButtonHintWoo: 'Opens the WordPress Site Editor. Place the Try-On button on your product page and save. Classic themes use the Customizer instead.',
   tryIt: 'Try it yourself on your store',
   tryItBody: 'Try on a piece and ask a question, like a shopper would.',
@@ -82,8 +92,13 @@ const ar: TodaySetupCopy = {
   openThemeEditor: 'افتح محرر القالب',
   addButton: 'أضف الزر إلى صفحات المنتجات',
   checkAgain: 'تحقق مرة أخرى',
-  addButtonHint: 'يفتح محرر القالب وقد أُضيف الزر أسفل تفاصيل المنتج. اضغط حفظ وانتهى الأمر.',
+  addButtonHint: 'احفظ الزر في محرر القالب. افتح صفحة منتج برابط المعاينة أدناه ثم تحقق مجددًا. سيرى المتسوقون الزر بعد الإطلاق.',
   chatPlugin: 'دردشة المتجر (إضافة GRINDCTRL لووردبريس)',
+  chatCode: 'كود دردشة المتجر',
+  tryOnCode: 'زر التجربة في صفحات المنتجات',
+  addButtonHintPaste: 'اختر موضع الزر في إعدادات التجربة الافتراضية. افتح صفحة منتج برابط المعاينة ثم تحقق مجددًا. سيرى المتسوقون الزر بعد الإطلاق.',
+  choosePosition: 'اختر موضع الزر',
+  storeSetup: 'افتح إعداد المتجر',
   addButtonHintWoo: 'يفتح محرر الموقع في ووردبريس. ضع زر التجربة في صفحة المنتج ثم احفظ. القوالب الكلاسيكية تستخدم أداة التخصيص بدلاً من ذلك.',
   tryIt: 'جرّب بنفسك في متجرك',
   tryItBody: 'جرّب قطعة واطرح سؤالاً، كما يفعل المتسوق.',

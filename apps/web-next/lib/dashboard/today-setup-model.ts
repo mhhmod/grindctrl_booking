@@ -5,9 +5,8 @@
    - Store connected: the shop is installed (the page is only shown then).
    - Turn GrindCTRL on in your theme: Store Chat's loader has booted on the
      store (in the theme editor, or for the owner's preview link while the
-     store is not live), and a look has been started on the store. The
-     theme itself is read with item 24 (N24), so neither piece is called
-     missing here, only not ready yet.
+     store is not live), and the Try-On button has loaded. A look is
+     required only by the next step.
    - Try it yourself: the owner has made a test look.
    - Go live: never ticked here; going live leaves this page for Today.
    Left out until their back ends exist: the product count and languages
@@ -26,12 +25,14 @@ export type TodaySetupFacts = {
   /** The store's tenant key: the Shopify shop, or `site:<id>` for WooCommerce. */
   shop: string;
   /** A WooCommerce store's WordPress editors, in place of Shopify's links. */
-  platform?: 'woocommerce';
+  platform?: 'woocommerce' | 'paste';
   wpAdmin?: { siteEditor: string; customizer: string } | null;
   /** When Store Chat's loader last booted on the store, if ever. */
   chatSeenAt: string | null;
   /** A look has been started on the store (a test look counts). */
   storeLook: boolean;
+  /** The theme piece loaded, independently of any generated look. */
+  tryOnMounted: boolean;
   /** The owner has made a test look from the preview link. */
   testLook: boolean;
   /** The 50/50 test can be chosen (n6_holdout). */
@@ -62,19 +63,24 @@ export type TodaySetupView = {
   pieces: ThemePiece[];
   addButtonHref: string;
   addButtonHint: string;
+  addButtonLabel: string;
+  themeLinkLabel: string;
   holdoutAvailable: boolean;
 };
 
 export function buildTodaySetupView(facts: TodaySetupFacts, copy: TodaySetupCopy): TodaySetupView {
   const woo = facts.platform === 'woocommerce';
+  const paste = facts.platform === 'paste';
   const pieces: ThemePiece[] = [
-    woo
+    paste
+      ? { key: 'chat', name: copy.chatCode, ready: facts.chatSeenAt !== null, href: '/dashboard/store#connect' }
+      : woo
       ? { key: 'chat', name: copy.chatPlugin, ready: facts.chatSeenAt !== null, href: null }
       : { key: 'chat', name: copy.chatEmbed, ready: facts.chatSeenAt !== null, href: appEmbedActivationUrl(facts.shop, 'messenger') },
-    { key: 'tryOn', name: copy.tryOnBlock, ready: facts.storeLook, href: null },
+    { key: 'tryOn', name: paste ? copy.tryOnCode : copy.tryOnBlock, ready: facts.tryOnMounted, href: null },
   ];
   const steps: SetupStep[] = [
-    { key: 'connected', number: 1, title: copy.connected, done: true, line: woo ? facts.store : facts.shop },
+    { key: 'connected', number: 1, title: copy.connected, done: true, line: woo || paste ? facts.store : facts.shop },
     { key: 'theme', number: 2, title: copy.theme, done: pieces.every((piece) => piece.ready), line: null },
     { key: 'tryIt', number: 3, title: copy.tryIt, done: facts.testLook, line: null },
     { key: 'goLive', number: 4, title: copy.goLive, done: false, line: null },
@@ -87,8 +93,10 @@ export function buildTodaySetupView(facts: TodaySetupFacts, copy: TodaySetupCopy
     current: steps.find((step) => !step.done)?.key ?? 'goLive',
     steps,
     pieces,
-    addButtonHref: woo ? (facts.wpAdmin?.siteEditor ?? '/dashboard/try-on/setup') : productBlockAddUrl(facts.shop, 'tryon'),
-    addButtonHint: woo ? copy.addButtonHintWoo : copy.addButtonHint,
+    addButtonHref: paste ? '/dashboard/try-on/setup' : woo ? (facts.wpAdmin?.siteEditor ?? '/dashboard/try-on/setup') : productBlockAddUrl(facts.shop, 'tryon'),
+    addButtonHint: paste ? copy.addButtonHintPaste : woo ? copy.addButtonHintWoo : copy.addButtonHint,
+    addButtonLabel: paste ? copy.choosePosition : copy.addButton,
+    themeLinkLabel: paste ? copy.storeSetup : copy.openThemeEditor,
     holdoutAvailable: facts.holdoutAvailable,
   };
 }

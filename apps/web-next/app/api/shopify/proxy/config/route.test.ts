@@ -13,6 +13,7 @@ const { entitlementMock, settingsMock, showButtonMock, rateLimitMock, flagsMock,
   activeInstallationMock: vi.fn(),
 }));
 vi.mock('@/lib/shopify/tokens', () => ({ isActiveShopifyInstallation: activeInstallationMock }));
+vi.mock('@/lib/dashboard/today-theme-data', () => ({ recordShopifyThemePiece: vi.fn(async () => {}) }));
 
 vi.mock('@/lib/ratelimit', () => {
   const limiter = (name: string) => ({ limit: (id: string) => rateLimitMock(name, id) });
@@ -42,6 +43,7 @@ vi.mock('@/lib/try-on/merchant-copy', () => ({
 }));
 
 import { GET } from './route';
+import { recordShopifyThemePiece } from '@/lib/dashboard/today-theme-data';
 import { clearProxyConfigCache, invalidateProxyConfig } from '@/lib/shopify/proxy-config-cache';
 import { signPreviewToken } from '@/lib/launch/preview-token';
 import { holdoutBucket } from '@/lib/launch/audience';
@@ -71,6 +73,7 @@ function request(locale = 'en', extra: Record<string, string> = {}, secret = SEC
 
 describe('GET /api/shopify/proxy/config launch answer', () => {
   beforeEach(() => {
+    vi.mocked(recordShopifyThemePiece).mockClear();
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
     process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
@@ -82,6 +85,20 @@ describe('GET /api/shopify/proxy/config launch answer', () => {
     flagsMock.mockReset().mockResolvedValue([]);
     launchMock.mockReset().mockResolvedValue(null);
     activeInstallationMock.mockReset().mockResolvedValue(true);
+  });
+
+  it('m5: records a signed product block before any look, including a cached config', async () => {
+    await GET(request());
+    expect(recordShopifyThemePiece).not.toHaveBeenCalled();
+    await GET(request('en', { piece: 'product' }));
+    expect(recordShopifyThemePiece).toHaveBeenCalledWith(SHOP);
+    vi.mocked(recordShopifyThemePiece).mockClear();
+    activeInstallationMock.mockResolvedValue(false);
+    await GET(request('en', { piece: 'product' }));
+    expect(recordShopifyThemePiece).not.toHaveBeenCalled();
+    activeInstallationMock.mockResolvedValue(true);
+    await GET(new NextRequest(`https://app.example.com/api/shopify/proxy/config?piece=product&shop=${SHOP}`));
+    expect(recordShopifyThemePiece).not.toHaveBeenCalled();
   });
 
   /* One switch for every platform: off hides the block and the pills. */

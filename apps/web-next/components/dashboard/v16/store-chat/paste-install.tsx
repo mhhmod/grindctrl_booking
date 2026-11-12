@@ -53,6 +53,7 @@ export function PasteInstall({
   actions,
   woocommerce,
   initialPlatform = null,
+  initialWebsite = '',
 }: {
   siteId: string;
   locale: string;
@@ -61,14 +62,16 @@ export function PasteInstall({
   actions: PasteInstallActions;
   woocommerce: React.ReactNode;
   initialPlatform?: InstallPlatform | null;
+  initialWebsite?: string;
 }) {
-  const [picked, setPlatform] = React.useState<InstallPlatform | null>(initialPlatform);
+  const [picked, setPlatform] = React.useState<InstallPlatform | null>(null);
   const [status, setStatus] = React.useState<PasteInstallStatus | null>(null);
   const [snippet, setSnippet] = React.useState<PasteSnippet | null>(null);
   const [error, setError] = React.useState<PasteErrorCode | null>(null);
   const [busy, setBusy] = React.useState<string | null>(null);
-  const [shop, setShop] = React.useState('');
-  const [domain, setDomain] = React.useState('');
+  const [shop, setShop] = React.useState(initialWebsite);
+  const [domain, setDomain] = React.useState(initialWebsite);
+  const [domainChecks, setDomainChecks] = React.useState<Record<string, { at: string; misses: number }>>({});
   const [proofFor, setProofFor] = React.useState<string | null>(null);
   const [resetStep, setResetStep] = React.useState<'idle' | 'confirm'>('idle');
   const [resetUntil, setResetUntil] = React.useState<string | null>(null);
@@ -131,6 +134,16 @@ export function PasteInstall({
     }
     setNow(Date.now());
     setStatus(next.data);
+    // Count distinct server checks, including checks observed by polling.
+    // Re-reading the same failure must never count as another attempt.
+    setDomainChecks((previous) => {
+      const updated = { ...previous };
+      for (const d of next.data.domains) {
+        if (!d.check || previous[d.id]?.at === d.check.checkedAt) continue;
+        updated[d.id] = { at: d.check.checkedAt, misses: d.verificationReason === 'code_not_found' ? (previous[d.id]?.misses ?? 0) + 1 : 0 };
+      }
+      return updated;
+    });
     if (loaded.snippet?.ok) setSnippet(loaded.snippet.data);
   }, []);
 
@@ -167,7 +180,7 @@ export function PasteInstall({
 
   const connectedAs = status?.connected ? status.platform : null;
   /* A connected store opens on its own platform until the merchant picks another. */
-  const platform = picked ?? connectedAs ?? null;
+  const platform = picked ?? connectedAs ?? initialPlatform;
   const domains = status?.domains ?? [];
 
   async function choose(next: InstallPlatform) {
@@ -187,6 +200,8 @@ export function PasteInstall({
   async function addDomain(event: React.FormEvent) {
     event.preventDefault();
     if (!domain.trim()) return;
+    // A preselected onboarding answer is a draft, never an implicit connection.
+    if (connectedAs !== 'website' && !(await run('enable', () => actions.enable(siteId, 'website')))) return;
     if (await run('domain', () => actions.addDomain(siteId, domain.trim()))) {
       setDomain('');
       await refresh();
@@ -379,7 +394,12 @@ export function PasteInstall({
         <Alert variant="light" role="status" icon={<GcIcon name="check" size={18} />}>{copy.leaveDone}</Alert>
       ) : null}
 
-      {platform === 'woocommerce' ? woocommerce : null}
+      {platform === 'woocommerce' ? (
+        <>
+          {initialWebsite && !connectedAs ? <Text size="sm">{copy.savedAddress} <bdi dir="ltr" className={classes.domainName}>{initialWebsite}</bdi></Text> : null}
+          {woocommerce}
+        </>
+      ) : null}
 
       {status?.connectionReason === 'shopify_app_installed' && platform === 'shopify' ? (
         <Alert variant="light" icon={<GcIcon name="info" size={18} />}>{copy.appHeld}</Alert>
@@ -450,7 +470,8 @@ export function PasteInstall({
                       const live = d.domainVerified && seen !== null && seen * 60000 <= LIVE_WINDOW_MS;
                       /* DNS or meta tag: for an address another account holds, or
                          a site our check cannot open. Never the first ask. */
-                      const proofOffered = d.state !== 'trusted' || d.verificationReason === 'unreachable';
+                      const injectedCode = !d.domainVerified && d.verificationReason === 'code_not_found' && (domainChecks[d.id]?.misses ?? 0) >= 2;
+                      const proofOffered = d.state !== 'trusted' || d.verificationReason === 'unreachable' || injectedCode;
                       const wait = domainWait?.id === d.id ? domainWait : null;
                       return (
                         <li key={d.id} className={classes.domain}>
@@ -490,6 +511,7 @@ export function PasteInstall({
                               </Button>
                             </Group>
                           ) : null}
+                          {injectedCode ? <Text size="sm" mt={4} role="status">{copy.injectedCodeProof}</Text> : null}
                           {proofOffered ? (
                             proofFor === d.id ? (
                               <Stack gap="xs" mt="xs" className={classes.proof}>

@@ -40,6 +40,8 @@ import { createWooPairingCodeAction, readWooConnectionAction } from './woo-actio
 import * as pasteActions from './paste-actions';
 import { getPasteConnection, readPasteDomainPlatforms } from '@/lib/paste/store';
 import { StoreConnect } from '@/components/dashboard/v16/store-setup/store-connect';
+import { getOnboardingProfile } from '@/lib/onboarding/profile';
+import { storeSetupDraft } from '@/lib/dashboard/store-setup-draft';
 
 /* The Store Chat page (04-dashboard.md), drawn by two routes:
    /dashboard/store-chat is What it knows and /dashboard/store-chat/setup is
@@ -216,10 +218,15 @@ export async function StoreChatPage({
       if (failed.status === 'rejected') console.error('[store setup] connect failed:', failed.reason);
     }
     const platforms = platformsRead.status === 'fulfilled' ? platformsRead.value ?? [] : [];
+    // Only the owner's unconnected site inherits their own onboarding answers.
+    const draft = selectedRole === 'owner' && !selected.domain && !platforms.length
+      && wooConnectionRead.status === 'fulfilled' && !wooConnectionRead.value && !(await getPasteConnection(selected.id))
+      ? storeSetupDraft(await getOnboardingProfile(userId)) : undefined;
     return (
       <StoreConnect
         locale={locale}
         siteId={selected.id}
+        draft={draft}
         meta={{
           domain: selected.domain ?? platforms[0]?.domain ?? null,
           embedKey: selected.embed_key,

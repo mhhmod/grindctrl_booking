@@ -135,7 +135,7 @@ export function V16TodaySetup({
                   <span className={classes.pieceName}>{piece.name}</span>
                   {!piece.ready && piece.href && (
                     <a href={piece.href} target="_blank" rel="noopener noreferrer" className={classes.link}>
-                      {copy.openThemeEditor}
+                      {view.themeLinkLabel}
                       <GcIcon name="ext" size={14} />
                     </a>
                   )}
@@ -151,7 +151,7 @@ export function V16TodaySetup({
                 radius="pill"
                 rightSection={<GcIcon name="ext" size={14} />}
               >
-                {copy.addButton}
+                {view.addButtonLabel}
               </Button>
               <Button variant="default" radius="pill" leftSection={<GcIcon name="refresh" size={16} />} loading={checking} onClick={checkAgain}>
                 {copy.checkAgain}

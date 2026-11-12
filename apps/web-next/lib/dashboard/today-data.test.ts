@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 vi.mock('server-only', () => ({}));
+vi.mock('@/lib/shopify/tokens', () => ({ isActiveTenant: mocks.active }));
 
 const mocks = vi.hoisted(() => ({
   entitlement: vi.fn(),
@@ -10,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   lastSeen: vi.fn(),
   replyMinutes: vi.fn(),
   shops: vi.fn(),
+  active: vi.fn(),
+  eq: vi.fn(),
   tables: {} as Record<string, unknown[]>,
   failTable: null as string | null,
 }));
@@ -22,7 +25,7 @@ vi.mock('@/lib/messenger/db', () => {
   class Query {
     constructor(readonly table: string) {}
     select() { return this; }
-    eq() { return this; }
+    eq(...args: unknown[]) { mocks.eq(...args); return this; }
     gte() { return this; }
     not() { return this; }
     limit() { return this; }
@@ -43,6 +46,7 @@ const STORE = { shopDomain: 'maison.myshopify.com', siteId: '11111111-1111-4111-
 
 beforeEach(() => {
   vi.resetAllMocks();
+  mocks.active.mockResolvedValue(true);
   mocks.failTable = null;
   mocks.shops.mockResolvedValue([{ domain: 'maison.myshopify.com', status: 'installed', lastSeenAt: at(5) }]);
   mocks.entitlement.mockResolvedValue({
@@ -114,6 +118,19 @@ describe('getTodayFacts', () => {
 });
 
 describe('getTodayFacts for a paired WooCommerce store', () => {
+  it('M6: reads paste looks and plan under the site tenant, refusing an inactive connection', async () => {
+    const key = `site:${STORE.siteId}`;
+    const paste = { shopDomain: null, siteId: STORE.siteId, tenantKey: key, platform: 'paste' as const };
+    mocks.shops.mockResolvedValue([]);
+    const facts = await getTodayFacts({ activeStore: paste, role: 'owner', timeZone: 'Africa/Cairo', now: NOW });
+    expect(mocks.active).toHaveBeenCalledWith(key);
+    expect(mocks.entitlement).toHaveBeenCalledWith(key);
+    expect(mocks.eq).toHaveBeenCalledWith('shop', key);
+    expect(facts.tryOn).toMatchObject({ looksLast7: 2, looksToday: 1, looksLeft: 150, planName: 'Growth', planActive: true });
+    expect(mocks.shops).not.toHaveBeenCalled();
+    mocks.active.mockResolvedValue(false);
+    expect((await getTodayFacts({ activeStore: paste, role: 'owner', timeZone: 'UTC', now: NOW })).tryOn).toBeNull();
+  });
   it('reads the plan and looks under the site tenant, with no shop list lookup', async () => {
     const key = `site:${STORE.siteId}`;
     const woo = { shopDomain: null, siteId: STORE.siteId, tenantKey: key, platform: 'woocommerce' as const };
