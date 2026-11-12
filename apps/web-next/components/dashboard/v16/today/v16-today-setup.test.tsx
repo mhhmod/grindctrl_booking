@@ -17,6 +17,7 @@ const FACTS: TodaySetupFacts = {
   shop: 'maison-noor.myshopify.com',
   chatSeenAt: '2026-10-02T10:58:00Z',
   storeLook: false,
+  tryOnMounted: false,
   testLook: false,
   holdoutAvailable: false,
 };
@@ -79,7 +80,7 @@ describe('V16TodaySetup', () => {
   });
 
   it('folds finished steps to their title, and opens them again', () => {
-    draw({ storeLook: true, testLook: true });
+    draw({ tryOnMounted: true, testLook: true });
     expect(screen.getByText('1 step left, about 2 minutes')).toBeInTheDocument();
     const fold = within(step(en.theme)).getByRole('button', { name: en.theme });
     expect(fold).toHaveAttribute('aria-expanded', 'false');

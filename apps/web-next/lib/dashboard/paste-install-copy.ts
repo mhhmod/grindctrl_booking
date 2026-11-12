@@ -23,6 +23,8 @@ export type PasteInstallCopy = {
   domainState: { live: (ago: string) => string; waiting: string; proof: string; verified: string };
   domainReason: (reason: PasteDomainVerificationReason) => string;
   otherProof: string;
+  injectedCodeProof: string;
+  savedAddress: string;
   proofTitle: string;
   proofMeta: string;
   proofDns: string;
@@ -122,6 +124,8 @@ const en: PasteInstallCopy = {
     }
   },
   otherProof: 'Other ways to confirm',
+  injectedCodeProof: 'We still cannot find your code. Our check cannot see code added by a tag manager. Confirm with DNS or a meta tag below so Try-On can turn on for shoppers.',
+  savedAddress: 'Your saved store address. Connect its WordPress plugin below, then preview what shoppers will see:',
   proofTitle: 'Add either of these, then check.',
   proofMeta: 'Add this tag inside your site’s <head>:',
   proofDns: 'Or add this DNS record:',
@@ -270,6 +274,8 @@ const ar: PasteInstallCopy = {
     }
   },
   otherProof: 'طرق أخرى للتأكيد',
+  injectedCodeProof: 'لم نجد الكود بعد. فحصنا لا يرى الكود المضاف عبر مدير الوسوم. أكّد عبر DNS أو وسم التعريف أدناه لتفعيل التجربة الافتراضية للمتسوقين.',
+  savedAddress: 'عنوان متجرك المحفوظ. اربط إضافة ووردبريس أدناه، ثم عاين ما سيراه المتسوقون:',
   proofTitle: 'أضف أحد هذين ثم اضغط تحقق.',
   proofMeta: 'أضف هذا الوسم داخل <head> في موقعك:',
   proofDns: 'أو أضف سجل DNS هذا:',

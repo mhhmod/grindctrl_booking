@@ -8,7 +8,7 @@ import { appEmbedActivationUrl } from '@/lib/shopify/app-identity';
 import { buildCanonicalInstallSnippet } from '@/lib/adapters/install';
 import { getChatStudioCopy } from '@/lib/dashboard/chat-studio-copy';
 import { getYourStoreCopy } from '@/lib/dashboard/your-store-copy';
-import { pasteInstallCopy } from '@/lib/dashboard/paste-install-copy';
+import { pasteInstallCopy, type InstallPlatform } from '@/lib/dashboard/paste-install-copy';
 import type { DomainActions } from '@/lib/messenger/dashboard-actions-contract';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import type { WooSiteConnectionSummary } from '@/lib/woo/connection';
@@ -64,12 +64,14 @@ export function StoreConnect({
   siteId,
   meta,
   actions,
+  draft,
 }: {
   locale: SiteLocale;
   siteId: string;
   meta: StoreConnectMeta;
   /** Absent for people who cannot change settings. */
   actions?: StoreConnectActions;
+  draft?: { platform: InstallPlatform; website: string };
 }) {
   const copy = getYourStoreCopy(locale);
   const chat = getChatStudioCopy(locale);
@@ -191,7 +193,8 @@ export function StoreConnect({
               copy={pasteInstallCopy(locale)}
               ago={chat.ago}
               actions={pasteActions!}
-              initialPlatform={meta.wooConnection ? 'woocommerce' : null}
+              initialPlatform={meta.wooConnection ? 'woocommerce' : draft?.platform ?? null}
+              initialWebsite={draft?.website}
               woocommerce={
                 <>
                   <WoocommerceGuide

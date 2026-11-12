@@ -10,10 +10,13 @@ import { wpAdminUrls } from './tryon-studio-model';
 import { getActiveWooSiteContext } from '@/lib/woo/connection';
 import { buildShellStores } from './shell-model';
 import type { TodaySetupFacts } from './today-setup-model';
+import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
+import { isActiveTenant } from '@/lib/shopify/tokens';
+import { readTodayTryOnMounted } from './today-theme-data';
 
 /* The facts behind the v16 Today while setting up, for the active store
-   only. Null when the page does not apply: no Shopify shop or paired
-   WooCommerce store, a shop that is not installed, or a store that is live (no launch row, a failed read and
+   only. Null when the page does not apply: no installed Shopify app, active
+   WooCommerce or trusted paste tenant, or a store that is live (no launch row, a failed read and
    a finished 50/50 test all read live, as on the storefront). A signal that
    cannot be read counts as not seen yet, so a step is never ticked on a
    guess. The caller checks the flags and the person's role. */
@@ -54,13 +57,16 @@ export async function getTodaySetupFacts({
   if (state !== 'setup' && state !== 'preview') return null;
 
   const [shops, sites] = await Promise.all([listDashboardShops().catch(() => []), listDashboardSites().catch(() => [])]);
-  if (activeStore.platform !== 'woocommerce' && shops.find((candidate) => candidate.domain === shop)?.status !== 'installed') return null;
+  if (isSiteTenantKey(shop)) {
+    if (!(await isActiveTenant(shop))) return null;
+  } else if (shops.find((candidate) => candidate.domain === shop)?.status !== 'installed') return null;
   const store = buildShellStores(shops, sites, activeStore).find((candidate) => candidate.current)?.label ?? shop;
 
   const siteId = activeStore.siteId;
-  const [chatSeenAt, looks] = await Promise.all([
+  const [chatSeenAt, looks, tryOnMounted] = await Promise.all([
     siteId ? signal(() => getWidgetLastSeenAt(siteId), null, 'store chat seen') : Promise.resolve(null),
     signal(() => storeLooks(shop), { storeLook: false, testLook: false }, 'looks'),
+    siteId ? signal(() => readTodayTryOnMounted(siteId, !isSiteTenantKey(shop), now), false, 'theme piece') : false,
   ]);
   const wpAdmin = activeStore.platform === 'woocommerce' && siteId
     ? wpAdminUrls((await getActiveWooSiteContext(siteId).catch(() => null))?.homeUrl ?? '')
@@ -70,7 +76,11 @@ export async function getTodaySetupFacts({
     shop,
     chatSeenAt,
     ...looks,
+    // The Shopify app block reports its own load only from the next app
+    // version; until then a look made on the store proves the block is on.
+    tryOnMounted: tryOnMounted || (!isSiteTenantKey(shop) && looks.storeLook),
     holdoutAvailable,
     ...(activeStore.platform === 'woocommerce' ? { platform: 'woocommerce' as const, wpAdmin } : {}),
+    ...(activeStore.platform === 'paste' ? { platform: 'paste' as const } : {}),
   };
 }

@@ -3,18 +3,23 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 vi.mock('server-only', () => ({}));
+vi.mock('@/lib/shopify/tokens', () => ({ isActiveTenant: mocks.active }));
 
 const mocks = vi.hoisted(() => ({
   launch: vi.fn(),
   lastSeen: vi.fn(),
   shops: vi.fn(),
+  active: vi.fn(),
+  eq: vi.fn(),
   sites: vi.fn(),
   woo: vi.fn(),
+  mounted: vi.fn(),
   /** Rows for a read of tryon_jobs, by whether it asked for test looks only. */
   looks: { any: [] as unknown[], test: [] as unknown[] },
   error: { any: null as null | { message: string }, test: null as null | { message: string } },
 }));
 
+vi.mock('./today-theme-data', () => ({ readTodayTryOnMounted: mocks.mounted }));
 vi.mock('@/lib/woo/connection', () => ({ getActiveWooSiteContext: mocks.woo }));
 vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: mocks.launch }));
 vi.mock('@/lib/messenger/conversations', () => ({ getWidgetLastSeenAt: mocks.lastSeen }));
@@ -23,7 +28,8 @@ vi.mock('@/lib/messenger/db', () => {
   class Query {
     test = false;
     select() { return this; }
-    eq(column: string) {
+    eq(column: string, value: unknown) {
+      mocks.eq(column, value);
       if (column === 'is_test') this.test = true;
       return this;
     }
@@ -46,6 +52,8 @@ const SETUP = { state: 'setup', holdoutShare: null, holdoutStartedAt: null, hold
 
 beforeEach(() => {
   vi.resetAllMocks();
+  mocks.active.mockResolvedValue(true);
+  mocks.mounted.mockResolvedValue(false);
   mocks.launch.mockResolvedValue(SETUP);
   mocks.lastSeen.mockResolvedValue('2026-10-02T10:58:00Z');
   mocks.shops.mockResolvedValue([{ domain: 'maison-noor.myshopify.com', status: 'installed', lastSeenAt: '2026-10-02T10:00:00Z' }]);
@@ -55,12 +63,29 @@ beforeEach(() => {
 });
 
 describe('getTodaySetupFacts', () => {
+  it('M6/m5: gives a paste tenant its checklist and mounted button before its first look', async () => {
+    const key = `site:${SITE}`;
+    const activeStore = { shopDomain: null, siteId: SITE, tenantKey: key, platform: 'paste' as const };
+    mocks.shops.mockResolvedValue([]);
+    mocks.sites.mockResolvedValue([{ id: SITE, name: 'Pasted store', domain: null, paste: true }]);
+    mocks.looks = { any: [], test: [] };
+    mocks.mounted.mockResolvedValue(true);
+    expect(await getTodaySetupFacts({ activeStore, holdoutAvailable: false, now: NOW })).toMatchObject({
+      store: 'Pasted store', shop: key, platform: 'paste', tryOnMounted: true, storeLook: false, testLook: false,
+    });
+    expect(mocks.active).toHaveBeenCalledWith(key);
+    expect(mocks.eq).toHaveBeenCalledWith('shop', key);
+    expect(mocks.mounted).toHaveBeenCalledWith(SITE, false, NOW);
+    mocks.active.mockResolvedValue(false);
+    expect(await getTodaySetupFacts({ activeStore, holdoutAvailable: false, now: NOW })).toBeNull();
+  });
   it('reads the store’s name and signals while it is being set up', async () => {
     expect(await getTodaySetupFacts({ activeStore: STORE, holdoutAvailable: true, now: NOW })).toEqual({
       store: 'Maison Noor',
       shop: 'maison-noor.myshopify.com',
       chatSeenAt: '2026-10-02T10:58:00Z',
       storeLook: true,
+      tryOnMounted: true, // a look made on the store proves the Shopify block is on
       testLook: false,
       holdoutAvailable: true,
     });

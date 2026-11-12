@@ -19,6 +19,7 @@ vi.mock('@/app/dashboard/connect-shop/actions', () => ({ generateShopLinkCode: v
 vi.mock('@clerk/nextjs/server', () => ({ currentUser: vi.fn(async () => ({ primaryEmailAddress: { emailAddress: 'hana@maisonnoor.com' }, emailAddresses: [] })) }));
 vi.mock('@/lib/auth/dashboard', () => ({ requireDashboardUser: vi.fn(async () => 'user_owner') }));
 vi.mock('@/lib/auth/locale', () => ({ getRequestLocale: vi.fn(async () => 'en') }));
+vi.mock('@/lib/onboarding/profile', () => ({ getOnboardingProfile: vi.fn(async () => ({ website: 'https://store.example', storePlatform: 'Shopify' })) }));
 
 const SITE = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -85,7 +86,7 @@ vi.mock('./actions', () => ({
   removeDomainAction: vi.fn(),
 }));
 vi.mock('./woo-actions', () => ({ createWooPairingCodeAction: vi.fn(), readWooConnectionAction: vi.fn() }));
-vi.mock('@/components/dashboard/v16/store-setup/store-connect', () => ({ StoreConnect: ({ siteId, actions }: { siteId: string; actions?: object }) => <div data-testid="store-connect" data-actions={actions ? Object.keys(actions).sort().join(',') : ''}>{siteId}</div> }));
+vi.mock('@/components/dashboard/v16/store-setup/store-connect', () => ({ StoreConnect: ({ siteId, actions, draft }: { siteId: string; actions?: object; draft?: object }) => <div data-testid="store-connect" data-draft={JSON.stringify(draft)} data-actions={actions ? Object.keys(actions).sort().join(',') : ''}>{siteId}</div> }));
 // ChatStudio has its own tests (v16-chat-studio.test.tsx); here only what it is handed.
 vi.mock('@/components/dashboard/v16/store-chat/v16-chat-studio', () => ({
   V16ChatStudio: ({
@@ -129,6 +130,14 @@ beforeEach(() => {
 });
 
 describe('the Store Chat routes', () => {
+  it('m2: hands the owner saved defaults only for an unconnected site', async () => {
+    vi.mocked(listMessengerSites).mockResolvedValueOnce([{ ...SITE, domain: null, hasDraft: false }]);
+    render(await StoreChatPage({ params: {}, tab: 'install' }));
+    expect(screen.getByTestId('store-connect')).toHaveAttribute('data-draft', JSON.stringify({ platform: 'shopify', website: 'https://store.example' }));
+    cleanup();
+    render(await StoreChatPage({ params: {}, tab: 'install' }));
+    expect(screen.getByTestId('store-connect')).not.toHaveAttribute('data-draft');
+  });
   it('passes the retention deadline without exposing the duplicate disconnect for a disabled paste site', async () => {
     const deadline = '2026-12-12T12:00:00Z';
     vi.mocked(listMessengerSites).mockResolvedValueOnce([{ ...SITE, domain: null, status: 'disabled', hasDraft: false }]);
