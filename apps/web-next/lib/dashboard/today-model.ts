@@ -280,12 +280,6 @@ function change(current: number, previous: number, copy: TodayCopy): { sub: stri
   return pct > 0 ? { sub: copy.moreThanBefore(pct), trend: 'up' } : { sub: copy.fewerThanBefore(-pct), trend: 'down' };
 }
 
-/** A round number read at a glance, as the shopper's panel says it. */
-function friendlyMinutes(minutes: number): number {
-  const whole = Math.max(1, Math.round(minutes));
-  return whole <= 10 ? whole : Math.round(whole / 5) * 5;
-}
-
 function lastWeekTiles(facts: TodayFacts, copy: TodayCopy, locale: SiteLocale): Tile[] {
   const tiles: Tile[] = [];
   const { tryOn, chat } = facts;
@@ -310,7 +304,7 @@ function lastWeekTiles(facts: TodayFacts, copy: TodayCopy, locale: SiteLocale): 
         ? {
             key: 'team_reply',
             label: copy.teamFirstReply,
-            value: copy.minutesValue(friendlyMinutes(chat.teamReplyMinutes)),
+            value: copy.durationValue(chat.teamReplyMinutes),
             sub: copy.duringOpeningHours,
           }
         : { key: 'team_reply', label: copy.teamFirstReply, value: '–', sub: copy.notEnoughHandoffs },

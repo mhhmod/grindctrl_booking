@@ -58,6 +58,7 @@ export type TeamView = {
   }>;
   invites: Array<{ id: string; email: string; role: string; roleKey: InviteRole; sent: string; expired: boolean }>;
   alerts: string | null;
+  alertRecipients: string[];
   hours: string | null;
   outsideHours: boolean;
 };
@@ -140,14 +141,15 @@ export function buildTeamView(facts: TeamFacts, copy: TeamCopy, locale: SiteLoca
 
   const site = facts.site;
   let alerts: string | null = null;
+  let alertRecipients: string[] = [];
   let hours: string | null = null;
   if (site) {
     const addresses = alertAddresses(facts.people, site.recipients);
+    if (site.emailOnHandoff) alertRecipients = addresses;
     alerts = !site.emailOnHandoff
       ? copy.alertsOff
       : addresses.length
-        // Each address keeps its own direction inside an Arabic sentence.
-        ? copy.alertsTo(copy.list(locale === 'ar' ? addresses.map((address) => `⁨${address}⁩`) : addresses))
+        ? copy.alertsTo
         : copy.alertsNobody;
     hours =
       site.availabilityMode === 'always'
@@ -174,6 +176,7 @@ export function buildTeamView(facts: TeamFacts, copy: TeamCopy, locale: SiteLoca
     people,
     invites,
     alerts,
+    alertRecipients,
     hours,
     outsideHours: Boolean(site && facts.afterHours && site.availabilityMode === 'hours' && site.availabilityHours.length),
   };

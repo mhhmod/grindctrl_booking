@@ -13,12 +13,21 @@ describe('Published legal copy', () => {
     expect(source).toContain(LEGAL_UPDATED);
     expect(ar.sections.map((section) => section.id)).toEqual(en.sections.map((section) => section.id));
     expect(new Set(en.sections.map((section) => section.id)).size).toBe(en.sections.length);
+    const sourceSections = source.split(/^## \d+\. /m).slice(1);
+    expect(sourceSections).toHaveLength(en.sections.length);
 
     for (const [index, section] of en.sections.entries()) {
       expect(source).toContain(section.title);
       for (const text of [...(section.paragraphs ?? []), ...(section.items ?? [])]) {
         expect(source).toContain(text);
       }
+      // Compare the whole section so an omitted source paragraph cannot pass.
+      const sourceBody = sourceSections[index].split(/\r?\n/).slice(1).join('\n').split('**Last updated:**')[0].trim();
+      const publishedBody = [
+        ...(section.paragraphs ?? []),
+        ...(section.items ? [section.items.map((item) => `- ${item}`).join('\n')] : []),
+      ].join('\n\n');
+      expect(sourceBody).toBe(publishedBody);
       const translation = ar.sections[index];
       expect(translation.title).toMatch(/[\u0600-\u06ff]/);
       expect(translation.paragraphs?.length ?? 0).toBe(section.paragraphs?.length ?? 0);
@@ -47,6 +56,15 @@ describe('Published legal copy', () => {
     expect(text).toContain('do not have signed Data Processing Agreements');
     expect(text).toContain('not completed a map of provider');
     expect(text).toContain('do not have an independent security certification');
+    expect(text).toContain('12 months after creation');
+    expect(text).toContain('after 30 days');
+    expect(text).toContain('Reconnecting before deletion cancels');
+    expect(text).toContain('Store Chat text replies');
+    expect(text).toContain('fallback Store Chat');
+    expect(text).toContain('Gmail SMTP by default');
+    expect(text).toContain('Cloudflare Turnstile');
+    expect(text).toContain('We do not store the upload on our own servers');
+    expect(text).toContain('not a guarantee of zero provider retention');
   });
 
   it('does not invent commercial commitments or retain obsolete shared permissions', () => {

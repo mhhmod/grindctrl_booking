@@ -1,6 +1,7 @@
 import React from 'react';
 import { AuthSignUp } from '@/components/auth/auth-clerk';
 import { AuthShell } from '@/components/auth/auth-shell';
+import { LegalLinks } from '@/components/legal-links';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { getAuthCopy } from '@/lib/auth/auth-i18n';
 import { getRequestLocale } from '@/lib/auth/locale';
@@ -28,6 +29,7 @@ export default async function SignUpPage() {
             Add `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` in `.env.local` to render the sign-up flow.
           </AlertDescription>
         </Alert>
+        <LegalLinks locale={locale} />
       </AuthShell>
     );
   }
@@ -35,6 +37,7 @@ export default async function SignUpPage() {
   return (
     <AuthShell {...shellProps}>
       <AuthSignUp />
+      <LegalLinks locale={locale} />
     </AuthShell>
   );
 }

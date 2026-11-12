@@ -14,7 +14,7 @@ export interface TeamCopy {
   rule: string;
   /** "a, b and c" in the language's own way. */
   list: (items: string[]) => string;
-  alertsTo: (addresses: string) => string;
+  alertsTo: string;
   alertsOff: string;
   alertsNobody: string;
   changeInStoreChat: string;
@@ -76,7 +76,7 @@ const en: TeamCopy = {
   people: 'People',
   rule: 'Owners see everything, including billing. Admins manage settings. Members answer chats and keep answers up to date.',
   list: (items) => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`),
-  alertsTo: (addresses) => `Email alerts go to ${addresses} when a shopper needs a person.`,
+  alertsTo: 'When a shopper needs a person, email alerts go to:',
   alertsOff: 'Email alerts are off, so nobody is emailed when a shopper needs a person.',
   alertsNobody: 'Email alerts are on, but nobody on the team has an email address to send them to.',
   changeInStoreChat: 'Change in Store Chat',
@@ -144,7 +144,7 @@ const ar: TeamCopy = {
   people: 'الأشخاص',
   rule: 'المالكون يرون كل شيء، بما في ذلك الفوترة. المسؤولون يديرون الإعدادات. الأعضاء يردون على المحادثات ويُبقون الإجابات محدّثة.',
   list: (items) => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join('، ')} و${items[items.length - 1]}`),
-  alertsTo: (addresses) => `تُرسل تنبيهات البريد الإلكتروني إلى ${addresses} عندما تحتاج متسوقة إلى شخص من الفريق.`,
+  alertsTo: 'عندما يحتاج متسوق إلى شخص من الفريق، تُرسل تنبيهات البريد إلى:',
   alertsOff: 'تنبيهات البريد الإلكتروني متوقفة، فلا يصل بريد لأحد عندما تحتاج متسوقة إلى شخص من الفريق.',
   alertsNobody: 'تنبيهات البريد الإلكتروني مفعّلة، لكن لا يوجد في الفريق عنوان بريد تُرسل إليه.',
   changeInStoreChat: 'غيّر ذلك في دردشة المتجر',

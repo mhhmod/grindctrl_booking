@@ -43,6 +43,17 @@ function restoreClerkKey() {
 }
 
 describe('SignUpPage', () => {
+  it.each(['en', 'ar'] as const)('links to both public legal pages in %s with or without Clerk', async (locale) => {
+    cookieLocale = locale;
+    for (const configured of [false, true]) {
+      if (configured) process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = 'pk_test_example';
+      else delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+      const { unmount } = render(await SignUpPage());
+      expect(screen.getByRole('link', { name: locale === 'ar' ? 'سياسة الخصوصية' : 'Privacy policy' })).toHaveAttribute('href', '/privacy');
+      expect(screen.getByRole('link', { name: locale === 'ar' ? 'شروط الخدمة' : 'Terms of service' })).toHaveAttribute('href', '/terms');
+      unmount();
+    }
+  });
   afterEach(() => {
     restoreClerkKey();
     cookieLocale = undefined;

@@ -1,12 +1,12 @@
 ﻿# Terms of service
 
-Published at /terms on 2026-11-01; this document remains the English source for the EN/AR copy in apps/web-next/components/marketing/legal-copy.ts.
+Published at /terms on 2026-11-12; this document remains the English source for the EN/AR copy in apps/web-next/components/marketing/legal-copy.ts.
 
 Terms for merchants using Grind CTRL virtual try-on, Store Chat, and the dashboard.
 
 ## 1. Agreement
 
-These Terms of Service ("Terms") are an agreement between Grind CTRL, operating from Egypt ("GrindCTRL", "we", "us"), and the merchant business using the service ("you"). By creating an account, installing our Shopify app, or using the dashboard, you agree to these Terms.
+These Terms of Service ("Terms") are an agreement between Grind CTRL, operating from Egypt ("GrindCTRL", "we", "us"), and the merchant business using the service ("you"). By creating an account, installing our Shopify app or WooCommerce plugin, adding Store Chat code to your website, or using the dashboard, you agree to these Terms.
 
 If you act on behalf of a business, you confirm that you have authority to bind it.
 
@@ -75,15 +75,17 @@ We may suspend or terminate access for unacceptable use, when required by law, o
 
 Request account deletion by emailing grindctrlnow@gmail.com. We complete deletion within 30 days, subject to legally required retention. Termination and refund requests remain subject to applicable law and any separate written agreement.
 
-Store Chat conversations, messages, and attachments are deleted 12 months after the conversation’s last activity. Visitor records are deleted once no conversation requiring retention remains; records with no conversation are deleted after 12 months of inactivity. Try-on retention is described in the Privacy policy.
+Store Chat conversations, messages, and attachments are deleted 12 months after the conversation’s last activity. Visitor records without remaining conversations are deleted after 12 months of inactivity. Captured leads, including names and contact details, are deleted 12 months after creation, or earlier when their linked conversation is deleted. Try-on retention is described in the Privacy policy.
 
 Billing and credit ledger records are retained for as long as accounting law requires and are never altered by privacy deletion. Job and subscription records needed to preserve accounting links are retained for that purpose, while generated images are removed.
 
 ## 10. Disconnecting a store
 
-A store owner can disconnect the store from the dashboard. Disconnecting removes dashboard access; it does not delete store data or uninstall the Shopify app.
+A store owner can disconnect the store from the dashboard. For a Shopify app installation, disconnecting removes dashboard access; it does not delete store data or uninstall the Shopify app.
 
 Store Chat continues in Shopify admin, and conversations, knowledge, replies, and settings stay with the store subject to the Privacy policy’s retention rules. An authorized person with Shopify admin access can reconnect through the claim process.
+
+Disconnecting a pasted-code store disables its widgets and schedules deletion of its shopper data after 30 days. Reconnecting before deletion cancels that schedule. Billing and credit ledger records and their required accounting links are retained; stored images and attachments are removed by the cleanup process.
 
 Shopify privacy requests are handled separately and completed within 30 days of receipt. Where multiple apps share store data, deletion is reviewed manually to protect the other app’s data.
 
@@ -115,4 +117,4 @@ Grind CTRL, Egypt.
 
 Email grindctrlnow@gmail.com for service questions, refund requests, or account deletion.
 
-**Last updated:** 2026-11-01
+**Last updated:** 2026-11-12

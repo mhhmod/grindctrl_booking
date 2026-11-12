@@ -45,7 +45,7 @@ export function LegalPageContent({ page }: { page: LegalPage }) {
       ))}
       <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <p className="text-sm text-muted-foreground">
-          {copy.updatedLabel}: <time dateTime={LEGAL_UPDATED} dir="ltr">{LEGAL_UPDATED}</time>
+          {copy.updatedLabel}: <time dateTime={LEGAL_UPDATED}>{new Intl.DateTimeFormat(locale === 'ar' ? 'ar-EG-u-nu-latn' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${LEGAL_UPDATED}T00:00:00Z`))}</time>
         </p>
       </div>
     </MarketingPage>

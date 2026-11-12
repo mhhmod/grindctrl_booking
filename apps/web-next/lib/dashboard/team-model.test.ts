@@ -51,28 +51,29 @@ describe('Team, people', () => {
 
 describe('Team, email alerts', () => {
   it('says who gets them: the owners and admins with an address when Store Chat has none of its own', () => {
-    expect(buildTeamView(facts(), en, 'en').alerts).toBe(
-      'Email alerts go to hana@maisonnoor.com and youssef@maisonnoor.com when a shopper needs a person.',
-    );
+    expect(buildTeamView(facts(), en, 'en')).toMatchObject({
+      alerts: 'When a shopper needs a person, email alerts go to:',
+      alertRecipients: ['hana@maisonnoor.com', 'youssef@maisonnoor.com'],
+    });
   });
 
   it('names the addresses Store Chat was given, in Arabic too', () => {
     const given = facts({}, { recipients: ['Desk@MaisonNoor.com', 'hana@maisonnoor.com', 'desk@maisonnoor.com'] });
-    expect(buildTeamView(given, en, 'en').alerts).toBe(
-      'Email alerts go to desk@maisonnoor.com and hana@maisonnoor.com when a shopper needs a person.',
-    );
-    expect(buildTeamView(given, ar, 'ar').alerts).toBe(
-      // Each address is isolated (U+2068..U+2069) so it reads left to right in the Arabic sentence.
-      'تُرسل تنبيهات البريد الإلكتروني إلى ⁨desk@maisonnoor.com⁩ و⁨hana@maisonnoor.com⁩ عندما تحتاج متسوقة إلى شخص من الفريق.',
-    );
+    for (const locale of ['en', 'ar'] as const) {
+      expect(buildTeamView(given, getTeamCopy(locale), locale)).toMatchObject({
+        alerts: getTeamCopy(locale).alertsTo,
+        alertRecipients: ['desk@maisonnoor.com', 'hana@maisonnoor.com'],
+      });
+    }
   });
 
   it('says plainly when they are off, when nobody has an address, and when there is no Store Chat', () => {
     expect(buildTeamView(facts({}, { emailOnHandoff: false }), en, 'en').alerts).toBe(en.alertsOff);
+    expect(buildTeamView(facts({}, { emailOnHandoff: false }), en, 'en').alertRecipients).toEqual([]);
     expect(buildTeamView(facts({ people: [{ profileId: 'p1', name: 'Hana', email: null, role: 'owner' }] }), en, 'en').alerts).toBe(
       en.alertsNobody,
     );
-    expect(buildTeamView(facts({ site: null }), en, 'en')).toMatchObject({ alerts: null, hours: null, outsideHours: false });
+    expect(buildTeamView(facts({ site: null }), en, 'en')).toMatchObject({ alerts: null, alertRecipients: [], hours: null, outsideHours: false });
   });
 });
 
