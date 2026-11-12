@@ -286,12 +286,12 @@ function friendlyMinutes(minutes: number): number {
   return whole <= 10 ? whole : Math.round(whole / 5) * 5;
 }
 
-function lastWeekTiles(facts: TodayFacts, copy: TodayCopy): Tile[] {
+function lastWeekTiles(facts: TodayFacts, copy: TodayCopy, locale: SiteLocale): Tile[] {
   const tiles: Tile[] = [];
   const { tryOn, chat } = facts;
   if (tryOn) {
     const delta = change(tryOn.looksLast7, tryOn.looksPrev7, copy);
-    tiles.push({ key: 'looks', label: copy.looks, value: String(tryOn.looksLast7), sub: delta?.sub ?? '', trend: delta?.trend });
+    tiles.push({ key: 'looks', label: copy.looks, value: tryOn.looksLast7.toLocaleString(intlLocale(locale)), sub: delta?.sub ?? '', trend: delta?.trend });
   }
   if (chat) {
     const finished = chat.solved7 + chat.handedOff7;
@@ -326,6 +326,6 @@ export function buildTodayView(facts: TodayFacts, copy: TodayCopy, locale: SiteL
     details: { rows: healthDetails(facts, copy, locale), notChecked: copy.details.notChecked },
     needsYou: rows.length > 0 ? { rows, count: copy.thingsCount(rows.length) } : null,
     calm: rows.length === 0 ? calmCard(facts, copy) : null,
-    tiles: lastWeekTiles(facts, copy),
+    tiles: lastWeekTiles(facts, copy, locale),
   };
 }

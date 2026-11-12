@@ -111,6 +111,12 @@
   min-height: 40px;
 }
 
+@media (pointer: coarse) {
+  .rowButton {
+    min-height: 44px;
+  }
+}
+
 /* On phones Edit, and an invite's two buttons, take their own line under
    the address, so the address keeps the width. */
 @media (max-width: 39.99em) {

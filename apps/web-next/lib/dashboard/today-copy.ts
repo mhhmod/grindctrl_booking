@@ -22,7 +22,7 @@ const arMinutes = (n: number) =>
 const arHours = (n: number) => arCount(n, { one: 'ساعة', two: 'ساعتين', few: (m) => `${m} ساعات`, many: (m) => `${m} ساعة` });
 const arDays = (n: number) => arCount(n, { one: 'يوم', two: 'يومين', few: (m) => `${m} أيام`, many: (m) => `${m} يوماً` });
 const arChats = (n: number) =>
-  arCount(n, { one: 'محادثة واحدة', two: 'محادثتين', few: (m) => `${m} محادثات`, many: (m) => `${m} محادثة` });
+  arCount(n, { one: 'محادثة واحدة', two: 'محادثتين', few: (m) => `${m} محادثات`, many: (m) => `${m.toLocaleString('ar-EG-u-nu-latn')} محادثة` });
 
 export interface TodayCopy {
   storeHealth: string;
@@ -153,7 +153,7 @@ const en: TodayCopy = {
   fewerThanBefore: (pct) => `${pct}% fewer than the 7 days before`,
   sameAsBefore: 'Same as the 7 days before',
   chatsSolved: 'Chats the assistant solved',
-  ofChats: (n) => (n === 1 ? 'Of 1 chat, the rest went to the team' : `Of ${n} chats, the rest went to the team`),
+  ofChats: (n) => (n === 1 ? 'Of 1 chat, the rest went to the team' : `Of ${n.toLocaleString('en-US')} chats, the rest went to the team`),
   noFinishedChats: 'No finished chats yet',
   teamFirstReply: 'Team first reply',
   minutesValue: (n) => `${n} min`,

@@ -42,7 +42,7 @@ const pasteStatus = (seen: boolean): PasteInstallStatus => ({
   plan: { totalCreditsRemaining: 13 } as PasteInstallStatus['plan'], mode: 'live', secretVersion: 1, rotationOverlapUntil: null,
   turnstileConfigured: true,
 } as unknown as PasteInstallStatus);
-function connectFor(state: string, member: boolean, locale: 'en' | 'ar') {
+export function connectFor(state: string, member: boolean, locale: 'en' | 'ar') {
   const seen = state !== 'new';
   const ok = async <T,>(data: T) => ({ ok: true as const, data });
   return (
@@ -70,7 +70,7 @@ function connectFor(state: string, member: boolean, locale: 'en' | 'ar') {
 }
 
 const EMPTY_HEALTH = { inline: 0, floating: 0, detected: 0, missing: 0, listings: 0, pills: 0, photos: 0, photoHost: null };
-const STATES: Record<string, YourStoreFacts> = {
+export const STATES: Record<string, YourStoreFacts> = {
   'health-working': { ...BASE, platform: 'paste_shopify', health: { ...EMPTY_HEALTH, inline: 12, detected: 12, photos: 2, listings: 1, pills: 24 } },
   'health-broken': { ...BASE, platform: 'paste_shopify', codeOutdated: true, health: { ...EMPTY_HEALTH, missing: 4, floating: 1, photoHost: 'a-very-long-product-image-cdn-host-that-must-wrap.example.com' } },
   'health-off': { ...BASE, platform: 'paste_shopify', pillsOn: false, health: EMPTY_HEALTH },

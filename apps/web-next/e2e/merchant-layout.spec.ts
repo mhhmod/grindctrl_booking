@@ -34,7 +34,164 @@ async function noOverflow(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
 }
 
-for (const width of [320, 360, 390, 430, 768, 1024, 1280, 1440]) {
+const WIDTHS = [320, 360, 390, 430, 768, 1024, 1280, 1440];
+const heightFor = (width: number) => (width === 320 ? 568 : width >= 768 ? 800 : 844);
+// Every merchant screen in the fixture; state variants carry the awkward data.
+const SCREENS = [
+  'today', 'today-calm', 'today-setup', 'tryon', 'tryon-empty', 'tryon-error', 'tryon-setup',
+  'store', 'store-outdated', 'store-new', 'settings', 'plan', 'plan-zero', 'claim', 'onboarding', 'connect', 'connect-code',
+];
+
+/* The rules every screen keeps at every width, returned as readable
+   problems so a failure names the element. */
+async function layoutProblems(page: Page, touch: boolean) {
+  return page.evaluate((coarse) => {
+    const root = document.querySelector('[data-merchant-layout-fixture]')!;
+    const problems: string[] = [];
+    const vw = document.documentElement.clientWidth;
+    const name = (el: Element) => {
+      const text = (el.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 40);
+      return `<${el.tagName.toLowerCase()}${el.className && typeof el.className === 'string' ? `.${el.className.split(' ')[0]}` : ''}> "${text}"`;
+    };
+    const visible = (el: Element) => {
+      const box = el.getBoundingClientRect();
+      if (box.width === 0 || box.height === 0) return false;
+      const style = getComputedStyle(el);
+      return style.visibility !== 'hidden' && style.opacity !== '0' && el.checkVisibility?.() !== false;
+    };
+    // Inside a deliberate sideways scroller (tabs, code), the box may run past the viewport.
+    const inScroller = (el: Element) => {
+      for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+        const x = getComputedStyle(p).overflowX;
+        if (x === 'auto' || x === 'scroll' || x === 'hidden' || x === 'clip') return true;
+      }
+      return false;
+    };
+    const all = Array.from(root.querySelectorAll('*')).filter(visible);
+    for (const el of all) {
+      const box = el.getBoundingClientRect();
+      if ((box.right > vw + 1 || box.left < -1) && !inScroller(el)) problems.push(`wider than viewport: ${name(el)} ${Math.round(box.left)}..${Math.round(box.right)}`);
+    }
+    // No two text boxes overlap inside a row (a flex or grid container's children).
+    const textOf = (el: Element) => (el.textContent ?? '').trim().length > 0;
+    for (const row of all) {
+      const display = getComputedStyle(row).display;
+      if (!/flex|grid/.test(display)) continue;
+      const kids = Array.from(row.children).filter((k) => visible(k) && textOf(k) && !['absolute', 'fixed'].includes(getComputedStyle(k).position));
+      for (let i = 0; i < kids.length; i++) {
+        for (let j = i + 1; j < kids.length; j++) {
+          const a = kids[i].getBoundingClientRect();
+          const b = kids[j].getBoundingClientRect();
+          const w = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+          const h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+          if (w > 1 && h > 1) problems.push(`overlap in row ${name(row)}: ${name(kids[i])} / ${name(kids[j])}`);
+        }
+      }
+    }
+    // A leaf whose text runs out of its own box.
+    for (const el of all) {
+      if (!(el instanceof HTMLElement) || el.children.length > 0 || !textOf(el)) continue;
+      const style = getComputedStyle(el);
+      // Ellipsis is deliberate; visually hidden screen-reader text is clipped on purpose.
+      if (style.textOverflow === 'ellipsis' || style.overflowX === 'visible' || el.getBoundingClientRect().width <= 2) continue;
+      if (el.scrollWidth - el.clientWidth > 1) problems.push(`clipped text: ${name(el)}`);
+    }
+    if (coarse) {
+      const targets = root.querySelectorAll('a[href], button, input:not([type=hidden]), select, textarea, [role=switch], [role=tab], [role=radio], summary');
+      for (const target of Array.from(targets)) {
+        // A link inside running text is exempt (WCAG 2.5.8 inline).
+        if (target.tagName === 'A' && getComputedStyle(target).display === 'inline') continue;
+        // Visually hidden inputs are hit through their label or control root.
+        const hit = !visible(target) || target.getBoundingClientRect().width < 4
+          ? target.closest('label, [class*="-root"]') : target;
+        if (!hit || !visible(hit)) continue;
+        const box = hit.getBoundingClientRect();
+        if (box.height < 43.5 || box.width < 43.5) problems.push(`touch target ${Math.round(box.width)}x${Math.round(box.height)}: ${name(hit)}`);
+      }
+    }
+    if (getComputedStyle(root).direction === 'rtl') {
+      // Directional icons (GcIcon's rtl:-scale-x-100) point the Arabic way.
+      for (const icon of all.filter((el) => el instanceof SVGElement && (el.getAttribute('class') ?? '').includes('rtl:-scale-x-100'))) {
+        // Tailwind 4 flips with the scale property, not transform.
+        const style = getComputedStyle(icon);
+        if (!style.scale.startsWith('-1') && !style.transform.startsWith('matrix(-1')) problems.push(`unmirrored icon in ${name(icon.parentElement!)}`);
+      }
+      // Emails, hosts and URLs keep their own direction inside Arabic text.
+      const LTR_VALUE = /[\w.+-]+@[\w-]+\.[\w.]+|\b[\w-]+(\.[\w-]+)*\.(com|net|org|cloud|store)\b/;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const text = node.nodeValue ?? '';
+        const match = LTR_VALUE.exec(text);
+        if (!match || !visible(node.parentElement!)) continue;
+        const before = text.slice(0, match.index);
+        const after = text.slice(match.index + match[0].length);
+        if (!/[؀-ۿ]/.test(before + after)) {
+          // The value is alone in its element: that element must hold LTR, or be isolated.
+          const host = node.parentElement!;
+          const style = getComputedStyle(host);
+          const isolated = style.direction === 'ltr' || /isolate|plaintext/.test(style.unicodeBidi) || host.closest('bdi, [dir=ltr]');
+          const siblingsArabic = /[؀-ۿ]/.test(host.parentElement?.textContent ?? '');
+          if (!isolated && siblingsArabic && style.display === 'inline') problems.push(`LTR value not isolated: ${name(host)}`);
+          continue;
+        }
+        if (!before.endsWith('⁨') && !node.parentElement!.closest('bdi, [dir=ltr]')) problems.push(`LTR value not isolated: "${match[0]}" in ${name(node.parentElement!)}`);
+      }
+    }
+    // At most one vertical scroll area per pane: the page itself scrolls.
+    const scrollers = all.filter((el) => {
+      const y = getComputedStyle(el).overflowY;
+      return (y === 'auto' || y === 'scroll') && el.scrollHeight - el.clientHeight > 1;
+    });
+    if (scrollers.length > 1) problems.push(`nested scroll areas: ${scrollers.map(name).join(', ')}`);
+    return Array.from(new Set(problems));
+  }, touch);
+}
+
+for (const width of WIDTHS) {
+  const touch = width < 1280;
+  test.describe(`${width}px`, () => {
+    test.use({ hasTouch: touch, viewport: { width, height: heightFor(width) } });
+    for (const locale of ['en', 'ar'] as const) {
+      test(`${width} ${locale}: every merchant screen fits`, async ({ page }) => {
+        if (touch) expect(await page.evaluate(() => matchMedia('(pointer: coarse)').matches)).toBe(true);
+        const found: string[] = [];
+        for (const screen of SCREENS) {
+          await ready(page, screen, locale);
+          const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+          if (overflow > 1) found.push(`${screen}: document scrolls sideways by ${overflow}px`);
+          found.push(...(await layoutProblems(page, touch)).map((p) => `${screen}: ${p}`));
+        }
+        expect(found).toEqual([]);
+      });
+    }
+  });
+}
+
+/* Review screenshots, only when MERCHANT_LAYOUT_SHOTS names a folder:
+   MERCHANT_LAYOUT_SCREENS picks screens and MERCHANT_LAYOUT_FULL takes the
+   whole page instead of the viewport. */
+const SHOT_SIZES = [[390, 844, 'en', 'dark'], [320, 568, 'ar', 'light'], [1280, 800, 'en', 'light']] as const;
+for (const [width, height, locale, theme] of SHOT_SIZES) {
+  test(`shots ${width} ${locale} ${theme}`, async ({ page }) => {
+    test.skip(!shots, 'MERCHANT_LAYOUT_SHOTS is not set');
+    await page.setViewportSize({ width, height });
+    await page.addInitScript((value) => localStorage.setItem('theme', value), theme);
+    const only = process.env.MERCHANT_LAYOUT_SCREENS?.split(',');
+    await mkdir(shots!, { recursive: true });
+    // Every screen on the phone; the main three at the small and desktop sizes.
+    for (const screen of only ?? (width === 390 ? SCREENS : ['today', 'tryon', 'tryon-setup', 'store'])) {
+      await ready(page, screen, locale);
+      const parts = process.env.MERCHANT_LAYOUT_FULL
+        ? Math.ceil(await page.evaluate(() => document.documentElement.scrollHeight / innerHeight)) : 1;
+      for (let part = 0; part < parts; part++) {
+        await page.evaluate((y) => window.scrollTo(0, y), part * height * 0.9);
+        await page.screenshot({ path: path.join(shots!, `${screen}-${width}x${height}-${locale}-${theme}${parts > 1 ? `-${part + 1}` : ''}.png`), animations: 'disabled' });
+      }
+    }
+  });
+}
+
+for (const width of WIDTHS) {
   for (const locale of ['en', 'ar'] as const) {
     for (const theme of ['light', 'dark'] as const) {
       test(`${width} ${locale} ${theme}: Plan icons/cards and Team addresses fit`, async ({ page }) => {

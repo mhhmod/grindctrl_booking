@@ -146,7 +146,8 @@ export function buildTeamView(facts: TeamFacts, copy: TeamCopy, locale: SiteLoca
     alerts = !site.emailOnHandoff
       ? copy.alertsOff
       : addresses.length
-        ? copy.alertsTo(copy.list(addresses))
+        // Each address keeps its own direction inside an Arabic sentence.
+        ? copy.alertsTo(copy.list(locale === 'ar' ? addresses.map((address) => `⁨${address}⁩`) : addresses))
         : copy.alertsNobody;
     hours =
       site.availabilityMode === 'always'

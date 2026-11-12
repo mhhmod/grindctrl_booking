@@ -326,6 +326,12 @@
   flex: 1 1 18rem;
 }
 
+/* Wrapped under the status line on a phone, the switch keeps to the row's
+   end, in line with the card pill switch below it. */
+.mainSwitch {
+  margin-inline-start: auto;
+}
+
 .switchState {
   display: inline-flex;
   align-items: baseline;
