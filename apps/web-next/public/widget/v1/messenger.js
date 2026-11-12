@@ -15,6 +15,42 @@
 (function () {
   'use strict';
 
+  /* Fixed body prevents iOS rubber-band/pan behind our frame. Independent
+     windows share ownership, so closing chat cannot unlock an open Try-On. */
+  function lockStorePage(owner, locked) {
+    var saved = window.__gcShopperScrollLock;
+    var root = document.documentElement;
+    var body = document.body;
+    var props = ['position', 'insetBlockStart', 'insetInlineStart', 'insetBlockEnd', 'insetInlineEnd', 'inlineSize'];
+    var i;
+    if (locked) {
+      if (!saved) {
+        saved = { x: window.scrollX, y: window.scrollY, overflow: root.style.overflow, body: {}, owners: {} };
+        for (i = 0; i < props.length; i++) saved.body[props[i]] = body.style[props[i]];
+        window.__gcShopperScrollLock = saved;
+        root.style.overflow = 'hidden';
+        body.style.position = 'fixed';
+        body.style.insetBlockStart = -saved.y + 'px';
+        body.style.insetInlineStart = -saved.x + 'px';
+        body.style.insetBlockEnd = 'auto';
+        body.style.insetInlineEnd = 'auto';
+        body.style.inlineSize = '100%';
+      }
+      saved.owners[owner] = true;
+      return;
+    }
+    if (!saved || !saved.owners[owner]) return;
+    delete saved.owners[owner];
+    for (var other in saved.owners) { if (saved.owners[other]) return; }
+    for (i = 0; i < props.length; i++) body.style[props[i]] = saved.body[props[i]];
+    root.style.overflow = saved.overflow;
+    delete window.__gcShopperScrollLock;
+    if (window.scrollX !== saved.x || window.scrollY !== saved.y) {
+      try { window.scrollTo({ left: saved.x, top: saved.y, behavior: 'instant' }); }
+      catch (_) { window.scrollTo(saved.x, saved.y); }
+    }
+  }
+
   /* document.currentScript is null for some tag-manager and dynamically
      created scripts: then the tag is found by its address and attributes. */
   function findScript() {
@@ -69,7 +105,7 @@
     widgetLoads[name] = new Promise(function (resolve, reject) {
       var script = document.createElement('script');
       script.async = true;
-      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=903f9d4af03c';
+      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=8604e4d2cd8e';
       script.onload = resolve;
       script.onerror = function () { delete widgetLoads[name]; reject(new Error('widget_unavailable')); };
       document.head.appendChild(script);
@@ -681,9 +717,27 @@
       : 'opacity:0;pointer-events:none;visibility:hidden;' + closedTransform(small);
 
     frame.style.cssText = css;
+    lockPage(state.open && small);
     if (frame.contentWindow) {
       frame.contentWindow.postMessage({ type: 'grindctrl-messenger:viewport', fullBleed: small }, APP_ORIGIN);
     }
+  }
+
+  /* On a phone the open chat covers the store, so the store page holds still
+     behind it: the thread is the one thing that scrolls, and closing puts
+     the page back exactly where it was, even if the keyboard panned it. A
+     class rather than the inline style the try-on sheet saves and restores,
+     so neither lock can undo the other. */
+  function lockPage(locked) {
+    if (!document.getElementById('gc-msgr-lock-css')) {
+      var style = document.createElement('style');
+      style.id = 'gc-msgr-lock-css';
+      style.textContent = '.gc-scroll{overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}@supports not selector(::-webkit-scrollbar){.gc-scroll{scrollbar-width:thin;scrollbar-color:color-mix(in oklch,currentColor 25%,transparent) transparent}}.gc-scroll::-webkit-scrollbar{width:6px;height:6px}.gc-scroll::-webkit-scrollbar-track{background:transparent}.gc-scroll::-webkit-scrollbar-thumb{border-radius:999px;background:color-mix(in oklch,currentColor 25%,transparent)}.gc-scroll::-webkit-scrollbar-button{display:none}@media(pointer:coarse){.gc-scroll{scrollbar-width:none}.gc-scroll::-webkit-scrollbar{display:none}}html.gc-msgr-lock{overflow:hidden!important;overscroll-behavior:none}';
+      document.head.appendChild(style);
+    }
+    if (locked) document.documentElement.classList.add('gc-msgr-lock');
+    else document.documentElement.classList.remove('gc-msgr-lock');
+    lockStorePage('chat', locked);
   }
 
   function closedTransform(small) {
@@ -705,7 +759,13 @@
         'border-radius:' + panelRadius() + ' ' + panelRadius() + ' 0 0;overflow:hidden;box-shadow:0 -8px 32px rgba(0,0,0,.18);';
     }
     var posLeft = state.config && state.config.appearance.position === 'bottom-left';
-    return 'inset:auto;top:0;bottom:0;height:100dvh;width:min(400px,100vw);' +
+    // A landscape phone still docks by width. Safari's keyboard only
+    // shrinks the visual viewport, so bound that dock to it when needed.
+    var visual = window.visualViewport;
+    var keyboard = visual && visual.height < window.innerHeight - 80 && window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    var vertical = keyboard ? 'top:' + visual.offsetTop + 'px;bottom:auto;height:' + visual.height + 'px;'
+      : 'top:0;bottom:0;height:100svh;height:100dvh;';
+    return 'inset:auto;' + vertical + 'width:min(400px,100vw);' +
       (posLeft ? 'left:0;right:auto;' : 'right:0;left:auto;') +
       'border-radius:0;overflow:hidden;box-shadow:0 0 32px rgba(0,0,0,.16);';
   }
@@ -716,6 +776,7 @@
     var el = document.createElement('div');
     el.setAttribute('aria-hidden', 'true');
     el.style.cssText = 'display:block!important;position:fixed;inset:0;z-index:2147482000;background:rgba(0,0,0,.4);';
+    el.style.touchAction = 'none';
     el.addEventListener('click', function () { close(); });
     document.body.appendChild(el);
     state.backdrop = el;
@@ -1276,6 +1337,9 @@
       state.loggedOut = true;
       if (state.iframe) { state.iframe.parentNode.removeChild(state.iframe); state.iframe = null; state.booted = false; }
       state.open = false;
+      // An open chat taken away must not leave the store page held or dimmed.
+      lockPage(false);
+      hideBackdrop();
     },
     _version: '1.1.0'
   };

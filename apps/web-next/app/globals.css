@@ -7,6 +7,8 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+/* A frame under 480px tall (a phone on its side): sheets tighten their pinned rows. */
+@custom-variant short (@media (max-height: 479.98px));
 
 @layer base {
   :root {

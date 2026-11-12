@@ -72,6 +72,37 @@ export function isV16NavActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/* Pages that are one workspace with panes of their own (the Inbox's list and
+   thread). The shell frames them at the viewport's height, so the document
+   never scrolls behind a pane that scrolls. */
+const FILL_HREFS = ['/dashboard/inbox'];
+
+export function isV16FillRoute(pathname: string): boolean {
+  return FILL_HREFS.some((href) => isV16NavActive(pathname, href));
+}
+
+/** Keeps a fill frame at the visible viewport's height, so a phone keyboard
+ *  shortens the frame (the composer stays above it) rather than covering it.
+ *  Pinch zoom also shrinks the visible viewport; the frame keeps the layout
+ *  height then. Without visualViewport the CSS falls back to 100dvh. */
+export function useV16VisibleViewportHeight(ref: React.RefObject<HTMLElement | null>, active: boolean) {
+  React.useEffect(() => {
+    const frame = ref.current;
+    const viewport = window.visualViewport;
+    if (!active || !frame || !viewport) return;
+    const update = () => {
+      if (viewport.scale > 1.01) frame.style.removeProperty('--v16-viewport-height');
+      else frame.style.setProperty('--v16-viewport-height', `${viewport.height}px`);
+    };
+    update();
+    viewport.addEventListener('resize', update);
+    return () => {
+      viewport.removeEventListener('resize', update);
+      frame.style.removeProperty('--v16-viewport-height');
+    };
+  }, [ref, active]);
+}
+
 export type V16ShellProps = {
   locale: SiteLocale;
   stores: ShellStore[];
@@ -143,6 +174,9 @@ export function V16ShellView({
   const nav = v16NavFor(permissions, hasTenant);
   const current = stores.find((store) => store.current) ?? stores[0] ?? null;
   const isToday = pathname === '/dashboard';
+  const fill = isV16FillRoute(pathname);
+  const shellRef = React.useRef<HTMLDivElement>(null);
+  useV16VisibleViewportHeight(shellRef, fill);
   /* Before hydration, guess the provider's default (light), like the toggle. */
   const isDark = mounted ? resolvedTheme !== 'light' : false;
 
@@ -238,7 +272,7 @@ export function V16ShellView({
     ));
 
   return (
-    <div className={classes.shell} data-testid="v16-shell">
+    <div ref={shellRef} className={classes.shell} data-testid="v16-shell" data-fill={fill || undefined}>
       <a href="#v16-main" className={classes.skip}>
         {copy.skipToContent}
       </a>
@@ -320,7 +354,7 @@ export function V16ShellView({
               </Button>
             </div>
           </div>
-          <div className="min-w-0">{children}</div>
+          <div className={classes.page}>{children}</div>
           </div>
         </main>
       </div>

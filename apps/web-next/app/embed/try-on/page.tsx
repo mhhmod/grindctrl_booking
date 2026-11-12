@@ -1,4 +1,5 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+import { ScrollShell } from '@/components/embed/scroll-shell';
 import type { CSSProperties } from 'react';
 import { cookies, headers } from 'next/headers';
 import { toAppearanceTokens } from '@/lib/try-on/appearance';
@@ -41,6 +42,11 @@ export const metadata: Metadata = {
   title: 'Try-On | GRINDCTRL',
   robots: { index: false },
 };
+
+/* Opened on its own (not framed), an on-screen keyboard shrinks the layout
+   so the pinned footer stays above it. Inside a store's frame the store's
+   page sizes us instead. */
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, interactiveWidget: 'resizes-content' };
 
 /* Bare try-on for embedding in an iframe (Shopify product pages).
    Query params: product=<handle> shop=<domain> locale=en|ar garment title
@@ -120,39 +126,40 @@ export default async function EmbedTryOnPage({
      storefront config route uses. */
   const merchantCopy = pickMerchantCopy(settings, initialLocale);
 
+  /* Every state below renders in the shared shell, which fills the frame and
+     owns its one scroll area (components/embed/scroll-shell.tsx), so nothing
+     here adds height or padding of its own. */
   return (
     <TryOnLocaleProvider
       initialLocale={initialLocale}
-      className={`${themeClass} min-h-dvh bg-background text-foreground`}
+      className={`${themeClass} bg-background text-foreground`}
     >
       <EmbedFrameBridge />
-      <main className={`gc-widget-surface ${sheetOn ? 'px-4 pb-6 pt-2 sm:px-8' : 'px-4 py-6 sm:px-6'}`} style={tokenOverrides}>
+      <main className="gc-widget-surface" style={tokenOverrides}>
         {shopProduct && sheetOn ? (
-          <div className="w-full">
-            <TryOnSheet
-              product={shopProduct}
-              variantId={params.variant}
-              displayVariantId={params.selectedVariant}
-              variantTitle={params.variantTitle?.trim().slice(0, 200) || undefined}
-              shop={shop ?? undefined}
-              lookSeconds={lookSeconds}
-              // The store's Arabic address form arrives with N26; until then
-              // the copy speaks to everyone.
-              addressForm={DEFAULT_ADDRESS_FORM}
-              loadingSteps={settings.loadingSteps ?? undefined}
-              loadingStyle={settings.loadingStyle}
-              result={{
-                showDownload: settings.showDownload,
-                showWhatsapp: settings.showWhatsapp,
-                showAddToCart: settings.showAddToCart,
-                showTryAgain: settings.showTryAgain,
-                backToProduct: params.cart === 'unsupported',
-                disclaimerText: merchantCopy.disclaimerText,
-              }}
-            />
-          </div>
+          <TryOnSheet
+            product={shopProduct}
+            variantId={params.variant}
+            displayVariantId={params.selectedVariant}
+            variantTitle={params.variantTitle?.trim().slice(0, 200) || undefined}
+            shop={shop ?? undefined}
+            lookSeconds={lookSeconds}
+            // The store's Arabic address form arrives with N26; until then
+            // the copy speaks to everyone.
+            addressForm={DEFAULT_ADDRESS_FORM}
+            loadingSteps={settings.loadingSteps ?? undefined}
+            loadingStyle={settings.loadingStyle}
+            result={{
+              showDownload: settings.showDownload,
+              showWhatsapp: settings.showWhatsapp,
+              showAddToCart: settings.showAddToCart,
+              showTryAgain: settings.showTryAgain,
+              backToProduct: params.cart === 'unsupported',
+              disclaimerText: merchantCopy.disclaimerText,
+            }}
+          />
         ) : shopProduct ? (
-          <TryOnDemo
+          <TryOnDemo embedded
             lookSeconds={lookSeconds}
             productId={productHandle}
             shop={shop ?? undefined}
@@ -172,10 +179,7 @@ export default async function EmbedTryOnPage({
             }}
           />
         ) : (
-          <section
-            role="status"
-            className="mx-auto flex min-h-[calc(100dvh-3rem)] w-full max-w-xl items-center justify-center"
-          >
+          <ScrollShell bodyClassName="grid place-items-center px-4 py-6 sm:px-6"><section role="status" className="mx-auto w-full max-w-xl">
             <div className="w-full rounded-2xl border bg-card p-6 text-center text-card-foreground sm:p-8">
               <h1 className="text-lg font-semibold tracking-tight">
                 {copy.noProductTitle}
@@ -184,7 +188,7 @@ export default async function EmbedTryOnPage({
                 {copy.noProductDescription}
               </p>
             </div>
-          </section>
+          </section></ScrollShell>
         )}
       </main>
     </TryOnLocaleProvider>

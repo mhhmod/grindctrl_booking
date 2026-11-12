@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { AlertCircle, ChevronLeft } from 'lucide-react';
 import { useTryOnLocale } from '../locale-provider';
 import type { ResultControls } from '../try-on-result';
@@ -9,12 +9,16 @@ import { SheetPhotoStep } from './sheet-photo-step';
 import { SheetCheckStep } from './sheet-check-step';
 import { SheetMakingStep } from './sheet-making-step';
 import { SheetResultStep } from './sheet-result-step';
-import { makingProgress } from '@/lib/try-on/making-progress';
+import { SheetChrome, SheetLayout } from './sheet-layout';
+import { makingProgress, type MakingProgress } from '@/lib/try-on/making-progress';
 import { parseStoreProduct, type StoreProduct } from '@/lib/try-on/store-product';
-import { detectInAppBrowser, storePageUrl } from '@/lib/try-on/in-app-browser';
+import { detectInAppBrowser, storePageUrl, type InAppBrowser } from '@/lib/try-on/in-app-browser';
 import { useMediaQuery } from './use-media-query';
 import { phoneStore } from '@/lib/try-on/phone-store';
-import { getSheetCopy, type ArabicAddressForm } from '@/lib/try-on/sheet-copy';
+import { getSheetCopy, type ArabicAddressForm, type SheetCopy } from '@/lib/try-on/sheet-copy';
+import type { TryOnLocale, TryOnTranslator } from '@/lib/try-on/i18n';
+
+type SheetProduct = { handle: string; name: string; imageUrl: string };
 
 /* The v16 try-on inside the sheet (02-try-on.md), for a store whose
    v16_tryon flag is on: the photo step, the on-phone check and the
@@ -32,7 +36,7 @@ export function TryOnSheet({
   loadingStyle,
   result,
 }: {
-  product: { handle: string; name: string; imageUrl: string };
+  product: SheetProduct;
   variantId?: string;
   /** Presentation only; the flow keeps the signed variantId. */
   displayVariantId?: string;
@@ -115,156 +119,279 @@ export function TryOnSheet({
     stage: flow.serverStage,
     acceptedElapsedMs: flow.acceptedAt == null ? null : Math.max(0, now - flow.acceptedAt),
   });
+
+  return (
+    <TryOnSheetView
+      copy={copy}
+      t={t}
+      locale={locale}
+      product={product}
+      variantTitle={variantTitle}
+      lookSeconds={lookSeconds}
+      inApp={inApp}
+      storeLink={storeLink}
+      canTakePhoto={touchScreen || inApp !== null}
+      phoneRead={phoneRead}
+      privacyOpen={privacyOpen}
+      onPrivacyOpenChange={setPrivacyOpen}
+      firstTime={firstTime}
+      keepOnPhone={keepOnPhone}
+      onKeepOnPhone={changeKeep}
+      onTryOn={() => void tryOn()}
+      flow={flow}
+      steps={steps}
+      progress={progress}
+      loadingStyle={loadingStyle}
+      storeProduct={storeProduct}
+      triedVariantId={displayVariantId || variantId}
+      result={result}
+    />
+  );
+}
+
+/** What the sheet's view reads from the try-on flow. */
+export type SheetFlow = Pick<
+  ReturnType<typeof useTryOnFlow>,
+  | 'step'
+  | 'photoDataUrl'
+  | 'sessionState'
+  | 'sessionError'
+  | 'job'
+  | 'error'
+  | 'unavailable'
+  | 'challengeFailed'
+  | 'generationSeconds'
+  | 'selectPhoto'
+  | 'acceptPhoto'
+  | 'clearPhoto'
+  | 'generate'
+  | 'retrySession'
+  | 'reset'
+  | 'forget'
+  | 'discardBrokenLook'
+>;
+
+/* Every state of the sheet, from state alone, in one shell per state: the
+   product pinned at the top, the state's content as the one scrolling body,
+   and its action pinned at the bottom (SheetLayout). The dev fixture
+   (app/dev/sheet-scroll-check) renders this directly. */
+export function TryOnSheetView({
+  copy,
+  t,
+  locale,
+  product,
+  variantTitle,
+  lookSeconds,
+  inApp,
+  storeLink,
+  canTakePhoto,
+  phoneRead,
+  privacyOpen,
+  onPrivacyOpenChange,
+  firstTime,
+  keepOnPhone,
+  onKeepOnPhone,
+  onTryOn,
+  flow,
+  steps,
+  progress,
+  loadingStyle,
+  storeProduct,
+  triedVariantId,
+  result,
+  initialResultView,
+  photoTips,
+}: {
+  copy: SheetCopy;
+  t: TryOnTranslator;
+  locale: TryOnLocale;
+  product: SheetProduct;
+  variantTitle?: string;
+  lookSeconds: number | null;
+  inApp: InAppBrowser | null;
+  storeLink: string | null;
+  canTakePhoto: boolean;
+  phoneRead: boolean;
+  privacyOpen: boolean;
+  onPrivacyOpenChange: (open: boolean) => void;
+  firstTime: boolean;
+  keepOnPhone: boolean;
+  onKeepOnPhone: (on: boolean) => void;
+  onTryOn: () => void;
+  flow: SheetFlow;
+  steps: string[];
+  progress: MakingProgress;
+  loadingStyle?: 'steps' | 'pulse' | 'bar';
+  storeProduct: StoreProduct | null;
+  triedVariantId?: string;
+  result?: ResultControls;
+  initialResultView?: 'look' | 'photo';
+  photoTips?: string[];
+}) {
+  const making = flow.step === 'generating';
   // One polite region for the whole sheet, so each step and the ready
   // moment are announced once.
   const announcement = making ? (progress.overEstimate ? copy.makingAlmostThere : steps[progress.stepIndex]) : flow.step === 'result' ? copy.lookReady : '';
-
   const variantLine = variantTitle && variantTitle !== 'Default Title' ? variantTitle.split(' / ').join(' · ') : '';
+  const showPrivacy = () => onPrivacyOpenChange(true);
 
+  const header = (
+    <header className="flex items-center gap-3">
+      {product.imageUrl && (
+        // The store's own product image, already on Shopify's CDN.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={product.imageUrl} alt="" className="size-14 shrink-0 rounded-lg object-cover short:size-10" />
+      )}
+      <div className="min-w-0">
+        <p className="truncate text-base font-semibold text-foreground">{product.name}</p>
+        {variantLine && <p className="truncate text-sm text-muted-foreground">{copy.variantLine(variantLine)}</p>}
+      </div>
+    </header>
+  );
+
+  const notice =
+    flow.sessionState === 'error' && flow.step !== 'result' && !privacyOpen ? (
+      <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+        <p className="font-medium text-foreground">{t.storefrontProofErrorTitle}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{flow.sessionError}</p>
+        <button type="button" onClick={flow.retrySession} className="mt-1 min-h-11 text-sm font-medium underline underline-offset-2">
+          {t.refreshTryOn}
+        </button>
+      </div>
+    ) : null;
+
+  let content: ReactNode = null;
   if (privacyOpen) {
-    return (
-      <div className="space-y-4">
+    content = (
+      <SheetLayout>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setPrivacyOpen(false)}
+            onClick={() => onPrivacyOpenChange(false)}
             aria-label={copy.back}
-            className="grid size-11 place-items-center rounded-full hover:bg-muted/60 focus-visible:outline-2 focus-visible:outline-ring"
+            className="grid size-11 shrink-0 place-items-center rounded-full hover:bg-muted/60 focus-visible:outline-2 focus-visible:outline-ring"
           >
             <ChevronLeft className="size-5 rtl:-scale-x-100" aria-hidden="true" />
           </button>
           <h2 className="text-lg font-semibold text-foreground">{copy.privacyTitle}</h2>
         </div>
-        {copy.privacyBody.map((paragraph) => (
-          <p key={paragraph} className="text-sm leading-relaxed text-muted-foreground">
-            {paragraph}
-          </p>
-        ))}
-      </div>
+        <div className="space-y-4">
+          {copy.privacyBody.map((paragraph) => (
+            <p key={paragraph} className="text-sm leading-relaxed text-muted-foreground">
+              {paragraph}
+            </p>
+          ))}
+        </div>
+      </SheetLayout>
     );
+  } else if (flow.step === 'upload' && phoneRead) {
+    content = (
+      <SheetPhotoStep
+        copy={copy}
+        t={t}
+        lookSeconds={lookSeconds}
+        inApp={inApp}
+        storeLink={storeLink}
+        canTakePhoto={canTakePhoto}
+        onPhoto={flow.selectPhoto}
+        onShowPrivacy={showPrivacy}
+        tips={photoTips}
+      />
+    );
+  } else if (flow.step === 'consent' && flow.photoDataUrl) {
+    content = (
+      <SheetCheckStep
+        copy={copy}
+        photoDataUrl={flow.photoDataUrl}
+        firstTime={firstTime}
+        keepOnPhone={keepOnPhone}
+        busy={flow.sessionState !== 'ready'}
+        onKeepOnPhone={onKeepOnPhone}
+        onAccepted={flow.acceptPhoto}
+        onDifferentPhoto={flow.clearPhoto}
+        onTryOn={onTryOn}
+        onShowPrivacy={showPrivacy}
+      />
+    );
+  } else if (making) {
+    content = (
+      <SheetMakingStep copy={copy} photoDataUrl={flow.photoDataUrl} piece={product} steps={steps} progress={progress} loadingStyle={loadingStyle} />
+    );
+  } else if (flow.step === 'result' && flow.job) {
+    content = (
+      <SheetResultStep
+        copy={copy}
+        t={t}
+        locale={locale}
+        job={flow.job}
+        photoDataUrl={flow.photoDataUrl}
+        productName={product.name}
+        productImageUrl={product.imageUrl || undefined}
+        storeProduct={storeProduct}
+        triedVariantId={triedVariantId}
+        fallbackVariantTitle={variantTitle}
+        controls={result}
+        madeInSeconds={flow.generationSeconds}
+        initialView={initialResultView}
+        onChangePhoto={flow.reset}
+        onForget={() => void flow.forget()}
+        onImageError={() => void flow.discardBrokenLook()}
+      />
+    );
+  } else if (flow.step === 'error') {
+    content = <SheetErrorState flow={flow} t={t} />;
   }
 
   return (
-    <div className={`mx-auto flex h-[calc(100dvh-2rem)] min-h-0 w-full flex-col gap-5 ${flow.step === 'result' ? 'max-w-4xl' : 'max-w-xl'}`}>
+    <SheetChrome header={header} notice={notice} closeLabel={copy.close}>
       <p role="status" className="sr-only">
         {announcement}
       </p>
-      {flow.step !== 'result' && (
-        <header className="flex items-center gap-3">
-          {product.imageUrl && (
-            // The store's own product image, already on Shopify's CDN.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={product.imageUrl} alt="" className="size-14 shrink-0 rounded-lg object-cover" />
-          )}
-          <div className="min-w-0">
-            <p className="truncate text-base font-semibold text-foreground">{product.name}</p>
-            {variantLine && <p className="truncate text-sm text-muted-foreground">{copy.variantLine(variantLine)}</p>}
-          </div>
-        </header>
-      )}
+      {content ?? <SheetLayout />}
+    </SheetChrome>
+  );
+}
 
-      {flow.sessionState === 'error' && flow.step !== 'result' && (
-        <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
-          <p className="font-medium text-foreground">{t.storefrontProofErrorTitle}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{flow.sessionError}</p>
-          <button type="button" onClick={flow.retrySession} className="mt-3 text-sm font-medium underline underline-offset-2">
-            {t.refreshTryOn}
+function SheetErrorState({ flow, t }: { flow: SheetFlow; t: TryOnTranslator }) {
+  const retry = flow.unavailable
+    ? null
+    : flow.challengeFailed
+      ? // A fresh check with the same photo and garment.
+        { label: t.challengeRetry, onClick: () => void flow.generate() }
+      : { label: t.tryAgain, onClick: flow.reset };
+  return (
+    <SheetLayout
+      footer={
+        retry && (
+          <button
+            type="button"
+            onClick={retry.onClick}
+            className="flex h-12 w-full items-center justify-center rounded-xl bg-primary px-4 text-base font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            {retry.label}
           </button>
-        </div>
-      )}
-
-      <div className={`flex min-h-0 flex-1 flex-col ${flow.step === 'consent' || flow.step === 'result' ? '' : 'overflow-y-auto'}`}>
-        {flow.step === 'upload' && phoneRead && (
-          <SheetPhotoStep
-            copy={copy}
-            t={t}
-            lookSeconds={lookSeconds}
-            inApp={inApp}
-            storeLink={storeLink}
-            canTakePhoto={touchScreen || inApp !== null}
-            onPhoto={selectPhoto}
-            onShowPrivacy={() => setPrivacyOpen(true)}
-          />
-        )}
-
-        {flow.step === 'consent' && flow.photoDataUrl && (
-          <SheetCheckStep
-            copy={copy}
-            photoDataUrl={flow.photoDataUrl}
-            firstTime={firstTime}
-            keepOnPhone={keepOnPhone}
-            busy={flow.sessionState !== 'ready'}
-            onKeepOnPhone={changeKeep}
-            onAccepted={flow.acceptPhoto}
-            onDifferentPhoto={flow.clearPhoto}
-            onTryOn={() => void tryOn()}
-            onShowPrivacy={() => setPrivacyOpen(true)}
-          />
-        )}
-
-        {making && (
-          <SheetMakingStep
-            copy={copy}
-            photoDataUrl={flow.photoDataUrl}
-            piece={product}
-            steps={steps}
-            progress={progress}
-            loadingStyle={loadingStyle}
-          />
-        )}
-
-        {flow.step === 'result' && flow.job && (
-          <SheetResultStep
-            copy={copy}
-            t={t}
-            locale={locale}
-            job={flow.job}
-            photoDataUrl={flow.photoDataUrl}
-            productName={product.name}
-            storeProduct={storeProduct}
-            triedVariantId={displayVariantId || variantId}
-            fallbackVariantTitle={variantTitle}
-            controls={result}
-            madeInSeconds={flow.generationSeconds}
-            onChangePhoto={flow.reset}
-            onForget={() => void flow.forget()}
-            onImageError={() => void flow.discardBrokenLook()}
-          />
-        )}
-
-        {flow.step === 'error' && (
-          <div className="flex flex-col items-center gap-4 py-8 text-center">
-            <AlertCircle className="size-8 text-destructive" aria-hidden="true" />
-            {flow.unavailable ? (
-              <p role="status" className="text-lg font-semibold text-foreground">
-                {t.tryOnUnavailable}
-              </p>
-            ) : flow.challengeFailed ? (
-              <>
-                <div role="alert" className="space-y-1">
-                  <p className="text-lg font-semibold text-foreground">{t.challengeFailedTitle}</p>
-                  <p className="text-sm text-muted-foreground">{t.challengeFailedBody}</p>
-                </div>
-                {/* A fresh check with the same photo and garment. */}
-                <button type="button" onClick={() => void flow.generate()} className="rounded-xl border px-4 py-2 text-sm font-medium">
-                  {t.challengeRetry}
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="space-y-1">
-                  <p className="text-lg font-semibold text-foreground">{t.errorTitle}</p>
-                  <p className="text-sm text-muted-foreground">{flow.error}</p>
-                </div>
-                <button type="button" onClick={flow.reset} className="rounded-xl border px-4 py-2 text-sm font-medium">
-                  {t.tryAgain}
-                </button>
-              </>
-            )}
+        )
+      }
+    >
+      <div className="my-auto flex flex-col items-center gap-4 py-8 text-center short:py-2">
+        <AlertCircle className="size-8 text-destructive" aria-hidden="true" />
+        {flow.unavailable ? (
+          <p role="status" className="text-lg font-semibold text-foreground">
+            {t.tryOnUnavailable}
+          </p>
+        ) : flow.challengeFailed ? (
+          <div role="alert" className="space-y-1">
+            <p className="text-lg font-semibold text-foreground">{t.challengeFailedTitle}</p>
+            <p className="text-sm text-muted-foreground">{t.challengeFailedBody}</p>
+          </div>
+        ) : (
+          <div className="space-y-1">
+            <p className="text-lg font-semibold text-foreground">{t.errorTitle}</p>
+            <p className="text-sm text-muted-foreground">{flow.error}</p>
           </div>
         )}
       </div>
-    </div>
+    </SheetLayout>
   );
 }
 

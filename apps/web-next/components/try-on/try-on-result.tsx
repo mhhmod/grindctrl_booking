@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Download, MessageCircle, ArrowLeft, ArrowRight, ShoppingCart } from 'lucide-react';
+import { ScrollShellAction } from '@/components/embed/scroll-shell';
 import { Button } from '@/components/ui/button';
 import { trackClick } from '@/lib/analytics';
 import type { TryOnJob } from '@/lib/try-on/types';
@@ -132,7 +133,7 @@ export function TryOnResult({ job, productName, onReset, shopMode, controls, onF
       <div className="mx-auto w-full max-w-sm space-y-3">
         {shopMode ? (
           show.addToCart && (
-            <Button
+            <ScrollShellAction><Button
               size="lg"
               className="h-12 w-full gap-2 rounded-xl text-base"
               onClick={handleAddToCart}
@@ -147,7 +148,7 @@ export function TryOnResult({ job, productName, onReset, shopMode, controls, onF
                 : cartState === 'failed'
                   ? t.addToCartRetry
                   : t.addToCart}
-            </Button>
+            </Button></ScrollShellAction>
           )
         ) : (
           <Button asChild size="lg" className="h-12 w-full gap-2 rounded-xl text-base">

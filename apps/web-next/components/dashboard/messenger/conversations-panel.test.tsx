@@ -135,6 +135,37 @@ describe('ConversationsPanel', () => {
 
     expect(staffReply).toHaveBeenCalledWith('site-1', 'conv-1', 'Shipped yesterday!');
   });
+
+  /* Chromium fires a scroll event on the thread when a keyboard shrinks it,
+     with scrollTop unchanged and far from the bottom, before the resize
+     observer runs. That event must not count as the moderator leaving. */
+  it('keeps following the newest message when the thread shrinks, and stops only when scrolled up', async () => {
+    const observers = new Set<{ callback: ResizeObserverCallback }>();
+    vi.stubGlobal('ResizeObserver', class {
+      callback: ResizeObserverCallback;
+      constructor(callback: ResizeObserverCallback) { this.callback = callback; }
+      observe() { observers.add(this); }
+      unobserve() {}
+      disconnect() { observers.delete(this); }
+    });
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={actions} />);
+    await screen.findByText('Where is my order?');
+    const log = screen.getByRole('log');
+    const box = { height: 2834, client: 400 };
+    Object.defineProperty(log, 'scrollHeight', { configurable: true, get: () => box.height });
+    Object.defineProperty(log, 'clientHeight', { configurable: true, get: () => box.client });
+    const resize = () => act(() => { for (const observer of [...observers]) observer.callback([], observer as unknown as ResizeObserver); });
+
+    log.scrollTop = 2434; fireEvent.scroll(log);
+    box.client = 76; fireEvent.scroll(log);
+    resize();
+    expect(log.scrollTop).toBe(2834);
+
+    fireEvent.scroll(log);
+    log.scrollTop = 1500; fireEvent.scroll(log);
+    box.height = 3000; resize();
+    expect(log.scrollTop).toBe(1500);
+  });
 });
 
 /* Inserting is a composer tool; merchant-wide management lives in Behaviour. */

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollShell } from '@/components/embed/scroll-shell';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { MessengerLocale } from '@/lib/messenger/types';
 import type { PublicHandoffAlert } from '@/lib/messenger/handoff-alert';
@@ -108,6 +109,7 @@ export function MessengerPanel({
   originToken,
   previewMessages,
   previewStatus,
+  previewChrome = false,
 }: {
   config: PublicMessengerPayload;
   variant?: 'live' | 'preview';
@@ -128,6 +130,8 @@ export function MessengerPanel({
   previewMessages?: WireMessage[];
   /** Preview only. See previewMessages. */
   previewStatus?: string;
+  /** Dev fixtures can show the live close control without bootstrapping. */
+  previewChrome?: boolean;
 }) {
   const [locale, setLocale] = useState<MessengerLocale>(localeOverride ?? 'en');
   // Locale must resolve after hydration (the iframe URL is the source of
@@ -302,6 +306,16 @@ export function MessengerPanel({
       else list.scrollTop = list.scrollHeight;
     });
   }, []);
+
+  // A keyboard or a growing composer resizes the single thread, including
+  // preview mode. Keep the newest message in view without moving the document.
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(scrollToEnd);
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, [scrollToEnd]);
 
   /* Bootstrap / restore. Preview variant performs no network and owns no
      session state — it is a pure visual render of the given config. */
@@ -984,21 +998,111 @@ export function MessengerPanel({
 
   if (bootError) {
     return (
-      <div dir={dir} className={`flex h-dvh flex-col items-center justify-center gap-2 p-6 text-center ${dark ? 'dark' : ''} bg-background text-foreground`}>
+      <ScrollShell dir={dir} bodyClassName={`flex flex-col items-center justify-center gap-2 p-6 text-center ${dark ? 'dark' : ''} bg-background text-foreground`}>
         <p className="text-sm font-semibold">{t.unavailableTitle}</p>
         <p className="text-xs text-muted-foreground">{t.unavailableBody}</p>
-      </div>
+      </ScrollShell>
     );
   }
 
-  return (
-    <div
-      dir={dir}
-      lang={locale}
-      className={`${dark ? 'dark' : ''} ${variant === 'preview' ? 'h-full min-h-[460px]' : 'h-dvh'} flex flex-col bg-background font-sans text-foreground`}
-      style={{ ['--accent' as string]: accent }}
-    >
-      {/* Header */}
+  const composer = (
+    <footer>
+      <form
+        className="flex items-end gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setHomeView(false);
+          void send();
+        }}
+      >
+        <label htmlFor="gc-msgr-input" className="sr-only">
+          {v16Chat ? t.messageLabel : placeholder}
+        </label>
+        {config.attachmentsEnabled && (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPTED_IMAGE_TYPES.join(',')}
+              className="sr-only"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void uploadPhoto(file);
+              }}
+            />
+            <button
+              type="button"
+              aria-label={t.attachAria}
+              disabled={booting || uploading}
+              onClick={() => fileInputRef.current?.click()}
+              className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-40"
+            >
+              <PaperclipIcon />
+            </button>
+          </>
+        )}
+        <textarea
+          id="gc-msgr-input"
+          ref={inputRef}
+          rows={1}
+          value={draft}
+          disabled={booting}
+          onChange={(e) => {
+            setDraft(e.target.value.slice(0, 2000));
+            resizeInput();
+          }}
+          onKeyDown={(e) => {
+            // Touch Return inserts a newline; the explicit Send button submits.
+            if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && !hasCoarsePointer()) {
+              e.preventDefault();
+              setHomeView(false);
+              void send();
+            }
+          }}
+          placeholder={v16Chat ? composerHint : placeholder}
+          dir={v16Chat ? 'auto' : undefined}
+          className="max-h-[120px] min-h-11 min-w-0 flex-1 resize-none rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-60"
+        />
+        {v16Chat && (
+          <SpeechButton
+            t={t}
+            locale={locale}
+            disabled={booting}
+            onText={(heard) => {
+              setDraft((current) => (current ? `${current} ${heard}` : heard).slice(0, 2000));
+              inputRef.current?.focus();
+            }}
+          />
+        )}
+        <button
+          type="submit"
+          aria-label={t.sendAria}
+          disabled={!draft.trim() || booting}
+          className="flex size-11 shrink-0 items-center justify-center rounded-xl text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-40"
+          style={{ backgroundColor: accent }}
+        >
+          <SendIcon />
+        </button>
+      </form>
+      {(uploading || attachError) && (
+        <p
+          className={`mt-2 text-center text-[11px] ${attachError ? 'text-destructive' : 'text-muted-foreground'}`}
+          role="status"
+        >
+          {attachError ?? t.attachUploading}
+        </p>
+      )}
+      {/* No GrindCTRL line on the store in v16; the shopper is told who answers instead. */}
+      <p className="mt-2 text-center text-[10px] text-muted-foreground">{v16Chat ? t.disclosure : t.poweredBy}</p>
+    </footer>
+  );
+
+  /* One scroll area per view (components/embed/scroll-shell.tsx): the header
+     and the composer stay pinned, and the thread between them is the only
+     thing that scrolls, kept on the newest message as the frame resizes
+     around an on-screen keyboard. */
+  const header = (
+    <>
       <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
         {inAnswer && pageProduct ? (
           <>
@@ -1058,7 +1162,7 @@ export function MessengerPanel({
                 lang={option}
                 aria-pressed={locale === option}
                 onClick={() => switchLocale(option)}
-                className={`min-h-8 rounded-full px-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${locale === option ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
+                className={`min-h-11 min-w-11 rounded-full px-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${locale === option ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
               >
                 {option === 'ar' ? 'عربي' : 'EN'}
               </button>
@@ -1073,12 +1177,13 @@ export function MessengerPanel({
             rather than trying to hide ourselves. Rendered on every size: a
             close button in the corner of a chat window is what people reach
             for first regardless of screen. */}
-        {variant === 'live' && (
+        {(variant === 'live' || previewChrome) && (
           <button
             type="button"
             onClick={closePanel}
+            data-sheet-close
             aria-label={t.close}
-            className={`-me-1.5 flex ${fullBleed ? 'size-11' : 'size-9'} shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+            className="-me-1.5 flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <svg
               width="18"
@@ -1103,447 +1208,370 @@ export function MessengerPanel({
           {t.offlineBar}
         </p>
       )}
+    </>
+  );
 
-      {/* Thread */}
-      <div ref={listRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4" role="log" aria-live="polite" aria-busy={booting}>
-        {booting && (
-          <div aria-hidden="true" className="max-w-[85%] space-y-2 rounded-2xl rounded-es-md border border-border bg-card px-3.5 py-3">
-            <Skeleton className="h-3 w-3/4 motion-reduce:animate-none" />
-            <Skeleton className="h-3 w-1/2 motion-reduce:animate-none" />
-          </div>
-        )}
-        {showHome && (
-          <ChatHome
-            t={t}
-            locale={locale}
-            product={pageProduct}
-            welcomeTitle={welcomeTitle}
-            welcomeSubtitle={welcomeSubtitle}
-            disabled={booting}
-            onQuickAction={(message, id) => {
-              setHomeView(false);
-              // Track my order opens the lookup form where the store offers it.
-              if (id === 'order' && config.orderLookup) {
-                const openForm = () => {
-                  setOrderForm(true);
-                  scrollToEnd();
-                };
-                if (shopperTokenRef.current) {
-                  void trackVerifiedOrder(message).then((found) => found || openForm());
-                } else {
-                  openForm();
-                }
-                return;
+  return (
+    <ScrollShell
+      dir={dir}
+      data-full-bleed={fullBleed}
+      lang={locale}
+      fill={variant === 'preview'}
+      className={`${dark ? 'dark' : ''} bg-background font-sans text-foreground`}
+      style={{ ['--accent' as string]: accent }}
+      header={header}
+      bodyRef={listRef}
+      bodyClassName="space-y-3 px-4 py-4"
+      bodyProps={{ role: 'log', 'aria-live': 'polite', 'aria-busy': booting }}
+      footerClassName="bg-card px-3 pt-3"
+      footer={composer}
+    >
+      {booting && (
+        <div aria-hidden="true" className="max-w-[85%] space-y-2 rounded-2xl rounded-es-md border border-border bg-card px-3.5 py-3">
+          <Skeleton className="h-3 w-3/4 motion-reduce:animate-none" />
+          <Skeleton className="h-3 w-1/2 motion-reduce:animate-none" />
+        </div>
+      )}
+      {showHome && (
+        <ChatHome
+          t={t}
+          locale={locale}
+          product={pageProduct}
+          welcomeTitle={welcomeTitle}
+          welcomeSubtitle={welcomeSubtitle}
+          disabled={booting}
+          onQuickAction={(message, id) => {
+            setHomeView(false);
+            // Track my order opens the lookup form where the store offers it.
+            if (id === 'order' && config.orderLookup) {
+              const openForm = () => {
+                setOrderForm(true);
+                scrollToEnd();
+              };
+              if (shopperTokenRef.current) {
+                void trackVerifiedOrder(message).then((found) => found || openForm());
+              } else {
+                openForm();
               }
-              void send(message);
-            }}
-            onTryOn={() => window.parent.postMessage({ type: 'grindctrl-messenger:try-on' }, '*')}
-          />
-        )}
-        {messages.length === 0 && !booting && !v16Chat && (
-          <div className="mx-auto max-w-[85%] pt-6 text-center">
-            <p className="text-base font-semibold">{welcomeTitle}</p>
-            {welcomeSubtitle && <p className="mt-1 text-xs text-muted-foreground">{welcomeSubtitle}</p>}
-          </div>
-        )}
+              return;
+            }
+            void send(message);
+          }}
+          onTryOn={() => window.parent.postMessage({ type: 'grindctrl-messenger:try-on' }, '*')}
+        />
+      )}
+      {messages.length === 0 && !booting && !v16Chat && (
+        <div className="mx-auto max-w-[85%] pt-6 text-center">
+          <p className="text-base font-semibold">{welcomeTitle}</p>
+          {welcomeSubtitle && <p className="mt-1 text-xs text-muted-foreground">{welcomeSubtitle}</p>}
+        </div>
+      )}
 
-        {!showHome && messages.map((m) => {
-          if (m.role === 'system') {
-            return (
-              /* Transcript history, not a live region: the handoff banner
-                 below is the one thing that should announce itself, or a
-                 restored conversation re-reads every past event on open. */
-              <p key={m.id} className="text-center text-[11px] text-muted-foreground">
-                {m.content}
-              </p>
-            );
-          }
-          const mine = m.role === 'user';
-          /* metadata.author already distinguishes 'ai' from 'human' server-side
-             (staffReply sets it, the AI paths set it) — a shopper reading a
-             resolved thread previously had no way to tell them apart. */
-          const senderLabel =
-            !mine && m.author === 'human'
-              ? t.humanSenderLabel
-              : !mine && m.author === 'ai' && !v16Chat
-                ? t.aiSenderLabel
-                : null;
+      {!showHome && messages.map((m) => {
+        if (m.role === 'system') {
           return (
-            <div key={m.id} className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
-              {senderLabel && (
-                <span className="mb-0.5 px-1 text-[10px] font-medium text-muted-foreground">{senderLabel}</span>
-              )}
-              <div
-                className={
-                  mine
-                    ? 'max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-ee-md px-3.5 py-2 text-sm text-white'
-                    : 'max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-es-md border border-border bg-card px-3.5 py-2 text-sm'
-                }
-                style={mine ? { backgroundColor: accent } : undefined}
-                dir={v16Chat ? 'auto' : undefined}
-              >
-                {localImages[m.id] ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- object URL, no loader involved
-                  <img
-                    src={localImages[m.id]}
-                    alt={t.attachImageAlt}
-                    className="mb-1 max-h-56 w-full rounded-lg object-cover"
-                  />
-                ) : null}
-                <MessageText text={m.content} />
-                {m.pending && <span className="ms-2 inline-block animate-pulse">…</span>}
-                {m.queued && (
-                  <span className="mt-1 block text-[11px] opacity-90" role="status">
-                    {t.waitingToSend}
-                  </span>
-                )}
-                {m.saved && !v16Chat && (
-                  <span className="mt-1 block text-[11px] opacity-90">{t.savedMark}</span>
-                )}
-                {m.failed && (
-                  <span className="mt-1 flex items-center gap-2 text-[11px] opacity-90">
-                    {t.sendFailed}
-                    <button
-                      type="button"
-                      onClick={() => retryFailed(m)}
-                      className="rounded-full border border-current px-2 py-0.5 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2"
-                    >
-                      {t.retry}
-                    </button>
-                  </span>
-                )}
-              </div>
-              {v16Chat && m.saved && <SavedMark t={t} />}
-              {v16Chat && m.order && (
-                <div className="mt-2 w-full">
-                  <OrderCardView card={m.order} t={t} locale={locale} />
-                </div>
-              )}
-              {v16Chat && !mine && m.author === 'ai' && (
-                <span className="mt-1 px-1 text-[10px] font-medium text-muted-foreground">
-                  {m.order ? t.orderAiLabel : t.storeAssistantAi}
+            /* Transcript history, not a live region: the handoff banner
+               below is the one thing that should announce itself, or a
+               restored conversation re-reads every past event on open. */
+            <p key={m.id} className="text-center text-[11px] text-muted-foreground">
+              {m.content}
+            </p>
+          );
+        }
+        const mine = m.role === 'user';
+        /* metadata.author already distinguishes 'ai' from 'human' server-side
+           (staffReply sets it, the AI paths set it) — a shopper reading a
+           resolved thread previously had no way to tell them apart. */
+        const senderLabel =
+          !mine && m.author === 'human'
+            ? t.humanSenderLabel
+            : !mine && m.author === 'ai' && !v16Chat
+              ? t.aiSenderLabel
+              : null;
+        return (
+          <div key={m.id} className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
+            {senderLabel && (
+              <span className="mb-0.5 px-1 text-[10px] font-medium text-muted-foreground">{senderLabel}</span>
+            )}
+            <div
+              className={
+                mine
+                  ? 'max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-ee-md px-3.5 py-2 text-sm text-white'
+                  : 'max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-es-md border border-border bg-card px-3.5 py-2 text-sm'
+              }
+              style={mine ? { backgroundColor: accent } : undefined}
+              dir={v16Chat ? 'auto' : undefined}
+            >
+              {localImages[m.id] ? (
+                // eslint-disable-next-line @next/next/no-img-element -- object URL, no loader involved
+                <img
+                  src={localImages[m.id]}
+                  alt={t.attachImageAlt}
+                  className="mb-1 max-h-56 w-full rounded-lg object-cover"
+                />
+              ) : null}
+              <MessageText text={m.content} />
+              {m.pending && <span className="ms-2 inline-block animate-pulse">…</span>}
+              {m.queued && (
+                <span className="mt-1 block text-[11px] opacity-90" role="status">
+                  {t.waitingToSend}
                 </span>
               )}
-              {/* Per-reply rating: AI answers only, never the shopper's own
-                  messages, team replies or system lines. Same emoji and
-                  button language as the end-of-conversation rating below;
-                  once rated, the buttons give way to the thanks line. */}
-              {!mine && m.author === 'ai' &&
-                (m.feedback ? (
-                  <span className="mt-1 px-1 text-[11px] text-muted-foreground" role="status">
-                    {t.feedbackThanks}
-                  </span>
-                ) : (
-                  <span className="mt-1 flex items-center gap-1 px-1">
-                    <button
-                      type="button"
-                      onClick={() => giveMessageFeedback(m.id, 'up')}
-                      aria-label={t.helpful}
-                      className="rounded-full px-1.5 py-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
-                    >
-                      👍
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => giveMessageFeedback(m.id, 'down')}
-                      aria-label={t.notHelpful}
-                      className="rounded-full px-1.5 py-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
-                    >
-                      👎
-                    </button>
-                  </span>
-                ))}
+              {m.saved && !v16Chat && (
+                <span className="mt-1 block text-[11px] opacity-90">{t.savedMark}</span>
+              )}
+              {m.failed && (
+                <span className="mt-1 flex items-center gap-2 text-[11px] opacity-90">
+                  {t.sendFailed}
+                  <button
+                    type="button"
+                    onClick={() => retryFailed(m)}
+                    className="rounded-full border border-current px-2 py-0.5 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2"
+                  >
+                    {t.retry}
+                  </button>
+                </span>
+              )}
             </div>
-          );
-        })}
-
-        {v16Chat && !showHome && orderForm && (
-          <OrderLookupForm t={t} busy={orderBusy} onSubmit={(number, contact) => void lookupOrderFromForm(number, contact)} onCancel={() => setOrderForm(false)} />
-        )}
-
-        {(typing || staffTyping) && (
-          <div className="flex justify-start" aria-label={t.typing} role="status">
-            <div className="flex items-center gap-1 rounded-2xl rounded-es-md border border-border bg-card px-3 py-2.5">
-              {[0, 150, 300].map((delay) => (
-                <span
-                  key={delay}
-                  className="size-1.5 animate-bounce rounded-full bg-muted-foreground/70 motion-reduce:animate-none"
-                  style={{ animationDelay: `${delay}ms` }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* N24: the assistant could not answer; the message is saved and
-            the team is one tap away. */}
-        {v16Chat && assistantDown && status === 'open' && (
-          <AssistantDownCard
-            t={t}
-            replyLine={replyLine}
-            accent={accent}
-            busy={handingOff}
-            handoffAvailable={handoffAvailable}
-            onSend={() => void handOffSaved()}
-          />
-        )}
-        {!v16Chat && assistantDown && status === 'open' && (
-          <div className="mx-auto w-full max-w-[92%] rounded-xl border border-border bg-card p-3" role="status">
-            <p className="text-xs font-semibold">{t.assistantDownTitle}</p>
-            <p className="mt-1 text-[11px] text-muted-foreground">{handoffAvailable ? t.assistantDownBody : t.assistantSavedBody}</p>
-            {handoffAvailable && (
-              <button
-                type="button"
-                onClick={() => void handOffSaved()}
-                disabled={handingOff}
-                className="mt-2 rounded-full px-3 py-1.5 text-[11px] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
-                style={{ backgroundColor: accent }}
-              >
-                {t.sendToTeam}
-              </button>
+            {v16Chat && m.saved && <SavedMark t={t} />}
+            {v16Chat && m.order && (
+              <div className="mt-2 w-full">
+                <OrderCardView card={m.order} t={t} locale={locale} />
+              </div>
             )}
+            {v16Chat && !mine && m.author === 'ai' && (
+              <span className="mt-1 px-1 text-[10px] font-medium text-muted-foreground">
+                {m.order ? t.orderAiLabel : t.storeAssistantAi}
+              </span>
+            )}
+            {/* Per-reply rating: AI answers only, never the shopper's own
+                messages, team replies or system lines. Same emoji and
+                button language as the end-of-conversation rating below;
+                once rated, the buttons give way to the thanks line. */}
+            {!mine && m.author === 'ai' &&
+              (m.feedback ? (
+                <span className="mt-1 px-1 text-[11px] text-muted-foreground" role="status">
+                  {t.feedbackThanks}
+                </span>
+              ) : (
+                <span className="mt-1 flex items-center gap-1 px-1">
+                  <button
+                    type="button"
+                    onClick={() => giveMessageFeedback(m.id, 'up')}
+                    aria-label={t.helpful}
+                    className="rounded-full px-1.5 py-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
+                  >
+                    👍
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => giveMessageFeedback(m.id, 'down')}
+                    aria-label={t.notHelpful}
+                    className="rounded-full px-1.5 py-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
+                  >
+                    👎
+                  </button>
+                </span>
+              ))}
           </div>
-        )}
+        );
+      })}
 
-        {/* While the team has it: only an alert that really went out says
-            the team has the message (phase zero item 6). */}
-        {v16Chat && waitingForTeam && (
-          <div className="grid gap-2">
-            {card.kind === 'alerted' ? (
-              <TeamHasItCard t={t} replyLine={replyLine}>
-                {replyAddress}
-              </TeamHasItCard>
-            ) : card.kind === 'after_hours' ? (
-              <TeamAwayCard
-                title={t.awayTitle(
+      {v16Chat && !showHome && orderForm && (
+        <OrderLookupForm t={t} busy={orderBusy} onSubmit={(number, contact) => void lookupOrderFromForm(number, contact)} onCancel={() => setOrderForm(false)} />
+      )}
+
+      {(typing || staffTyping) && (
+        <div className="flex justify-start" aria-label={t.typing} role="status">
+          <div className="flex items-center gap-1 rounded-2xl rounded-es-md border border-border bg-card px-3 py-2.5">
+            {[0, 150, 300].map((delay) => (
+              <span
+                key={delay}
+                className="size-1.5 animate-bounce rounded-full bg-muted-foreground/70 motion-reduce:animate-none"
+                style={{ animationDelay: `${delay}ms` }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* N24: the assistant could not answer; the message is saved and
+          the team is one tap away. */}
+      {v16Chat && assistantDown && status === 'open' && (
+        <AssistantDownCard
+          t={t}
+          replyLine={replyLine}
+          accent={accent}
+          busy={handingOff}
+          handoffAvailable={handoffAvailable}
+          onSend={() => void handOffSaved()}
+        />
+      )}
+      {!v16Chat && assistantDown && status === 'open' && (
+        <div className="mx-auto w-full max-w-[92%] rounded-xl border border-border bg-card p-3" role="status">
+          <p className="text-xs font-semibold">{t.assistantDownTitle}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">{handoffAvailable ? t.assistantDownBody : t.assistantSavedBody}</p>
+          {handoffAvailable && (
+            <button
+              type="button"
+              onClick={() => void handOffSaved()}
+              disabled={handingOff}
+              className="mt-2 rounded-full px-3 py-1.5 text-[11px] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
+              style={{ backgroundColor: accent }}
+            >
+              {t.sendToTeam}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* While the team has it: only an alert that really went out says
+          the team has the message (phase zero item 6). */}
+      {v16Chat && waitingForTeam && (
+        <div className="grid gap-2">
+          {card.kind === 'alerted' ? (
+            <TeamHasItCard t={t} replyLine={replyLine}>
+              {replyAddress}
+            </TeamHasItCard>
+          ) : card.kind === 'after_hours' ? (
+            <TeamAwayCard
+              title={t.awayTitle(
+                card.opensAt ? formatTeamTime(card.opensAt, locale) : null,
+                card.timezone ? cityTime(card.timezone, locale) : null,
+              )}
+              body={opensNextDay(team?.opensAtIso ?? null, card.timezone) ? t.awayBodyTomorrow : t.awayBody}
+            >
+              {replyAddress}
+            </TeamAwayCard>
+          ) : (
+            <SavedForTeamCard t={t}>{replyAddress}</SavedForTeamCard>
+          )}
+          {/* Only where the assistant really keeps answering while the
+              shopper waits: after hours, with n23 on. Inside opening hours
+              it stops once the team has the conversation. */}
+          {card.kind === 'after_hours' && afterHoursMode && config.aiEnabled && !assistantDown && (
+            <p className="px-1 text-xs text-muted-foreground">{t.stillHelp}</p>
+          )}
+        </div>
+      )}
+      {!v16Chat && waitingForTeam && (
+        <div className="mx-auto w-full max-w-[92%] rounded-xl border border-border bg-card p-3 text-center" role="status">
+          {card.kind === 'alerted' ? (
+            <>
+              <p className="text-xs font-semibold">{t.alertedTitle}</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">{t.alertedBody}</p>
+            </>
+          ) : card.kind === 'after_hours' ? (
+            <>
+              <p className="text-xs font-semibold">
+                {t.awayTitle(
                   card.opensAt ? formatTeamTime(card.opensAt, locale) : null,
                   card.timezone ? cityTime(card.timezone, locale) : null,
                 )}
-                body={opensNextDay(team?.opensAtIso ?? null, card.timezone) ? t.awayBodyTomorrow : t.awayBody}
-              >
-                {replyAddress}
-              </TeamAwayCard>
-            ) : (
-              <SavedForTeamCard t={t}>{replyAddress}</SavedForTeamCard>
-            )}
-            {/* Only where the assistant really keeps answering while the
-                shopper waits: after hours, with n23 on. Inside opening hours
-                it stops once the team has the conversation. */}
-            {card.kind === 'after_hours' && afterHoursMode && config.aiEnabled && !assistantDown && (
-              <p className="px-1 text-xs text-muted-foreground">{t.stillHelp}</p>
-            )}
-          </div>
-        )}
-        {!v16Chat && waitingForTeam && (
-          <div className="mx-auto w-full max-w-[92%] rounded-xl border border-border bg-card p-3 text-center" role="status">
-            {card.kind === 'alerted' ? (
-              <>
-                <p className="text-xs font-semibold">{t.alertedTitle}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">{t.alertedBody}</p>
-              </>
-            ) : card.kind === 'after_hours' ? (
-              <>
-                <p className="text-xs font-semibold">
-                  {t.awayTitle(
-                    card.opensAt ? formatTeamTime(card.opensAt, locale) : null,
-                    card.timezone ? cityTime(card.timezone, locale) : null,
-                  )}
-                </p>
-                <p className="mt-1 text-[11px] text-muted-foreground">{t.awayBody}</p>
-                {!assistantDown && <p className="mt-1 text-[11px] text-muted-foreground">{t.stillHelp}</p>}
-              </>
-            ) : (
-              <>
-                <p className="text-xs font-semibold">{t.savedTitle}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">{t.savedBody}</p>
-              </>
-            )}
-          </div>
-        )}
-
-        {showHandoffBanner && !waitingForTeam && (
-          <p className="text-center text-[11px] text-muted-foreground" role="status">
-            {status === 'closed' ? t.resolved : t.teamReplied}
-          </p>
-        )}
-
-        {/* Inline, never a modal: the composer stays usable and skipping
-            costs nothing. Asked at most once, decided by the server. */}
-        {askContact && !teamHasAnswered && !contactEmail && !(v16Chat && waitingForTeam && config.contactCapture) && (
-          <div className="mx-auto w-full max-w-[92%] rounded-xl border border-border bg-card p-3">
-            {contactState === 'done' ? (
-              <p className="text-center text-[11px] text-muted-foreground" role="status">
-                {t.contactThanks}
               </p>
-            ) : (
-              <form onSubmit={submitContact} className="grid gap-2">
-                <p className="text-xs font-semibold">{t.contactTitle}</p>
-                <label htmlFor="gc-msgr-contact" className="sr-only">
-                  {t.contactLabel}
-                </label>
-                <input
-                  id="gc-msgr-contact"
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  dir="ltr"
-                  value={contactDraft}
-                  onChange={(e) => {
-                    setContactDraft(e.target.value.slice(0, 200));
-                    if (contactState === 'invalid') setContactState('idle');
-                  }}
-                  placeholder={t.contactPlaceholder}
-                  aria-invalid={contactState === 'invalid'}
-                  aria-describedby={contactState === 'invalid' ? 'gc-msgr-contact-error' : undefined}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
-                />
-                {contactState === 'invalid' && (
-                  <p id="gc-msgr-contact-error" className="text-[11px] text-destructive" role="alert">
-                    {t.contactInvalid}
-                  </p>
-                )}
-                <div className="flex items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setAskContact(false)}
-                    className="rounded-full px-3 py-1.5 text-[11px] text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
-                  >
-                    {t.contactSkip}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={contactState === 'sending'}
-                    className="rounded-full px-3 py-1.5 text-[11px] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
-                    style={{ backgroundColor: accent }}
-                  >
-                    {t.contactSend}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        )}
-
-        {status === 'closed' && lastIsOurs && (
-          <div className="mx-auto w-fit rounded-full border border-border px-3 py-1.5 text-[11px] text-muted-foreground">
-            {feedbackGiven ? (
-              t.feedbackThanks
-            ) : (
-              <span className="flex items-center gap-2">
-                {t.rateQuestion}
-                <button
-                  type="button"
-                  onClick={() => giveFeedback('up')}
-                  aria-label={t.helpful}
-                  className="rounded-full px-1.5 py-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
-                >
-                  👍
-                </button>
-                <button
-                  type="button"
-                  onClick={() => giveFeedback('down')}
-                  aria-label={t.notHelpful}
-                  className="rounded-full px-1.5 py-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
-                >
-                  👎
-                </button>
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Composer */}
-      <footer className="border-t border-border bg-card p-3">
-        <form
-          className="flex items-end gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setHomeView(false);
-            void send();
-          }}
-        >
-          <label htmlFor="gc-msgr-input" className="sr-only">
-            {v16Chat ? t.messageLabel : placeholder}
-          </label>
-          {config.attachmentsEnabled && (
+              <p className="mt-1 text-[11px] text-muted-foreground">{t.awayBody}</p>
+              {!assistantDown && <p className="mt-1 text-[11px] text-muted-foreground">{t.stillHelp}</p>}
+            </>
+          ) : (
             <>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept={ACCEPTED_IMAGE_TYPES.join(',')}
-                className="sr-only"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) void uploadPhoto(file);
-                }}
-              />
-              <button
-                type="button"
-                aria-label={t.attachAria}
-                disabled={booting || uploading}
-                onClick={() => fileInputRef.current?.click()}
-                className="flex size-[42px] shrink-0 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-40"
-              >
-                <PaperclipIcon />
-              </button>
+              <p className="text-xs font-semibold">{t.savedTitle}</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">{t.savedBody}</p>
             </>
           )}
-          <textarea
-            id="gc-msgr-input"
-            ref={inputRef}
-            rows={1}
-            value={draft}
-            disabled={booting}
-            onChange={(e) => {
-              setDraft(e.target.value.slice(0, 2000));
-              resizeInput();
-            }}
-            onKeyDown={(e) => {
-              // Touch Return inserts a newline; the explicit Send button submits.
-              if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && !hasCoarsePointer()) {
-                e.preventDefault();
-                setHomeView(false);
-                void send();
-              }
-            }}
-            placeholder={v16Chat ? composerHint : placeholder}
-            dir={v16Chat ? 'auto' : undefined}
-            className="max-h-[120px] min-h-[42px] flex-1 resize-none rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-60"
-          />
-          {v16Chat && (
-            <SpeechButton
-              t={t}
-              locale={locale}
-              disabled={booting}
-              onText={(heard) => {
-                setDraft((current) => (current ? `${current} ${heard}` : heard).slice(0, 2000));
-                inputRef.current?.focus();
-              }}
-            />
+        </div>
+      )}
+
+      {showHandoffBanner && !waitingForTeam && (
+        <p className="text-center text-[11px] text-muted-foreground" role="status">
+          {status === 'closed' ? t.resolved : t.teamReplied}
+        </p>
+      )}
+
+      {/* Inline, never a modal: the composer stays usable and skipping
+          costs nothing. Asked at most once, decided by the server. */}
+      {askContact && !teamHasAnswered && !contactEmail && !(v16Chat && waitingForTeam && config.contactCapture) && (
+        <div className="mx-auto w-full max-w-[92%] rounded-xl border border-border bg-card p-3">
+          {contactState === 'done' ? (
+            <p className="text-center text-[11px] text-muted-foreground" role="status">
+              {t.contactThanks}
+            </p>
+          ) : (
+            <form onSubmit={submitContact} className="grid gap-2">
+              <p className="text-xs font-semibold">{t.contactTitle}</p>
+              <label htmlFor="gc-msgr-contact" className="sr-only">
+                {t.contactLabel}
+              </label>
+              <input
+                id="gc-msgr-contact"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                dir="ltr"
+                value={contactDraft}
+                onChange={(e) => {
+                  setContactDraft(e.target.value.slice(0, 200));
+                  if (contactState === 'invalid') setContactState('idle');
+                }}
+                placeholder={t.contactPlaceholder}
+                aria-invalid={contactState === 'invalid'}
+                aria-describedby={contactState === 'invalid' ? 'gc-msgr-contact-error' : undefined}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+              />
+              {contactState === 'invalid' && (
+                <p id="gc-msgr-contact-error" className="text-[11px] text-destructive" role="alert">
+                  {t.contactInvalid}
+                </p>
+              )}
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAskContact(false)}
+                  className="rounded-full px-3 py-1.5 text-[11px] text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
+                >
+                  {t.contactSkip}
+                </button>
+                <button
+                  type="submit"
+                  disabled={contactState === 'sending'}
+                  className="rounded-full px-3 py-1.5 text-[11px] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
+                  style={{ backgroundColor: accent }}
+                >
+                  {t.contactSend}
+                </button>
+              </div>
+            </form>
           )}
-          <button
-            type="submit"
-            aria-label={t.sendAria}
-            disabled={!draft.trim() || booting}
-            className="flex size-[42px] shrink-0 items-center justify-center rounded-xl text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-40"
-            style={{ backgroundColor: accent }}
-          >
-            <SendIcon />
-          </button>
-        </form>
-        {(uploading || attachError) && (
-          <p
-            className={`mt-2 text-center text-[11px] ${attachError ? 'text-destructive' : 'text-muted-foreground'}`}
-            role="status"
-          >
-            {attachError ?? t.attachUploading}
-          </p>
-        )}
-        {/* No GrindCTRL line on the store in v16; the shopper is told who answers instead. */}
-        <p className="mt-2 text-center text-[10px] text-muted-foreground">{v16Chat ? t.disclosure : t.poweredBy}</p>
-      </footer>
-    </div>
+        </div>
+      )}
+
+      {status === 'closed' && lastIsOurs && (
+        <div className="mx-auto w-fit rounded-full border border-border px-3 py-1.5 text-[11px] text-muted-foreground">
+          {feedbackGiven ? (
+            t.feedbackThanks
+          ) : (
+            <span className="flex items-center gap-2">
+              {t.rateQuestion}
+              <button
+                type="button"
+                onClick={() => giveFeedback('up')}
+                aria-label={t.helpful}
+                className="rounded-full px-1.5 py-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
+              >
+                👍
+              </button>
+              <button
+                type="button"
+                onClick={() => giveFeedback('down')}
+                aria-label={t.notHelpful}
+                className="rounded-full px-1.5 py-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
+              >
+                👎
+              </button>
+            </span>
+          )}
+        </div>
+      )}
+    </ScrollShell>
   );
 }
 

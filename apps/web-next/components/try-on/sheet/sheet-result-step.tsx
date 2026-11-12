@@ -15,6 +15,7 @@ import type { TryOnJob } from '@/lib/try-on/types';
 import { SheetCompareSlider } from './sheet-compare-slider';
 import { LookViewer } from './look-viewer';
 import { useMediaQuery } from './use-media-query';
+import { SheetLayout } from './sheet-layout';
 
 /* TryOn-Result (02-try-on.md): "Your look is ready" with the piece and its
    price, the look filling the top with Look and Your photo to compare,
@@ -32,11 +33,13 @@ export function SheetResultStep({
   job,
   photoDataUrl,
   productName,
+  productImageUrl,
   storeProduct,
   triedVariantId,
   fallbackVariantTitle,
   controls,
   madeInSeconds = null,
+  initialView = 'look',
   onChangePhoto,
   onForget,
   onImageError,
@@ -47,6 +50,8 @@ export function SheetResultStep({
   job: TryOnJob;
   photoDataUrl: string | null;
   productName: string;
+  /** The piece's own image, beside the look's header. */
+  productImageUrl?: string;
   /** The store's own product, once the loader has handed it over. */
   storeProduct: StoreProduct | null;
   triedVariantId?: string;
@@ -55,12 +60,14 @@ export function SheetResultStep({
   controls?: ResultControls;
   /** From the tap to the look in this page, for the desktop title. */
   madeInSeconds?: number | null;
+  /** Which side of the compare opens first; the look unless a preview asks. */
+  initialView?: 'look' | 'photo';
   onChangePhoto: () => void;
   onForget?: () => void;
   onImageError?: () => void;
 }) {
   const wide = useMediaQuery('(min-width: 768px)');
-  const [view, setView] = useState<'look' | 'photo'>('look');
+  const [view, setView] = useState<'look' | 'photo'>(photoDataUrl ? initialView : 'look');
   const [fullScreen, setFullScreen] = useState(false);
   const [pickedId, setPickedId] = useState<string | null>(null);
   const [cart, setCart] = useState<{ state: 'idle' | 'adding' | 'added' | 'failed'; added: string; message: string }>({
@@ -128,18 +135,27 @@ export function SheetResultStep({
 
   const otherOptions = storeProduct && tried ? storeProduct.options.map((name, index) => ({ name, index })).filter(({ index }) => index !== sizes.index) : [];
 
+  // The look's own header takes the product row's place, pinned like it.
   const heading = (
-    <header className="space-y-1">
-      <h2 className="text-xl font-semibold tracking-tight text-foreground">
-        {wide && madeInSeconds ? copy.readyIn(madeInSeconds) : copy.lookReady}
-      </h2>
-      <p className="text-sm text-muted-foreground">{price ? `${productName} · ${price}` : productName}</p>
+    <header className="flex items-center gap-3">
+      {productImageUrl && (
+        // The store's own product image, already on its CDN.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={productImageUrl} alt="" className="size-14 shrink-0 rounded-lg object-cover short:size-10" />
+      )}
+      <div className="min-w-0 space-y-0.5">
+        <h2 className="text-xl font-semibold tracking-tight text-foreground short:text-lg">
+          {wide && madeInSeconds ? copy.readyIn(madeInSeconds) : copy.lookReady}
+        </h2>
+        <p className="truncate text-sm text-muted-foreground">{price ? `${productName} · ${price}` : productName}</p>
+      </div>
     </header>
   );
 
   const visual =
     wide && photoDataUrl && job.resultImageUrl ? (
-      <div className="space-y-3">
+      // As tall as the frame allows beside the details, never taller.
+      <div className="mx-auto w-full max-w-[clamp(12rem,calc((100dvh-16rem)*0.75),100%)] space-y-3">
         <SheetCompareSlider
           photoSrc={photoDataUrl}
           lookSrc={job.resultImageUrl}
@@ -168,10 +184,10 @@ export function SheetResultStep({
           {view === 'look' ? (
             // The look lives in this page as a data or blob URL.
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={job.resultImageUrl ?? ''} alt={copy.lookAlt(productName)} onError={onImageError} className="block aspect-[3/4] h-[clamp(10rem,calc(100dvh-24rem),24rem)] w-auto max-w-full object-cover" />
+            <img src={job.resultImageUrl ?? ''} alt={copy.lookAlt(productName)} onError={onImageError} className={LOOK_SIZE} />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={photoDataUrl ?? ''} alt={copy.originalPhotoAlt} className="block aspect-[3/4] h-[clamp(10rem,calc(100dvh-24rem),24rem)] w-auto max-w-full object-cover" />
+            <img src={photoDataUrl ?? ''} alt={copy.originalPhotoAlt} className={LOOK_SIZE} />
           )}
           <span aria-hidden="true" className="absolute bottom-3 end-3 grid size-9 place-items-center rounded-full bg-background/90 text-foreground shadow-sm backdrop-blur">
             <Maximize2 className="size-4" />
@@ -255,107 +271,121 @@ export function SheetResultStep({
 
     </>
   );
-  const details = (
-    <>
-      {show.addToCart && (
-        <div className="space-y-2">
+  const cartAction = show.addToCart && (
+    <div className="space-y-2">
+      <button
+        type="button"
+        onClick={addToCart}
+        disabled={!controls?.backToProduct && (soldOut || cart.state === 'adding')}
+        className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-base font-semibold text-primary-foreground disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      >
+        {controls?.backToProduct
+          ? <ArrowLeft className="size-5 rtl:-scale-x-100" aria-hidden="true" />
+          : <ShoppingBag className="size-5" aria-hidden="true" />}
+        {controls?.backToProduct ? copy.backToProduct : soldOut
+          ? copy.soldOut
+          : cart.state === 'adding'
+            ? copy.adding
+            : cart.state === 'failed'
+              ? t.addToCartRetry
+              : copy.addToCart(pickedName)}
+      </button>
+      {cart.state === 'added' && (
+        <div role="status" className="flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm">
+          <span className="min-w-0 truncate">{t.addedVariant(cart.added)}</span>
           <button
             type="button"
-            onClick={addToCart}
-            disabled={!controls?.backToProduct && (soldOut || cart.state === 'adding')}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-base font-semibold text-primary-foreground disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            onClick={() => window.parent.postMessage({ type: 'grindctrl-tryon:checkout' }, '*')}
+            className="min-h-11 shrink-0 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground focus-visible:outline-2 focus-visible:outline-ring"
           >
-            {controls?.backToProduct
-              ? <ArrowLeft className="size-5 rtl:-scale-x-100" aria-hidden="true" />
-              : <ShoppingBag className="size-5" aria-hidden="true" />}
-            {controls?.backToProduct ? copy.backToProduct : soldOut
-              ? copy.soldOut
-              : cart.state === 'adding'
-                ? copy.adding
-                : cart.state === 'failed'
-                  ? t.addToCartRetry
-                  : copy.addToCart(pickedName)}
+            {t.checkout}
           </button>
-          {cart.state === 'added' && (
-            <div role="status" className="flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm">
-              <span className="min-w-0 truncate">{t.addedVariant(cart.added)}</span>
-              <button
-                type="button"
-                onClick={() => window.parent.postMessage({ type: 'grindctrl-tryon:checkout' }, '*')}
-                className="min-h-11 shrink-0 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground focus-visible:outline-2 focus-visible:outline-ring"
-              >
-                {t.checkout}
-              </button>
-            </div>
-          )}
-          {cart.state === 'failed' && cart.message && <p className="text-center text-xs text-destructive">{cart.message}</p>}
         </div>
       )}
+      {cart.state === 'failed' && cart.message && <p className="text-center text-xs text-destructive">{cart.message}</p>}
+    </div>
+  );
 
-      {(show.download || show.whatsapp) && (
-        <div className="flex gap-2">
-          {show.download && (
-            <button type="button" onClick={saveLook} className={SECONDARY}>
-              <Download className="size-4" aria-hidden="true" />
-              {wide ? copy.saveImage : copy.savePhoto}
-            </button>
-          )}
-          {show.whatsapp && (
-            <a
-              href={`https://wa.me/?text=${encodeURIComponent(t.whatsappMsg(productName))}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={t.whatsapp}
-              className={SECONDARY}
-            >
-              <MessageCircle className="size-4" aria-hidden="true" />
-              {/* One line beside Save photo on a phone; the icon and the full
-                  name for screen readers carry the rest. */}
-              <span aria-hidden="true">{copy.whatsappShort}</span>
-            </a>
-          )}
-        </div>
+  const shareActions = (show.download || show.whatsapp) && (
+    <div className="flex gap-2">
+      {show.download && (
+        <button type="button" onClick={saveLook} className={SECONDARY}>
+          <Download className="size-4" aria-hidden="true" />
+          {wide ? copy.saveImage : copy.savePhoto}
+        </button>
       )}
+      {show.whatsapp && (
+        <a
+          href={`https://wa.me/?text=${encodeURIComponent(t.whatsappMsg(productName))}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={t.whatsapp}
+          className={SECONDARY}
+        >
+          <MessageCircle className="size-4" aria-hidden="true" />
+          {/* One line beside Save photo on a phone; the icon and the full
+              name for screen readers carry the rest. */}
+          <span aria-hidden="true">{copy.whatsappShort}</span>
+        </a>
+      )}
+    </div>
+  );
 
-      {onForget && <button type="button" onClick={onForget} className="min-h-11 rounded-lg px-3 text-sm text-muted-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">{copy.forgetOnPhone}</button>}
+  /* Add to cart is the step's action, pinned in the footer; saving and
+     sharing take its place when the store hides it. Everything else ends
+     the scrolling body. */
+  const primary = cartAction || shareActions;
+  const rest = (
+    <>
+      {cartAction && shareActions}
+      {onForget && <button type="button" onClick={onForget} className="min-h-11 self-center rounded-lg px-3 text-sm text-muted-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">{copy.forgetOnPhone}</button>}
       <p className="text-center text-xs leading-relaxed text-muted-foreground">{controls?.disclaimerText || copy.disclaimer}</p>
     </>
   );
 
-  // Desktop (TryOn-Desktop): the slider beside the details.
+  // Desktop (TryOn-Desktop): the slider beside the details, the action under them.
   return wide ? (
-    <div className="grid grid-cols-2 items-start gap-8 overflow-y-auto">
-      {visual}
-      <div className="flex flex-col gap-5">
-        {heading}
-        {options}
-        {details}
-      </div>
-    </div>
-  ) : (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto">
-        {heading}
+    <SheetLayout
+      wide
+      header={heading}
+      footer={primary && <div className="grid grid-cols-2 gap-8"><div className="col-start-2">{primary}</div></div>}
+    >
+      <div className="grid grid-cols-2 items-start gap-8">
         {visual}
-        {options}
+        <div className="flex flex-col gap-5">
+          {options}
+          {rest}
+        </div>
       </div>
-      <div className="sticky bottom-0 shrink-0 space-y-2 border-t bg-background pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        {details}
-      </div>
-      {fullScreen && job.resultImageUrl && (
-        <LookViewer
-          lookSrc={job.resultImageUrl}
-          photoSrc={photoDataUrl}
-          initial={view}
-          labels={{ title: copy.viewerTitle, close: copy.closeViewer, look: copy.viewLook, photo: copy.yourPhoto, save: show.download ? copy.savePhoto : null,
-            lookAlt: copy.lookAlt(productName), photoAlt: copy.originalPhotoAlt, zoomHint: copy.zoomHint }}
-          onSave={show.download ? saveLook : undefined}
-          onClose={() => setFullScreen(false)}
-        />
-      )}
-    </div>
+    </SheetLayout>
+  ) : (
+    <SheetLayout
+      header={heading}
+      footer={primary}
+      overlay={
+        fullScreen && job.resultImageUrl && (
+          <LookViewer
+            lookSrc={job.resultImageUrl}
+            photoSrc={photoDataUrl}
+            initial={view}
+            labels={{ title: copy.viewerTitle, close: copy.closeViewer, look: copy.viewLook, photo: copy.yourPhoto, save: show.download ? copy.savePhoto : null,
+              lookAlt: copy.lookAlt(productName), photoAlt: copy.originalPhotoAlt, zoomHint: copy.zoomHint }}
+            onSave={show.download ? saveLook : undefined}
+            onClose={() => setFullScreen(false)}
+          />
+        )
+      }
+    >
+      {visual}
+      {options}
+      {rest}
+    </SheetLayout>
   );
 }
+
+/* The look fills what the pinned header and Add to cart leave, keeping the
+   sizes under it in reach; a tap opens it full screen. */
+const LOOK_SIZE = 'block aspect-[3/4] h-[clamp(10rem,calc(100dvh-20rem),28rem)] w-auto max-w-full object-cover';
 
 const SECONDARY =
   'flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-medium text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';

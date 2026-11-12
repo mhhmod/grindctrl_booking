@@ -53,7 +53,9 @@ export default defineConfig({
     : {
         /* `npx next dev` rather than `npm run dev --`: the npm shim crashes
            (exit 0xC0000409) when Playwright spawns it on Windows. */
-        command: 'npx next dev --port 3100',
+        // Worktree node_modules is a junction on Windows; webpack can resolve
+        // it outside Turbopack's hermetic root. Dual stack also serves proxy hops.
+        command: `npx next dev --port 3100${process.platform === 'win32' ? ' --webpack --hostname ::' : ''}`,
         port: 3100,
         reuseExistingServer: true,
         // ponytail: Next dev cold-starts and compiles the landing page on
