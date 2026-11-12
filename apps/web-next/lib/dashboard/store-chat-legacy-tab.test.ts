@@ -20,13 +20,12 @@ describe('legacyStoreChatHref', () => {
     expect(legacyStoreChatHref({ site: SITE, tab: 'ai' })).toBe(`/dashboard/store-chat?site=${SITE}`);
   });
 
-  it('sends Shopify’s order access return to the editor that grants it', () => {
-    expect(legacyStoreChatHref({ tab: 'behaviour', orders: 'connected' })).toBe(
-      '/dashboard/store-chat/setup/more?section=behaviour&orders=connected',
-    );
+  it('keeps Shopify’s order access answer for Set up, where the grant button is', () => {
+    expect(legacyStoreChatHref({ tab: 'behaviour', orders: 'connected' })).toBe('/dashboard/store-chat/setup?orders=connected');
     expect(legacyStoreChatHref({ site: SITE, tab: 'behaviour', orders: 'failed' })).toBe(
-      `/dashboard/store-chat/setup/more?site=${SITE}&section=behaviour&orders=failed`,
+      `/dashboard/store-chat/setup?site=${SITE}&orders=failed`,
     );
+    expect(legacyStoreChatHref({ tab: 'ai', orders: 'connected' })).toBe('/dashboard/store-chat');
   });
 
   it('leaves a link without a known tab alone, so a v16 address never loops', () => {

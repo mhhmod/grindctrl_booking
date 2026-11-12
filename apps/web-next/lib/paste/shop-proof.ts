@@ -2,6 +2,7 @@ import 'server-only';
 import { pasteShopCheckShopRatelimit, pasteShopCheckSiteRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError } from '@/lib/request-rate-limit';
 import { scheduleStoreConnectedEmail } from '@/lib/email/store-connected-sender';
+import { scheduleProductsRefresh } from '@/lib/messenger/products-refresh';
 import { beginPasteShopCheck, finishPasteShopCheck, provePasteShop, recordPasteShopRender, releasePasteShopCheck } from './store';
 import { recordedStorefrontEvidence, scanShopStorefront, type StorefrontEvidence } from './storefront-scan';
 import { PasteError, type PasteConnection, type PasteShopCheckOutcome, type PasteShopProof } from './types';
@@ -62,6 +63,7 @@ async function prove(connection: PasteConnection, evidence: StorefrontEvidence, 
     return { ...pending('awaiting_visit', now.toISOString(), null), ...(storefront ? { storefront } : {}) };
   }
   scheduleStoreConnectedEmail(connection.widget_site_id, { path: 'shopify_paste', host: connection.shop_domain ?? '' });
+  scheduleProductsRefresh(connection.widget_site_id);
   return { shopProof: 'proven', shopProvenAt: now.toISOString(), outcome: 'proven', checkedAt: now.toISOString(), retryAfterSeconds: null,
     ...(storefront ? { storefront } : {}) };
 }

@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { getMessengerServiceClient } from './db';
+import { tallyChatOutcomes, type OutcomeConversation, type OutcomeMessage } from './chat-outcomes';
 import type {
   ConversationRecord,
   ConversationStatus,
@@ -857,7 +858,7 @@ export async function getOverviewStats(siteId: string): Promise<MessengerOvervie
 
   const convRows = await supabase
     .from('widget_conversations')
-    .select('id, status, started_at, handoff_reason')
+    .select('id, status, started_at, handoff_reason, assigned_profile_id')
     .eq('widget_site_id', siteId)
     .gte('started_at', since7d)
     .order('started_at', { ascending: false })
@@ -867,21 +868,14 @@ export async function getOverviewStats(siteId: string): Promise<MessengerOvervie
   const conversations = (convRows.data ?? []) as Array<Record<string, unknown>>;
   const ids = conversations.map((c) => c.id as string);
 
-  let aiResolved7d = 0;
-  let handedOff7d = 0;
   let openNow = 0;
-
   for (const c of conversations) {
     const status = c.status as ConversationStatus;
     if (status === 'open' || status === 'handoff_requested' || status === 'handoff_active') openNow += 1;
-    if (status === 'closed') {
-      // A handoff reason on a closed conversation means a human finished it.
-      if (c.handoff_reason) handedOff7d += 1;
-      else aiResolved7d += 1;
-    }
-    if (status === 'handoff_requested' || status === 'handoff_active') handedOff7d += 1;
   }
 
+  let aiResolved7d = 0;
+  let handedOff7d = 0;
   let medianFirstResponseSeconds7d: number | null = null;
   let feedbackUp30d = 0;
   let feedbackDown30d = 0;
@@ -893,27 +887,32 @@ export async function getOverviewStats(siteId: string): Promise<MessengerOvervie
       .in('conversation_id', ids)
       .order('created_at', { ascending: true })
       .limit(5000);
-    if (!msgRows.error) {
-      const firstUserAt = new Map<string, number>();
-      const firstAiAt = new Map<string, number>();
-      for (const raw of (msgRows.data ?? []) as Array<Record<string, unknown>>) {
-        const cid = raw.conversation_id as string;
-        const at = new Date(raw.created_at as string).getTime();
-        const meta = (raw.metadata ?? {}) as MessageRecord['metadata'];
-        if (raw.role === 'user' && !firstUserAt.has(cid)) firstUserAt.set(cid, at);
-        if (raw.role === 'assistant' && meta.author === 'ai' && !firstAiAt.has(cid)) {
-          firstAiAt.set(cid, at);
-        }
+    // Who answered is read from the messages; without them the split would be a guess.
+    if (msgRows.error) throw new Error(`overview messages failed: ${msgRows.error.message}`);
+    const messages = (msgRows.data ?? []) as Array<Record<string, unknown>>;
+    const outcomes = tallyChatOutcomes(conversations as unknown as OutcomeConversation[], messages as unknown as OutcomeMessage[]);
+    aiResolved7d = outcomes.answered;
+    handedOff7d = outcomes.handedOff;
+
+    const firstUserAt = new Map<string, number>();
+    const firstAiAt = new Map<string, number>();
+    for (const raw of messages) {
+      const cid = raw.conversation_id as string;
+      const at = new Date(raw.created_at as string).getTime();
+      const meta = (raw.metadata ?? {}) as MessageRecord['metadata'];
+      if (raw.role === 'user' && !firstUserAt.has(cid)) firstUserAt.set(cid, at);
+      if (raw.role === 'assistant' && meta.author === 'ai' && !firstAiAt.has(cid)) {
+        firstAiAt.set(cid, at);
       }
-      const samples: number[] = [];
-      for (const [cid, userAt] of firstUserAt) {
-        const aiAt = firstAiAt.get(cid);
-        if (aiAt !== undefined && aiAt >= userAt) samples.push((aiAt - userAt) / 1000);
-      }
-      if (samples.length > 0) {
-        samples.sort((a, b) => a - b);
-        medianFirstResponseSeconds7d = Math.round(samples[Math.floor(samples.length / 2)]);
-      }
+    }
+    const samples: number[] = [];
+    for (const [cid, userAt] of firstUserAt) {
+      const aiAt = firstAiAt.get(cid);
+      if (aiAt !== undefined && aiAt >= userAt) samples.push((aiAt - userAt) / 1000);
+    }
+    if (samples.length > 0) {
+      samples.sort((a, b) => a - b);
+      medianFirstResponseSeconds7d = Math.round(samples[Math.floor(samples.length / 2)]);
     }
 
     const feedbackRows = await supabase

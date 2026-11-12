@@ -8,6 +8,13 @@ import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import { arCount } from './today-copy';
 
 export interface ChatKnowsCopy {
+  products: string;
+  /** What the last read of the store's products found, and what happens next. */
+  productsRead: (count: number) => string;
+  productsPassword: string;
+  productsNotFound: string;
+  productsUnreachable: string;
+  productsRateLimited: string;
   syncProducts: string;
   productsSynced: (count: number) => string;
   productsSkipped: string;
@@ -19,6 +26,8 @@ export interface ChatKnowsCopy {
   hidden: string;
   notInstalled: string;
   answeredShare: (pct: number, chats: number) => string;
+  /** Under a handful of chats a percentage misleads, so the count is said as it is. */
+  answeredCount: (answered: number, chats: number) => string;
   noChatsYet: string;
   openStore: string;
   learnsFrom: string;
@@ -70,7 +79,17 @@ const arDays = (n: number) => arCount(n, { one: 'يوم', two: 'يومين', few
 const arChats = (n: number) =>
   arCount(n, { one: 'محادثة واحدة', two: 'محادثتين', few: (k) => `${k} محادثات`, many: (k) => `${k} محادثة` });
 
+const arProducts = (n: number) =>
+  arCount(n, { one: 'منتجاً واحداً', two: 'منتجين', few: (k) => `${k} منتجات`, many: (k) => `${k} منتجاً` });
+
 const en: ChatKnowsCopy = {
+  products: 'Products',
+  productsRead: (count) => `We read ${count === 1 ? '1 product' : `${count} products`} from your store.`,
+  productsPassword: "Your store has a password page, so we can't read your products yet. We'll read them as soon as it opens.",
+  productsNotFound:
+    "We couldn't find a product list on your store. Add your key products as a page or a note, and the assistant will answer from them.",
+  productsUnreachable: "We couldn't reach your store to read its products. We'll try again tonight, or you can sync now.",
+  productsRateLimited: "Your store asked us to slow down, so we couldn't read your products. We'll try again tonight, or you can sync now.",
   syncProducts: 'Sync products now',
   productsSynced: (count) => `${count} products synced.`,
   productsSkipped: 'Catalogue sync is available for Shopify and WooCommerce stores.',
@@ -83,6 +102,8 @@ const en: ChatKnowsCopy = {
   hidden: 'Hidden from shoppers',
   answeredShare: (pct, chats) =>
     `In the last 7 days the assistant answered ${pct}% of ${chats === 1 ? '1 chat' : `${chats} chats`} on its own.`,
+  answeredCount: (answered, chats) =>
+    `In the last 7 days the assistant answered ${answered} of ${chats === 1 ? '1 chat' : `${chats} chats`} on its own.`,
   noChatsYet: 'No finished chats in the last 7 days yet.',
   openStore: 'Open your store',
   learnsFrom: 'What it learns from',
@@ -127,6 +148,12 @@ const en: ChatKnowsCopy = {
 };
 
 const ar: ChatKnowsCopy = {
+  products: 'المنتجات',
+  productsRead: (count) => `قرأنا ${arProducts(count)} من متجرك.`,
+  productsPassword: 'متجرك محمي بصفحة كلمة مرور، لذلك لا نستطيع قراءة منتجاتك بعد. سنقرؤها فور فتح المتجر.',
+  productsNotFound: 'لم نجد قائمة منتجات في متجرك. أضف أهم منتجاتك كصفحة أو ملاحظة، وسيجيب المساعد منها.',
+  productsUnreachable: 'تعذّر الوصول إلى متجرك لقراءة منتجاته. سنحاول مجدداً الليلة، أو يمكنك المزامنة الآن.',
+  productsRateLimited: 'طلب متجرك منا التمهّل، فلم نتمكن من قراءة منتجاتك. سنحاول مجدداً الليلة، أو يمكنك المزامنة الآن.',
   syncProducts: 'مزامنة المنتجات الآن',
   productsSynced: (count) => `تمت مزامنة ${count} من المنتجات.`,
   productsSkipped: 'مزامنة المنتجات متاحة لمتاجر شوبيفاي وووكومرس.',
@@ -138,6 +165,7 @@ const ar: ChatKnowsCopy = {
   hidden: 'مخفية عن المتسوقين',
   notInstalled: 'لم يُثبَّت بعد',
   answeredShare: (pct, chats) => `خلال آخر 7 أيام أجاب المساعد بنفسه عن ${pct}% من ${arChats(chats)}.`,
+  answeredCount: (answered, chats) => `خلال آخر 7 أيام أجاب المساعد بنفسه عن ${answered} من أصل ${arChats(chats)}.`,
   noChatsYet: 'لا محادثات منتهية خلال آخر 7 أيام بعد.',
   openStore: 'افتح متجرك',
   learnsFrom: 'ما يتعلّم منه',

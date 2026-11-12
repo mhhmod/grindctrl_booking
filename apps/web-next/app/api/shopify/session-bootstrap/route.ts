@@ -6,6 +6,7 @@ import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { getConfiguredShopifyApps } from '@/lib/shopify/app-registry';
 import { scheduleStoreConnectedEmail } from '@/lib/email/store-connected-sender';
 import { syncShopStorefrontDomains } from '@/lib/messenger/shop-domain-sync';
+import { scheduleProductsRefresh } from '@/lib/messenger/products-refresh';
 import { findSiteByDomain } from '@/lib/messenger/shop-tenancy';
 import { syncShopifyAppOrigin } from '@/lib/shopify/admin';
 import { getShopifyAppPricingPresentation, reconcileShopifyAppPricing } from '@/lib/shopify/app-pricing';
@@ -73,6 +74,7 @@ export async function GET(request: NextRequest) {
     // Every admin load runs this; the email's once-per-store marker makes all but the first a single read.
     scheduleStoreConnectedEmail(async () => (await findSiteByDomain(session.shop))?.id ?? null,
       { path: 'shopify_app', host: session.shop });
+    scheduleProductsRefresh(async () => (await findSiteByDomain(session.shop))?.id ?? null);
     // Plan sync self-heals a missed webhook, but it must never block the app
     // from loading: the merchant keeps their stored plan until the next sync.
     if (session.app.distribution === 'public') {

@@ -24,6 +24,26 @@ describe('catalogue storage and scheduling', () => {
     expect(m.page).toHaveBeenCalledWith('https://shop.myshopify.com/products.json?limit=250&page=1', expect.objectContaining({ timeoutMs: 10_000, maxBytes: 2 * 1024 * 1024 }));
     expect(m.rpc).toHaveBeenCalledWith('messenger_replace_products', { p_site: 'site', p_lease: expect.any(String), p_products: [expect.objectContaining({ title: 'Dress', sizes: ['M'], url: 'https://shop.myshopify.com/products/dress' })] });
   });
+  it('records what a refresh found, so the store can say it', async () => {
+    await syncSiteProducts(site);
+    expect(m.claim).toHaveBeenLastCalledWith({ products_sync_result: { outcome: 'ok', count: 1, at: expect.any(String) } });
+  });
+  it.each([
+    ['a password page', { url: 'https://shop.myshopify.com/password', contentType: 'text/html', body: Buffer.from('<html>') }, 'password_page'],
+    ['a 404', { failure: 'status', status: 404 }, 'not_found'],
+    ['a 429', { failure: 'status', status: 429 }, 'rate_limited'],
+    ['a timeout', { failure: 'timeout' }, 'unreachable'],
+  ])('records %s as %s and keeps the old catalogue', async (_name, page, outcome) => {
+    m.page.mockResolvedValue(page);
+    await expect(syncSiteProducts(site)).rejects.toThrow();
+    expect(m.rpc).not.toHaveBeenCalled();
+    expect(m.claim).toHaveBeenLastCalledWith({ products_sync_result: { outcome, count: 0, at: expect.any(String) } });
+  });
+  it('clears the record for a site with no catalogue to read', async () => {
+    m.site.mockResolvedValue({ ...site, domain: null });
+    await syncSiteProducts(site);
+    expect(m.claim).toHaveBeenLastCalledWith({ products_sync_result: null });
+  });
   it('supports detected WooCommerce paste domains and uses only trusted hosts', async () => {
     m.site.mockResolvedValue({ ...site, domain: null, patterns: [{ pattern: 'woo.example', verification_status: 'trusted', verification_method: 'paste_snippet', environment: 'production' }] });
     m.domains = [{ domain: 'woo.example', platform_detected: 'woocommerce' }];
@@ -53,6 +73,7 @@ describe('catalogue storage and scheduling', () => {
     m.page.mockResolvedValueOnce({ failure: 'network' });
     expect(await refreshDueProducts()).toEqual({ processed: 2, failed: 1 }); expect(m.limit).toHaveBeenCalledWith(3);
     expect(m.or).toHaveBeenCalledWith(expect.stringContaining('products_sync_attempted_at.lt.'));
-    expect(m.claim).toHaveBeenCalledTimes(2);
+    // Each attempt takes the lease, then records what it found.
+    expect(m.claim).toHaveBeenCalledTimes(4);
   });
 });

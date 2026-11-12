@@ -29,6 +29,8 @@ const nextConfig: NextConfig = {
     return [
       { source: '/dashboard/overview', destination: '/dashboard', permanent: false },
       { source: '/dashboard/messenger', destination: '/dashboard/store-chat', permanent: false },
+      // The old More settings screen: its editors are on Set up now. The query (an order access answer) is kept.
+      { source: '/dashboard/store-chat/setup/more', destination: '/dashboard/store-chat/setup', permanent: false },
     ];
   },
   async headers() {

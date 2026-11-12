@@ -145,6 +145,13 @@ const LABELS: Record<string, (c: ChatStudioCopy) => string> = {
   'appearance.radiusStyle': (c) => c.corners,
   'appearance.themeMode': (c) => c.theme,
   'appearance.launcherLabel': (c) => c.launcherLabel.label,
+  'appearance.launcherCustomIconUrl': (c) => c.customIcon.label,
+  'appearance.languageMode': (c) => c.widgetLanguage.label,
+  'appearance.launcherSizePx': (c) => c.launcherSize.label,
+  'behaviour.greetingDelaySeconds': (c) => c.helloDelay,
+  'behaviour.greeting': (c) => c.helloText.label,
+  'behaviour.proactiveEnabled': (c) => c.reminder.label,
+  'behaviour.proactiveDelaySeconds': (c) => c.reminderDelay,
   'behaviour.excludePatterns': (c) => c.hidePages.label,
   'behaviour.targetingMode': (c) => c.hidePages.label,
   'behaviour.greetingEnabled': (c) => c.firstHello,
@@ -171,6 +178,7 @@ const OPTIONS: Record<string, (c: ChatStudioCopy) => Record<string, string>> = {
   'appearance.position': (c) => c.sides,
   'appearance.launcherIcon': (c) => c.icons,
   'appearance.radiusStyle': (c) => c.radii,
+  'appearance.languageMode': (c) => c.widgetLanguages,
   'appearance.themeMode': (c) => c.themes,
   'ai.tone': (c) => c.tones,
   'ai.languageMode': (c) => c.replyLanguages,
@@ -183,6 +191,8 @@ function humanize(key: string): string {
 
 function formatValue(id: string, value: unknown, copy: ChatStudioCopy, locale: SiteLocale): string {
   if (value == null || value === '') return copy.empty;
+  // An address says nothing to the merchant; the icon they uploaded is "Your icon".
+  if (id === 'appearance.launcherCustomIconUrl') return copy.customIcon.alt;
   if (typeof value === 'boolean') return value ? copy.on : copy.off;
   if (typeof value === 'string' && OPTIONS[id]) return OPTIONS[id](copy)[value] ?? value;
   if (Array.isArray(value)) return value.length ? value.join(', ') : copy.empty;

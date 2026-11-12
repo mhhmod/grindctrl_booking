@@ -515,3 +515,165 @@
     justify-self: start;
   }
 }
+
+/* Custom launcher icon */
+.iconRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  min-width: 0;
+}
+
+.iconPreview {
+  display: grid;
+  place-items: center;
+  inline-size: 56px;
+  block-size: 56px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--muted);
+  overflow: hidden;
+}
+
+.iconPreview img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+}
+
+.iconError {
+  margin: 0;
+  color: var(--gc-danger);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Bubble size, delays */
+.slider {
+  inline-size: 220px;
+  max-inline-size: 100%;
+}
+
+@media (max-width: 30em) {
+  .slider {
+    inline-size: 100%;
+  }
+}
+
+.narrowInput {
+  max-inline-size: 220px;
+}
+
+/* Opening hours */
+.days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.windows {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.window {
+  display: grid;
+  grid-template-columns: 5rem repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 8px 10px;
+  min-width: 0;
+}
+
+.windowDay {
+  align-self: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+@media (max-width: 30em) {
+  .window {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .windowDay {
+    grid-column: 1 / -1;
+  }
+}
+
+.warn {
+  margin: 0;
+  color: var(--gc-attention);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Saved replies */
+.replyForm {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.replyList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reply {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--gc-radius-card);
+}
+
+.reply[aria-busy='true'] {
+  opacity: 0.7;
+}
+
+.replyHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  min-width: 0;
+}
+
+.replyTitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.replyBody {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.note[data-ok='false'] {
+  color: var(--gc-danger);
+}
+
+.note[data-ok='true'] {
+  color: var(--gc-success);
+}

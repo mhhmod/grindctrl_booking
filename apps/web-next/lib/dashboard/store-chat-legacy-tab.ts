@@ -5,9 +5,6 @@
 
 const KNOWS = '/dashboard/store-chat';
 const SETUP = '/dashboard/store-chat/setup';
-/** The editors the Set up board does not cover yet: saved replies, hours,
- *  the widget's language, a custom icon and the launcher size. */
-export const MORE_SETTINGS = '/dashboard/store-chat/setup/more';
 
 const DESTINATION = {
   overview: KNOWS,
@@ -24,20 +21,17 @@ const text = (value: unknown): string | null => (typeof value === 'string' && va
 
 /** The v16 address for a link that carries a known ?tab=, keeping the
  *  store it names, or null for a link without one. Shopify's order-access
- *  return (`tab=behaviour&orders=...`) goes to the editor that grants it. */
+ *  return (`tab=behaviour&orders=...`) keeps its answer for Set up, where
+ *  the grant button is. */
 export function legacyStoreChatHref(query: Query): string | null {
   const tab = text(query.tab);
   if (!tab || !Object.hasOwn(DESTINATION, tab)) return null;
   const site = text(query.site);
-  const orders = text(query.orders);
-  const withOrders = tab === 'behaviour' && orders;
-  const path = withOrders ? MORE_SETTINGS : DESTINATION[tab as keyof typeof DESTINATION];
+  const orders = tab === 'behaviour' ? text(query.orders) : null;
+  const path = DESTINATION[tab as keyof typeof DESTINATION];
   const next = new URLSearchParams();
   if (site) next.set('site', site);
-  if (withOrders) {
-    next.set('section', 'behaviour');
-    next.set('orders', orders);
-  }
+  if (orders) next.set('orders', orders);
   const search = next.toString();
   return search ? `${path}?${search}` : path;
 }

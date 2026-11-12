@@ -15,7 +15,7 @@ import { syncShopifyAppOrigin } from '@/lib/shopify/admin';
 export const runtime = 'nodejs';
 
 /* Back to the button that started this. Exactly one thing links to
-   /api/shopify/oauth/start — "Grant order access" in Support Desk settings —
+   /api/shopify/oauth/start — "Approve order access" in Store Chat Set up —
    so this is where the merchant was and where the answer belongs.
 
    It used to land on /dashboard/install, a design mock that is not in the
@@ -24,7 +24,7 @@ export const runtime = 'nodejs';
    shown installation instructions for something that does not exist, and was
    never told whether the grant had worked. */
 function ordersReturn(appUrl: string, outcome: 'connected' | 'failed'): string {
-  return `${appUrl}/dashboard/store-chat/setup/more?section=behaviour&orders=${outcome}`;
+  return `${appUrl}/dashboard/store-chat/setup?orders=${outcome}`;
 }
 
 function failure(appUrl: string, reason: string): NextResponse {

@@ -20,6 +20,9 @@ import { pasteInstallCopy } from '@/lib/dashboard/paste-install-copy';
 import { pasteRetentionDate } from '@/lib/dashboard/paste-retention-date';
 import { V16ChatStudio, type ChatStudioActions, type ChatStudioMeta } from './v16-chat-studio';
 
+// The whole board is rendered by every test, and it can exceed the default 5 s under parallel Windows load.
+vi.setConfig({ testTimeout: 20000 });
+
 const en = getChatStudioCopy('en');
 const PUBLISHED = resolveMessengerConfig({});
 const PAYLOAD = { active: true, aiEnabled: true, attachmentsEnabled: false, appearance: PUBLISHED.appearance, behaviour: { ...PUBLISHED.behaviour } } as unknown as PublicMessengerPayload;
@@ -31,10 +34,16 @@ const META: ChatStudioMeta = {
   canRevert: true,
   canDisconnect: true,
   ordersAuthorized: true,
+  ordersGrant: null,
+  shopTimezone: 'Africa/Cairo',
   lastSeenMinutes: 2,
   handoffRules: false,
   wooConnection: null,
 };
+const REPLIES = [
+  { id: 'r1', title: 'Shipping times', content: 'Two to four days.', status: 'active' as const, sort_order: 0, updated_at: '2026-11-01T00:00:00Z' },
+  { id: 'r2', title: 'Returns', content: 'Within 14 days.', status: 'disabled' as const, sort_order: 1, updated_at: '2026-11-01T00:00:00Z' },
+];
 
 function actions(): ChatStudioActions {
   return {
@@ -44,6 +53,10 @@ function actions(): ChatStudioActions {
     setMessengerEnabled: vi.fn(async () => ({ ok: true as const })),
     disconnectSiteAction: vi.fn(async () => ({ ok: true as const })),
     discardDraft: vi.fn(async () => ({ ok: true as const })),
+    uploadLauncherIconAction: vi.fn(async () => ({ ok: true as const, url: 'https://files.example/messenger-icons/site_1/abc.png' })),
+    addCannedReply: vi.fn(async () => ({ ok: true as const })),
+    updateCannedReplyStatus: vi.fn(async () => ({ ok: true as const })),
+    deleteCannedReply: vi.fn(async () => ({ ok: true as const })),
     createWooPairingCodeAction: vi.fn(async () => ({
       ok: true as const,
       code: 'K7QM4TXP',
@@ -54,7 +67,7 @@ function actions(): ChatStudioActions {
 
 function draw(a = actions(), locale: 'en' | 'ar' = 'en', meta: Partial<ChatStudioMeta> = {}) {
   renderWithMantine(
-    <V16ChatStudio locale={locale} siteId="site_1" published={PUBLISHED} config={PUBLISHED} payload={PAYLOAD} meta={{ ...META, ...meta }} actions={a} />,
+    <V16ChatStudio locale={locale} siteId="site_1" published={PUBLISHED} config={PUBLISHED} payload={PAYLOAD} cannedReplies={REPLIES} meta={{ ...META, ...meta }} actions={a} />,
   );
   return a;
 }
@@ -223,6 +236,159 @@ describe('V16ChatStudio', () => {
     it('speaks Arabic', () => {
       draw(undefined, 'ar', { domain: 'shop.example.com', wooConnection: connection('0.3.0') });
       expect(screen.getByText(getChatStudioCopy('ar').wooOrderReady)).toBeInTheDocument();
+    });
+  });
+
+  describe('what used to live on More settings', () => {
+    it('has no link to the earlier screens any more', () => {
+      draw();
+      expect(document.body.innerHTML).not.toContain('setup/more');
+      expect(screen.queryByText(/More settings/i)).not.toBeInTheDocument();
+    });
+
+    it('turns on the second reminder and its delay, through the draft', async () => {
+      const a = draw();
+      expect(screen.queryByRole('textbox', { name: en.reminderDelay })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('switch', { name: en.reminder.label }));
+      fireEvent.change(await screen.findByLabelText(en.reminderDelay), { target: { value: '45' } });
+      await waitFor(
+        () => expect(vi.mocked(a.saveDraftSections).mock.calls.at(-1)![1][0].payload).toEqual(expect.objectContaining({ proactiveEnabled: true, proactiveDelaySeconds: 45 })),
+        { timeout: 4000 },
+      );
+    });
+
+    it('pins the chat language, and sizes the bubble', async () => {
+      const a = draw();
+      fireEvent.click(within(screen.getByRole('radiogroup', { name: en.widgetLanguage.label })).getByRole('radio', { name: en.widgetLanguages.ar }));
+      await waitFor(() => expect(a.saveDraftSections).toHaveBeenCalled(), { timeout: 2000 });
+      expect(vi.mocked(a.saveDraftSections).mock.calls.at(-1)![1][0].payload).toEqual(expect.objectContaining({ languageMode: 'ar' }));
+      expect(screen.getByRole('slider', { name: en.launcherSize.label })).toBeInTheDocument();
+    });
+
+    it('edits opening hours in place: mode, days and their times', async () => {
+      const a = draw();
+      fireEvent.click(screen.getByRole('button', { name: en.hoursModes.hours }));
+      // The store's own time zone replaces UTC.
+      expect(screen.getByLabelText(en.timezone)).toHaveValue('Africa/Cairo');
+      expect(screen.getByText(en.noDays)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('checkbox', { name: en.days[6] }));
+      fireEvent.change(screen.getByLabelText(`${en.from}, ${en.days[6]}`), { target: { value: '10:30' } });
+      await waitFor(
+        () => {
+          const behaviour = vi.mocked(a.saveDraftSections).mock.calls.at(-1)![1].find((s) => s.section === 'behaviour')!.payload;
+          expect(behaviour).toEqual(expect.objectContaining({ availabilityMode: 'hours', availabilityTimezone: 'Africa/Cairo', availabilityHours: [{ day: 6, startMinute: 630, endMinute: 1020 }] }));
+        },
+        { timeout: 4000 },
+      );
+    });
+
+    it('keeps saved replies saved as they are made, with what is on and off', async () => {
+      const a = draw();
+      const list = screen.getByRole('region', { name: en.savedReplies.label });
+      expect(within(list).getByText('Shipping times')).toBeInTheDocument();
+      const add = within(list).getByRole('button', { name: en.addReply });
+      expect(add).toBeDisabled();
+      fireEvent.change(within(list).getByLabelText(en.replyTitle), { target: { value: 'Sizing' } });
+      fireEvent.change(within(list).getByLabelText(en.replyText), { target: { value: 'Runs small.' } });
+      await act(async () => {
+        fireEvent.click(add);
+      });
+      expect(a.addCannedReply).toHaveBeenCalledWith('site_1', 'Sizing', 'Runs small.');
+      expect(within(list).getByText(en.replyAdded)).toBeInTheDocument();
+      await act(async () => {
+        fireEvent.click(within(list).getByRole('button', { name: en.replyTurnOn }));
+      });
+      expect(a.updateCannedReplyStatus).toHaveBeenCalledWith('site_1', 'r2', 'active');
+      await act(async () => {
+        fireEvent.click(within(list).getAllByRole('button', { name: en.replyDelete })[0]);
+      });
+      expect(a.deleteCannedReply).toHaveBeenCalledWith('site_1', 'r1');
+    });
+
+    it('says when a saved reply could not be added', async () => {
+      const a = actions();
+      vi.mocked(a.addCannedReply).mockResolvedValueOnce({ ok: false, error: 'x' });
+      draw(a);
+      const list = screen.getByRole('region', { name: en.savedReplies.label });
+      fireEvent.change(within(list).getByLabelText(en.replyTitle), { target: { value: 'Sizing' } });
+      fireEvent.change(within(list).getByLabelText(en.replyText), { target: { value: 'Runs small.' } });
+      await act(async () => {
+        fireEvent.click(within(list).getByRole('button', { name: en.addReply }));
+      });
+      expect(within(list).getByText(en.replyFailed)).toBeInTheDocument();
+    });
+
+    it('approves order access from here, and says how the approval ended', () => {
+      draw(undefined, 'en', { ordersAuthorized: false, ordersGrant: 'failed' });
+      expect(screen.getByRole('link', { name: en.orderGrant.connect })).toHaveAttribute('href', '/api/shopify/oauth/start?shop=maison-noor.myshopify.com');
+      expect(screen.getByText(en.orderGrant.refused)).toBeInTheDocument();
+    });
+  });
+
+  describe('the launcher icon upload', () => {
+    const file = (type: string, size = 1000, name = 'icon.png') => new File([new Uint8Array(size)], name, { type });
+    const pick = (f: File) => fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [f] } });
+
+    it('replaces the address field: uploads, previews, saves the draft, and can be removed', async () => {
+      const a = draw();
+      expect(screen.queryByText(/Custom icon URL/i)).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText(/cdn\.yourstore\.com/)).not.toBeInTheDocument();
+      await act(async () => {
+        pick(file('image/png'));
+      });
+      const sent = vi.mocked(a.uploadLauncherIconAction).mock.calls[0][0];
+      expect(sent.get('siteId')).toBe('site_1');
+      expect((sent.get('icon') as File).name).toBe('icon.png');
+      expect(screen.getByRole('img', { name: en.customIcon.alt })).toHaveAttribute('src', 'https://files.example/messenger-icons/site_1/abc.png');
+      expect(screen.getByText(en.customIcon.inUse)).toBeInTheDocument();
+      await waitFor(() => expect(a.saveDraftSections).toHaveBeenCalled(), { timeout: 2000 });
+      expect(vi.mocked(a.saveDraftSections).mock.calls.at(-1)![1][0].payload).toEqual(
+        expect.objectContaining({ launcherCustomIconUrl: 'https://files.example/messenger-icons/site_1/abc.png' }),
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: en.customIcon.remove }));
+      expect(screen.queryByRole('img', { name: en.customIcon.alt })).not.toBeInTheDocument();
+    });
+
+    it('turns a wrong file away before sending it, in words', async () => {
+      const a = draw();
+      await act(async () => {
+        pick(file('image/png', 300 * 1024));
+      });
+      expect(screen.getByRole('alert')).toHaveTextContent(en.customIcon.errors.too_big);
+      await act(async () => {
+        pick(file('image/gif'));
+      });
+      expect(screen.getByRole('alert')).toHaveTextContent(en.customIcon.errors.bad_type);
+      expect(a.uploadLauncherIconAction).not.toHaveBeenCalled();
+    });
+
+    it('says what the server found wrong with a file that looked right', async () => {
+      const a = actions();
+      vi.mocked(a.uploadLauncherIconAction).mockResolvedValueOnce({ ok: false, error: 'not_square' });
+      draw(a);
+      await act(async () => {
+        pick(file('image/png'));
+      });
+      expect(screen.getByRole('alert')).toHaveTextContent(en.customIcon.errors.not_square);
+      expect(screen.queryByRole('img', { name: en.customIcon.alt })).not.toBeInTheDocument();
+    });
+
+    it('keeps an icon address a store already has, showing it as its icon', () => {
+      renderWithMantine(
+        <V16ChatStudio
+          locale="en"
+          siteId="site_1"
+          published={resolveMessengerConfig({ messenger_appearance: { launcherCustomIconUrl: 'https://cdn.old-store.com/icon.png' } })}
+          config={resolveMessengerConfig({ messenger_appearance: { launcherCustomIconUrl: 'https://cdn.old-store.com/icon.png' } })}
+          payload={PAYLOAD}
+          cannedReplies={[]}
+          meta={META}
+          actions={actions()}
+        />,
+      );
+      expect(screen.getByRole('img', { name: en.customIcon.alt })).toHaveAttribute('src', 'https://cdn.old-store.com/icon.png');
+      expect(screen.getByRole('button', { name: en.customIcon.replace })).toBeInTheDocument();
     });
   });
 

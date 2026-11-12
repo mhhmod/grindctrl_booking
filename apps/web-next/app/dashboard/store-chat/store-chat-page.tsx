@@ -12,7 +12,7 @@ import {
   wasDisconnectedBySelf,
 } from '@/lib/messenger/provisioning';
 import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
-import { diffMessengerConfig, mergeDraftOverPublished, resolveMessengerConfig } from '@/lib/messenger/config';
+import { mergeDraftOverPublished, resolveMessengerConfig } from '@/lib/messenger/config';
 import { getOverviewStats, getWidgetLastSeenAt } from '@/lib/messenger/conversations';
 import { listKnowledge } from '@/lib/messenger/knowledge';
 import { listCannedReplies } from '@/lib/messenger/canned-replies';
@@ -21,49 +21,43 @@ import { getActiveStore } from '@/lib/dashboard/active-store-server';
 import { hasShopOrderAccess } from '@/lib/shopify/tokens';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { toPublicPayload } from '@/lib/messenger/public-api';
-import { MessengerTabs } from '@/components/dashboard/messenger/messenger-tabs';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import * as messengerActions from './actions';
 import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
 import { getShopTimezone } from '@/lib/shopify/shop-timezone';
 import { roleCan } from '@/lib/rbac/dashboard-policy';
 import { getChatKnowsCopy } from '@/lib/dashboard/chat-knows-copy';
-import { buildChatHead, buildPagesAndNotes } from '@/lib/dashboard/chat-knows-model';
+import { buildChatHead, buildPagesAndNotes, buildProductsLine } from '@/lib/dashboard/chat-knows-model';
+import { readProductsStatus } from '@/lib/messenger/products';
 import { V16ChatFrame, V16ChatKnows, V16ChatKnowsError } from '@/components/dashboard/v16/store-chat/v16-chat-knows';
 import { V16ChatStudio } from '@/components/dashboard/v16/store-chat/v16-chat-studio';
 import { getChatStudioCopy } from '@/lib/dashboard/chat-studio-copy';
 import { minutesSince } from '@/lib/dashboard/chat-studio-model';
-import { legacyStoreChatHref, MORE_SETTINGS } from '@/lib/dashboard/store-chat-legacy-tab';
-import { V16BackToSetUp, V16StoreTaken } from '@/components/dashboard/v16/states';
+import { legacyStoreChatHref } from '@/lib/dashboard/store-chat-legacy-tab';
+import { V16StoreTaken } from '@/components/dashboard/v16/states';
 import { getWooSiteConnection } from '@/lib/woo/connection';
 import { createWooPairingCodeAction, readWooConnectionAction } from './woo-actions';
 import * as pasteActions from './paste-actions';
 import { getPasteConnection, readPasteDomainPlatforms } from '@/lib/paste/store';
 import { StoreConnect } from '@/components/dashboard/v16/store-setup/store-connect';
 
-/* The editors on /dashboard/store-chat/setup/more, the ones Set up does not
-   cover yet (see v16-chat-studio.tsx, More settings). */
-const MORE_SECTIONS = ['appearance', 'behaviour'] as const;
-type MoreSection = (typeof MORE_SECTIONS)[number];
-
-/* The Store Chat page (04-dashboard.md), drawn by three routes:
-   /dashboard/store-chat is What it knows, /dashboard/store-chat/setup is
-   Set up (ChatStudio), and /dashboard/store-chat/setup/more holds the
-   editors Set up does not cover yet. Today's six ?tab= screens are gone: a
-   link that still carries one is redirected to the page that replaced it
+/* The Store Chat page (04-dashboard.md), drawn by two routes:
+   /dashboard/store-chat is What it knows and /dashboard/store-chat/setup is
+   Set up (ChatStudio). Today's six ?tab= screens are gone: a link that
+   still carries one is redirected to the page that replaced it
    (lib/dashboard/store-chat-legacy-tab.ts). */
 export async function StoreChatPage({
   params,
   tab: route,
 }: {
-  params: { site?: string; tab?: string; section?: string; orders?: string };
+  params: { site?: string; tab?: string; orders?: string };
   /** install: only the Connect your store card, drawn on Store setup. */
-  tab: 'knows' | 'setup' | 'more' | 'install';
+  tab: 'knows' | 'setup' | 'install';
 }) {
   const userId = await requireDashboardUser(
-    route === 'setup' ? '/dashboard/store-chat/setup' : route === 'more' ? MORE_SETTINGS : route === 'install' ? '/dashboard/store' : '/dashboard/store-chat',
+    route === 'setup' ? '/dashboard/store-chat/setup' : route === 'install' ? '/dashboard/store' : '/dashboard/store-chat',
   );
-  const legacy = route === 'more' || route === 'install' ? null : legacyStoreChatHref(params);
+  const legacy = route === 'install' ? null : legacyStoreChatHref(params);
   if (legacy) redirect(legacy);
   const locale = await getRequestLocale();
 
@@ -138,13 +132,12 @@ export async function StoreChatPage({
       : undefined) ??
     sites.find((site) => site.domain) ??
     sites[0];
-  const { config, hasDraft } = mergeDraftOverPublished(selected.settings_json, selected.settings_draft);
+  const { config } = mergeDraftOverPublished(selected.settings_json, selected.settings_draft);
   const canRevert = Boolean((selected.settings_json as Record<string, unknown>)._previousSettings);
   // Only the store's owner may disconnect it (item 12).
   const selectedRole = teamSites.find((site) => site.id === selected.id)?.role ?? 'owner';
   const canDisconnect = Boolean(selected.domain) && roleCan(selectedRole, 'store');
   const publishedConfig = resolveMessengerConfig(selected.settings_json);
-  const configDiff = diffMessengerConfig(publishedConfig, config);
   // The store's v16 flags, so the preview and the editors show what is on.
   const flagStore = flagStoreForSite(selected);
   const [features, shopTimezone] = await Promise.all([
@@ -171,7 +164,12 @@ export async function StoreChatPage({
   // Setting Store Chat up is for owners and admins (item 12); the actions check it again.
   const canSetUp = roleCan(selectedRole, 'settings');
   if (route === 'knows') {
-    const [statsRead, knowledgeRead, seenRead] = await Promise.allSettled([getOverviewStats(selected.id), listKnowledge(selected.id), getWidgetLastSeenAt(selected.id)]);
+    const [statsRead, knowledgeRead, seenRead, productsRead] = await Promise.allSettled([
+      getOverviewStats(selected.id),
+      listKnowledge(selected.id),
+      getWidgetLastSeenAt(selected.id),
+      readProductsStatus(selected.id),
+    ]);
     const head = buildChatHead(
       {
         active: selected.status === 'active',
@@ -191,6 +189,7 @@ export async function StoreChatPage({
         locale={locale}
         head={head}
         pages={buildPagesAndNotes(knowledgeRead.value, knowsCopy)}
+        products={buildProductsLine(productsRead.status === 'fulfilled' ? productsRead.value : null, knowsCopy)}
         siteId={selected.id}
         canSetUp={canSetUp}
         actions={{
@@ -258,114 +257,29 @@ export async function StoreChatPage({
   }
 
   /* Set up is ChatStudio, on the same draft and publish. */
-  if (route === 'setup') {
-    if (!canSetUp) redirect('/dashboard/store-chat');
-    const [statsRead, detectedRead, ordersRead, wooConnectionRead, pasteRead] = await Promise.allSettled([
-      getOverviewStats(selected.id),
-      getWidgetLastSeenAt(selected.id),
-      selected.domain ? hasShopOrderAccess(selected.domain) : Promise.resolve(false),
-      selected.domain?.endsWith('.myshopify.com')
-        ? Promise.resolve(null)
-        : getWooSiteConnection(selected.id),
-      getPasteConnection(selected.id),
-    ]);
-    for (const failed of [statsRead, detectedRead, ordersRead, wooConnectionRead, pasteRead]) {
-      if (failed.status === 'rejected') console.error('[store chat] set up failed:', failed.reason);
-    }
-    const stats = statsRead.status === 'fulfilled' ? statsRead.value : null;
-    const lastSeenMinutes = minutesSince(detectedRead.status === 'fulfilled' ? detectedRead.value : null, new Date().getTime());
-    return (
-      <V16ChatFrame
-        locale={locale}
-        tab="setup"
-        subtitle={getChatStudioCopy(locale).subtitle}
-        head={buildChatHead(
-          {
-            active: selected.status === 'active',
-            installed: detectedRead.status === 'fulfilled' ? Boolean(detectedRead.value) : undefined,
-            domain: selected.domain,
-            solved7: stats?.aiResolved7d ?? null,
-            handedOff7: stats?.handedOff7d ?? null,
-          },
-          knowsCopy,
-        )}
-      >
-        <V16ChatStudio
-          locale={locale}
-          siteId={selected.id}
-          published={publishedConfig}
-          config={config}
-          payload={payload}
-          meta={{
-            domain: selected.domain,
-            embedKey: selected.embed_key,
-            active: selected.status === 'active',
-            version: selected.settings_version,
-            canRevert,
-            canDisconnect: canDisconnect && pasteRead.status === 'fulfilled' && !pasteRead.value,
-            pasteRetention: pasteRead.status === 'fulfilled' && pasteRead.value ? {
-              disconnected: pasteRead.value.status === 'disconnected',
-              redactAfter: pasteRead.value.redact_after ?? null,
-            } : null,
-            ordersAuthorized: ordersRead.status === 'fulfilled' ? ordersRead.value : false,
-            lastSeenMinutes,
-            handoffRules: features.includes('n25_handoff_rules'),
-            wooConnection:
-              wooConnectionRead.status === 'fulfilled' ? wooConnectionRead.value : null,
-          }}
-          actions={{
-            saveDraftSections: messengerActions.saveDraftSections,
-            publishConfig: messengerActions.publishConfig,
-            revertConfigAction: messengerActions.revertConfigAction,
-            setMessengerEnabled: messengerActions.setMessengerEnabled,
-            disconnectSiteAction: messengerActions.disconnectSiteAction,
-            discardDraft: messengerActions.discardDraft,
-            listDomainsAction: messengerActions.listDomainsAction,
-            addDomainAction: messengerActions.addDomainAction,
-            checkDomainAction: messengerActions.checkDomainAction,
-            removeDomainAction: messengerActions.removeDomainAction,
-            createWooPairingCodeAction,
-            paste: {
-              enable: pasteActions.enablePasteInstallAction,
-              addDomain: pasteActions.addPasteDomainAction,
-              removeDomain: pasteActions.removePasteDomainAction,
-              proveDns: pasteActions.provePasteDomainAction,
-              proveMeta: pasteActions.provePasteDomainMetaAction,
-              rotate: pasteActions.rotatePasteSecretAction,
-              snippet: pasteActions.getPasteSnippetAction,
-              status: pasteActions.getPasteInstallStatusAction,
-              proveShop: pasteActions.provePasteShopAction,
-              checkDomain: pasteActions.checkPasteDomainAction,
-              disconnect: pasteActions.disconnectPasteInstallAction,
-            },
-          }}
-        />
-      </V16ChatFrame>
-    );
-  }
-
-  /* More settings: today's Appearance and Behaviour editors, for what Set up
-     does not cover yet (saved replies, hours, the widget's language, a custom
-     icon, the launcher size), and where Shopify's order access grant returns.
-     Their own tabs switch in the client. */
   if (!canSetUp) redirect('/dashboard/store-chat');
-  const section: MoreSection = MORE_SECTIONS.find((id) => id === params.section) ?? 'behaviour';
-  const [statsRead, cannedRead, ordersRead] = await Promise.allSettled([
+  const [statsRead, detectedRead, ordersRead, wooConnectionRead, cannedRead, pasteRead] = await Promise.allSettled([
     getOverviewStats(selected.id),
-    listCannedReplies(selected.id),
+    getWidgetLastSeenAt(selected.id),
     selected.domain ? hasShopOrderAccess(selected.domain) : Promise.resolve(false),
+    selected.domain?.endsWith('.myshopify.com') ? Promise.resolve(null) : getWooSiteConnection(selected.id),
+    listCannedReplies(selected.id),
+    getPasteConnection(selected.id),
   ]);
-  for (const failed of [statsRead, cannedRead, ordersRead]) {
-    if (failed.status === 'rejected') console.error('[store chat] more settings failed:', failed.reason);
+  for (const failed of [statsRead, detectedRead, ordersRead, wooConnectionRead, cannedRead, pasteRead]) {
+    if (failed.status === 'rejected') console.error('[store chat] set up failed:', failed.reason);
   }
   const stats = statsRead.status === 'fulfilled' ? statsRead.value : null;
+  const lastSeenMinutes = minutesSince(detectedRead.status === 'fulfilled' ? detectedRead.value : null, new Date().getTime());
   return (
     <V16ChatFrame
       locale={locale}
       tab="setup"
+      subtitle={getChatStudioCopy(locale).subtitle}
       head={buildChatHead(
         {
           active: selected.status === 'active',
+          installed: detectedRead.status === 'fulfilled' ? Boolean(detectedRead.value) : undefined,
           domain: selected.domain,
           solved7: stats?.aiResolved7d ?? null,
           handedOff7: stats?.handedOff7d ?? null,
@@ -373,31 +287,61 @@ export async function StoreChatPage({
         knowsCopy,
       )}
     >
-      <V16BackToSetUp locale={locale} />
-      <MessengerTabs
+      <V16ChatStudio
         locale={locale}
-        initialTab={section}
-        sections={MORE_SECTIONS}
         siteId={selected.id}
-        siteName={selected.name}
-        domain={selected.domain}
-        embedKey={selected.embed_key}
-        active={selected.status === 'active'}
-        version={selected.settings_version}
-        detectedAt={null}
-        ordersAuthorized={ordersRead.status === 'fulfilled' ? ordersRead.value : false}
+        published={publishedConfig}
         config={config}
         payload={payload}
-        stats={null}
-        conversations={[]}
-        knowledge={[]}
         cannedReplies={cannedRead.status === 'fulfilled' ? cannedRead.value : []}
-        actions={messengerActions}
-        hasDraft={hasDraft}
-        canRevert={canRevert}
-        canDisconnect={canDisconnect}
-        configDiff={configDiff}
-        shopTimezone={shopTimezone}
+        meta={{
+          domain: selected.domain,
+          embedKey: selected.embed_key,
+          active: selected.status === 'active',
+          version: selected.settings_version,
+          canRevert,
+          canDisconnect: canDisconnect && pasteRead.status === 'fulfilled' && !pasteRead.value,
+          pasteRetention: pasteRead.status === 'fulfilled' && pasteRead.value ? {
+            disconnected: pasteRead.value.status === 'disconnected',
+            redactAfter: pasteRead.value.redact_after ?? null,
+          } : null,
+          ordersAuthorized: ordersRead.status === 'fulfilled' ? ordersRead.value : false,
+          ordersGrant: params.orders === 'connected' || params.orders === 'failed' ? params.orders : null,
+          shopTimezone,
+          lastSeenMinutes,
+          handoffRules: features.includes('n25_handoff_rules'),
+          wooConnection: wooConnectionRead.status === 'fulfilled' ? wooConnectionRead.value : null,
+        }}
+        actions={{
+          saveDraftSections: messengerActions.saveDraftSections,
+          publishConfig: messengerActions.publishConfig,
+          revertConfigAction: messengerActions.revertConfigAction,
+          setMessengerEnabled: messengerActions.setMessengerEnabled,
+          disconnectSiteAction: messengerActions.disconnectSiteAction,
+          discardDraft: messengerActions.discardDraft,
+          uploadLauncherIconAction: messengerActions.uploadLauncherIconAction,
+          addCannedReply: messengerActions.addCannedReply,
+          updateCannedReplyStatus: messengerActions.updateCannedReplyStatus,
+          deleteCannedReply: messengerActions.deleteCannedReply,
+          listDomainsAction: messengerActions.listDomainsAction,
+          addDomainAction: messengerActions.addDomainAction,
+          checkDomainAction: messengerActions.checkDomainAction,
+          removeDomainAction: messengerActions.removeDomainAction,
+          createWooPairingCodeAction,
+          paste: {
+            enable: pasteActions.enablePasteInstallAction,
+            addDomain: pasteActions.addPasteDomainAction,
+            removeDomain: pasteActions.removePasteDomainAction,
+            proveDns: pasteActions.provePasteDomainAction,
+            proveMeta: pasteActions.provePasteDomainMetaAction,
+            rotate: pasteActions.rotatePasteSecretAction,
+            snippet: pasteActions.getPasteSnippetAction,
+            status: pasteActions.getPasteInstallStatusAction,
+            proveShop: pasteActions.provePasteShopAction,
+            checkDomain: pasteActions.checkPasteDomainAction,
+            disconnect: pasteActions.disconnectPasteInstallAction,
+          },
+        }}
       />
     </V16ChatFrame>
   );

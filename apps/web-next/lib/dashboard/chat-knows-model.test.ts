@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { KnowledgeEntry } from '@/lib/messenger/knowledge';
 import { getChatKnowsCopy } from './chat-knows-copy';
-import { buildChatHead, buildPagesAndNotes } from './chat-knows-model';
+import { parseProductsStatus } from '@/lib/messenger/products-status';
+import { buildChatHead, buildPagesAndNotes, buildProductsLine } from './chat-knows-model';
 
 const NOW = Date.parse('2026-10-22T12:00:00Z');
 const DAY = 86_400_000;
@@ -44,12 +45,46 @@ describe('the Store Chat head', () => {
     });
   });
 
+  it('says the count, not a percentage, while there are fewer than 5 chats', () => {
+    const head = (solved7: number, handedOff7: number, copy = en) => buildChatHead({ active: true, domain: null, solved7, handedOff7 }, copy).subtitle;
+    expect(head(1, 0)).toBe('In the last 7 days the assistant answered 1 of 1 chat on its own.');
+    expect(head(0, 4)).toBe('In the last 7 days the assistant answered 0 of 4 chats on its own.');
+    expect(head(4, 1)).toBe('In the last 7 days the assistant answered 80% of 5 chats on its own.');
+    expect(head(1, 0, ar)).toBe('خلال آخر 7 أيام أجاب المساعد بنفسه عن 1 من أصل محادثة واحدة.');
+    expect(head(2, 1, ar)).toBe('خلال آخر 7 أيام أجاب المساعد بنفسه عن 2 من أصل 3 محادثات.');
+  });
+
   it('counts chats as Arabic does', () => {
-    expect(buildChatHead({ active: true, domain: 'maisonnoor.com', solved7: 3, handedOff7: 1 }, ar).subtitle).toBe(
-      'خلال آخر 7 أيام أجاب المساعد بنفسه عن 75% من 4 محادثات.',
+    expect(buildChatHead({ active: true, domain: 'maisonnoor.com', solved7: 6, handedOff7: 2 }, ar).subtitle).toBe(
+      'خلال آخر 7 أيام أجاب المساعد بنفسه عن 75% من 8 محادثات.',
     );
     expect(ar.answeredShare(86, 140)).toBe('خلال آخر 7 أيام أجاب المساعد بنفسه عن 86% من 140 محادثة.');
     expect(ar.answeredShare(100, 1)).toBe('خلال آخر 7 أيام أجاب المساعد بنفسه عن 100% من محادثة واحدة.');
+  });
+});
+
+describe('the Products line', () => {
+  const at = '2026-10-22T03:00:00Z';
+  it('says what was read, or why not and what happens next, in English and Arabic', () => {
+    expect(buildProductsLine({ outcome: 'ok', count: 1, at }, en)).toEqual({ ok: true, text: 'We read 1 product from your store.' });
+    expect(buildProductsLine({ outcome: 'ok', count: 42, at }, en)?.text).toBe('We read 42 products from your store.');
+    expect(buildProductsLine({ outcome: 'ok', count: 2, at }, ar)?.text).toBe('قرأنا منتجين من متجرك.');
+    for (const outcome of ['password_page', 'not_found', 'unreachable', 'rate_limited'] as const) {
+      const line = buildProductsLine({ outcome, count: 0, at }, en);
+      expect(line?.ok).toBe(false);
+      expect(line?.text.length).toBeGreaterThan(20);
+      expect(buildProductsLine({ outcome, count: 0, at }, ar)?.text).toMatch(/[؀-ۿ]/);
+    }
+    expect(buildProductsLine({ outcome: 'password_page', count: 0, at }, en)?.text).toContain("We'll read them as soon as it opens.");
+  });
+  it('says nothing when no read is recorded', () => {
+    expect(buildProductsLine(null, en)).toBeNull();
+  });
+  it('trusts only a stored result in the shape this app writes', () => {
+    expect(parseProductsStatus({ outcome: 'ok', count: 3, at })).toEqual({ outcome: 'ok', count: 3, at });
+    for (const bad of [null, 'ok', {}, { outcome: 'bogus', count: 1, at }, { outcome: 'ok', count: -1, at }, { outcome: 'ok', count: 1, at: 'x' }]) {
+      expect(parseProductsStatus(bad)).toBeNull();
+    }
   });
 });
 
