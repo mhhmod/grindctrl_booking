@@ -297,6 +297,13 @@
   cursor: pointer;
 }
 
+@media (pointer: coarse) {
+  /* Padding, not flex, so the disclosure triangle stays. */
+  .table summary {
+    padding-block: 12px;
+  }
+}
+
 .table table {
   margin-block-start: 8px;
   border-collapse: collapse;
@@ -332,9 +339,17 @@
 }
 
 .link {
+  display: inline-flex;
+  align-items: center;
   justify-self: start;
   color: var(--foreground);
   font-weight: 700;
+}
+
+@media (pointer: coarse) {
+  .link {
+    min-block-size: 44px;
+  }
 }
 
 /* Last 3 cycles */

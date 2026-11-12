@@ -7,6 +7,7 @@
 
 import { classifyTryOnFailure, type TryOnFailureKind } from '@/lib/try-on/shopper-errors';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
+import { intlLocale } from '@/lib/copy/rules';
 import type { ResultsPeriod, TryOnResultsCopy } from './tryon-insights-copy';
 import type { TodayCopy } from './today-copy';
 import { relativeAgo } from './today-model';
@@ -78,7 +79,7 @@ export function buildTryOnResultsView(
   facts: TryOnResultsFacts,
   copy: TryOnResultsCopy,
   todayCopy: TodayCopy,
-  _locale: SiteLocale,
+  locale: SiteLocale,
 ): TryOnResultsView {
   const start = facts.now - facts.period * DAY;
   const before = start - facts.period * DAY;
@@ -94,7 +95,7 @@ export function buildTryOnResultsView(
 
   const tiles: ResultsTile[] = [];
   const delta = change(made.length, previous.filter((job) => job.status === 'completed').length, copy, facts.period);
-  tiles.push({ key: 'looks', label: copy.looksMade, value: String(made.length), sub: delta?.sub ?? '', trend: delta?.trend });
+  tiles.push({ key: 'looks', label: copy.looksMade, value: made.length.toLocaleString(intlLocale(locale)), sub: delta?.sub ?? '', trend: delta?.trend });
   tiles.push(
     photos > 0
       ? {

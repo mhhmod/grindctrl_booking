@@ -3,6 +3,15 @@
 import * as React from 'react';
 import classes from './notice.module.css';
 
+/* Copy marks a Latin value (a store's host) with U+2068..U+2069. Chrome
+   loses that isolate where a long host wraps in Arabic ("-maison" on the
+   first line), so the value is drawn as its own left-to-right element. */
+function isolated(text: string): React.ReactNode {
+  const parts = text.split(/⁨([^⁩]*)⁩/);
+  if (parts.length === 1) return text;
+  return parts.map((part, i) => (i % 2 ? <bdi key={i} dir="ltr" className={classes.value}>{part}</bdi> : part));
+}
+
 /* The one card the dashboard uses for a state that is not a page's own
    content (04-dashboard.md). `role="alert"` when something failed. */
 export function V16Notice({
@@ -20,7 +29,7 @@ export function V16Notice({
   return (
     <section className={classes.notice} aria-labelledby={id}>
       <h2 id={id} className={classes.title}>
-        {title}
+        {isolated(title)}
       </h2>
       <p className={classes.body} role={role}>
         {body}

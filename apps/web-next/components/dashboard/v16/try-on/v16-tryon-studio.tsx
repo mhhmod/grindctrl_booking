@@ -560,6 +560,7 @@ function ButtonSwitch({
       </div>
       <Switch
         size="md"
+        className={classes.mainSwitch}
         labelPosition="left"
         label={on ? copy.on : copy.off}
         checked={installed && on}

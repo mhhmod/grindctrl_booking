@@ -331,7 +331,7 @@ export function WidgetPreview({
                 setExpanded(false);
                 setDialogOpen(false);
               }}
-              className={`min-h-10 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+              className={`min-h-10 pointer-coarse:min-h-11 pointer-coarse:min-w-11 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                 tab === id
                   ? 'bg-foreground text-background'
                   : 'text-muted-foreground hover:text-foreground'

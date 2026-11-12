@@ -56,12 +56,34 @@
   color: var(--muted-foreground);
 }
 
+/* A host in a title: its own LTR box, wrapping inside the card's width. */
+.value {
+  display: inline-block;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
 .row {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 12px;
   min-inline-size: 0;
+}
+
+/* A button naming a store (Switch to <store>) wraps inside the card
+   instead of pushing the page sideways. */
+.notice :global(.mantine-Button-root) {
+  max-inline-size: 100%;
+  block-size: auto;
+  min-block-size: 44px;
+  padding-block: 8px;
+}
+
+.notice :global(.mantine-Button-label) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: start;
 }
 
 .note {

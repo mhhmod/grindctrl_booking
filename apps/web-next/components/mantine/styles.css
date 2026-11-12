@@ -59,4 +59,61 @@
   .mantine-focus-auto:focus-visible {
     outline-color: var(--ring);
   }
+
+  /* A choice that does not fit its third of a phone-width control wraps to
+     a second line instead of being cut to "Progress ba…". */
+  .mantine-SegmentedControl-label {
+    white-space: normal;
+    text-overflow: clip;
+    line-height: 1.25;
+  }
+
+  /* On touch screens every control is at least 44px to hit (WCAG 2.5.5).
+     Mantine's sm/md sizes are 36px, comfortable for a mouse only, so the
+     floor is raised here once for every SaaS surface instead of per page. */
+  @media (pointer: coarse) {
+    .mantine-Button-root {
+      min-width: 44px;
+    }
+
+    /* The 24x17 steppers cannot be hit; the number keyboard does their job. */
+    .mantine-NumberInput-controls {
+      display: none;
+    }
+
+    .mantine-Button-root,
+    .mantine-Input-input,
+    .mantine-Select-input,
+    .mantine-NativeSelect-input {
+      min-height: 44px;
+    }
+
+    .mantine-ActionIcon-root,
+    .mantine-CloseButton-root {
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    .mantine-SegmentedControl-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+    }
+
+    /* The switch's label row is what a finger hits. */
+    .mantine-Switch-body,
+    .mantine-Checkbox-body,
+    .mantine-Radio-body {
+      align-items: center;
+      min-width: 44px;
+      min-height: 44px;
+    }
+  }
+
+  /* A switch's one-line label sits level with its track, which is taller
+     than the label's line ("On" floated above it). */
+  .mantine-Switch-body {
+    align-items: center;
+  }
 }

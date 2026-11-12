@@ -209,6 +209,12 @@
   text-underline-offset: 3px;
 }
 
+@media (pointer: coarse) {
+  .link {
+    min-block-size: 44px;
+  }
+}
+
 .buttons {
   display: flex;
   flex-wrap: wrap;

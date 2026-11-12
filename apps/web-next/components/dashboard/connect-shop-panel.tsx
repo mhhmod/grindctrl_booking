@@ -26,9 +26,14 @@ function formatCode(code: string): string {
 /* `hasShops`: the merchant already has a store, so the same code connects
    another store or re-links one (the Shopify page's "Link a different
    account"). The button stays available either way. */
-export function ConnectShopPanel({ locale, hasShops = false }: { locale: SiteLocale; hasShops?: boolean }) {
+export function ConnectShopPanel({ locale, hasShops = false, initialCode = null }: {
+  locale: SiteLocale;
+  hasShops?: boolean;
+  /** Layout fixtures only: start from an issued code. */
+  initialCode?: ShopLinkCode | null;
+}) {
   const c = getTryOnDashboardCopy(locale);
-  const [linkCode, setLinkCode] = useState<ShopLinkCode | null>(null);
+  const [linkCode, setLinkCode] = useState<ShopLinkCode | null>(initialCode);
   const [remaining, setRemaining] = useState(0);
   const [status, setStatus] = useState<'idle' | 'generating' | 'error'>('idle');
   /** The shop the code connected, once it was entered in Shopify. */

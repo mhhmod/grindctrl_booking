@@ -62,7 +62,8 @@ describe('Team, email alerts', () => {
       'Email alerts go to desk@maisonnoor.com and hana@maisonnoor.com when a shopper needs a person.',
     );
     expect(buildTeamView(given, ar, 'ar').alerts).toBe(
-      'تُرسل تنبيهات البريد الإلكتروني إلى desk@maisonnoor.com وhana@maisonnoor.com عندما تحتاج متسوقة إلى شخص من الفريق.',
+      // Each address is isolated (U+2068..U+2069) so it reads left to right in the Arabic sentence.
+      'تُرسل تنبيهات البريد الإلكتروني إلى ⁨desk@maisonnoor.com⁩ و⁨hana@maisonnoor.com⁩ عندما تحتاج متسوقة إلى شخص من الفريق.',
     );
   });
 
