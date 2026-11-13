@@ -52,6 +52,7 @@ function facts(over: Partial<PlanFacts['plan']> = {}): PlanFacts {
     },
     plans: [item({ id: 'l', planKey: 'launch-v1', name: 'Launch', priceMinor: 1500, rendersIncluded: 150, sortOrder: 20 }), item({})],
     currency: 'USD',
+    chatRepliesPerDay: 2000,
     looks,
   };
 }
@@ -87,7 +88,7 @@ describe('V16Plan', () => {
       expect(card).toHaveTextContent(view.plans[i].name);
       expect(card).toHaveTextContent(view.plans[i].price);
       expect(card).toHaveTextContent(view.plans[i].looks);
-      expect(within(card).getByText(locale === 'en' ? 'Store Chat included' : 'دردشة المتجر مشمولة')).toBeInTheDocument();
+      expect(within(card).getByText(copy.storeChatLimit(2000))).toBeInTheDocument();
     });
   });
 
@@ -153,8 +154,8 @@ describe('V16Plan', () => {
 
     const plans = screen.getByRole('region', { name: 'Plans' });
     expect(within(plans).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
-      'Launch$15 a month150 looks a monthStore Chat included',
-      'GrowthYour plan$29 a month350 looks a monthStore Chat included',
+      'Launch$15 a month150 looks a monthStore Chat: up to 2,000 AI replies a day',
+      'GrowthYour plan$29 a month350 looks a monthStore Chat: up to 2,000 AI replies a day',
     ]);
     for (const link of screen.getAllByRole('link', { name: /Talk to us to add looks/ })) {
       expect(link).toHaveAttribute('href', BOOKING_URL);
@@ -170,6 +171,69 @@ describe('V16Plan', () => {
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
     expect(screen.queryByRole('meter')).not.toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Looks used, last 3 cycles' })).not.toBeInTheDocument();
+    // One entitlement decides both: a plan that is not active is never tagged "Your plan" in the list.
+    expect(within(screen.getByRole('region', { name: 'Your plan' })).getByText('Expired')).toBeInTheDocument();
+    expect(within(screen.getByRole('region', { name: 'Plans' })).queryByText('Your plan')).not.toBeInTheDocument();
+  });
+
+  /* The owner's phone: the list read "Free, Your plan" beside "Plan not
+     active, 0 left of 0", with nothing to do next. */
+  const NO_PLAN = { planKey: null, planName: null, status: 'none', isFree: false, rendersIncluded: 0, totalCreditsRemaining: 0,
+    available: false, currentPeriodStart: null, currentPeriodEnd: null } as const;
+
+  it.each([
+    ['en', 'connect', 'No looks yet', 'Your plan has not started.', 'Check my store connection', '/dashboard/store#connect'],
+    ['en', 'taken', 'No looks yet', 'Your plan has not started.', 'Talk to us to start a plan', BOOKING_URL],
+    ['en', 'ask', 'No looks yet', 'Your plan has not started.', 'Talk to us to start a plan', BOOKING_URL],
+    ['ar', 'connect', 'لا إطلالات بعد', 'لم تبدأ باقتك بعد.', 'تحقق من ربط متجري', '/dashboard/store#connect'],
+  ] as const)('gives a store with no plan one clear next step and marks no plan as its own (%s, %s)', (locale, reason, left, sub, action, href) => {
+    const copy = getPlanCopy(locale);
+    const f = facts(NO_PLAN);
+    f.plans = [item({ id: 'f', planKey: 'free-v2', name: 'Free', priceMinor: 0, rendersIncluded: 15, isFree: true, sortOrder: 10 }), ...f.plans];
+    f.looks = [];
+    render(<V16Plan view={buildPlanView({ ...f, noPlanReason: reason }, copy, locale)} locale={locale} />);
+
+    const looks = screen.getByRole('region', { name: copy.looksThisCycle });
+    expect(within(looks).getByText(left)).toBeInTheDocument();
+    expect(within(looks).getByText(sub)).toBeInTheDocument();
+    expect(looks).not.toHaveTextContent(copy.left(0));
+    expect(within(looks).getByText(copy.planNotActive)).toBeInTheDocument();
+    expect(within(looks).getByText(copy.hiddenNoPlan)).toBeInTheDocument();
+
+    const yours = screen.getByRole('region', { name: copy.yourPlan });
+    expect(within(yours).getByText(copy.status.none)).toBeInTheDocument();
+    expect(within(yours).getByText(copy.noPlan[reason].body)).toBeInTheDocument();
+    expect(within(yours).getByRole('link', { name: action })).toHaveAttribute('href', href);
+
+    const cards = within(screen.getByRole('region', { name: copy.plans })).getAllByRole('listitem');
+    expect(cards).toHaveLength(3);
+    for (const card of cards) {
+      expect(card).toHaveAttribute('data-current', 'false');
+      expect(within(card).queryByText(copy.current)).not.toBeInTheDocument();
+    }
+  });
+
+  it.each(['en', 'ar'] as const)('says how much Store Chat every plan includes, in the style of its looks (%s)', (locale) => {
+    const copy = getPlanCopy(locale);
+    const line = locale === 'en' ? 'Store Chat: up to 2,000 AI replies a day' : 'دردشة المتجر: حتى 2,000 رد من المساعد يومياً';
+    const { unmount, container } = render(<V16Plan view={buildPlanView({ ...facts(), chatRepliesPerDay: 2000 }, copy, locale)} locale={locale} />);
+    const plans = screen.getByRole('region', { name: copy.plans });
+    for (const card of within(plans).getAllByRole('listitem')) {
+      const [looks, chat] = [within(card).getByText(/350|150/), within(card).getByText(line)];
+      // The same element and class as the looks line above it.
+      expect(chat.tagName).toBe(looks.tagName);
+      expect(chat.className).toBe(looks.className);
+    }
+    expect(within(plans).getByText(copy.storeChatLimitLine)).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/[٠-٩]/);
+    unmount();
+
+    // A store whose assistant an operator switched off, and one whose limit could not be read.
+    const off = render(<V16Plan view={buildPlanView({ ...facts(), chatRepliesPerDay: 0 }, copy, locale)} locale={locale} />);
+    expect(screen.getAllByText(copy.storeChatTeamOnly)).toHaveLength(2);
+    off.unmount();
+    render(<V16Plan view={buildPlanView({ ...facts(), chatRepliesPerDay: null }, copy, locale)} locale={locale} />);
+    expect(screen.getAllByText(copy.storeChatLimitUnknown)).toHaveLength(2);
   });
 
   it('speaks Arabic in Arabic, with Western digits', () => {

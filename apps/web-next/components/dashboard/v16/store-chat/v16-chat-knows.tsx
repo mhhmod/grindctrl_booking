@@ -273,6 +273,13 @@ export function V16ChatKnows({
   const [showAll, setShowAll] = React.useState(false);
   const [note, setNote] = React.useState<{ text: string; ok: boolean } | null>(null);
   const [syncing, startSync] = React.useTransition();
+  /* What "Sync products now" just found. It is shown in the Products card
+     and nowhere else: the same sentence used to appear a second time as a
+     notice above Pages and notes. It stands in for the page's own line only
+     until that line arrives with the refresh the action triggers (`basis`
+     is the line it replaced). */
+  const [synced, setSynced] = React.useState<{ line: ProductsLine; basis: ProductsLine | null } | null>(null);
+  const productsLine = synced && synced.basis === products ? synced.line : products;
   const rows = showAll ? pages.rows : pages.rows.slice(0, FIRST_ROWS);
 
   const report = (text: string | null, ok: boolean) => setNote(text ? { text, ok } : null);
@@ -338,7 +345,7 @@ export function V16ChatKnows({
             </Button>
           )}
         </div>
-        {(products || (canSetUp && actions.syncKnowledgeProducts)) && (
+        {(productsLine || (canSetUp && actions.syncKnowledgeProducts)) && (
           <div className={classes.tile}>
             <div className={classes.tileHead}>
               <span className={classes.tileIcon} aria-hidden="true">
@@ -346,17 +353,22 @@ export function V16ChatKnows({
               </span>
               <h3 className={classes.h3}>{copy.products}</h3>
             </div>
-            {products && (
-              <p className={classes.muted} data-ok={products.ok}>
-                {products.text}
-              </p>
-            )}
+            {/* The one place the products' state is said, the last sync's answer
+                included. Announced politely; the status role stays with the
+                notice above, which reports on pages and notes. */}
+            <p aria-live="polite" className={`${classes.muted} ${classes.productsLine}`} data-ok={productsLine?.ok}>
+              {productsLine?.text}
+            </p>
             {canSetUp && actions.syncKnowledgeProducts && (
               <div className={classes.formActions}>
                 <Button variant="default" radius="pill" loading={syncing} onClick={() => startSync(async () => {
                   const result = await actions.syncKnowledgeProducts!(siteId).catch(() => ({ ok: false as const, error: '' }));
-                  if (result.ok && result.outcome) report(buildProductsLine({ outcome: result.outcome, count: 0, at: '' }, copy)!.text, false);
-                  else report(result.ok ? result.skipped ? copy.productsSkipped : copy.productsSynced(result.count ?? 0) : copy.actionFailed, result.ok);
+                  const line: ProductsLine = !result.ok
+                    ? { ok: false, text: copy.actionFailed }
+                    : result.outcome
+                      ? buildProductsLine({ outcome: result.outcome, count: 0, at: '' }, copy)!
+                      : { ok: true, text: result.skipped ? copy.productsSkipped : copy.productsRead(result.count ?? 0) };
+                  setSynced({ line, basis: products });
                 })}>{copy.syncProducts}</Button>
               </div>
             )}

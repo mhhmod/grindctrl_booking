@@ -322,6 +322,22 @@ export async function releasePasteShopCheck(connection: PasteConnection): Promis
     .eq('status', 'pending'));
 }
 
+export type PasteShopPlanResult = 'granted' | 'apex_taken' | 'ignored' | 'unavailable';
+
+/** The free plan of a proven Shopify paste shop (20261113_paste_shop_free_plan.sql).
+ *  prove_paste_shop already claims it; this is the same claim for a store
+ *  proven before that, or whose claim failed, made when its owner opens the
+ *  dashboard. The RPC checks the proof and the one-plan-per-apex rule under
+ *  the paste lock and answers `ignored` for anything that is not a proven
+ *  Shopify paste shop. Never throws; before its migration it is a no-op. */
+export async function claimPasteShopPlan(siteId: string): Promise<PasteShopPlanResult> {
+  try {
+    const { data, error } = await getMessengerServiceClient().rpc('claim_paste_shop_free_plan', { p_site: siteId });
+    if (error) return schemaMissing(error) ? 'ignored' : 'unavailable';
+    return data === 'granted' || data === 'apex_taken' || data === 'ignored' ? data : 'unavailable';
+  } catch { return 'unavailable'; }
+}
+
 export type PasteSignalResult = 'granted' | 'apex_taken' | 'recorded' | 'unverified' | 'ignored' | 'unavailable';
 
 /** Only browser Origin / signed-origin-token authorized config/heartbeat
@@ -333,9 +349,10 @@ export type PasteSignalResult = 'granted' | 'apex_taken' | 'recorded' | 'unverif
  * `unverified` with nothing recorded; the caller may then schedule a
  * snippet check. A `.myshopify.com` host is submitted as its own apex; the
  * RPC records it only when it is this site's proven connection shop.
- * `signed` is set only by the context route after a verified Liquid render:
- * a Shopify paste store earns its free plan from that alone, and an
- * Origin-only signal is just `recorded`. */
+ * `signed` is set only by the context route after a verified Liquid render.
+ * A proven Shopify paste shop earns its free plan with the proof itself
+ * (prove_paste_shop) and, since 20261113_paste_shop_free_plan.sql, from any
+ * later signal; before that migration only a signed one grants it. */
 export async function recordPasteSignal(siteId: string, origin: string, options: { signed?: boolean } = {}): Promise<PasteSignalResult> {
   try {
     const url = new URL(origin);

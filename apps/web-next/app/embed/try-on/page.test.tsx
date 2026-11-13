@@ -12,7 +12,8 @@ vi.mock('next/headers', () => ({
   cookies: async () => ({ get: () => undefined }),
   headers: async () => new Headers({ 'accept-language': 'en' }),
 }));
-const flags = vi.hoisted(() => ({ on: [] as string[], asked: [] as unknown[], timing: 0 }));
+const flags = vi.hoisted(() => ({ on: [] as string[], asked: [] as unknown[], timing: 0,
+  style: 'steps' as 'steps' | 'pulse' | 'bar', settingsFor: [] as unknown[] }));
 vi.mock('@/lib/flags/store-flags', () => ({
   storeFlags: async (store: unknown) => {
     flags.asked.push(store);
@@ -27,14 +28,17 @@ vi.mock('@/lib/try-on/look-timing', () => ({
 }));
 vi.mock('@/lib/try-on/settings', async (importOriginal) => {
   const real = await importOriginal<typeof import('@/lib/try-on/settings')>();
-  return { ...real, getTryOnSettings: async () => real.DEFAULT_SETTINGS };
+  return { ...real, getTryOnSettings: async (shop: unknown) => {
+    flags.settingsFor.push(shop);
+    return { ...real.DEFAULT_SETTINGS, loadingStyle: flags.style, loadingSteps: ['Reading', 'Fitting'] };
+  } };
 });
 vi.mock('@/components/try-on/sheet/try-on-sheet', () => ({
-  TryOnSheet: (props: { lookSeconds: number | null; variantTitle?: string; addressForm: string }) => (
-    <div data-testid="sheet" data-seconds={String(props.lookSeconds)} data-variant={props.variantTitle} data-form={props.addressForm} />
+  TryOnSheet: (props: { lookSeconds: number | null; variantTitle?: string; addressForm: string; loadingStyle?: string; loadingSteps?: string[] }) => (
+    <div data-testid="sheet" data-seconds={String(props.lookSeconds)} data-variant={props.variantTitle} data-form={props.addressForm} data-style={props.loadingStyle} data-steps={props.loadingSteps?.join(',')} />
   ),
 }));
-vi.mock('@/components/try-on/try-on-demo', () => ({ TryOnDemo: (props: { lookSeconds: number | null }) => <div data-testid="today" data-seconds={String(props.lookSeconds)} /> }));
+vi.mock('@/components/try-on/try-on-demo', () => ({ TryOnDemo: (props: { lookSeconds: number | null; overrides?: { loadingStyle?: string; loadingSteps?: string[] } }) => <div data-testid="today" data-seconds={String(props.lookSeconds)} data-style={props.overrides?.loadingStyle} data-steps={props.overrides?.loadingSteps?.join(',')} /> }));
 vi.mock('@/components/try-on/embed-frame-bridge', () => ({ EmbedFrameBridge: () => null }));
 const hosts = vi.hoisted(() => ({ list: ['shop.example.com'] as string[] }));
 vi.mock('@/lib/woo/garment-url', async (importOriginal) => ({
@@ -61,9 +65,20 @@ beforeEach(() => {
   flags.on = [];
   flags.asked = [];
   flags.timing = 0;
+  flags.style = 'steps';
+  flags.settingsFor = [];
 });
 
 describe('the try-on embed', () => {
+  it.each(['steps', 'pulse', 'bar'] as const)('passes %s from the saved tenant settings to either hosted storefront UI', async (style) => {
+    flags.style = style;
+    const tenant = 'site:123e4567-e89b-42d3-a456-426614174000';
+    flags.on = ['v16_tryon'];
+    await renderPage({ ...BASE, shop: tenant, sheet: '1' });
+    expect(flags.settingsFor).toEqual([tenant]);
+    expect(screen.getByTestId('sheet')).toHaveAttribute('data-style', style);
+    expect(screen.getByTestId('sheet')).toHaveAttribute('data-steps', 'Reading,Fitting');
+  });
   it('opens the v16 sheet for a store with the flag, with its own time per look', async () => {
     flags.on = ['v16_tryon'];
     await renderPage({ ...BASE, sheet: '1', variantTitle: 'Black / M' });

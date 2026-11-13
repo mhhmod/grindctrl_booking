@@ -57,6 +57,15 @@
   background: none;
 }
 
+/* The Products card's one line; nothing to draw before the first read. */
+.productsLine {
+  overflow-wrap: anywhere;
+}
+
+.productsLine:empty {
+  display: none;
+}
+
 .note[data-ok='false'] {
   background: var(--gc-attention-soft);
   color: var(--gc-attention);

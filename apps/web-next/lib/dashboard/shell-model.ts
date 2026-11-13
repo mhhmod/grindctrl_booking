@@ -11,6 +11,7 @@ import {
   type StoreChoice,
 } from './active-store';
 import type { ShellCopy, ShellRole } from './shell-copy';
+import { storeDisplayName, storeHost } from './store-name';
 
 export type ShellStore = {
   key: string;
@@ -21,7 +22,14 @@ export type ShellStore = {
   current: boolean;
 };
 
-export type ShellSite = { id: string; name: string; domain: string | null };
+export type ShellSite = {
+  id: string;
+  name: string;
+  domain: string | null;
+  /** The address the store is known by when `domain` is empty (pasted code:
+   *  its Shopify shop or its first confirmed address). Only names it. */
+  storeDomain?: string | null;
+};
 
 const MYSHOPIFY = '.myshopify.com';
 
@@ -36,7 +44,10 @@ export function storeInitials(label: string): string {
 
 /** The stores the person can see: every shop they own, named after its
  *  Store Chat site when it has one, then their Store Chat sites on other
- *  websites. The active store is marked current. */
+ *  websites. The active store is marked current. A store is listed under
+ *  the name its merchant gave it, else under its address (store-name.ts),
+ *  never under the "My store" placeholder while its address is known; the
+ *  address is always there as the second line. */
 export function buildShellStores(
   shops: readonly StoreCandidateShop[],
   sites: readonly ShellSite[],
@@ -44,7 +55,7 @@ export function buildShellStores(
 ): ShellStore[] {
   const siteOnShop = (domain: string) => sites.find((site) => site.domain?.trim().toLowerCase() === domain);
   const fromShops = shops.map((shop): ShellStore => {
-    const label = siteOnShop(shop.domain)?.name.trim() || shop.domain.replace(MYSHOPIFY, '');
+    const label = storeDisplayName(siteOnShop(shop.domain)?.name, shop.domain) ?? shop.domain.replace(MYSHOPIFY, '');
     return {
       key: `shop:${shop.domain}`,
       label,
@@ -58,11 +69,12 @@ export function buildShellStores(
   const fromSites = sites
     .filter((site) => !shopDomains.has(site.domain?.trim().toLowerCase() ?? ''))
     .map((site): ShellStore => {
-      const label = site.name.trim() || site.domain || site.id.slice(0, 8);
+      const domain = storeHost(site.domain || site.storeDomain) ?? null;
+      const label = storeDisplayName(site.name, domain) ?? (site.name.trim() || site.id.slice(0, 8));
       return {
         key: `site:${site.id}`,
         label,
-        domain: site.domain,
+        domain,
         initials: storeInitials(label),
         choice: { site: site.id },
         current: !active.shopDomain && active.siteId === site.id,

@@ -11,7 +11,12 @@ const mocks = vi.hoisted(() => ({
   calls: [] as Array<[string, ...unknown[]]>,
   error: null as { code?: string; message: string } | null,
   testColumnMissing: false,
+  chatLimits: vi.fn(),
+  siteDailyTurns: vi.fn(),
 }));
+
+vi.mock('@/lib/messenger/ai-budget', () => ({ siteDailyAiTurns: mocks.siteDailyTurns }));
+vi.mock('@/lib/spend/store', () => ({ readChatSpendLimits: mocks.chatLimits }));
 
 vi.mock('@/app/dashboard/try-on/plan-actions', () => ({ getShopPlanState: mocks.plan, listPlansCatalog: mocks.catalog }));
 vi.mock('@/lib/messenger/db', () => {
@@ -50,6 +55,8 @@ beforeEach(() => {
   mocks.rows = [{ created_at: '2026-10-01T09:00:00Z' }, { created_at: '2026-09-20T09:00:00Z' }, { created_at: 'not a date' }];
   mocks.plan.mockResolvedValue({ planKey: 'growth-v1', currentPeriodStart: START, currentPeriodEnd: END });
   mocks.catalog.mockResolvedValue({ plans: PLANS });
+  mocks.siteDailyTurns.mockReturnValue(2_000);
+  mocks.chatLimits.mockResolvedValue({});
 });
 
 describe('getPlanFacts', () => {
@@ -74,7 +81,28 @@ describe('getPlanFacts', () => {
       plans: PLANS,
       currency: 'EGP',
       looks: [Date.parse('2026-10-01T09:00:00Z'), Date.parse('2026-09-20T09:00:00Z')],
+      // No Store Chat site to read an override from: the deployment's daily limit.
+      chatRepliesPerDay: 2_000,
     });
+    expect(mocks.chatLimits).not.toHaveBeenCalled();
+  });
+
+  /* Item 3: what limits Store Chat is one daily count of AI replies per
+     store, the same on every plan, so the page reads that and invents nothing. */
+  it("reads Store Chat's real daily limit: the deployment's, or this store's own when an operator set one", async () => {
+    const SITE = '11111111-1111-4111-8111-111111111111';
+    const read = () => getPlanFacts({ shop: SHOP, siteId: SITE, timeZone: 'UTC', currency: 'USD', now: NOW });
+    expect((await read()).chatRepliesPerDay).toBe(2_000);
+    expect(mocks.chatLimits).toHaveBeenCalledWith(SITE);
+    mocks.siteDailyTurns.mockReturnValue(5_000);
+    expect((await read()).chatRepliesPerDay).toBe(5_000);
+    mocks.chatLimits.mockResolvedValue({ storeChatDailyTurns: 300 });
+    expect((await read()).chatRepliesPerDay).toBe(300);
+    mocks.chatLimits.mockResolvedValue({ storeChatDailyTurns: 0 });
+    expect((await read()).chatRepliesPerDay).toBe(0);
+    // Unreadable: no number, and the plan still loads.
+    mocks.chatLimits.mockRejectedValue(new Error('Spend limits unavailable'));
+    expect(await read()).toMatchObject({ chatRepliesPerDay: null, plans: PLANS });
   });
 
   it('reads 30-day cycles back from today when the plan has no cycle', async () => {

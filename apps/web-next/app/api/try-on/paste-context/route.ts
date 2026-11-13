@@ -137,7 +137,14 @@ async function mint(request: NextRequest): Promise<Response> {
         if (shopProof.shopProof !== 'proven') return json({ error: 'shop_proof_pending' }, 403);
       }
       // The shop is proven (now or before): that is all a proof request asks.
-      if (proof) return json({ proven: true } satisfies PasteProofResponse);
+      if (proof) {
+        // This verified render is as good a signal as a Try-On one. Without
+        // it a shop proven from Store Chat's request was never given its
+        // free plan, and with no plan no Try-On render followed. Never
+        // changes the answer: the proof stands either way.
+        await recordPasteSignal(site.id, origin, { signed: true });
+        return json({ proven: true } satisfies PasteProofResponse);
+      }
     }
     // Try-On runs only where our server confirmed this site's code: the
     // proven shop host, or a domain whose page it found the snippet on.

@@ -12,7 +12,7 @@ import { displayCurrencyFor, isCurrency, plansForCurrency, type Currency } from 
 import { intlLocale } from '@/lib/copy/rules';
 import { addStoreDays, startOfStoreDay } from '@/lib/time/store-day';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
-import type { PlanCopy } from './plan-copy';
+import type { NoPlanReason, PlanCopy } from './plan-copy';
 import { dayMonth } from './today-model';
 
 const DAY = 86_400_000;
@@ -43,6 +43,12 @@ export type PlanFacts = {
   currency: Currency;
   /** When each look of the last three cycles was made, test looks left out. */
   looks: number[];
+  /** Store Chat's AI replies a day for this store (messenger/ai-budget.ts):
+   *  the same on every plan. Null when it could not be read, and the cards
+   *  then say that the daily limit could not be read. */
+  chatRepliesPerDay?: number | null;
+  /** Why the store has no plan, for its next step. Read only while it has none. */
+  noPlanReason?: NoPlanReason;
 };
 
 export type BadgeTone = 'ok' | 'attention' | 'danger';
@@ -74,8 +80,14 @@ export type PlanView = {
   chart: PlanChart | null;
   meter: { used: number; limit: number; label: string } | null;
   plan: { name: string; status: string; tone: BadgeTone; price: string | null; line: string | null; renews: string | null } | null;
+  /** In place of `plan` for a store with none: why, and the one next step.
+   *  `call` books a call; `connect` opens the store's connection. */
+  noPlan: { status: string; body: string; action: string; kind: 'connect' | 'call' } | null;
   cycles: { rows: Array<{ label: string; used: number; current: boolean }>; limit: number; limitLabel: string } | null;
-  plans: Array<{ key: string; name: string; price: string; looks: string; current: boolean }>;
+  /** `current` marks the plan the store holds now. It follows the same
+   *  entitlement as the usage card, so a store whose plan is not active (or
+   *  that has none) never reads "Plan not active" beside "Your plan". */
+  plans: Array<{ key: string; name: string; price: string; looks: string; chat: string; current: boolean }>;
 };
 
 function shortDate(at: number, locale: SiteLocale, timeZone: string): string {
@@ -139,11 +151,14 @@ export function buildPlanView(facts: PlanFacts, copy: PlanCopy, locale: SiteLoca
   const runOutAt = perDay > 0 && left > 0 ? now + (left / perDay) * DAY : null;
   const runsOut = hasCycle && runOutAt !== null && runOutAt < end;
 
+  // No subscription at all, as distinct from one that lapsed.
+  const noPlan = plan.status === 'none';
+
   let badge: PlanView['headline']['badge'] = null;
   let hides: string | null = null;
   if (!active && !plan.available) {
     badge = { tone: 'danger', label: copy.planNotActive };
-    hides = copy.hiddenPlan;
+    hides = noPlan ? copy.hiddenNoPlan : copy.hiddenPlan;
   } else if (left <= 0) {
     badge = { tone: 'danger', label: copy.outOfLooks };
     hides = reset ? copy.hiddenUntil(reset) : copy.hiddenPlan;
@@ -230,10 +245,20 @@ export function buildPlanView(facts: PlanFacts, copy: PlanCopy, locale: SiteLoca
       }
     : null;
 
+  const chatReplies = facts.chatRepliesPerDay;
+  const chat =
+    chatReplies == null ? copy.storeChatLimitUnknown : chatReplies > 0 ? copy.storeChatLimit(chatReplies) : copy.storeChatTeamOnly;
+  const reason = facts.noPlanReason ?? 'ask';
+
   return {
     headline: {
-      left: copy.left(left),
-      sub: reset ? copy.ofResets(String(plan.rendersIncluded), reset) : copy.of(String(plan.rendersIncluded)),
+      // "0 left of 0" says nothing to a store that has no plan to count against.
+      left: noPlan ? copy.noLooksYet : copy.left(left),
+      sub: noPlan
+        ? copy.notStarted
+        : reset
+          ? copy.ofResets(String(plan.rendersIncluded), reset)
+          : copy.of(String(plan.rendersIncluded)),
       added: plan.topUpCreditsRemaining > 0 ? copy.addedIncluded(plan.topUpCreditsRemaining) : null,
       badge,
     },
@@ -251,13 +276,17 @@ export function buildPlanView(facts: PlanFacts, copy: PlanCopy, locale: SiteLoca
           renews: reset && active ? copy.renewsOn(reset) : null,
         }
       : null,
+    noPlan: noPlan
+      ? { status: copy.status.none, body: copy.noPlan[reason].body, action: copy.noPlan[reason].action, kind: reason === 'connect' ? 'connect' : 'call' }
+      : null,
     cycles,
     plans: listedPlans(facts.plans, current, currency).map((item) => ({
       key: item.planKey,
       name: item.name,
       price: planPrice(item, currency, copy, locale),
       looks: copy.looksPer(item.rendersIncluded, item.periodUnit, item.periodCount),
-      current: item.planKey === plan.planKey,
+      chat,
+      current: active && item.planKey === plan.planKey,
     })),
   };
 }

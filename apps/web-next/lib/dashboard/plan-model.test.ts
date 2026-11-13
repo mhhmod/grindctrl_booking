@@ -158,11 +158,50 @@ describe('the plan, the last three cycles and the plans', () => {
   });
 
   it('lists the active plans in their order, marking the current one', () => {
-    expect(buildPlanView(facts(), en, 'en').plans).toEqual([
-      { key: 'free-v1', name: 'Free', price: '$0 a month', looks: '15 looks a month', current: false },
-      { key: 'launch-v1', name: 'Launch', price: '$15 a month', looks: '150 looks a month', current: false },
-      { key: 'growth-v1', name: 'Growth', price: '$29 a month', looks: '350 looks a month', current: true },
+    const chat = 'Store Chat: up to 2,000 AI replies a day';
+    expect(buildPlanView(facts({ chatRepliesPerDay: 2000 }), en, 'en').plans).toEqual([
+      { key: 'free-v1', name: 'Free', price: '$0 a month', looks: '15 looks a month', chat, current: false },
+      { key: 'launch-v1', name: 'Launch', price: '$15 a month', looks: '150 looks a month', chat, current: false },
+      { key: 'growth-v1', name: 'Growth', price: '$29 a month', looks: '350 looks a month', chat, current: true },
     ]);
+  });
+
+  /* The usage card and the list read one entitlement. Before, the list
+     compared plan keys alone, so a plan that was not active still read
+     "Your plan" beside "Plan not active". */
+  it.each([
+    ['expired', { status: 'expired', available: false }],
+    ['cancelled', { status: 'cancelled', available: false }],
+    ['none', { status: 'none', available: false, planKey: null, planName: null, rendersIncluded: 0, totalCreditsRemaining: 0,
+      currentPeriodStart: null, currentPeriodEnd: null }],
+  ] as const)('never marks a plan as the store’s own while the usage card says the plan is not active (%s)', (_status, plan) => {
+    const view = buildPlanView(facts({ looks: [] }, plan), en, 'en');
+    expect(view.headline.badge).toEqual({ tone: 'danger', label: 'Plan not active' });
+    expect(view.plans.filter((item) => item.current)).toEqual([]);
+  });
+
+  it('marks the plan a store holds in its grace period, which the usage card still counts', () => {
+    const view = buildPlanView(facts({}, { status: 'grace' }), en, 'en');
+    expect(view.plans.filter((item) => item.current).map((item) => item.key)).toEqual(['growth-v1']);
+    expect(view.noPlan).toBeNull();
+  });
+
+  it('gives a store with no plan a reason and one next step, in both languages, in place of "0 left of 0"', () => {
+    const none = { status: 'none', available: false, planKey: null, planName: null, rendersIncluded: 0, totalCreditsRemaining: 0,
+      currentPeriodStart: null, currentPeriodEnd: null } as const;
+    const view = buildPlanView(facts({ looks: [], noPlanReason: 'connect' }, none), en, 'en');
+    expect(view.headline).toEqual({ left: 'No looks yet', sub: 'Your plan has not started.', added: null,
+      badge: { tone: 'danger', label: 'Plan not active' } });
+    expect(view.hides).toBe('The Try it on button stays hidden until your plan starts.');
+    expect(view.plan).toBeNull();
+    expect(view.noPlan).toEqual({ status: 'No plan', kind: 'connect', action: 'Check my store connection',
+      body: 'Your Free plan starts by itself once we confirm our code on your store. There is nothing to pay or choose.' });
+    expect(buildPlanView(facts({ looks: [], noPlanReason: 'taken' }, none), en, 'en').noPlan).toMatchObject({ kind: 'call', action: 'Talk to us to start a plan' });
+    // No reason given reads as the safe one: the call.
+    expect(buildPlanView(facts({ looks: [] }, none), en, 'en').noPlan).toMatchObject({ kind: 'call' });
+    const arabic = buildPlanView(facts({ looks: [], noPlanReason: 'connect' }, none), ar, 'ar');
+    expect(arabic.headline.left).toBe('لا إطلالات بعد');
+    expect(arabic.noPlan).toMatchObject({ status: 'لا باقة', action: 'تحقق من ربط متجري' });
   });
 
   it('keeps a store on a retired plan in the list, in place of the plan that replaced it', () => {

@@ -20,6 +20,7 @@ import { SIGNED_OUT_PATH } from '@/lib/auth/redirect';
 import type { DashboardPermissionKey, DashboardPermissionSet } from '@/lib/rbac/dashboard-policy';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import classes from './v16-shell.module.css';
+import { StoreSwitcher } from './store-switcher';
 
 /* The v16 dashboard shell (04-dashboard.md), the only shell: every person
    gets it, with or without a store. The nav lists only pages that exist:
@@ -210,48 +211,7 @@ export function V16ShellView({
       </Badge>
     ) : null;
 
-  const storeList = stores.map((store) => (
-    <Menu.Item
-      key={store.key}
-      component="a"
-      href={storeSwitchHref(pathname, store.choice)}
-      leftSection={<span className={classes.storeAvatar} aria-hidden="true">{store.initials}</span>}
-      rightSection={store.current ? <GcIcon name="check" size={16} /> : null}
-      aria-current={store.current ? 'true' : undefined}
-    >
-      <span className={classes.storeText}>
-        <span className={classes.storeName}>{store.label}</span>
-        {store.domain && (
-          <bdi dir="ltr" className={classes.storeDomain}>
-            {store.domain}
-          </bdi>
-        )}
-      </span>
-    </Menu.Item>
-  ));
-
-  const storeSwitcher = current && (
-    <Menu position="bottom-start" width="target" withinPortal>
-      <Menu.Target>
-        <button type="button" className={classes.storeButton} aria-label={copy.switchStore(current.label)}>
-          <span className={classes.storeAvatar} aria-hidden="true">{current.initials}</span>
-          <span className={classes.storeText}>
-            <span className={classes.storeName}>{current.label}</span>
-            {current.domain && (
-              <bdi dir="ltr" className={classes.storeDomain}>
-                {current.domain}
-              </bdi>
-            )}
-          </span>
-          <GcIcon name="sel" size={16} />
-        </button>
-      </Menu.Target>
-      <Menu.Dropdown>
-        <Menu.Label>{copy.yourStores}</Menu.Label>
-        {storeList}
-      </Menu.Dropdown>
-    </Menu>
-  );
+  const storeSwitcher = <StoreSwitcher stores={stores} locale={locale} pathname={pathname} />;
 
   const personMenuItems = (
     <>
@@ -335,20 +295,7 @@ export function V16ShellView({
           <ActionIcon variant="subtle" color="gray" size={40} aria-label={copy.menu} onClick={() => setDrawerOpen(true)}>
             <GcIcon name="menu" size={20} />
           </ActionIcon>
-          {current && (
-            <Menu position="bottom-start" withinPortal>
-              <Menu.Target>
-                <button type="button" className={classes.topbarStore} aria-label={copy.switchStore(current.label)}>
-                  <span className={classes.storeName}>{current.label}</span>
-                  <GcIcon name="sel" size={16} />
-                </button>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Label>{copy.yourStores}</Menu.Label>
-                {storeList}
-              </Menu.Dropdown>
-            </Menu>
-          )}
+          {current && <StoreSwitcher stores={stores} locale={locale} pathname={pathname} compact />}
         </header>
 
         <main id="v16-main" tabIndex={-1} className={classes.main}>
@@ -418,7 +365,14 @@ export function V16ShellView({
               aria-current={store.current ? 'true' : undefined}
             >
               <span className={classes.storeAvatar} aria-hidden="true">{store.initials}</span>
-              <span className={classes.navLabel}>{store.label}</span>
+              <span className={classes.storeText}>
+                <span className={classes.storeName}>{store.label}</span>
+                {store.domain && (
+                  <bdi dir="ltr" className={classes.storeDomain}>
+                    {store.domain}
+                  </bdi>
+                )}
+              </span>
               {store.current && <GcIcon name="check" size={16} />}
             </a>
           ))}

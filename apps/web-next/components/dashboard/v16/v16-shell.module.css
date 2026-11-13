@@ -98,6 +98,14 @@
   min-width: 0;
 }
 
+.storeDropdown {
+  max-inline-size: calc(100vw - 2rem);
+}
+
+.storeDropdown :global(.mantine-Menu-itemLabel) {
+  min-inline-size: 0;
+}
+
 .storeName {
   overflow: hidden;
   font-size: 14px;
@@ -343,7 +351,7 @@ a.meter:focus-visible {
   align-items: center;
   gap: 8px;
   min-width: 0;
-  min-height: 40px;
+  min-height: 44px;
   padding-inline: 8px;
   border: 0;
   border-radius: var(--gc-radius-input);

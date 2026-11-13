@@ -52,6 +52,9 @@ async function as<T>(role: 'authenticated' | 'service_role', work: () => Promise
 
 let legacy: Record<string, string>;
 let provenBefore: string;
+/** A shop proven before 20261113_paste_shop_free_plan.sql: proven, no plan. */
+let stuckShop: string;
+const claimShopPlan = (id: string) => one<string>('select claim_paste_shop_free_plan($1) as value', [id]);
 /** What our server does after its fetch found this site's snippet on the page. */
 const verify = (id: string, domainId: string) => op(id, 'verify', null, domainId, null);
 const grant = (id: string, domain: string, apex = domain) =>
@@ -104,6 +107,15 @@ beforeAll(async () => {
   const disconnect = await read('supabase/20261111_paste_disconnect.sql');
   await db.exec(disconnect);
   await db.exec(disconnect);
+  // The deadlock 20261113 fixes: the signed render came before the proof,
+  // so nothing granted the plan, and every later signal was unsigned.
+  stuckShop = await site();
+  await enable(stuckShop, 'shopify', 'stuck.myshopify.com');
+  await prove(stuckShop, 'stuck.myshopify.com');
+  await signal(stuckShop, 'stuck.myshopify.com', 'stuck.myshopify.com');
+  const shopPlan = await read('supabase/20261113_paste_shop_free_plan.sql');
+  await db.exec(shopPlan);
+  await db.exec(shopPlan);
 }, 60_000);
 afterAll(async () => { await db?.close(); });
 
@@ -274,28 +286,73 @@ describe('Shopify shop proof', () => {
 });
 
 describe('free plan', () => {
-  it('grants a Shopify paste store only from a signed render after proof, claiming the shop and its storefront apex', async () => {
+  it('grants a Shopify paste store its plan in the step that proves the shop, with the render arriving before the proof', async () => {
     const merchant = await site();
     await enable(merchant, 'shopify', 'freeplan.myshopify.com');
-    const storefront = await op(merchant, 'add', 'freeplan-store.example');
+    // The signed render that completes the proof arrives while the shop is
+    // still pending: it earns nothing by itself.
     expect(await signal(merchant, 'freeplan.myshopify.com', 'freeplan.myshopify.com', true)).toBe('ignored');
-    await prove(merchant, 'freeplan.myshopify.com');
+    expect(await render(merchant, 'freeplan.myshopify.com')).toBe('recorded');
+    expect(await subscribed(merchant)).toBe(false);
 
-    expect(await signal(merchant, 'freeplan.myshopify.com', 'freeplan.myshopify.com')).toBe('recorded');
-    // The storefront domain counts only once our server found the code there.
+    // No signal follows the proof: the proof itself claims the plan.
+    expect(await proveOnly(merchant, 'freeplan.myshopify.com')).toBe('proven');
+    expect(await subscribed(merchant)).toBe(true);
+    expect(await apexes(merchant)).toEqual(['freeplan.myshopify.com']);
+    expect(await proveOnly(merchant, 'freeplan.myshopify.com')).toBe('proven');
+    expect(await signal(merchant, 'freeplan.myshopify.com', 'freeplan.myshopify.com')).toBe('granted');
+    expect((await connection(merchant)).last_seen_at).not.toBeNull();
+
+    // The storefront domain counts only once our server found the code
+    // there; then it is claimed with the shop.
+    const storefront = await op(merchant, 'add', 'freeplan-store.example');
     expect(await signal(merchant, 'freeplan-store.example', 'freeplan-store.example', true)).toBe('unverified');
     expect(await history('freeplan-store.example')).toBeNull();
     await verify(merchant, storefront.domain!.id);
-    expect(await signal(merchant, 'freeplan-store.example', 'freeplan-store.example')).toBe('recorded');
-    expect((await connection(merchant)).last_seen_at).not.toBeNull();
-    expect(await subscribed(merchant)).toBe(false);
+    expect(await signal(merchant, 'freeplan-store.example', 'freeplan-store.example')).toBe('granted');
+    expect(await apexes(merchant)).toEqual(['freeplan-store.example', 'freeplan.myshopify.com']);
     expect(await signal(merchant, 'myshopify.com', 'myshopify.com', true)).toBe('ignored');
     expect(await signal(merchant, 'freeplan.myshopify.com', 'myshopify.com', true)).toBe('ignored');
+  });
 
-    expect(await signal(merchant, 'freeplan-store.example', 'freeplan-store.example', true)).toBe('granted');
+  it('heals a shop that was proven without a plan from its next signal, signed or not', async () => {
+    expect((await connection(stuckShop)).shop_proven_at).not.toBeNull();
+    expect(await subscribed(stuckShop)).toBe(false);
+    expect(await signal(stuckShop, 'stuck.myshopify.com', 'stuck.myshopify.com')).toBe('granted');
+    expect(await subscribed(stuckShop)).toBe(true);
+    expect(await apexes(stuckShop)).toEqual(['stuck.myshopify.com']);
+  });
+
+  it('claims for a proven shop only, and a claim that fails never undoes the proof', async () => {
+    const pending = await site(); const web = await site(); const merchant = await site();
+    await enable(pending, 'shopify', 'unproven.myshopify.com');
+    await enable(web, 'website');
+    expect(await claimShopPlan(pending)).toBe('ignored');
+    expect(await claimShopPlan(web)).toBe('ignored');
+    expect(await claimShopPlan(await site())).toBe('ignored');
+    expect(await subscribed(pending)).toBe(false);
+
+    // Proven while the plan could not be written: the proof stands.
+    await enable(merchant, 'shopify', 'claimlater.myshopify.com');
+    await db.exec(`alter function ensure_free_tryon_subscription(text) rename to ensure_free_tryon_subscription_real;
+      create function ensure_free_tryon_subscription(p text) returns void language plpgsql as $$ begin raise exception 'ledger down'; end $$;`);
+    try {
+      expect(await prove(merchant, 'claimlater.myshopify.com')).toBe('proven');
+    } finally {
+      await db.exec(`drop function ensure_free_tryon_subscription(text);
+        alter function ensure_free_tryon_subscription_real(text) rename to ensure_free_tryon_subscription;`);
+    }
+    expect(await connection(merchant)).toMatchObject({ status: 'active', shop_check_outcome: 'proven' });
+    expect(await subscribed(merchant)).toBe(false);
+    expect(await apexes(merchant)).toEqual([]);
+    // A visit to a storefront domain not verified yet still claims the shop's plan.
+    await op(merchant, 'add', 'claimlater-store.example');
+    expect(await signal(merchant, 'claimlater-store.example', 'claimlater-store.example')).toBe('unverified');
     expect(await subscribed(merchant)).toBe(true);
-    expect(await apexes(merchant)).toEqual(['freeplan-store.example', 'freeplan.myshopify.com']);
-    expect(await signal(merchant, 'freeplan.myshopify.com', 'freeplan.myshopify.com', true)).toBe('granted');
+    expect(await history('claimlater-store.example')).toBeNull();
+    // So does the dashboard, any number of times.
+    expect(await claimShopPlan(merchant)).toBe('granted');
+    expect(await apexes(merchant)).toEqual(['claimlater.myshopify.com']);
   });
 
   it('grants each apex once, even after the first site is deleted', async () => {
@@ -321,10 +378,32 @@ describe('free plan', () => {
     const earlier = await site(); const later = await site();
     await enable(earlier, 'shopify', 'reused.myshopify.com');
     await prove(earlier, 'reused.myshopify.com');
-    expect(await signal(earlier, 'reused.myshopify.com', 'reused.myshopify.com', true)).toBe('granted');
+    expect(await subscribed(earlier)).toBe(true);
     await enable(later, 'shopify', 'reused.myshopify.com');
-    await prove(later, 'reused.myshopify.com');
+    // The proof still succeeds; only the second free plan is refused.
+    expect(await prove(later, 'reused.myshopify.com')).toBe('proven');
+    expect(await subscribed(later)).toBe(false);
+    expect(await claimShopPlan(later)).toBe('apex_taken');
     expect(await signal(later, 'reused.myshopify.com', 'reused.myshopify.com', true)).toBe('apex_taken');
+    expect(await signal(later, 'reused.myshopify.com', 'reused.myshopify.com')).toBe('apex_taken');
+    expect(await history('reused.myshopify.com')).toBe(earlier);
+  });
+
+  it('refuses a Shopify shop whose verified storefront domain already earned a free plan elsewhere', async () => {
+    const website = await site(); const shop = await site();
+    await enable(website, 'website');
+    const first = await op(website, 'add', 'twice.example');
+    await verify(website, first.domain!.id);
+    expect(await signal(website, 'twice.example', 'twice.example')).toBe('granted');
+
+    await enable(shop, 'shopify', 'twice.myshopify.com');
+    const claim = await op(shop, 'add', 'shop.twice.example');
+    await verify(shop, claim.domain!.id);
+    expect(await prove(shop, 'twice.myshopify.com')).toBe('proven');
+    expect(await subscribed(shop)).toBe(false);
+    expect(await signal(shop, 'twice.myshopify.com', 'twice.myshopify.com', true)).toBe('apex_taken');
+    expect(await history('twice.myshopify.com')).toBeNull();
+    expect(await history('twice.example')).toBe(website);
   });
 });
 
@@ -482,6 +561,7 @@ describe('trigger guards and grants', () => {
       ['select begin_paste_shop_check($1,$2)', [s, 'x.myshopify.com']],
       ['select finish_paste_shop_check($1,$2,$3)', [s, 'x.myshopify.com', 'not_found']],
       ['select record_paste_install_signal($1,$2,$3,true)', [s, 'a.example', 'a.example']],
+      ['select claim_paste_shop_free_plan($1)', [s]],
       ['select paste_domain_operation($1,$2,$3,null,null)', [s, 'add', 'a.example']],
     ] as const) {
       expect(await as('authenticated', () => db.query(call[0], [...call[1]]).then(() => undefined, (e: { code?: string }) => e.code))).toBe('42501');
@@ -567,11 +647,11 @@ describe('Shopify app installed on the shop', () => {
     await prove(merchant, 'arrives.myshopify.com');
     // A later claim on a proven shop is still accepted, as pending.
     expect(await enable(pending, 'shopify', 'arrives.myshopify.com')).toBe('enabled');
-    expect(await signal(merchant, 'arrives.myshopify.com', 'arrives.myshopify.com')).toBe('recorded');
+    expect(await signal(merchant, 'arrives.myshopify.com', 'arrives.myshopify.com')).toBe('granted');
 
     await db.query("insert into shopify_installations(shop_domain, app_client_id, status) values ('arrives.myshopify.com','app','active')");
     expect(await signal(merchant, 'arrives.myshopify.com', 'arrives.myshopify.com', true)).toBe('ignored');
-    expect(await subscribed(merchant)).toBe(false);
+    expect(await claimShopPlan(merchant)).toBe('ignored');
     expect(await proveOnly(pending, 'arrives.myshopify.com')).toBe('shopify_app_installed');
     expect(await render(pending, 'arrives.myshopify.com')).toBe('shopify_app_installed');
     expect(await begin(pending, 'arrives.myshopify.com')).toBe('shopify_app_installed');

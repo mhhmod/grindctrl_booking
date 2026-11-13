@@ -31,7 +31,8 @@ describe('buildShellStores', () => {
     expect(stores.map((s) => [s.label, s.domain, s.current])).toEqual([
       ['Maison Noor', 'maison-noor.myshopify.com', true],
       ['kids', 'kids.myshopify.com', false],
-      ['My store', 'maison.example', false],
+      // Never the "My store" placeholder while the address is known.
+      ['maison.example', 'maison.example', false],
     ]);
     expect(stores.map((s) => s.choice)).toEqual([
       { shop: 'maison-noor.myshopify.com' },
@@ -42,7 +43,31 @@ describe('buildShellStores', () => {
 
   it('marks a Store Chat site on another website as current when it is the active store', () => {
     const stores = buildShellStores(shops, sites, { shopDomain: null, siteId: SITE_WEB });
-    expect(stores.filter((s) => s.current).map((s) => s.label)).toEqual(['My store']);
+    expect(stores.filter((s) => s.current).map((s) => s.label)).toEqual(['maison.example']);
+  });
+
+  /* The owner's phone: a Shopify store connected with pasted code read "My
+     store" everywhere, because pasted code never writes widget_sites.domain. */
+  it('names a store by its address instead of the "My store" placeholder, and keeps a name the merchant typed', () => {
+    const SITE_PASTE = '33333333-3333-4333-8333-333333333333';
+    const SITE_NAMED = '44444444-4444-4444-8444-444444444444';
+    const SITE_NEW = '55555555-5555-4555-8555-555555555555';
+    const stores = buildShellStores([], [
+      { id: SITE_PASTE, name: 'My store', domain: null, storeDomain: 'harmong-eg.myshopify.com' },
+      { id: SITE_NAMED, name: 'Harmong', domain: null, storeDomain: 'harmong-eg.myshopify.com' },
+      { id: SITE_NEW, name: 'My store', domain: null, storeDomain: null },
+      { id: SITE_WEB, name: ' my STORE ', domain: 'www.maison.example' },
+    ], { shopDomain: null, siteId: SITE_PASTE });
+    expect(stores.map((s) => [s.label, s.domain, s.initials])).toEqual([
+      ['harmong-eg', 'harmong-eg.myshopify.com', 'HE'],
+      ['Harmong', 'harmong-eg.myshopify.com', 'HA'],
+      // Nothing is known about it yet, so the placeholder is all there is.
+      ['My store', null, 'MS'],
+      ['maison.example', 'www.maison.example', 'ME'],
+    ]);
+    // A shop whose Store Chat site still has the placeholder name is named after the shop.
+    expect(buildShellStores([shops[1]], [{ id: SITE_SHOP, name: 'My store', domain: 'kids.myshopify.com' }],
+      { shopDomain: 'kids.myshopify.com', siteId: SITE_SHOP })[0]).toMatchObject({ label: 'kids', domain: 'kids.myshopify.com' });
   });
 
   it('gives each store initials', () => {

@@ -52,25 +52,54 @@ function isPasswordPage(response: { url: string; contentType: string; body: Buff
   return response.contentType.includes('html') && findPasswordForm(response.body.toString('utf8')) !== null;
 }
 
-function readFailureOutcome(failure: string, status: number | undefined): Exclude<ProductsOutcome, 'ok'> {
-  if (failure !== 'status') return 'unreachable';
+/** What an HTTP status that is not the catalogue means for the merchant. */
+function statusOutcome(status: number | undefined): Exclude<ProductsOutcome, 'ok'> {
   if (status === 429) return 'rate_limited';
   return status === 404 || status === 410 ? 'not_found' : 'unreachable';
+}
+
+/** The statuses a Shopify storefront serves its password page with besides
+ *  200, the same three scanShopStorefront reads. */
+const PASSWORD_PAGE_STATUSES = [401, 403] as const;
+
+type CatalogueFetchOptions = Pick<Parameters<typeof fetchPublicPage>[1], 'transport' | 'lookup' | 'allowedHost'>;
+
+/** Whether the store's own home page is its password page. Asked once, only
+ *  after the catalogue answered with a status that explains nothing, so "we
+ *  couldn't reach your store" is never said of a store that is simply closed. */
+async function storefrontBehindPassword(base: string, options: CatalogueFetchOptions): Promise<boolean> {
+  const home = await fetchPublicPage(new URL('/', base).href, { ...options, accept: 'text/html', maxBytes: 512 * 1024, timeoutMs: 5_000,
+    passStatuses: PASSWORD_PAGE_STATUSES });
+  return !('failure' in home) && isPasswordPage(home);
 }
 
 export async function fetchCatalogue(platform: Platform, base: string, trusted: (url: URL) => boolean, options: Pick<Parameters<typeof fetchPublicPage>[1], 'transport' | 'lookup'> = {}): Promise<ProductContext[]> {
   const unique = new Map<string, ProductContext>();
   const perPage = platform === 'woocommerce' ? 100 : 250;
+  const read: CatalogueFetchOptions = { ...options, allowedHost: (host) => trusted(new URL(`https://${host}/`)) };
+  /** A status the catalogue answered with that is not its products. */
+  const refused = async (status: number | undefined, page: number): Promise<CatalogueReadError> => {
+    const outcome = statusOutcome(status);
+    return outcome === 'unreachable' && platform === 'shopify' && page === 1 && await storefrontBehindPassword(base, read)
+      ? new CatalogueReadError('password_page', 'Catalogue is behind the store password page.')
+      : new CatalogueReadError(outcome, 'Catalogue fetch failed: status');
+  };
   // Page bound holds even if the provider repeats a full page forever.
   for (let page = 1; page <= PRODUCT_LIMIT / perPage; page++) {
     const path = platform === 'woocommerce' ? `/wp-json/wc/store/v1/products?per_page=100&page=${page}` : `/products.json?limit=250&page=${page}`;
     const url = new URL(path, base);
     if (!trusted(url)) throw new CatalogueReadError('unreachable', 'Catalogue domain is not trusted.');
-    const response = await fetchPublicPage(url.href, { ...options, accept: 'application/json', maxBytes: 2 * 1024 * 1024, timeoutMs: 10_000,
-      allowedHost: (host) => trusted(new URL(`https://${host}/`)) });
-    if ('failure' in response) throw new CatalogueReadError(readFailureOutcome(response.failure, response.status), `Catalogue fetch failed: ${response.failure}`);
+    const response = await fetchPublicPage(url.href, { ...read, accept: 'application/json', maxBytes: 2 * 1024 * 1024, timeoutMs: 10_000,
+      // A closed Shopify store may answer 401 or 403 with its password page:
+      // read it, or the real reason is lost and it reads as an outage.
+      passStatuses: platform === 'shopify' ? PASSWORD_PAGE_STATUSES : undefined });
+    if ('failure' in response) {
+      if (response.failure === 'status') throw await refused(response.status, page);
+      throw new CatalogueReadError('unreachable', `Catalogue fetch failed: ${response.failure}`);
+    }
     // A password-protected Shopify store answers /products.json with its password page.
     if (isPasswordPage(response)) throw new CatalogueReadError('password_page', 'Catalogue is behind the store password page.');
+    if (response.status < 200 || response.status > 299) throw await refused(response.status, page);
     if (!response.contentType.includes('json') || response.body.length >= 2 * 1024 * 1024) throw new CatalogueReadError('not_found', 'Invalid or oversized catalogue response.');
     let parsed: ReturnType<typeof parseCataloguePage>;
     try { parsed = parseCataloguePage(JSON.parse(response.body.toString('utf8')), platform, response.url, trusted); }

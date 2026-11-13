@@ -56,6 +56,38 @@ describe('public catalogue sync', () => {
     await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, { transport: redirected, lookup })).rejects.toMatchObject({ outcome: 'password_page' });
     await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, { transport: async () => html(), lookup })).rejects.toMatchObject({ outcome: 'password_page' });
   });
+  /* The owner's store: password protected, and What it knows said "We
+     couldn't reach your store". Any status but 2xx was dropped before the
+     page could be looked at, so a password page served with 401 or 403 (the
+     storefront check reads both) became an outage. */
+  it.each([401, 403])('names a password-protected store whose password page is served with %s, not an unreachable one', async (status) => {
+    const page = '<form action="/password" method="post"><input type="password" name="password"></form>';
+    const transport = vi.fn<StorefrontTransport>(async () => ({ status, location: null, contentType: 'text/html', setCookie: [], body: Buffer.from(page) }));
+    await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, { transport, lookup })).rejects.toMatchObject({ outcome: 'password_page' });
+    // The page itself said so: no second request.
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
+  it('asks the store\'s home page once when the catalogue is refused without a reason, and names the password page it finds', async () => {
+    const page = '<form action="/password" method="post"><input type="password" name="password"></form>';
+    const transport = vi.fn<StorefrontTransport>(async ({ url }) => url.pathname === '/products.json'
+      ? response({ errors: 'Not allowed' }, { status: 403 })
+      : url.pathname === '/password' ? { status: 200, location: null, contentType: 'text/html', setCookie: [], body: Buffer.from(page) }
+        : response('', { status: 302, location: '/password' }));
+    await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, { transport, lookup })).rejects.toMatchObject({ outcome: 'password_page' });
+    expect(transport.mock.calls.map(([request]) => request.url.pathname)).toEqual(['/products.json', '/', '/password']);
+    // An open store that refuses the catalogue stays unreachable, and so does a WooCommerce store (never asked).
+    const open = vi.fn<StorefrontTransport>(async ({ url }) => url.pathname === '/'
+      ? { status: 200, location: null, contentType: 'text/html', setCookie: [], body: Buffer.from('<h1>Shop</h1>') } : response('', { status: 403 }));
+    await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, { transport: open, lookup })).rejects.toMatchObject({ outcome: 'unreachable' });
+    const wooStore = vi.fn<StorefrontTransport>(async () => response('', { status: 403 }));
+    await expect(fetchCatalogue('woocommerce', 'https://shop.example', trusted, { transport: wooStore, lookup })).rejects.toMatchObject({ outcome: 'unreachable' });
+    expect(wooStore).toHaveBeenCalledTimes(1);
+    // The home page is asked on the store's own host only.
+    const foreign = vi.fn<StorefrontTransport>(async ({ url }) => url.pathname === '/'
+      ? response('', { status: 302, location: 'https://foreign.example/password' }) : response('', { status: 503 }));
+    await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, { transport: foreign, lookup })).rejects.toMatchObject({ outcome: 'unreachable' });
+    expect(foreign.mock.calls.every(([request]) => request.url.hostname === 'shop.example')).toBe(true);
+  });
   it('tells a missing, rate limited or unreachable catalogue apart', async () => {
     const status = (code: number) => ({ transport: async () => response('', { status: code }), lookup });
     await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, status(404))).rejects.toMatchObject({ outcome: 'not_found' });

@@ -85,7 +85,7 @@ const arProducts = (n: number) =>
 const en: ChatKnowsCopy = {
   products: 'Products',
   productsRead: (count) => `We read ${count === 1 ? '1 product' : `${count} products`} from your store.`,
-  productsPassword: "Your store has a password page, so we can't read your products yet. We'll read them as soon as it opens.",
+  productsPassword: 'Your store is password protected, so we can read its products once it opens. Store Chat still answers from your pages and notes.',
   productsNotFound:
     "We couldn't find a product list on your store. Add your key products as a page or a note, and the assistant will answer from them.",
   productsUnreachable: "We couldn't reach your store to read its products. We'll try again tonight, or you can sync now.",
@@ -150,7 +150,7 @@ const en: ChatKnowsCopy = {
 const ar: ChatKnowsCopy = {
   products: 'المنتجات',
   productsRead: (count) => `قرأنا ${arProducts(count)} من متجرك.`,
-  productsPassword: 'متجرك محمي بصفحة كلمة مرور، لذلك لا نستطيع قراءة منتجاتك بعد. سنقرؤها فور فتح المتجر.',
+  productsPassword: 'متجرك محمي بكلمة مرور، لذلك سنقرأ منتجاته فور فتحه. دردشة المتجر تواصل الإجابة من صفحاتك وملاحظاتك.',
   productsNotFound: 'لم نجد قائمة منتجات في متجرك. أضف أهم منتجاتك كصفحة أو ملاحظة، وسيجيب المساعد منها.',
   productsUnreachable: 'تعذّر الوصول إلى متجرك لقراءة منتجاته. سنحاول مجدداً الليلة، أو يمكنك المزامنة الآن.',
   productsRateLimited: 'طلب متجرك منا التمهّل، فلم نتمكن من قراءة منتجاتك. سنحاول مجدداً الليلة، أو يمكنك المزامنة الآن.',
@@ -160,7 +160,7 @@ const ar: ChatKnowsCopy = {
   tabsLabel: 'دردشة المتجر',
   whatItKnows: 'ما يعرفه',
   setUp: 'الإعداد',
-  liveOn: (domain) => `تعمل على ${domain}`,
+  liveOn: (domain) => `تعمل على \u2068${domain}\u2069`,
   live: 'تعمل على متجرك',
   hidden: 'مخفية عن المتسوقين',
   notInstalled: 'لم يُثبَّت بعد',

@@ -44,6 +44,11 @@ function draw(entries: KnowledgeEntry[], locale: 'en' | 'ar' = 'en', productsSta
   );
 }
 
+/** The Products card: its heading's tile. */
+function productsCard(name = 'Products'): HTMLElement {
+  return screen.getByRole('heading', { name }).parentElement!.parentElement!;
+}
+
 beforeEach(() => {
   for (const fn of Object.values(actions)) fn.mockReset().mockResolvedValue({ ok: true });
 });
@@ -54,7 +59,9 @@ describe('the v16 Store Chat page, What it knows', () => {
     draw([]);
     fireEvent.click(screen.getByRole('button', { name: 'Sync products now' }));
     await waitFor(() => expect(actions.syncKnowledgeProducts).toHaveBeenCalledWith(SITE));
-    expect(await screen.findByText('12 products synced.')).toBeInTheDocument();
+    // In the Products card, in the words the card uses after a refresh, and nowhere else.
+    expect(await within(productsCard()).findByText('We read 12 products from your store.')).toBeInTheDocument();
+    expect(screen.getAllByText(/12 products/)).toHaveLength(1);
   });
   it('says what the last read of the store found, and why not when it could not', () => {
     const at = '2026-10-22T03:00:00Z';
@@ -63,7 +70,9 @@ describe('the v16 Store Chat page, What it knows', () => {
     expect(screen.getByText('We read 42 products from your store.')).toBeInTheDocument();
     unmount();
     const waiting = draw([], 'en', { outcome: 'password_page', count: 0, at });
-    expect(screen.getByText("Your store has a password page, so we can't read your products yet. We'll read them as soon as it opens.")).toBeInTheDocument();
+    expect(screen.getByText('Your store is password protected, so we can read its products once it opens. Store Chat still answers from your pages and notes.')).toBeInTheDocument();
+    // The merchant can still ask for a read.
+    expect(screen.getByRole('button', { name: 'Sync products now' })).toBeInTheDocument();
     waiting.unmount();
     draw([], 'ar', { outcome: 'password_page', count: 0, at });
     expect(screen.getByText(getChatKnowsCopy('ar').productsPassword)).toBeInTheDocument();
@@ -72,7 +81,38 @@ describe('the v16 Store Chat page, What it knows', () => {
     actions.syncKnowledgeProducts.mockResolvedValue({ ok: true, count: 0, outcome: 'password_page' });
     draw([]);
     fireEvent.click(screen.getByRole('button', { name: 'Sync products now' }));
-    expect(await screen.findByRole('status')).toHaveTextContent("Your store has a password page");
+    expect(await within(productsCard()).findByText(/Your store is password protected/)).toHaveAttribute('aria-live', 'polite');
+  });
+  /* The owner's phone: "We couldn't reach your store to read its products"
+     stood above Pages and notes and again inside the Products card. */
+  it.each(['en', 'ar'] as const)('says why the products could not be read once, in the Products card, after a sync by hand (%s)', async (locale) => {
+    const copy = getChatKnowsCopy(locale);
+    actions.syncKnowledgeProducts.mockResolvedValue({ ok: true, count: 0, outcome: 'unreachable' });
+    draw([], locale, { outcome: 'unreachable', count: 0, at: '2026-10-22T03:00:00Z' });
+    expect(screen.getAllByText(copy.productsUnreachable)).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: copy.syncProducts }));
+    await waitFor(() => expect(actions.syncKnowledgeProducts).toHaveBeenCalledWith(SITE));
+    await waitFor(() => expect(screen.getByRole('button', { name: copy.syncProducts })).not.toHaveAttribute('data-loading'));
+    expect(screen.getAllByText(copy.productsUnreachable)).toHaveLength(1);
+    expect(within(productsCard(copy.products)).getByText(copy.productsUnreachable)).toBeInTheDocument();
+    // The notice above Pages and notes stays for the pages and notes.
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+  it('shows a newer answer from the sync until the page brings its own, and says so when the sync failed', async () => {
+    actions.syncKnowledgeProducts.mockResolvedValue({ ok: true, count: 0, outcome: 'password_page' });
+    const view = draw([], 'en', { outcome: 'unreachable', count: 0, at: '2026-10-22T03:00:00Z' });
+    fireEvent.click(screen.getByRole('button', { name: 'Sync products now' }));
+    expect(await within(productsCard()).findByText(/password protected/)).toBeInTheDocument();
+    expect(screen.queryByText(getChatKnowsCopy('en').productsUnreachable)).not.toBeInTheDocument();
+    // The refresh the action triggers arrives with the page's own line.
+    const copy = getChatKnowsCopy('en');
+    view.rerender(<V16ChatKnows locale="en" head={buildChatHead({ active: true, domain: 'maisonnoor.com', solved7: 120, handedOff7: 20 }, copy)}
+      pages={buildPagesAndNotes([], copy, NOW)} products={buildProductsLine({ outcome: 'ok', count: 7, at: '2026-10-23T03:00:00Z' }, copy)}
+      siteId={SITE} actions={actions as unknown as KnowledgeActions} />);
+    expect(within(productsCard()).getByText('We read 7 products from your store.')).toBeInTheDocument();
+    actions.syncKnowledgeProducts.mockRejectedValue(new Error('network'));
+    fireEvent.click(screen.getByRole('button', { name: 'Sync products now' }));
+    expect(await within(productsCard()).findByText(copy.actionFailed)).toBeInTheDocument();
   });
   it('explains skipped platforms in Arabic using the existing status line', async () => {
     actions.syncKnowledgeProducts.mockResolvedValue({ ok: true, count: 0, skipped: true }); draw([], 'ar');
@@ -153,7 +193,7 @@ describe('the v16 Store Chat page, What it knows', () => {
   it('reads in Arabic, and says so when the knowledge could not load', () => {
     const { unmount } = draw([entry('n1', { title: 'العناية بالقماش' })], 'ar');
     expect(screen.getByRole('link', { name: 'ما يعرفه' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByText('تعمل على maisonnoor.com')).toBeInTheDocument();
+    expect(screen.getByText('تعمل على \u2068maisonnoor.com\u2069')).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/[٠-٩]/);
     unmount();
 

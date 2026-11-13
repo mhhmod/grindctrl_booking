@@ -24,6 +24,11 @@ function entry(over: Partial<KnowledgeEntry>): KnowledgeEntry {
 }
 
 describe('the Store Chat head', () => {
+  it('isolates a Latin store address inside the Arabic live badge', () => {
+    const head = buildChatHead({ active: true, domain: 'harmong-eg.myshopify.com', solved7: 0, handedOff7: 0 }, ar);
+    expect(head.badge.label).toBe('تعمل على \u2068harmong-eg.myshopify.com\u2069');
+    expect(head.storeUrl).toBe('https://harmong-eg.myshopify.com');
+  });
   it('says where it is live and how much the assistant answered on its own', () => {
     expect(buildChatHead({ active: true, domain: 'https://MaisonNoor.com/', solved7: 120, handedOff7: 20 }, en)).toEqual({
       badge: { live: true, label: 'Live on maisonnoor.com' },
@@ -75,7 +80,10 @@ describe('the Products line', () => {
       expect(line?.text.length).toBeGreaterThan(20);
       expect(buildProductsLine({ outcome, count: 0, at }, ar)?.text).toMatch(/[؀-ۿ]/);
     }
-    expect(buildProductsLine({ outcome: 'password_page', count: 0, at }, en)?.text).toContain("We'll read them as soon as it opens.");
+    // The real reason in plain words, and what still works meanwhile; never "couldn't reach".
+    expect(buildProductsLine({ outcome: 'password_page', count: 0, at }, en)?.text).toBe(
+      'Your store is password protected, so we can read its products once it opens. Store Chat still answers from your pages and notes.');
+    expect(buildProductsLine({ outcome: 'password_page', count: 0, at }, ar)?.text).not.toBe(ar.productsUnreachable);
   });
   it('says nothing when no read is recorded', () => {
     expect(buildProductsLine(null, en)).toBeNull();

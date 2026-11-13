@@ -7,6 +7,8 @@ import { canonicalShopDomain, findSiteByDomain, isShopProfileId, shopProfileId, 
 import type { WidgetSiteRow } from './types';
 import { RoleNotAllowedError, roleCan, type DashboardCapability, type DashboardWorkspaceRole } from '@/lib/rbac/dashboard-policy';
 import { listTeamMemberships, teamSiteRoleFor } from '@/lib/rbac/store-role';
+import { adoptStoreNameFromAddress } from '@/lib/dashboard/store-domains';
+import { isPlaceholderStoreName, storeNameFromAddress } from '@/lib/dashboard/store-name';
 
 export { isPlaceholderEmail };
 
@@ -515,7 +517,13 @@ export async function ensureMessengerSite(
         )
         .maybeSingle();
       if (attached.error) throw new Error(`domain attach failed: ${attached.error.message}`);
-      if (attached.data) return toView(attached.data as unknown as Record<string, unknown>);
+      if (attached.data) {
+        const view = toView(attached.data as unknown as Record<string, unknown>);
+        // The store made before its address was known is still "My store".
+        if (!isPlaceholderStoreName(view.name)) return view;
+        await adoptStoreNameFromAddress(view.id, domain);
+        return { ...view, name: storeNameFromAddress(domain) ?? view.name };
+      }
       // CAS lost the race (a concurrent caller attached first) — fall through to the existing insert path below.
     }
   }
@@ -524,7 +532,7 @@ export async function ensureMessengerSite(
     .from('widget_sites')
     .insert({
       workspace_id: workspaceId,
-      name: displayName ?? domain ?? 'My store',
+      name: displayName?.trim() || storeNameFromAddress(domain) || 'My store',
       domain,
       status: 'draft',
       created_by_profile_id: profile.id,

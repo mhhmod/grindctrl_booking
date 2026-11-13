@@ -69,6 +69,24 @@
   font-size: 0.9375rem;
 }
 
+/* A store with no plan: why, then the one next step. */
+.noPlanBody {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.noPlanAction {
+  justify-self: start;
+  max-inline-size: 100%;
+  min-block-size: 44px;
+  block-size: auto;
+}
+
+.noPlanAction :global(.mantine-Button-label) {
+  white-space: normal;
+  text-align: start;
+}
+
 .headRow {
   display: flex;
   flex-wrap: wrap;

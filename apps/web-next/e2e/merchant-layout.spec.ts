@@ -1,9 +1,53 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
+import { getChatKnowsCopy } from '../lib/dashboard/chat-knows-copy';
+import { getShellCopy } from '../lib/dashboard/shell-copy';
 
 test.use({ channel: process.platform === 'win32' ? 'msedge' : undefined, trace: 'off' });
 const shots = process.env.MERCHANT_LAYOUT_SHOTS;
+
+for (const [width, height, locale, theme] of [[390, 844, 'en', 'light'], [320, 568, 'ar', 'dark']] as const) {
+  test(`merchant fixes ${width} ${locale} ${theme}: cards and switcher`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.addInitScript((value) => localStorage.setItem('theme', value), theme);
+    const shot = async (name: string) => {
+      if (!shots) return;
+      await mkdir(shots, { recursive: true });
+      await page.screenshot({ path: path.join(shots, `${name}-${width}x${height}-${locale}-${theme}.png`), fullPage: true, animations: 'disabled' });
+    };
+    await ready(page, 'plan', locale);
+    await expect(page.locator('html')).toHaveAttribute('data-mantine-color-scheme', theme);
+    const cards = page.locator('#plan-list li');
+    await expect(cards).toHaveCount(4);
+    for (const card of await cards.all()) await expect(card).toContainText('2,000');
+    await noOverflow(page);
+    await shot('plan-cards');
+    await ready(page, 'plan-none', locale);
+    await expect(page.locator('#plan-list [data-current=true]')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: locale === 'en' ? 'Check my store connection' : 'تحقق من ربط متجري' })).toBeVisible();
+    await noOverflow(page);
+    await ready(page, 'chat-products', locale);
+    const copy = getChatKnowsCopy(locale);
+    await page.getByRole('button', { name: copy.syncProducts }).click();
+    await expect(page.getByText(copy.productsPassword, { exact: true })).toHaveCount(1);
+    await expect(page.getByText(copy.productsUnreachable, { exact: true })).toHaveCount(0);
+    await noOverflow(page);
+    await shot('products-card');
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.getByRole('button', { name: getShellCopy(locale).switchStore('harmong-eg') }).filter({ visible: true }).click();
+    const menu = page.getByRole('menu');
+    await expect(menu).toBeVisible();
+    for (const host of ['harmong-eg.myshopify.com', 'maison-noor-modest-fashion-and-abayas-boutique.example.com']) {
+      await expect(menu.getByText(host, { exact: true })).toHaveAttribute('dir', 'ltr');
+    }
+    const box = (await menu.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(width);
+    await noOverflow(page);
+    await shot('store-switcher');
+  });
+}
 
 async function ready(page: Page, surface: string, locale: string) {
   await page.goto(`/dev/merchant-layout-check?page=${surface}&locale=${locale}`);
@@ -39,7 +83,7 @@ const heightFor = (width: number) => (width === 320 ? 568 : width >= 768 ? 800 :
 // Every merchant screen in the fixture; state variants carry the awkward data.
 const SCREENS = [
   'today', 'today-calm', 'today-setup', 'tryon', 'tryon-empty', 'tryon-error', 'tryon-setup',
-  'store', 'store-outdated', 'store-new', 'settings', 'plan', 'plan-zero', 'claim', 'onboarding', 'connect', 'connect-code',
+  'store', 'store-outdated', 'store-new', 'settings', 'plan', 'plan-zero', 'plan-none', 'chat-products', 'claim', 'onboarding', 'connect', 'connect-code',
 ];
 
 /* The rules every screen keeps at every width, returned as readable
@@ -220,7 +264,7 @@ for (const width of WIDTHS) {
         const cards = page.locator('#plan-list li');
         await expect(cards).toHaveCount(4);
         for (const card of await cards.all()) {
-          await expect(card).toContainText(locale === 'ar' ? 'دردشة المتجر مشمولة' : 'Store Chat included');
+          await expect(card).toContainText(locale === 'ar' ? 'دردشة المتجر: حتى 2,000 رد' : 'Store Chat: up to 2,000 AI replies a day');
           expect(await card.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(1);
         }
         const planShot = theme === 'dark' && (width === 390 || (width === 1280 && locale === 'en'));
@@ -236,9 +280,12 @@ for (const width of WIDTHS) {
         await ready(page, 'team', locale);
         await noOverflow(page);
         const people = page.locator('section[aria-labelledby="team-people"]');
+        // Only People rows have avatar/name/role columns. The notification
+        // addresses below are a separate nested list, also made of <li>s.
+        const teamRows = people.locator(':scope > ul > li');
         // The address/name track must stay between the avatar and the role,
         // including the null-name email fallback, member Edit and invite actions.
-        const rows = await people.locator('li').evaluateAll((items) => items.map((item) => {
+        const rows = await teamRows.evaluateAll((items) => items.map((item) => {
           const [avatar, who, role] = Array.from(item.children).map((el) => el.getBoundingClientRect());
           const rtl = getComputedStyle(item).direction === 'rtl';
           return {
@@ -265,8 +312,8 @@ for (const width of WIDTHS) {
         if (shots && theme === 'dark' && (width === 390 || (width === 320 && locale === 'ar'))) {
           await mkdir(shots, { recursive: true });
           await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' });
-          await people.locator('li').first().scrollIntoViewIfNeeded();
-          await people.locator('li').first().evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + scrollY - 85));
+          await teamRows.first().scrollIntoViewIfNeeded();
+          await teamRows.first().evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + scrollY - 85));
           await page.screenshot({ path: path.join(shots, `team-${width}x${height}-${locale}-${theme}.png`), animations: 'disabled' });
         }
       });

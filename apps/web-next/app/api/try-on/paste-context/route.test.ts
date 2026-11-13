@@ -332,7 +332,24 @@ describe('pending Shopify shop proof', () => {
       expect(m.signature).toHaveBeenCalledWith(expect.objectContaining({ connection: pending, claims: signed }));
       expect(m.prove).toHaveBeenCalledExactlyOnceWith(pending, { kind: 'render' });
       expect(m.visitor).toHaveBeenCalled(); expect(m.siteLimit).toHaveBeenCalled(); expect(m.network).toHaveBeenCalled();
-      for (const later of [m.active, m.signal, m.launch, m.tryOnHosts]) expect(later).not.toHaveBeenCalled();
+      for (const later of [m.active, m.launch, m.tryOnHosts]) expect(later).not.toHaveBeenCalled();
+    });
+
+    it('sends the signed signal after the proof, so a shop proven from Store Chat still earns its free plan', async () => {
+      // The deadlock: this request proved the shop and returned without a
+      // signal, every later signal was unsigned, and with no plan no Try-On
+      // render ever followed.
+      expect((await proofPost()).status).toBe(200);
+      expect(m.signal).toHaveBeenCalledExactlyOnceWith(SITE, 'https://merchant.myshopify.com', { signed: true });
+      expect(m.prove.mock.invocationCallOrder[0]).toBeLessThan(m.signal.mock.invocationCallOrder[0]);
+      // A signal that cannot be recorded never fails the proof.
+      m.signal.mockResolvedValue('unavailable');
+      expect(await (await proofPost()).json()).toEqual({ proven: true });
+      // Nothing is signalled while the shop is not proven.
+      m.signal.mockClear();
+      m.prove.mockResolvedValue({ shopProof: 'pending', outcome: 'awaiting_visit' });
+      expect((await proofPost()).status).toBe(403);
+      expect(m.signal).not.toHaveBeenCalled();
     });
 
     it('keeps every check: signature, replay, origin, pending outcome and the signed product', async () => {

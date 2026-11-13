@@ -6,6 +6,8 @@ import { setMessengerServiceClientForTests } from './db';
 vi.mock('@clerk/nextjs/server', () => ({ auth: vi.fn(async () => ({ userId: 'user_1' })) }));
 
 const findSiteByDomain = vi.hoisted(() => vi.fn());
+const adoptStoreName = vi.hoisted(() => vi.fn(async () => undefined));
+vi.mock('@/lib/dashboard/store-domains', () => ({ adoptStoreNameFromAddress: adoptStoreName }));
 vi.mock('./shop-tenancy', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./shop-tenancy')>();
   return { ...actual, findSiteByDomain };
@@ -608,6 +610,36 @@ describe('provisioning', () => {
     });
     expect(calls).not.toContain('widget_sites.insert');
     expect(tables.widget_sites.rows).toHaveLength(1);
+    // The merchant named this store: the address never replaces that.
+    expect(adoptStoreName).not.toHaveBeenCalled();
+  });
+
+  it('names a store still called "My store" after the address it is attached to', async () => {
+    const { client } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
+      widget_sites: {
+        rows: [{ id: 's-orphan', workspace_id: 'w-1', domain: null, name: 'My store', embed_key: 'gc_keep_me', status: 'draft',
+          settings_json: {}, settings_version: 0, settings_draft: null }],
+      },
+    });
+    setMessengerServiceClientForTests(client);
+
+    const site = await ensureMessengerSite('user_1', 'demo.myshopify.com');
+
+    expect(site).toMatchObject({ id: 's-orphan', domain: 'demo.myshopify.com', name: 'demo' });
+    expect(adoptStoreName).toHaveBeenCalledExactlyOnceWith('s-orphan', 'demo.myshopify.com');
+  });
+
+  it.each([[undefined, 'demo'], ['Maison Noor', 'Maison Noor']])('names a new store from its address unless a merchant name was given (%s)', async (name, expected) => {
+    const { client, tables } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(client);
+    expect(await ensureMessengerSite('user_1', 'demo.myshopify.com', name)).toMatchObject({ name: expected });
+    expect(tables.widget_sites.rows[0].name).toBe(expected);
   });
 
   it('falls through to the existing insert race recovery when domain attachment loses its CAS', async () => {

@@ -21,7 +21,8 @@ import { getShopTimezone } from '@/lib/shopify/shop-timezone';
 import { getActiveWooSiteContext, listActiveWooSiteIds } from '@/lib/woo/connection';
 import { ensureWooFreePlan } from '@/lib/woo/free-plan';
 import { resolveTimeZone } from '@/lib/time/store-day';
-import { getPasteConnection, listActivePasteSiteIds, pasteTrust } from '@/lib/paste/store';
+import { claimPasteShopPlan, getPasteConnection, listActivePasteSiteIds, pasteTrust } from '@/lib/paste/store';
+import { listSiteStoreDomains } from './store-domains';
 
 /* Read once per request and shared by the layout, the page and anything
    else that asks, so every part of a page agrees on the store. Each lists
@@ -41,7 +42,13 @@ export const listDashboardSites = cache(async () => {
     return new Set<string>();
   });
   const paste = await listActivePasteSiteIds(sites.map((site) => site.id)).catch(() => new Set<string>());
-  return sites.map((site) => ({ ...site, woo: woo.has(site.id), paste: paste.has(site.id) }));
+  /* Pasted code never writes widget_sites.domain, so the address such a
+     store is known by is read from its connection and domain rows. Only to
+     name it in the shell (storeDomain): `domain` keeps deciding the tenant. */
+  const storeDomains = await listSiteStoreDomains(sites.filter((site) => !site.domain).map((site) => site.id));
+  return sites.map((site) => ({
+    ...site, woo: woo.has(site.id), paste: paste.has(site.id), storeDomain: site.domain ?? storeDomains.get(site.id) ?? null,
+  }));
 });
 
 /** Whether the person's store lists could not be read on this request.
@@ -101,9 +108,17 @@ export async function getPendingPasteShop(active: ActiveStore): Promise<string |
 }
 
 /** Gives a paired WooCommerce store its free plan once it has a verified
- *  domain. Never throws, and is a no-op for every other store. */
-export async function ensureActiveStorePlan(active: ActiveStore): Promise<void> {
-  if (active.platform === 'woocommerce' && active.tenantKey) await ensureWooFreePlan(active.tenantKey);
+ *  domain, and a pasted-code Shopify store its free plan once its shop is
+ *  proven (the proof claims it too; this covers a store proven before that,
+ *  or whose claim failed). Both are idempotent, check their own rules in the
+ *  database and never throw. A no-op for every other store.
+ *  Answers whether the store's address already used a free plan on another
+ *  account (`apex_taken`), for the Plan page's next step; null otherwise. */
+export async function ensureActiveStorePlan(active: ActiveStore): Promise<'apex_taken' | null> {
+  const claim = active.platform === 'woocommerce' && active.tenantKey ? await ensureWooFreePlan(active.tenantKey)
+    : active.platform === 'paste' && active.siteId ? await claimPasteShopPlan(active.siteId)
+      : null;
+  return claim === 'apex_taken' ? 'apex_taken' : null;
 }
 
 /** The person's role on the active store (item 12). With no store at all
