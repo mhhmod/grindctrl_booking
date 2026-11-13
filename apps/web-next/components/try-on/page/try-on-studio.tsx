@@ -249,6 +249,7 @@ export function TryOnStudio({ typicalSeconds = null }: { typicalSeconds?: number
           brandHome: t.brandHome,
           mainNav: t.pageStepsLabel,
           signIn: '',
+          openDashboard: '',
           bookCall: '',
           menu: '',
           openMenu: '',

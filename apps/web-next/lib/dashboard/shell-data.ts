@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { currentUser } from '@clerk/nextjs/server';
+import { getRequestUser } from '@/lib/auth/site-viewer-server';
 import { getShopEntitlement } from '@/lib/try-on/entitlement';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import { roleCan, type DashboardWorkspaceRole } from '@/lib/rbac/dashboard-policy';
@@ -38,7 +38,7 @@ export async function getV16ShellData({
       : activeStore.platform === 'woocommerce' && activeStore.siteId
         ? getActiveWooSiteContext(activeStore.siteId).then((context) => context?.timezone ?? null, () => null)
         : Promise.resolve(null),
-    currentUser().catch(() => null),
+    getRequestUser().catch(() => null),
   ]);
 
   const firstName = user?.firstName?.trim() || null;

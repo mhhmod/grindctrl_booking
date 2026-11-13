@@ -1,7 +1,9 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { SiteViewerProvider } from '@/components/auth/site-viewer';
 import { LandingLocaleProvider } from '@/components/landing/landing-locale';
+import type { SiteViewer } from '@/lib/auth/site-viewer';
 import { BOOKING_URL } from '@/lib/booking';
 import { getLandingDictionary, type SiteLocale } from '@/lib/landing/landing-i18n';
 import { MarketingChrome } from './marketing-chrome';
@@ -17,17 +19,20 @@ vi.mock('@/components/dashboard/theme-toggle', () => ({
    header keeps a single row (Book a call and the menu button). The menu
    rows are the story scenes (/#try ... /#results), Ask the store and
    Pricing, replacing the old #how, #demo and #benefits anchors. */
-function renderChrome(locale: SiteLocale = 'en') {
+function renderChrome(locale: SiteLocale = 'en', viewer?: SiteViewer) {
   const t = getLandingDictionary(locale);
-  render(
+  const page = (
     <LandingLocaleProvider initialLocale={locale}>
       <MarketingChrome>
         <p>Page</p>
       </MarketingChrome>
-    </LandingLocaleProvider>,
+    </LandingLocaleProvider>
   );
+  render(viewer ? <SiteViewerProvider viewer={viewer} clerk={false}>{page}</SiteViewerProvider> : page);
   return t;
 }
+
+const SIGNED_IN: SiteViewer = { signedIn: true, initials: 'MS', imageUrl: null };
 
 describe('SiteHeader (v15)', () => {
   it.each<SiteLocale>(['en', 'ar'])('keeps a labelled Sign in and Book a call outside the closed menu in %s', (locale) => {
@@ -86,6 +91,73 @@ describe('SiteHeader (v15)', () => {
     signIn.addEventListener('click', (event) => event.preventDefault(), { once: true });
     fireEvent.click(signIn);
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+});
+
+/* Item 1 (owner decision 2026-11-12): a signed-in visitor still gets the
+   page, with their account where Sign in was. The server decides it, so
+   these render the first paint as the server sends it. */
+describe('SiteHeader for a signed-in visitor', () => {
+  it.each<SiteLocale>(['en', 'ar'])('shows Open dashboard with the avatar instead of Sign in in %s', (locale) => {
+    const t = renderChrome(locale, SIGNED_IN);
+    const header = within(screen.getByRole('banner'));
+    expect(header.queryByRole('link', { name: t.signIn })).not.toBeInTheDocument();
+    const dashboardLinks = header.getAllByRole('link', { name: t.openDashboard });
+    // Desktop: labelled; phones: the avatar alone, named by aria-label.
+    expect(dashboardLinks).toHaveLength(2);
+    for (const link of dashboardLinks) {
+      expect(link).toHaveAttribute('href', '/dashboard');
+      expect(link.querySelector('[data-viewer-avatar]')).toHaveTextContent('MS');
+    }
+    expect(dashboardLinks[0]).toHaveTextContent(t.openDashboard);
+    expect(dashboardLinks[1]).toHaveClass('size-11');
+    // Book a call and the menu button keep their own 44px targets.
+    expect(header.getAllByRole('link', { name: t.bookCall })[1]).toHaveClass('h-11');
+    expect(header.getByRole('button', { name: t.siteOpenMenu })).toHaveClass('size-11');
+    expect(screen.getByRole('banner')).toHaveAttribute('data-signed-in');
+  });
+
+  it.each<SiteLocale>(['en', 'ar'])('opens a %s menu with Open dashboard as the first, focused row', async (locale) => {
+    const t = renderChrome(locale, SIGNED_IN);
+    fireEvent.click(screen.getByRole('button', { name: t.siteOpenMenu }));
+    const dialog = await screen.findByRole('dialog', { name: t.menu });
+    const links = within(dialog).getAllByRole('link').filter((link) => link.getAttribute('href') !== BOOKING_URL);
+    expect(links[0]).toHaveAttribute('href', '/dashboard');
+    expect(links[0]).toHaveTextContent(t.openDashboard);
+    expect(links.some((link) => link.getAttribute('href') === '/sign-in')).toBe(false);
+    await waitFor(() => expect(links[0]).toHaveFocus());
+  });
+
+  it('draws the photo over the initials, and falls back to the initials if it fails', () => {
+    const t = renderChrome('en', { signedIn: true, initials: 'MS', imageUrl: 'https://img.clerk.com/abc' });
+    const desktop = within(screen.getByRole('banner')).getAllByRole('link', { name: t.openDashboard })[0];
+    const photo = desktop.querySelector('img')!;
+    expect(photo).toHaveAttribute('src', 'https://img.clerk.com/abc');
+    expect(photo).toHaveAttribute('alt', '');
+    fireEvent.error(photo);
+    expect(desktop.querySelector('img')).toBeNull();
+    expect(desktop).toHaveTextContent('MS');
+  });
+
+  it('shows a person mark when the account could not be read', () => {
+    const t = renderChrome('en', { signedIn: true, initials: null, imageUrl: null });
+    const desktop = within(screen.getByRole('banner')).getAllByRole('link', { name: t.openDashboard })[0];
+    expect(desktop.querySelector('[data-viewer-avatar] svg')).not.toBeNull();
+  });
+
+  it('hides the phone wordmark below 420px only when the avatar needs its room', () => {
+    renderChrome('en', SIGNED_IN);
+    const wordmarks = within(screen.getByRole('banner')).getAllByText('GRINDCTRL');
+    expect(wordmarks[1]).toHaveClass('max-[419px]:hidden');
+    expect(wordmarks[0]).not.toHaveClass('max-[419px]:hidden');
+  });
+
+  it('keeps the signed-out header unchanged without a viewer', () => {
+    const t = renderChrome('en', { signedIn: false });
+    const header = within(screen.getByRole('banner'));
+    expect(header.getByRole('link', { name: t.signIn })).toHaveAttribute('href', '/sign-in');
+    expect(header.queryByRole('link', { name: t.openDashboard })).not.toBeInTheDocument();
+    expect(header.getAllByText('GRINDCTRL')[1]).not.toHaveClass('max-[419px]:hidden');
   });
 });
 

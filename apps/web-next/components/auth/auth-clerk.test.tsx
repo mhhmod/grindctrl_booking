@@ -72,6 +72,18 @@ describe('useClerkAppearance', () => {
     expect(result.current).toHaveProperty('baseTheme');
   });
 
+  it.each(['light', 'dark'])('puts "Continue with Google" first as a labelled block button (%s)', (theme) => {
+    state.resolvedTheme = theme;
+    const { result } = renderHook(() => useClerkAppearance());
+    expect(result.current.layout).toEqual({
+      logoPlacement: 'none',
+      socialButtonsPlacement: 'top',
+      socialButtonsVariant: 'blockButton',
+    });
+    // The social button keeps its 44px touch target.
+    expect(result.current.elements.socialButtonsBlockButton).toMatchObject({ minHeight: '44px' });
+  });
+
   it('follows the resolved theme once it is known', () => {
     document.documentElement.classList.add('dark');
     state.resolvedTheme = 'light';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 /* Onboarding asks about the person's own store. Someone who signed up from
@@ -46,6 +46,19 @@ describe('OnboardingPage', () => {
   it('ignores an off-site next', async () => {
     mocks.profile.mockResolvedValue({ onboardedAt: '2026-10-01T00:00:00Z' });
     await expect(OnboardingPage({ searchParams: Promise.resolve({ next: '//evil.example' }) })).rejects.toThrow('redirect:/dashboard');
+  });
+
+  it('presents itself as the first of the two Store setup steps', async () => {
+    render(await OnboardingPage());
+    const steps = screen.getByRole('navigation', { name: 'Store setup' });
+    const items = within(steps).getAllByRole('listitem');
+    expect(items.map((item) => item.textContent)).toEqual(['1About your store', '2Connect your store']);
+    expect(items[0]).toHaveAttribute('aria-current', 'step');
+  });
+
+  it('shows no Store setup steps to someone on the way to a claim link', async () => {
+    render(await OnboardingPage({ searchParams: Promise.resolve({ next: '/claim?token=abc' }) }));
+    expect(screen.queryByRole('navigation', { name: 'Store setup' })).not.toBeInTheDocument();
   });
 
   it('asks everyone else about their store, as before', async () => {

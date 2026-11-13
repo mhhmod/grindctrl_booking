@@ -39,8 +39,16 @@ export function useClerkAppearance() {
   const isDark = resolvedTheme === undefined ? documentIsDark() : resolvedTheme !== 'light';
 
   /* The AuthShell brand pane already shows the logo; Clerk's in-card logo
-     image has a baked-in white background that clashes in dark mode. */
-  const layout = { logoPlacement: 'none' as const };
+     image has a baked-in white background that clashes in dark mode.
+     Method order (owner decision 2026-11-12): "Continue with Google" first,
+     as a full-width labelled button even when it is the only provider, then
+     email with a one-time code. Which methods exist (Google, email code, no
+     password) is set in the Clerk dashboard, not here. */
+  const layout = {
+    logoPlacement: 'none' as const,
+    socialButtonsPlacement: 'top' as const,
+    socialButtonsVariant: 'blockButton' as const,
+  };
 
   if (isDark) {
     return {

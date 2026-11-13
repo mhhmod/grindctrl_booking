@@ -21,6 +21,8 @@ interface LandingDict {
 
   navPricing: string;
   signIn: string;
+  /** Takes Sign in's place for someone already signed in. */
+  openDashboard: string;
   bookCall: string;
   menu: string;
   closeMenu: string;
@@ -94,6 +96,7 @@ const en: LandingDict = {
 
   navPricing: 'Pricing',
   signIn: 'Sign in',
+  openDashboard: 'Open dashboard',
   bookCall: 'Book a call',
   menu: 'Menu',
   closeMenu: 'Close menu',
@@ -164,6 +167,7 @@ const ar: LandingDict = {
 
   navPricing: 'الأسعار',
   signIn: 'تسجيل الدخول',
+  openDashboard: 'افتح لوحة التحكم',
   bookCall: 'احجز مكالمة',
   menu: 'القائمة',
   closeMenu: 'إغلاق القائمة',

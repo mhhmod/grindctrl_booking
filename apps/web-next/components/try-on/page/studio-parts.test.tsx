@@ -1,6 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { SiteViewerProvider } from '@/components/auth/site-viewer';
 import { getDictionary } from '@/lib/try-on/i18n';
 import { makingProgress } from '@/lib/try-on/making-progress';
 import { ActionBar, LookCard } from './studio-parts';
@@ -44,5 +45,19 @@ describe('studio controls and real progress', () => {
     expect(screen.queryByRole('button', { name: t.tryAgain })).toBeNull();
     expect(screen.queryByText(t.errorTitle)).toBeNull();
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it.each(['en', 'ar'] as const)('sends a signed-in visitor at the demo limit to their dashboard in %s', (locale) => {
+    const t = getDictionary(locale);
+    const uploaded = studioReducer(INITIAL_STATE, { type: 'setUpload', dataUrl: 'data:image/jpeg;base64,YQ==' });
+    const creating = studioReducer(uploaded, { type: 'create' });
+    const failed = studioReducer(creating, { type: 'failed', request: creating.request, failure: { kind: 'demo_limit' } });
+    render(
+      <SiteViewerProvider viewer={{ signedIn: true, initials: 'A', imageUrl: null }} clerk={false}>
+        <LookCard t={t} state={failed} look={null} progress={makingProgress({ elapsedMs: 0, estimateSeconds: 30, stage: null, stepCount: 3 })} status="later" failureMessage={t.pageDemoLimit} limitReached retryLocked={false} onRetry={vi.fn()} onUseSample={vi.fn()} onView={vi.fn()} cardRef={null} />
+      </SiteViewerProvider>,
+    );
+    expect(screen.getByRole('link', { name: t.openDashboard })).toHaveAttribute('href', '/dashboard');
+    expect(screen.queryByRole('link', { name: t.pageDemoLimitCta })).toBeNull();
   });
 });

@@ -10,13 +10,15 @@ import { headers } from 'next/headers';
 import { ClerkProvider } from '@clerk/nextjs';
 import { ColorSchemeScript } from '@mantine/core';
 import { auth } from '@clerk/nextjs/server';
-import { arSA, enUS } from '@clerk/localizations';
 import './globals.css';
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from '@/components/theme-provider';
 import { GcSpotlight } from '@/components/gc-spotlight';
 import { AssistantLauncher } from '@/components/assistant/launcher';
 import { ClientBoundary } from '@/components/client-boundary';
+import { SiteViewerProvider } from '@/components/auth/site-viewer';
+import { clerkLocalization } from '@/lib/auth/clerk-localization';
+import { getSiteViewer } from '@/lib/auth/site-viewer-server';
 import { showLauncherFor } from '@/lib/assistant/launcher-visibility';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { SIGNED_OUT_PATH } from '@/lib/auth/redirect';
@@ -48,6 +50,11 @@ export default async function RootLayout({children}: {children: React.ReactNode}
      surfaced to visitors as the generic Next.js error page), which broke
      the merchant-facing try-on widget in production. */
   const { userId } = clerkConfigured && pathname !== null ? await auth() : { userId: null };
+  /* The marketing header's signed-in state, decided here so the first paint
+     is already right. Every page under this layout is rendered per request
+     (it reads cookies and the session), so this never lands in a shared
+     cache. */
+  const viewer = await getSiteViewer(userId);
   const launcher = showLauncherFor(pathname, Boolean(userId)) ? (
     <ClientBoundary fallback={null}>
       <AssistantLauncher initialLocale={locale} />
@@ -82,9 +89,11 @@ export default async function RootLayout({children}: {children: React.ReactNode}
           {clerkConfigured ? (
             /* afterSignOutUrl: a sign-out Clerk starts itself (its account
                dialog) lands where the dashboard's own sign-out does. */
-            <ClerkProvider localization={locale === 'ar' ? arSA : enUS} afterSignOutUrl={SIGNED_OUT_PATH}>
-              {children}
-              {launcher}
+            <ClerkProvider localization={clerkLocalization(locale)} afterSignOutUrl={SIGNED_OUT_PATH}>
+              <SiteViewerProvider viewer={viewer} clerk>
+                {children}
+                {launcher}
+              </SiteViewerProvider>
             </ClerkProvider>
           ) : (
             <>

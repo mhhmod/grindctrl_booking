@@ -10,6 +10,10 @@ import {
 } from './redirect';
 
 describe('auth pages are never a destination', () => {
+  it.each(['/dashboard/../sign-in', '/x/%2e%2e/sign-up', '/%73ign-in', '/%2fsign-in', '/x/../onboarding/../login', '/%5cevil.example'])('rejects normalized or encoded auth loops and unsafe paths: %s', (path) => {
+    expect(safeRedirectPath(path)).toBeNull();
+    expect(resolveSignInDestination(path)).toBe('/dashboard');
+  });
   it('rejects sign-in, sign-up and login, with or without a query, subpath or trailing slash', () => {
     for (const loop of ['/sign-in', '/sign-in/', '/sign-in?x=1', '/sign-in/factor-one', '/SIGN-UP', '/sign-up#top', '/login', '/login?redirect_url=/dashboard']) {
       expect(safeRedirectPath(loop)).toBeNull();
@@ -36,6 +40,8 @@ describe('sign-up keeps where the new account was going', () => {
 
   it('never lets onboarding point back at itself', () => {
     expect(resolveOnboardingNext('/onboarding/')).toBeNull();
+    expect(resolveOnboardingNext('/dashboard/../onboarding')).toBeNull();
+    expect(resolveOnboardingNext('/%6fnboarding')).toBeNull();
     expect(resolveOnboardingNext('/dashboard/inbox')).toBe('/dashboard/inbox');
     expect(onboardingPath('/dashboard/inbox')).toBe('/onboarding?next=%2Fdashboard%2Finbox');
   });

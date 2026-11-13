@@ -35,10 +35,25 @@ function hasControlCharacter(value: string): boolean {
 
 const AUTH_PATHS = ['/sign-in', '/sign-up', '/login'];
 
+/* Compare the route the browser/Next will actually open, including encoded
+   characters and dot segments. Checking only the raw string lets
+   /dashboard/../sign-in bypass the loop guard. Never decode the query: a
+   claim token's nested return path must survive byte for byte. */
+function destinationPathname(path: string): string | null {
+  try {
+    const decoded = decodeURIComponent(new URL(path, 'https://redirect.invalid').pathname);
+    if (decoded.startsWith('//') || decoded.includes('\\') || hasControlCharacter(decoded)) return null;
+    return new URL(decoded, 'https://redirect.invalid').pathname.toLowerCase().replace(/\/+$/, '');
+  } catch {
+    return null;
+  }
+}
+
 /* Sending someone back to an auth page after they authenticate is a loop:
    Clerk's forced redirect lands a signed-in person on the form again. */
 function isAuthPath(path: string): boolean {
-  const pathname = path.split(/[?#]/, 1)[0].toLowerCase().replace(/\/+$/, '');
+  const pathname = destinationPathname(path);
+  if (pathname === null) return true;
   return AUTH_PATHS.some((authPath) => pathname === authPath || pathname.startsWith(`${authPath}/`));
 }
 
@@ -72,7 +87,7 @@ export const POST_ONBOARDING_PATH = '/dashboard/store';
 export function resolveOnboardingNext(next: unknown): string | null {
   const safe = safeRedirectPath(next);
   if (!safe) return null;
-  const pathname = safe.split(/[?#]/, 1)[0].replace(/\/+$/, '');
+  const pathname = destinationPathname(safe);
   return pathname === POST_SIGN_UP_PATH ? null : safe;
 }
 

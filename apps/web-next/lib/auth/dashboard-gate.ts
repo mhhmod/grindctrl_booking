@@ -1,5 +1,8 @@
-/* What proxy.ts does with a signed-out request to a protected route, kept
-   free of Clerk so it can be tested directly. */
+/* What proxy.ts does with a signed-out request to a protected route, and
+   with a signed-in request to an auth page, kept free of Clerk so it can be
+   tested directly. */
+
+import { resolveSignInDestination } from './redirect';
 
 type GateRequest = { method: string; headers: Headers; url: string; nextUrl: { pathname: string; search: string } };
 
@@ -24,4 +27,22 @@ export function signInRedirectUrl(req: Pick<GateRequest, 'url' | 'nextUrl'>): UR
 /** Signed out on a protected route: redirect pages, let actions answer for themselves. */
 export function shouldRedirectSignedOut(req: Pick<GateRequest, 'method' | 'headers'>): boolean {
   return !isServerActionRequest(req);
+}
+
+/* The entry pages only. Clerk's own steps live under them
+   (/sign-in/factor-one, /sign-in/sso-callback, /sign-up/verify-email-address,
+   /sign-up/continue) and must finish even once a session exists, so they are
+   left to Clerk. */
+const AUTH_ENTRY_PATHS = new Set(['/sign-in', '/sign-up', '/login']);
+
+/** Signed in and opening sign-in, sign-up or the /login alias: where to go
+ *  instead, decided before any of the auth page is drawn. The page's
+ *  redirect_url when it is a safe same-site path (never an auth page, so this
+ *  cannot loop), else the dashboard. Null for anything else. */
+export function signedInAuthPageRedirect(req: Pick<GateRequest, 'method' | 'url' | 'nextUrl'>): URL | null {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return null;
+  const pathname = req.nextUrl.pathname.replace(/\/+$/, '').toLowerCase();
+  if (!AUTH_ENTRY_PATHS.has(pathname)) return null;
+  const redirectUrl = new URLSearchParams(req.nextUrl.search).get('redirect_url');
+  return new URL(resolveSignInDestination(redirectUrl), req.url);
 }

@@ -1,7 +1,9 @@
 /* The claim flow (app/api/shopify/claim/start/route.ts mints, app/claim/page.tsx
-   redeems) carries its 5-minute bearer token as a `token` query param, and
+   redeems) carries its 30-minute bearer token as a `token` query param, and
    round-trips it a second time through `/sign-in?redirect_url=%2Fclaim%3Ftoken%3D...`
-   when the merchant isn't signed in yet. Both params must never reach an
+   when the merchant isn't signed in yet, and a third time through
+   `/onboarding?next=%2Fclaim%3Ftoken%3D...` when they have no account yet.
+   None of these params may reach an
    analytics or error-tracking vendor as a first-party payload — used by
    instrumentation-client.ts (PostHog's before_send, Sentry's beforeSend /
    beforeSendTransaction) and sentry.server.config.ts.
@@ -12,6 +14,7 @@
 const SCRUBBED_PARAMS = [
   'token',
   'redirect_url',
+  'next',
   'storefrontContext',
   'storefrontNonce',
 ];

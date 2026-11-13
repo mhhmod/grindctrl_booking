@@ -62,6 +62,25 @@ describe('claim token', () => {
     expect(verifyClaimToken(SECRET, token)).toBeNull();
   });
 
+  it('lasts thirty minutes: long enough to sign up and confirm an email, and no longer', () => {
+    // Owner decision 2026-11-12. A new merchant creates an account, confirms
+    // their email and answers onboarding before /claim redeems the link.
+    expect(CLAIM_TTL_SECONDS).toBe(30 * 60);
+    vi.useFakeTimers();
+    const mintedAt = new Date('2026-11-13T10:00:00Z').getTime();
+    vi.setSystemTime(mintedAt);
+    const token = signClaimToken(SECRET, SHOP);
+    const { iat, exp } = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
+    expect(exp - iat).toBe(1800);
+
+    vi.setSystemTime(mintedAt + 29 * 60 * 1000);
+    expect(verifyClaimToken(SECRET, token)).toEqual({ shop: SHOP });
+    // Still for this one store only, however long it lives.
+    expect(verifyClaimToken(SECRET, token)?.shop).toBe(SHOP);
+    vi.setSystemTime(mintedAt + 30 * 60 * 1000);
+    expect(verifyClaimToken(SECRET, token)).toBeNull();
+  });
+
   it('refuses junk, an empty token, and a non-myshopify shop', () => {
     expect(verifyClaimToken(SECRET, 'not.a.token')).toBeNull();
     expect(verifyClaimToken(SECRET, '')).toBeNull();

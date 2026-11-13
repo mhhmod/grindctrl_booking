@@ -30,7 +30,9 @@ import {
   TickIcon,
   UploadIcon,
 } from '@/components/site/icons';
+import { useSiteViewer } from '@/components/auth/site-viewer';
 import { trackClick } from '@/lib/analytics';
+import { SIGNED_IN_HOME } from '@/lib/auth/site-viewer';
 import type { TryOnTranslator } from '@/lib/try-on/i18n';
 import type { MakingProgress } from '@/lib/try-on/making-progress';
 import type { TryOnStage } from '@/lib/try-on/types';
@@ -482,6 +484,8 @@ export function LookCard({
   const done = state.stage === 'done' && look;
   const photoView = done && state.view === 'photo';
   const shownImage = done ? (photoView ? photoSrc(look.photo) : look.image) : null;
+  // Someone with an account is sent to it, not to sign-up.
+  const signedIn = useSiteViewer().viewer.signedIn;
 
   return (
     <section
@@ -609,11 +613,11 @@ export function LookCard({
                   {failureMessage}
                 </p>
                 <Link
-                  href="/sign-up"
-                  onClick={() => trackClick('cta_clicked', { cta: 'sign_up', section: 'try_on_demo_limit' })}
+                  href={signedIn ? SIGNED_IN_HOME : '/sign-up'}
+                  onClick={() => trackClick('cta_clicked', { cta: signedIn ? 'open_dashboard' : 'sign_up', section: 'try_on_demo_limit' })}
                   className="inline-flex h-12 items-center gap-2 rounded-full bg-foreground px-[22px] text-[14.5px] font-bold text-background"
                 >
-                  {t.pageDemoLimitCta}
+                  {signedIn ? t.openDashboard : t.pageDemoLimitCta}
                 </Link>
               </>
             ) : (

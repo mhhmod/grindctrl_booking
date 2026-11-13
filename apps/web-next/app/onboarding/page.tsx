@@ -50,6 +50,33 @@ export default async function OnboardingPage({
       >
         <div className="flex flex-col gap-3">
           <BrandLogo />
+          {/* On the way to Store setup this is its first step, and says so.
+              Someone headed elsewhere (a claim link) is not set up there. */}
+          {next ? null : (
+            <nav aria-label={copy.onboardingSetupLabel} className="mt-2">
+              <ol className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                {copy.onboardingSteps.map((step, index) => (
+                  <li
+                    key={step}
+                    aria-current={index === 0 ? 'step' : undefined}
+                    className={index === 0 ? 'flex items-center gap-2 font-semibold text-foreground' : 'flex items-center gap-2 text-muted-foreground'}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={
+                        index === 0
+                          ? 'inline-flex size-6 items-center justify-center rounded-full bg-foreground text-xs font-bold text-background'
+                          : 'inline-flex size-6 items-center justify-center rounded-full border border-border text-xs font-bold'
+                      }
+                    >
+                      {index + 1}
+                    </span>
+                    {step}
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )}
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             {copy.onboardingTitle}
           </h1>

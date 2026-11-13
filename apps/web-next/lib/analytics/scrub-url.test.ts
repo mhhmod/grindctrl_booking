@@ -10,8 +10,15 @@ describe('scrubUrl', () => {
 
   it('removes redirect_url too, including its own encoded token', () => {
     expect(
-      scrubUrl('https://app.example.com/sign-in?redirect_url=%2Fclaim%3Ftoken%3Dabc&next=/dashboard'),
-    ).toBe('https://app.example.com/sign-in?next=%2Fdashboard');
+      scrubUrl('https://app.example.com/sign-in?redirect_url=%2Fclaim%3Ftoken%3Dabc&signed_out=1'),
+    ).toBe('https://app.example.com/sign-in?signed_out=1');
+  });
+
+  it('removes onboarding’s next, which carries a new merchant’s claim link', () => {
+    expect(scrubUrl('https://app.example.com/onboarding?next=%2Fclaim%3Ftoken%3Dabc')).toBe(
+      'https://app.example.com/onboarding',
+    );
+    expect(scrubUrl('/onboarding?next=%2Fclaim%3Ftoken%3Dabc&utm_source=shopify')).toBe('/onboarding?utm_source=shopify');
   });
 
   it('leaves a URL without a scrubbed param unchanged, byte for byte', () => {

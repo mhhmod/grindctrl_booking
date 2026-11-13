@@ -18,12 +18,15 @@ import React from 'react';
 import Link from 'next/link';
 import { AmbientBackground } from '@/components/landing/ambient-background';
 import { Eyebrow } from '@/components/landing/eyebrow';
-import { useLandingLocale } from '@/components/landing/landing-locale';
+import { useLandingLocale, useOptionalLandingLocale } from '@/components/landing/landing-locale';
+import { useSiteViewer } from '@/components/auth/site-viewer';
 import { MarketingChrome } from '@/components/site/marketing-chrome';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { trackClick } from '@/lib/analytics';
 import { BOOKING_URL } from '@/lib/booking';
+import { SIGNED_IN_HOME } from '@/lib/auth/site-viewer';
+import { DEFAULT_SITE_LOCALE, getLandingDictionary } from '@/lib/landing/landing-i18n';
 import { cn } from '@/lib/utils';
 
 export function MarketingPage({ children }: { children: React.ReactNode }) {
@@ -49,6 +52,12 @@ export function CtaRow({
   secondary?: CtaLink[];
   className?: string;
 }) {
+  const { viewer } = useSiteViewer();
+  const landing = useOptionalLandingLocale();
+  const t = landing?.t ?? getLandingDictionary(DEFAULT_SITE_LOCALE);
+  const links = secondary.map((item) => viewer.signedIn && /^\/(?:sign-in|sign-up|login)(?:[?#]|$)/.test(item.href)
+    ? { ...item, href: SIGNED_IN_HOME, label: t.openDashboard, cta: 'open_dashboard' }
+    : item);
   return (
     <div className={cn('flex flex-col gap-3 sm:flex-row', className)}>
       <Button
@@ -65,7 +74,7 @@ export function CtaRow({
           {bookCallLabel}
         </a>
       </Button>
-      {secondary.map((item) => (
+      {links.map((item) => (
         <Button
           key={item.href}
           asChild

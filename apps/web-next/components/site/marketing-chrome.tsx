@@ -22,6 +22,7 @@ export function siteHeaderCopy(t: LandingTranslator): SiteHeaderCopy {
     brandHome: t.brandHome,
     mainNav: t.siteMainNav,
     signIn: t.signIn,
+    openDashboard: t.openDashboard,
     bookCall: t.bookCall,
     menu: t.menu,
     openMenu: t.siteOpenMenu,

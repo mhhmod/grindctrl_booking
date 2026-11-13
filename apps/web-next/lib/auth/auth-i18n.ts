@@ -39,6 +39,9 @@ export interface AuthCopy {
   /** Production with no auth configured: non-technical, no env names. */
   unavailableTitle: string;
   unavailableBody: string;
+  /** Onboarding is the first step of Store setup: its name and two steps. */
+  onboardingSetupLabel: string;
+  onboardingSteps: [string, string];
   onboardingTitle: string;
   onboardingLead: string;
   fieldName: string;
@@ -52,7 +55,10 @@ export interface AuthCopy {
   fieldGoal: string;
   fieldGoalHint: string;
   selectPlaceholder: string;
+  /** On the way to Store setup. */
   submit: string;
+  /** On the way to another page (a claim link, an invite, a deep link). */
+  submitContinue: string;
   submitting: string;
   platforms: string[];
   orderRanges: string[];
@@ -79,7 +85,7 @@ const en: AuthCopy = {
   signInFooterPrompt: 'Need an account?',
   signInFooterCta: 'Create one',
   signUpTitle: 'Create your account',
-  signUpSubtitle: 'Set up your store once, then run try-on and the rest from one dashboard.',
+  signUpSubtitle: 'Continue with Google, or with your email and a one-time code. No password to remember.',
   signUpFooterPrompt: 'Already have an account?',
   signUpFooterCta: 'Sign in',
   signedOutNotice: 'You’re signed out.',
@@ -92,9 +98,11 @@ const en: AuthCopy = {
   contactSupport: 'Contact support',
   unavailableTitle: 'Signing in isn’t available right now',
   unavailableBody: 'We’re working on it. Try again in a few minutes, or contact support.',
+  onboardingSetupLabel: 'Store setup',
+  onboardingSteps: ['About your store', 'Connect your store'],
   onboardingTitle: 'Tell us about your store',
   onboardingLead:
-    'Six quick answers. We use them to set up your account and to prepare before we speak, so nothing on the call is a blank page.',
+    'Six quick answers. Your platform and store address carry straight into the next step, so you won’t type them twice.',
   fieldName: 'Your name',
   fieldPhone: 'Phone number',
   fieldPhoneHint: 'Include the country code so we can reach you on WhatsApp.',
@@ -106,7 +114,8 @@ const en: AuthCopy = {
   fieldGoal: 'What do you want AI to fix first?',
   fieldGoalHint: 'Optional. One line is enough.',
   selectPlaceholder: 'Select an option',
-  submit: 'Go to my dashboard',
+  submit: 'Continue to connect your store',
+  submitContinue: 'Continue',
   submitting: 'Saving...',
   platforms: ['Shopify', 'WooCommerce', 'Salla', 'Zid', 'Custom build', 'Not live yet'],
   orderRanges: [
@@ -137,7 +146,7 @@ const ar: AuthCopy = {
   signInFooterPrompt: 'ليس لديك حساب؟',
   signInFooterCta: 'أنشئ حسابًا',
   signUpTitle: 'أنشئ حسابك',
-  signUpSubtitle: 'جهّز متجرك مرة واحدة، ثم شغّل التجربة الافتراضية وغيرها من لوحة واحدة.',
+  signUpSubtitle: 'تابع باستخدام Google، أو ببريدك الإلكتروني ورمز لمرة واحدة. لا حاجة إلى كلمة مرور.',
   signUpFooterPrompt: 'لديك حساب بالفعل؟',
   signUpFooterCta: 'سجّل الدخول',
   signedOutNotice: 'تم تسجيل خروجك.',
@@ -150,9 +159,11 @@ const ar: AuthCopy = {
   contactSupport: 'تواصل مع الدعم',
   unavailableTitle: 'تسجيل الدخول غير متاح الآن',
   unavailableBody: 'نعمل على حل المشكلة. حاول مرة أخرى بعد دقائق، أو تواصل مع الدعم.',
+  onboardingSetupLabel: 'إعداد المتجر',
+  onboardingSteps: ['عن متجرك', 'اربط متجرك'],
   onboardingTitle: 'عرّفنا على متجرك',
   onboardingLead:
-    'ست إجابات سريعة. نستخدمها لتجهيز حسابك وللتحضير قبل التحدث معك، حتى لا نبدأ المكالمة من صفحة فارغة.',
+    'ست إجابات سريعة. تنتقل منصتك وعنوان متجرك مباشرة إلى الخطوة التالية، فلن تكتبهما مرتين.',
   fieldName: 'اسمك',
   fieldPhone: 'رقم الهاتف',
   fieldPhoneHint: 'أضف رمز الدولة حتى نتمكن من التواصل معك على واتساب.',
@@ -164,7 +175,8 @@ const ar: AuthCopy = {
   fieldGoal: 'ما الذي تريد من الذكاء الاصطناعي معالجته أولًا؟',
   fieldGoalHint: 'اختياري. سطر واحد يكفي.',
   selectPlaceholder: 'اختر من القائمة',
-  submit: 'انتقل إلى لوحتي',
+  submit: 'تابع لربط متجرك',
+  submitContinue: 'متابعة',
   submitting: 'جارٍ الحفظ...',
   platforms: ['Shopify', 'WooCommerce', 'سلة', 'زد', 'تطوير مخصص', 'لم يُطلق بعد'],
   orderRanges: [

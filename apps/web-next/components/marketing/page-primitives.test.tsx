@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { LandingLocaleProvider } from '@/components/landing/landing-locale';
+import { SiteViewerProvider } from '@/components/auth/site-viewer';
 import {
   CtaRow,
   MarketingPage,
@@ -78,6 +79,30 @@ describe('ProductSection', () => {
 });
 
 describe('CtaRow', () => {
+  it.each<SiteLocale>(['en', 'ar'])('sends signed-in hero and section auth CTAs to the dashboard in %s', (locale) => {
+    const t = getLandingDictionary(locale);
+    withLocale(locale,
+      <SiteViewerProvider viewer={{ signedIn: true, initials: 'A', imageUrl: null }} clerk={false}>
+        <CtaRow bookCallLabel={t.bookCall} section="hero" secondary={[{ href: '/sign-up', label: 'Get started', cta: 'sign_up' }]} />
+        <CtaRow bookCallLabel={t.bookCall} section="closing" secondary={[{ href: '/sign-in?redirect_url=%2Fdashboard', label: t.signIn, cta: 'sign_in' }]} />
+      </SiteViewerProvider>,
+    );
+    const links = screen.getAllByRole('link', { name: t.openDashboard });
+    expect(links).toHaveLength(2);
+    links.forEach((link) => expect(link).toHaveAttribute('href', '/dashboard'));
+    expect(screen.queryByRole('link', { name: 'Get started' })).toBeNull();
+    expect(screen.queryByRole('link', { name: t.signIn })).toBeNull();
+  });
+
+  it('keeps signed-out account CTAs and other destinations unchanged', () => {
+    withLocale('en', <CtaRow bookCallLabel="Book a call" section="hero" secondary={[
+      { href: '/sign-up', label: 'Get started', cta: 'sign_up' },
+      { href: '/pricing', label: 'Pricing', cta: 'pricing' },
+    ]} />);
+    expect(screen.getByRole('link', { name: 'Get started' })).toHaveAttribute('href', '/sign-up');
+    expect(screen.getByRole('link', { name: 'Pricing' })).toHaveAttribute('href', '/pricing');
+  });
+
   it('tracks the book-call click with the given section and cta id', () => {
     render(<CtaRow bookCallLabel="Book a call" section="shopping_hero" />);
     const link = screen.getByRole('link', { name: 'Book a call' });

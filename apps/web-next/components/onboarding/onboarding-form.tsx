@@ -134,17 +134,17 @@ export function OnboardingForm({
           defaultValue={value('primaryGoal')}
         />
 
-        <SubmitButton copy={copy} />
+        <SubmitButton copy={copy} label={next ? copy.submitContinue : copy.submit} />
       </Stack>
     </form>
   );
 }
 
-function SubmitButton({ copy }: { copy: AuthCopy }) {
+function SubmitButton({ copy, label }: { copy: AuthCopy; label: string }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" radius="pill" h={44} mt={4} loading={pending}>
-      {pending ? copy.submitting : copy.submit}
+      {pending ? copy.submitting : label}
     </Button>
   );
 }

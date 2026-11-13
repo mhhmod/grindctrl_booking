@@ -10,10 +10,16 @@ import { normalizeShopDomain } from './shop-authorization';
 
    It authorizes exactly one thing: adopting THIS shop's configuration
    into whichever workspace redeems it. It carries no account, no role,
-   and nothing that survives its five minutes. */
+   and nothing that survives its thirty minutes.
+
+   Thirty minutes, not five (owner decision 2026-11-12): a merchant with no
+   account yet has to create one, confirm their email and answer onboarding
+   before the link is redeemed, and five minutes expired on them mid-way.
+   The link alone still adopts nothing: /claim also requires the signed-in
+   account's email to match the store owner's (app/claim/page.tsx). */
 
 const ISSUER = 'grindctrl-shop-claim';
-export const CLAIM_TTL_SECONDS = 300;
+export const CLAIM_TTL_SECONDS = 30 * 60;
 
 interface ClaimPayload {
   iss: string;
@@ -87,12 +93,12 @@ export function verifyClaimToken(secret: string, token: string): { shop: string;
   // a valid HMAC alone is not proof this token means "claim this store".
   if (payload.iss !== ISSUER) return null;
 
-  // Zero clock skew tolerance, deliberately: this is a 5-minute token
-  // minted and redeemed within one request flow, not a session crossing a
-  // real client clock — identity.ts allows 30s and session-token.ts allows
-  // 5s for exactly that reason, and neither applies here.
+  // Zero clock skew tolerance, deliberately: this server mints the token
+  // and this server checks it, so no client clock is ever compared —
+  // identity.ts allows 30s and session-token.ts allows 5s for exactly that
+  // reason, and neither applies here.
   if (typeof payload.exp !== 'number' || !Number.isFinite(payload.exp)) return null;
-  if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+  if (payload.exp <= Math.floor(Date.now() / 1000)) return null;
 
   // Canonical-form check, not a normalization: a signature is proof of the
   // secret, not proof of the shop, so reject anything the mint side would

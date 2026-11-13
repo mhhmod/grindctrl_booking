@@ -24,6 +24,13 @@ describe.each(['en', 'ar'] as const)('OnboardingForm in %s', (locale) => {
     expect(screen.getByRole('button', { name: copy.submit })).toBeInTheDocument();
   });
 
+  it('names the next step: connecting the store, or just Continue on the way elsewhere', () => {
+    expect(copy.submit).toBe(locale === 'en' ? 'Continue to connect your store' : 'تابع لربط متجرك');
+    render(<OnboardingForm profile={null} copy={copy} next="/claim?token=abc" />);
+    expect(screen.getByRole('button', { name: copy.submitContinue })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: copy.submit })).not.toBeInTheDocument();
+  });
+
   it('shows what the server rejected and moves focus to the first rejected field', async () => {
     mocks.submit.mockResolvedValue({ errors: { phone: 'Enter a valid number' }, message: 'Check the form' });
     const { container } = render(<OnboardingForm profile={null} copy={copy} />);
