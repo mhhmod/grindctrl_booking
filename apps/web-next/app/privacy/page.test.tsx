@@ -2,7 +2,10 @@ import React from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { getRequestLocale } from '@/lib/auth/locale';
-import PrivacyPage from './page';
+import PrivacyPage, { metadata } from './page';
+import { legalCopy } from '@/components/marketing/legal-copy';
+import robots from '@/app/robots';
+import sitemap from '@/app/sitemap';
 
 vi.mock('@/lib/auth/locale', () => ({ getRequestLocale: vi.fn() }));
 vi.mock('@/components/dashboard/theme-toggle', () => ({
@@ -27,12 +30,24 @@ describe('Privacy page', () => {
     expect(main.getByRole('link', { name: 'grindctrlnow@gmail.com' })).toHaveAttribute('href', 'mailto:grindctrlnow@gmail.com');
     expect(main.getByRole('link', { name: related })).toHaveAttribute('href', '/terms');
     const time = container.querySelector('time');
-    expect(time).toHaveAttribute('dateTime', '2026-11-01');
-    expect(time?.parentElement).toHaveTextContent(`${updated}: 2026-11-01`);
+    expect(time).toHaveAttribute('dateTime', '2026-11-12');
+    expect(time?.parentElement).toHaveTextContent(`${updated}: ${locale === 'en' ? '12 November 2026' : '12 نوفمبر 2026'}`);
+    for (const section of legalCopy.privacy[locale].sections) {
+      expect(main.getByRole('heading', { name: section.title })).toBeInTheDocument();
+      for (const text of [...(section.paragraphs ?? []), ...(section.items ?? [])]) {
+        expect(main.getByText(text)).toBeInTheDocument();
+      }
+    }
     expect(screen.getByRole('main').textContent).not.toMatch(/DRAFT|Open Questions|\u2014/);
     const footer = within(screen.getByRole('contentinfo'));
     expect(footer.getByRole('link', { name: title })).toHaveAttribute('href', '/privacy');
     expect(footer.getByRole('link', { name: related })).toHaveAttribute('href', '/terms');
+  });
+
+  it('allows indexing and includes the public legal routes in discovery', () => {
+    expect(metadata.robots).toBeUndefined();
+    expect(JSON.stringify(robots())).not.toMatch(/privacy|terms/);
+    expect(sitemap().map((entry) => new URL(entry.url).pathname)).toEqual(expect.arrayContaining(['/privacy', '/terms']));
   });
 
   it('switches the legal content and reading direction through the shared language control', async () => {

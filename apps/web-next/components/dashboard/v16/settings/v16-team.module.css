@@ -190,6 +190,16 @@
   overflow-wrap: anywhere;
 }
 
+.alertAddresses {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .address {
   display: block;
   min-inline-size: 0;
@@ -227,9 +237,10 @@
 
 .rowText {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   flex: 1 1 260px;
   gap: 4px;
-  min-width: 0;
+  min-inline-size: 0;
   margin: 0;
   overflow-wrap: anywhere;
 }

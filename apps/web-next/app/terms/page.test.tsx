@@ -2,7 +2,8 @@ import React from 'react';
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { getRequestLocale } from '@/lib/auth/locale';
-import TermsPage from './page';
+import TermsPage, { metadata } from './page';
+import { legalCopy } from '@/components/marketing/legal-copy';
 
 vi.mock('@/lib/auth/locale', () => ({ getRequestLocale: vi.fn() }));
 vi.mock('@/components/dashboard/theme-toggle', () => ({
@@ -26,8 +27,15 @@ describe('Terms page', () => {
     expect(main.getByRole('link', { name: 'grindctrlnow@gmail.com' })).toHaveAttribute('href', 'mailto:grindctrlnow@gmail.com');
     expect(main.getByRole('link', { name: related })).toHaveAttribute('href', '/privacy');
     const time = container.querySelector('time');
-    expect(time).toHaveAttribute('dateTime', '2026-11-01');
-    expect(time?.parentElement).toHaveTextContent(`${updated}: 2026-11-01`);
+    expect(time).toHaveAttribute('dateTime', '2026-11-12');
+    expect(time?.parentElement).toHaveTextContent(`${updated}: ${locale === 'en' ? '12 November 2026' : '12 نوفمبر 2026'}`);
+    expect(metadata.robots).toBeUndefined();
+    for (const section of legalCopy.terms[locale].sections) {
+      expect(main.getByRole('heading', { name: section.title })).toBeInTheDocument();
+      for (const text of [...(section.paragraphs ?? []), ...(section.items ?? [])]) {
+        expect(main.getByText(text)).toBeInTheDocument();
+      }
+    }
     expect(screen.getByRole('main').textContent).not.toMatch(/DRAFT|Open Questions|\u2014/);
     const footer = within(screen.getByRole('contentinfo'));
     expect(footer.getByRole('link', { name: title })).toHaveAttribute('href', '/terms');

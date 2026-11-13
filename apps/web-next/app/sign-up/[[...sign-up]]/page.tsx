@@ -2,6 +2,7 @@ import React from 'react';
 import { AuthSignUp } from '@/components/auth/auth-clerk';
 import { AuthUnavailable } from '@/components/auth/auth-form-states';
 import { AuthShell } from '@/components/auth/auth-shell';
+import { LegalLinks } from '@/components/legal-links';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { authFormStateCopy, getAuthCopy } from '@/lib/auth/auth-i18n';
 import { getRequestLocale } from '@/lib/auth/locale';
@@ -44,6 +45,7 @@ export default async function SignUpPage({
             </AlertDescription>
           </Alert>
         )}
+        <LegalLinks locale={locale} />
       </AuthShell>
     );
   }
@@ -56,6 +58,7 @@ export default async function SignUpPage({
         signInRedirectTo={resolveSignInDestination(params.redirect_url)}
         copy={authFormStateCopy(copy)}
       />
+      <LegalLinks locale={locale} />
     </AuthShell>
   );
 }

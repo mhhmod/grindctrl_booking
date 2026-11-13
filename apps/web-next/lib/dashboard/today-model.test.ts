@@ -168,6 +168,26 @@ describe('Nothing needs you', () => {
 });
 
 describe('Last 7 days', () => {
+  it.each([
+    [0.5, '1 min', 'دقيقة'],
+    [9, '9 min', '9 دقائق'],
+    [23, '25 min', '25 دقيقة'],
+    [59, '59 min', '59 دقيقة'],
+    [59.9, '59 min', '59 دقيقة'],
+    [60, '1 h', 'ساعة'],
+    [120, '2 h', 'ساعتين'],
+    [180, '3 h', '3 ساعات'],
+    [1440, '24 h', '24 ساعة'],
+    [2879, '47 h', '47 ساعة'],
+    [2880, '2 d', 'يومين'],
+    [4320, '3 d', '3 أيام'],
+    [15840, '11 d', '11 يوماً'],
+  ])('formats a %s-minute team reply in the appropriate unit in both locales', (minutes, english, arabic) => {
+    const facts = { chat: { ...CHAT, teamReplyMinutes: minutes } };
+    expect(view(facts).tiles.find((tile) => tile.key === 'team_reply')?.value).toBe(english);
+    expect(view(facts, ar, 'ar').tiles.find((tile) => tile.key === 'team_reply')?.value).toBe(arabic);
+  });
+
   it('compares looks with the week before, and leaves the comparison out without one', () => {
     expect(view().tiles[0]).toEqual({ key: 'looks', label: 'Looks', value: '98', sub: '18% more than the 7 days before', trend: 'up' });
     expect(view({ tryOn: { ...TRY_ON, looksPrev7: 120 } }).tiles[0].sub).toBe('18% fewer than the 7 days before');

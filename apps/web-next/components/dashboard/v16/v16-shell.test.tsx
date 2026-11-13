@@ -44,6 +44,16 @@ beforeEach(() => {
 });
 
 describe('V16Shell', () => {
+  it.each(['en', 'ar'] as const)('links the desktop sidebar and phone menu to the legal pages in %s', (locale) => {
+    render(<V16Shell {...props({ locale })} />);
+    const checkLinks = (scope: HTMLElement) => {
+      expect(within(scope).getByRole('link', { name: locale === 'ar' ? 'سياسة الخصوصية' : 'Privacy policy' })).toHaveAttribute('href', '/privacy');
+      expect(within(scope).getByRole('link', { name: locale === 'ar' ? 'شروط الخدمة' : 'Terms of service' })).toHaveAttribute('href', '/terms');
+    };
+    checkLinks(screen.getByRole('complementary'));
+    fireEvent.click(screen.getByRole('button', { name: locale === 'ar' ? 'القائمة' : 'Menu' }));
+    checkLinks(screen.getByRole('dialog', { name: locale === 'ar' ? 'القائمة' : 'Menu' }));
+  });
   it('lists only the pages that exist, with the current one marked', () => {
     pathname = '/dashboard/try-on';
     render(<V16Shell {...props()} />);

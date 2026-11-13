@@ -2,7 +2,7 @@ import type { SiteLocale } from '@/lib/landing/landing-i18n';
 
 // Published copy is maintained with docs/legal/*-draft.md.
 export const LEGAL_CONTACT_EMAIL = 'grindctrlnow@gmail.com';
-export const LEGAL_UPDATED = '2026-11-01';
+export const LEGAL_UPDATED = '2026-11-12';
 export type LegalPage = 'privacy' | 'terms';
 
 interface LegalSection {
@@ -38,7 +38,7 @@ export const legalCopy: Record<LegalPage, Record<SiteLocale, LegalCopy>> = {
           "id": "who-we-are",
           "title": "Who we are",
           "paragraphs": [
-            "Grind CTRL (\"GrindCTRL\", \"we\", \"us\", or \"our\") operates an AI-powered virtual try-on and customer chat product for Shopify merchants from Egypt, available at grindctrl.cloud and as Shopify apps.",
+            "Grind CTRL (\"GrindCTRL\", \"we\", \"us\", or \"our\") operates an AI-powered virtual try-on and customer chat product from Egypt, available at grindctrl.cloud, through Shopify apps and a WooCommerce plugin, and through pasted Store Chat code on other websites.",
             "Grind CTRL is the privacy operator. Contact us about privacy at grindctrlnow@gmail.com."
           ]
         },
@@ -55,15 +55,16 @@ export const legalCopy: Record<LegalPage, Record<SiteLocale, LegalCopy>> = {
           "title": "Information we collect",
           "items": [
             "Merchant account identity: your Clerk-issued user ID and account email, used to sign you in.",
-            "Workspace and store information: store domain, connected Shopify shop, workspace settings, plan, and credit balance.",
+            "Workspace and store information: store domain, connected Shopify shop, WooCommerce or pasted-code site connection, workspace settings, plan, and credit balance.",
             "Shopify Admin API access tokens: issued on installation, encrypted at rest using AES-256-GCM, and used to operate the app for your store.",
             "Content you provide: Store Chat knowledge articles, saved replies, URLs submitted for knowledge imports, and communications when you email us or book a call.",
             "Try-on photos: your uploaded photo is sent to the AI image provider to generate a preview. We do not store the uploaded photo on our servers. Generated results are stored temporarily under the retention rules below.",
-            "Store Chat: messages, conversation history, image attachments, and your name and email if provided. Attachments may be sent to our AI provider for handling.",
-            "Order lookups: a signed-in shopper’s verified Shopify customer identity is used to look up their orders. Otherwise, order number and email are requested to verify the shopper before showing order details.",
+            "Store Chat: messages, conversation history, image attachments, captured leads, and contact details you provide. Attachments may be sent to our AI provider for handling.",
+            "Order lookups: a signed-in shopper’s verified Shopify or WooCommerce customer identity is used to look up their orders. Otherwise, order number and email are requested to verify the shopper before showing order details.",
             "Error and performance data: Sentry receives error reports and page addresses to help keep the service working. Authentication tokens in page URLs are stripped before transmission.",
             "Product analytics: PostHog receives usage events only after active consent. Events do not include photos, message text, email addresses, or phone numbers.",
-            "Rate limiting: Upstash processes requester IP addresses and request identifiers to enforce usage limits. Requests are denied if the limiter is unavailable."
+            "Rate limiting: Upstash processes requester IP addresses and request identifiers to enforce usage limits. Requests are denied if the limiter is unavailable.",
+            "Abuse checks: where required for free try-on requests, Cloudflare Turnstile processes challenge tokens, request identifiers, and requester IP addresses when provided."
           ]
         },
         {
@@ -88,15 +89,16 @@ export const legalCopy: Record<LegalPage, Record<SiteLocale, LegalCopy>> = {
             "The following providers support the service. We have not independently reviewed OpenRouter’s or Groq’s own data-retention or training-use terms. We do not have signed Data Processing Agreements with merchants at this time."
           ],
           "items": [
-            "OpenRouter: AI image generation. Receives the shopper’s try-on photo and garment image, and image attachments sent in Store Chat.",
-            "Groq: AI chat and voice. Receives conversation text and voice audio for replies, speech-to-text, and text-to-speech, not photos.",
+            "OpenRouter and the model providers it routes requests to: AI image generation, Store Chat text replies, and image understanding. Receive the shopper’s try-on photo and garment image, conversation text and relevant store knowledge, and image attachments sent in Store Chat, as needed for the feature used.",
+            "Groq: AI assistant chat and voice, and fallback Store Chat text replies when OpenRouter is unavailable. Receives conversation text and voice audio for replies, speech-to-text, and text-to-speech, not photos.",
             "Supabase: database and file storage for operational, support, and generated result data, accessed through server-side controls.",
             "Clerk: merchant sign-in, account email, and authentication identity.",
-            "Gmail SMTP: account emails, team notifications, privacy-request alerts, and customer data exports sent to the privacy operator for delivery to the merchant.",
+            "SMTP email transport (Gmail SMTP by default, configurable by the operator): account emails, team notifications, privacy-request alerts, and customer data exports sent to the privacy operator for delivery to the merchant.",
             "Sentry: error reports, stack traces, and page addresses with sign-in tokens removed.",
             "PostHog: product usage events after consent.",
             "Upstash: requester IP addresses and request keys for rate limiting.",
-            "Hostinger: application hosting. Site and app traffic passes through its infrastructure."
+            "Hostinger: application hosting. Site and app traffic passes through its infrastructure.",
+            "Cloudflare Turnstile: abuse prevention for free try-on requests. Receives challenge tokens, request identifiers, and requester IP addresses when provided."
           ]
         },
         {
@@ -105,7 +107,9 @@ export const legalCopy: Record<LegalPage, Record<SiteLocale, LegalCopy>> = {
           "items": [
             "Uploaded try-on photos are not stored on our servers. Provider retention is not yet independently confirmed.",
             "Generated try-on results are deleted when your browser has received them. Otherwise they remain readable for at most 10 minutes, with remaining files deleted by a cleanup job that runs every 10 minutes. Signed result links are valid for up to 5 minutes.",
-            "Store Chat conversations, messages, and attachments are deleted 12 months after the conversation’s last activity. Visitor records are deleted once no conversation requiring retention remains; a visitor record with no conversation is deleted after 12 months of inactivity.",
+            "Store Chat conversations, messages, and attachments are deleted 12 months after the conversation’s last activity. Visitor records without remaining conversations are deleted after 12 months of inactivity.",
+            "Captured leads, including names and contact details, are deleted 12 months after creation, or earlier when their linked conversation is deleted.",
+            "Disconnecting a pasted-code store disables its widgets and schedules deletion of its shopper data after 30 days. Reconnecting before deletion cancels that schedule. Billing and credit ledger records and their required accounting links are retained; stored images and attachments are removed by the cleanup process.",
             "Merchant account and workspace information is kept for the life of the account. Request account deletion by email to grindctrlnow@gmail.com. We complete account deletion within 30 days, subject to records that must be retained by law.",
             "Billing and credit ledger records are kept for as long as accounting law requires and are never altered by privacy deletion. Job or subscription records needed to preserve their accounting links are retained for that purpose; generated images are removed.",
             "Sentry retention follows the configured monitoring settings. We have not independently confirmed its retention period."
@@ -204,7 +208,7 @@ export const legalCopy: Record<LegalPage, Record<SiteLocale, LegalCopy>> = {
           "id": "who-we-are",
           "title": "من نحن",
           "paragraphs": [
-            "تدير Grind CTRL، ويشار إليها أيضاً باسم GrindCTRL أو «نحن»، خدمة قياس افتراضي ومحادثة عملاء بالذكاء الاصطناعي لتجار Shopify من مصر. تتوفر الخدمة على grindctrl.cloud ومن خلال تطبيقات Shopify.",
+            "تدير Grind CTRL، ويشار إليها أيضاً باسم GrindCTRL أو «نحن»، خدمة قياس افتراضي ومحادثة عملاء بالذكاء الاصطناعي من مصر. تتوفر الخدمة على grindctrl.cloud ومن خلال تطبيقات Shopify وإضافة WooCommerce، ومن خلال لصق كود Store Chat في المواقع الأخرى.",
             "تتولى Grind CTRL مسؤولية تنفيذ طلبات الخصوصية. للتواصل بشأن الخصوصية: grindctrlnow@gmail.com."
           ]
         },
@@ -221,15 +225,16 @@ export const legalCopy: Record<LegalPage, Record<SiteLocale, LegalCopy>> = {
           "title": "المعلومات التي نجمعها",
           "items": [
             "هوية حساب التاجر: معرّف المستخدم الصادر من Clerk والبريد الإلكتروني للحساب، لتسجيل الدخول.",
-            "معلومات مساحة العمل والمتجر: نطاق المتجر ومتجر Shopify المرتبط وإعدادات مساحة العمل والخطة ورصيد الوحدات.",
+            "معلومات مساحة العمل والمتجر: نطاق المتجر ومتجر Shopify المرتبط واتصال موقع WooCommerce أو الموقع المثبت بكود ملصق وإعدادات مساحة العمل والخطة ورصيد الوحدات.",
             "رموز الوصول إلى واجهة Shopify Admin API: تصدر عند التثبيت، وتُخزن مشفرة باستخدام AES-256-GCM، وتُستخدم لتشغيل التطبيق لمتجرك.",
             "المحتوى الذي تقدمه: مقالات معرفة Store Chat والردود المحفوظة والروابط المقدمة لاستيراد المعرفة ومراسلات البريد الإلكتروني أو حجز المكالمات.",
             "صور القياس الافتراضي: تُرسل الصورة التي ترفعها إلى مزود توليد الصور لإنشاء المعاينة. لا نخزن الصورة المرفوعة على خوادمنا. تُخزن النتائج مؤقتاً وفق قواعد الاحتفاظ أدناه.",
-            "Store Chat: الرسائل وسجل المحادثات ومرفقات الصور واسمك وبريدك الإلكتروني إذا قدمتهما. قد تُرسل المرفقات إلى مزود الذكاء الاصطناعي لمعالجتها.",
-            "البحث عن الطلبات: تُستخدم هوية عميل Shopify المتحقق منها للمتسوق المسجل دخوله للبحث عن طلباته. وإلا نطلب رقم الطلب والبريد الإلكتروني للتحقق قبل عرض تفاصيل الطلب.",
+            "Store Chat: الرسائل وسجل المحادثات ومرفقات الصور وبيانات العملاء المحتملين المسجلة وبيانات الاتصال التي تقدمها. قد تُرسل المرفقات إلى مزود الذكاء الاصطناعي لمعالجتها.",
+            "البحث عن الطلبات: تُستخدم هوية عميل Shopify أو WooCommerce المتحقق منها للمتسوق المسجل دخوله للبحث عن طلباته. وإلا نطلب رقم الطلب والبريد الإلكتروني للتحقق قبل عرض تفاصيل الطلب.",
             "بيانات الأخطاء والأداء: تتلقى Sentry تقارير الأخطاء وعناوين الصفحات للمساعدة في تشغيل الخدمة. تُزال رموز المصادقة من عناوين الصفحات قبل إرسالها.",
             "تحليلات المنتج: تتلقى PostHog أحداث الاستخدام بعد موافقة صريحة فقط. لا تشمل الأحداث الصور أو نصوص الرسائل أو عناوين البريد الإلكتروني أو أرقام الهاتف.",
-            "تحديد معدل الطلبات: تعالج Upstash عناوين IP ومعرّفات الطلبات لفرض حدود الاستخدام. تُرفض الطلبات إذا تعذر تشغيل محدد المعدل."
+            "تحديد معدل الطلبات: تعالج Upstash عناوين IP ومعرّفات الطلبات لفرض حدود الاستخدام. تُرفض الطلبات إذا تعذر تشغيل محدد المعدل.",
+            "فحوص إساءة الاستخدام: تعالج Cloudflare Turnstile رموز التحقق ومعرّفات الطلبات وعناوين IP عند تقديمها، عندما يكون التحقق مطلوباً لطلبات القياس الافتراضي المجانية."
           ]
         },
         {
@@ -254,15 +259,16 @@ export const legalCopy: Record<LegalPage, Record<SiteLocale, LegalCopy>> = {
             "يدعم مقدمو الخدمة التاليون تشغيل المنتج. لم نراجع بصورة مستقلة شروط OpenRouter أو Groq الخاصة بالاحتفاظ بالبيانات أو استخدامها في التدريب. لا توجد حالياً اتفاقيات معالجة بيانات موقعة بيننا وبين التجار."
           ],
           "items": [
-            "OpenRouter: توليد الصور بالذكاء الاصطناعي. يتلقى صورة المتسوق وصورة الملابس للقياس الافتراضي، ومرفقات الصور في Store Chat.",
-            "Groq: المحادثة والصوت بالذكاء الاصطناعي. يتلقى نص المحادثة والصوت لإنشاء الردود وتحويل الكلام إلى نص والنص إلى كلام، ولا يتلقى الصور.",
+            "OpenRouter ومزودو النماذج الذين يوجه إليهم الطلبات: توليد الصور وردود Store Chat النصية وفهم الصور بالذكاء الاصطناعي. يتلقون صورة المتسوق وصورة الملابس للقياس الافتراضي ونص المحادثة ومعرفة المتجر ذات الصلة ومرفقات الصور في Store Chat، بحسب الميزة المستخدمة.",
+            "Groq: محادثة المساعد والصوت بالذكاء الاصطناعي، وردود Store Chat النصية الاحتياطية عند تعذر OpenRouter. يتلقى نص المحادثة والصوت لإنشاء الردود وتحويل الكلام إلى نص والنص إلى كلام، ولا يتلقى الصور.",
             "Supabase: قاعدة البيانات وتخزين الملفات للبيانات التشغيلية وبيانات الدعم والصور الناتجة، مع ضوابط وصول على الخادم.",
             "Clerk: تسجيل دخول التجار والبريد الإلكتروني للحساب وهوية المصادقة.",
-            "Gmail SMTP: رسائل الحساب وإشعارات الفريق وتنبيهات الخصوصية وصادرات بيانات العملاء المرسلة إلى مسؤول الخصوصية لتسليمها إلى التاجر.",
+            "نقل البريد عبر SMTP (باستخدام Gmail SMTP افتراضياً، ويمكن للمشغل تغييره): رسائل الحساب وإشعارات الفريق وتنبيهات الخصوصية وصادرات بيانات العملاء المرسلة إلى مسؤول الخصوصية لتسليمها إلى التاجر.",
             "Sentry: تقارير الأخطاء وسجلاتها وعناوين الصفحات بعد إزالة رموز تسجيل الدخول.",
             "PostHog: أحداث استخدام المنتج بعد الموافقة.",
             "Upstash: عناوين IP ومفاتيح الطلبات لتحديد المعدل.",
-            "Hostinger: استضافة التطبيق. تمر حركة الموقع والتطبيق عبر بنيته التحتية."
+            "Hostinger: استضافة التطبيق. تمر حركة الموقع والتطبيق عبر بنيته التحتية.",
+            "Cloudflare Turnstile: منع إساءة استخدام طلبات القياس الافتراضي المجانية. تتلقى رموز التحقق ومعرّفات الطلبات وعناوين IP عند تقديمها."
           ]
         },
         {
@@ -271,7 +277,9 @@ export const legalCopy: Record<LegalPage, Record<SiteLocale, LegalCopy>> = {
           "items": [
             "لا نخزن صور القياس الافتراضي المرفوعة على خوادمنا. لم نتحقق بصورة مستقلة من مدة احتفاظ المزود بها.",
             "تُحذف نتائج القياس الافتراضي بعد استلام المتصفح لها. وإلا تظل قابلة للقراءة لمدة أقصاها 10 دقائق، وتُحذف الملفات المتبقية بواسطة مهمة تنظيف تعمل كل 10 دقائق. صلاحية روابط النتائج الموقعة تصل إلى 5 دقائق.",
-            "تُحذف محادثات Store Chat ورسائلها ومرفقاتها بعد 12 شهراً من آخر نشاط في المحادثة. تُحذف سجلات الزوار عند عدم بقاء محادثة تستلزم الاحتفاظ بها؛ ويُحذف سجل الزائر الذي لا توجد له محادثة بعد 12 شهراً من عدم النشاط.",
+            "تُحذف محادثات Store Chat ورسائلها ومرفقاتها بعد 12 شهراً من آخر نشاط في المحادثة. تُحذف سجلات الزوار التي لم تعد لها محادثات بعد 12 شهراً من عدم النشاط.",
+            "تُحذف بيانات العملاء المحتملين المسجلة، بما فيها الأسماء وبيانات الاتصال، بعد 12 شهراً من إنشائها، أو قبل ذلك عند حذف المحادثة المرتبطة بها.",
+            "يؤدي فصل متجر مثبت بكود ملصق إلى تعطيل أدواته وجدولة حذف بيانات المتسوقين بعد 30 يوماً. تلغي إعادة الاتصال قبل الحذف هذه الجدولة. نحتفظ بسجلات الفوترة ودفتر الوحدات والروابط المحاسبية المطلوبة، وتُزال الصور والمرفقات المخزنة بواسطة عملية التنظيف.",
             "نحتفظ بمعلومات حساب التاجر ومساحة العمل طوال مدة الحساب. لطلب حذف الحساب أرسل بريداً إلى grindctrlnow@gmail.com. نُكمل الحذف خلال 30 يوماً، مع مراعاة السجلات التي يلزم الاحتفاظ بها قانوناً.",
             "تُحفظ سجلات الفوترة ودفتر الوحدات للمدة التي يفرضها قانون المحاسبة، ولا تُعدّل بسبب حذف بيانات الخصوصية. نحتفظ بسجلات المهام أو الاشتراكات اللازمة للحفاظ على الروابط المحاسبية لهذا الغرض، مع حذف الصور الناتجة.",
             "تخضع بيانات Sentry لإعدادات الاحتفاظ المحددة في خدمة المراقبة. لم نتحقق بصورة مستقلة من مدة الاحتفاظ بها."
@@ -372,7 +380,7 @@ export const legalCopy: Record<LegalPage, Record<SiteLocale, LegalCopy>> = {
           "id": "agreement",
           "title": "Agreement",
           "paragraphs": [
-            "These Terms of Service (\"Terms\") are an agreement between Grind CTRL, operating from Egypt (\"GrindCTRL\", \"we\", \"us\"), and the merchant business using the service (\"you\"). By creating an account, installing our Shopify app, or using the dashboard, you agree to these Terms.",
+            "These Terms of Service (\"Terms\") are an agreement between Grind CTRL, operating from Egypt (\"GrindCTRL\", \"we\", \"us\"), and the merchant business using the service (\"you\"). By creating an account, installing our Shopify app or WooCommerce plugin, adding Store Chat code to your website, or using the dashboard, you agree to these Terms.",
             "If you act on behalf of a business, you confirm that you have authority to bind it."
           ]
         },
@@ -456,7 +464,7 @@ export const legalCopy: Record<LegalPage, Record<SiteLocale, LegalCopy>> = {
           "paragraphs": [
             "We may suspend or terminate access for unacceptable use, when required by law, or when an account poses a security risk to the service or other merchants. You may stop using the service at any time.",
             "Request account deletion by emailing grindctrlnow@gmail.com. We complete deletion within 30 days, subject to legally required retention. Termination and refund requests remain subject to applicable law and any separate written agreement.",
-            "Store Chat conversations, messages, and attachments are deleted 12 months after the conversation’s last activity. Visitor records are deleted once no conversation requiring retention remains; records with no conversation are deleted after 12 months of inactivity. Try-on retention is described in the Privacy policy.",
+            "Store Chat conversations, messages, and attachments are deleted 12 months after the conversation’s last activity. Visitor records without remaining conversations are deleted after 12 months of inactivity. Captured leads, including names and contact details, are deleted 12 months after creation, or earlier when their linked conversation is deleted. Try-on retention is described in the Privacy policy.",
             "Billing and credit ledger records are retained for as long as accounting law requires and are never altered by privacy deletion. Job and subscription records needed to preserve accounting links are retained for that purpose, while generated images are removed."
           ]
         },
@@ -464,8 +472,9 @@ export const legalCopy: Record<LegalPage, Record<SiteLocale, LegalCopy>> = {
           "id": "disconnecting",
           "title": "Disconnecting a store",
           "paragraphs": [
-            "A store owner can disconnect the store from the dashboard. Disconnecting removes dashboard access; it does not delete store data or uninstall the Shopify app.",
+            "A store owner can disconnect the store from the dashboard. For a Shopify app installation, disconnecting removes dashboard access; it does not delete store data or uninstall the Shopify app.",
             "Store Chat continues in Shopify admin, and conversations, knowledge, replies, and settings stay with the store subject to the Privacy policy’s retention rules. An authorized person with Shopify admin access can reconnect through the claim process.",
+            "Disconnecting a pasted-code store disables its widgets and schedules deletion of its shopper data after 30 days. Reconnecting before deletion cancels that schedule. Billing and credit ledger records and their required accounting links are retained; stored images and attachments are removed by the cleanup process.",
             "Shopify privacy requests are handled separately and completed within 30 days of receipt. Where multiple apps share store data, deletion is reviewed manually to protect the other app’s data."
           ]
         },
@@ -528,7 +537,7 @@ export const legalCopy: Record<LegalPage, Record<SiteLocale, LegalCopy>> = {
           "id": "agreement",
           "title": "الاتفاق",
           "paragraphs": [
-            "تشكل شروط الخدمة هذه اتفاقاً بين Grind CTRL التي تعمل من مصر، ويشار إليها باسم GrindCTRL أو «نحن»، وبين نشاط التاجر الذي يستخدم الخدمة، ويشار إليه باسم «أنت». بإنشاء حساب أو تثبيت تطبيق Shopify أو استخدام لوحة التحكم، فإنك توافق على هذه الشروط.",
+            "تشكل شروط الخدمة هذه اتفاقاً بين Grind CTRL التي تعمل من مصر، ويشار إليها باسم GrindCTRL أو «نحن»، وبين نشاط التاجر الذي يستخدم الخدمة، ويشار إليه باسم «أنت». بإنشاء حساب أو تثبيت تطبيق Shopify أو إضافة WooCommerce أو إضافة كود Store Chat إلى موقعك أو استخدام لوحة التحكم، فإنك توافق على هذه الشروط.",
             "إذا كنت تتصرف نيابة عن شركة، فأنت تؤكد امتلاكك صلاحية إلزامها بهذا الاتفاق."
           ]
         },
@@ -612,7 +621,7 @@ export const legalCopy: Record<LegalPage, Record<SiteLocale, LegalCopy>> = {
           "paragraphs": [
             "يجوز لنا تعليق الوصول أو إنهاؤه بسبب استخدام غير مقبول، أو عندما يقتضي القانون ذلك، أو إذا شكل الحساب خطراً أمنياً على الخدمة أو التجار الآخرين. يمكنك التوقف عن استخدام الخدمة في أي وقت.",
             "لطلب حذف الحساب راسل grindctrlnow@gmail.com. نُكمل الحذف خلال 30 يوماً، مع مراعاة الاحتفاظ المطلوب قانوناً. تظل طلبات الإنهاء والاسترداد خاضعة للقانون المعمول به وأي اتفاق مكتوب منفصل.",
-            "تُحذف محادثات Store Chat ورسائلها ومرفقاتها بعد 12 شهراً من آخر نشاط في المحادثة. تُحذف سجلات الزوار عند عدم بقاء محادثة تستلزم الاحتفاظ بها؛ وتُحذف السجلات التي لا توجد لها محادثة بعد 12 شهراً من عدم النشاط. توضح سياسة الخصوصية مدد الاحتفاظ ببيانات القياس الافتراضي.",
+            "تُحذف محادثات Store Chat ورسائلها ومرفقاتها بعد 12 شهراً من آخر نشاط في المحادثة. تُحذف سجلات الزوار التي لم تعد لها محادثات بعد 12 شهراً من عدم النشاط. تُحذف بيانات العملاء المحتملين المسجلة، بما فيها الأسماء وبيانات الاتصال، بعد 12 شهراً من إنشائها، أو قبل ذلك عند حذف المحادثة المرتبطة بها. توضح سياسة الخصوصية مدد الاحتفاظ ببيانات القياس الافتراضي.",
             "تُحفظ سجلات الفوترة ودفتر الوحدات للمدة التي يفرضها قانون المحاسبة، ولا تُعدّل بسبب حذف بيانات الخصوصية. نحتفظ بسجلات المهام والاشتراكات اللازمة للحفاظ على الروابط المحاسبية لهذا الغرض، مع حذف الصور الناتجة."
           ]
         },
@@ -620,8 +629,9 @@ export const legalCopy: Record<LegalPage, Record<SiteLocale, LegalCopy>> = {
           "id": "disconnecting",
           "title": "فصل متجر",
           "paragraphs": [
-            "يمكن لمالك المتجر فصله من لوحة التحكم. يزيل الفصل الوصول من لوحة التحكم، لكنه لا يحذف بيانات المتجر ولا يلغي تثبيت تطبيق Shopify.",
+            "يمكن لمالك المتجر فصله من لوحة التحكم. بالنسبة إلى تثبيت تطبيق Shopify، يزيل الفصل الوصول من لوحة التحكم، لكنه لا يحذف بيانات المتجر ولا يلغي تثبيت تطبيق Shopify.",
             "تستمر Store Chat داخل لوحة Shopify، وتبقى المحادثات والمعرفة والردود والإعدادات مع المتجر وفق مدد الاحتفاظ في سياسة الخصوصية. يمكن لشخص مخول لديه وصول إلى لوحة Shopify إعادة الربط عبر إجراءات إثبات الملكية.",
+            "يؤدي فصل متجر مثبت بكود ملصق إلى تعطيل أدواته وجدولة حذف بيانات المتسوقين بعد 30 يوماً. تلغي إعادة الاتصال قبل الحذف هذه الجدولة. نحتفظ بسجلات الفوترة ودفتر الوحدات والروابط المحاسبية المطلوبة، وتُزال الصور والمرفقات المخزنة بواسطة عملية التنظيف.",
             "تُعالج طلبات خصوصية Shopify بشكل منفصل وتُستكمل خلال 30 يوماً من استلامها. عندما تشترك تطبيقات متعددة في بيانات المتجر، يُراجع الحذف يدوياً لحماية بيانات التطبيق الآخر."
           ]
         },
