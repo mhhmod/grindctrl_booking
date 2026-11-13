@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Button, Group, Text } from '@mantine/core';
+import Link from 'next/link';
+import { Button, Group } from '@mantine/core';
 import { GcIcon } from '@/components/icons';
 import { BOOKING_URL } from '@/lib/booking';
 import { getPlanCopy } from '@/lib/dashboard/plan-copy';
@@ -275,6 +276,36 @@ export function V16Plan({ view, locale }: { view: PlanView; locale: SiteLocale }
             </section>
           )}
 
+          {view.noPlan && (
+            // No plan: the same card says so and names the one next step.
+            <section aria-labelledby="plan-yours" className={`${classes.card} ${classes.section}`}>
+              <div className={classes.headRow}>
+                <h2 id="plan-yours" className={classes.label}>
+                  {copy.yourPlan}
+                </h2>
+                <Badge tone="danger" label={view.noPlan.status} />
+              </div>
+              <p className={classes.noPlanBody}>{view.noPlan.body}</p>
+              {view.noPlan.kind === 'connect' ? (
+                <Button component={Link} href="/dashboard/store#connect" radius="pill" className={classes.noPlanAction}>
+                  {view.noPlan.action}
+                </Button>
+              ) : (
+                <Button
+                  component="a"
+                  href={BOOKING_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  radius="pill"
+                  className={classes.noPlanAction}
+                  rightSection={<GcIcon name="ext" size={15} />}
+                >
+                  {view.noPlan.action}
+                </Button>
+              )}
+            </section>
+          )}
+
           {view.cycles && (
             <section aria-labelledby="plan-cycles" className={`${classes.card} ${classes.section}`}>
               <h2 id="plan-cycles" className={classes.label}>
@@ -332,6 +363,8 @@ export function V16Plan({ view, locale }: { view: PlanView; locale: SiteLocale }
             </h2>
             <p className={classes.muted}>{copy.plansLine}</p>
           </div>
+          {/* What limits Store Chat is the same on every plan, so it is said once here and counted on each card. */}
+          <p className={classes.muted}>{copy.storeChatLimitLine}</p>
           <ul className={classes.plans}>
             {view.plans.map((plan) => (
               <li key={plan.key} className={classes.planCard} data-current={plan.current}>
@@ -343,7 +376,7 @@ export function V16Plan({ view, locale }: { view: PlanView; locale: SiteLocale }
                   <span className={classes.planCardPrice}>{plan.price}</span>
                 </Group>
                 <span className={classes.muted}>{plan.looks}</span>
-                <Text size="sm" c="dimmed">{copy.storeChatIncluded}</Text>
+                <span className={classes.muted}>{plan.chat}</span>
               </li>
             ))}
           </ul>

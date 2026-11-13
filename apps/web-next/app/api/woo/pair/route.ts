@@ -4,6 +4,7 @@ import { scheduleStoreConnectedEmail } from '@/lib/email/store-connected-sender'
 import { readLimitedJson } from '@/lib/http/read-limited-body';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { scheduleProductsRefresh } from '@/lib/messenger/products-refresh';
+import { adoptStoreNameFromAddress } from '@/lib/dashboard/store-domains';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import {
   RequestRateLimitError,
@@ -256,6 +257,7 @@ export async function POST(request: NextRequest) {
       .update({ rest_base_url: input.restUrl })
       .eq('widget_site_id', siteId);
     if (restBaseWrite.error) console.warn('[woo] rest base not stored', { siteId });
+    await adoptStoreNameFromAddress(siteId, input.homeUrl);
     scheduleStoreConnectedEmail(siteId, { path: 'woocommerce', host: new URL(input.homeUrl).hostname });
     scheduleProductsRefresh(siteId);
 

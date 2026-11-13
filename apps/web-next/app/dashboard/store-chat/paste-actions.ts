@@ -16,6 +16,7 @@ import {
   grantPasteDomainPlan, listPasteDomains, normalizePasteDomain, pasteTrust, rotatePasteSecret, shopAppInstalled,
 } from '@/lib/paste/store';
 import { listActiveWooSiteIds } from '@/lib/woo/connection';
+import { adoptStoreNameFromAddress } from '@/lib/dashboard/store-domains';
 import { buildPasteSnippet } from '@/lib/paste/snippet';
 import { schedulePasteDomainPlatformCheck } from '@/lib/paste/platform-check';
 import { checkPasteDomain } from '@/lib/paste/domain-check';
@@ -58,6 +59,8 @@ export async function enablePasteInstallAction(siteId: string, platform: PastePl
       if (error instanceof PasteError && error.code === 'connection_conflict') holder = conflictHolder(site, shop);
       throw error;
     }
+    // The store's address is known now: it stops being "My store", unless its owner named it.
+    if (shop) await adoptStoreNameFromAddress(site.id, shop);
     return { tenantKey: siteTenantKey(site.id) };
   });
   const heldBy = await holder;
@@ -122,6 +125,8 @@ export async function addPasteDomainAction(siteId: string, domain: string): Prom
   return authorized(siteId, 'settings', 'write', async (site, userId) => {
     const added = await addPasteDomain(site.id, domain);
     await recordAudit({ siteId: site.id, actorClerkUserId: userId, action: 'trusted_domain_added', detail: { domain_id: added.id, domain: added.domain, state: added.state } });
+    // An address this site holds names a store still called "My store".
+    if (added.state === 'trusted') await adoptStoreNameFromAddress(site.id, added.domain);
     if (added.domainVerified || added.state === 'disputed') return added;
     try {
       return (await checkPasteDomain({ id: site.id, embedKey: site.embed_key }, added, 'added')).domain;

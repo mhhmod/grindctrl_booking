@@ -385,7 +385,7 @@ export async function fetchStorefrontPage(domain: string, options: {
   }
 }
 
-export type PublicPage = { url: string; contentType: string; body: Buffer };
+export type PublicPage = { url: string; contentType: string; body: Buffer; /** 2xx, or one of `passStatuses`. */ status: number };
 
 function withAbort<T>(work: Promise<T>, signal: AbortSignal): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -400,10 +400,14 @@ function withAbort<T>(work: Promise<T>, signal: AbortSignal): Promise<T> {
  *  the same pinned transport: every hop's host resolved and refused if any
  *  answer is non-public, the socket held to the checked address, redirects
  *  to any public host (each one checked again), no cookies or credentials,
- *  and the decoded body cut at `maxBytes` rather than read whole. */
+ *  and the decoded body cut at `maxBytes` rather than read whole.
+ *  `passStatuses`: non-2xx answers the caller wants to read rather than have
+ *  reported as a failure. A Shopify store behind its password serves that
+ *  page with 401 or 403 as well as 200 (scanShopStorefront reads all three),
+ *  and a caller that only saw "failed" could not tell it from an outage. */
 export async function fetchPublicPage(raw: string, options: {
   maxBytes: number; accept: string; transport?: StorefrontTransport; lookup?: StorefrontLookup;
-  timeoutMs?: number; allowedHost?: (hostname: string) => boolean;
+  timeoutMs?: number; allowedHost?: (hostname: string) => boolean; passStatuses?: readonly number[];
 }): Promise<PublicPage | { failure: StorefrontFailure; /** The HTTP status, for failure 'status'. */ status?: number }> {
   const transport = options.transport ?? pinnedStorefrontTransport;
   const lookup = options.lookup ?? defaultLookup;
@@ -432,8 +436,10 @@ export async function fetchPublicPage(raw: string, options: {
         url = next;
         continue;
       }
-      if (response.status < 200 || response.status > 299) throw new ScanStop('status', response.status);
-      return { url: url.toString(), contentType: response.contentType, body: response.body.subarray(0, options.maxBytes) };
+      if ((response.status < 200 || response.status > 299) && !options.passStatuses?.includes(response.status)) {
+        throw new ScanStop('status', response.status);
+      }
+      return { url: url.toString(), contentType: response.contentType, body: response.body.subarray(0, options.maxBytes), status: response.status };
     }
   } catch (error) {
     if (!(error instanceof ScanStop)) return { failure: 'network' };

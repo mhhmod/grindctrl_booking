@@ -33,6 +33,15 @@ beforeEach(() => {
 });
 
 describe('Try-On settings safe action result', () => {
+  it.each(['steps', 'pulse', 'bar'])('persists the selected loading style %s', async (style) => {
+    const fd = new FormData();
+    fd.set('shop', 'owned.myshopify.com');
+    fd.set('loading_style', style);
+    fd.set('loading_steps', 'Reading\nFitting\nFinishing');
+    expect(await saveTryOnSettingsAction(fd)).toEqual({ ok: true });
+    expect(mocks.save).toHaveBeenCalledWith('owned.myshopify.com', expect.objectContaining({ loadingStyle: style, loadingSteps: ['Reading', 'Fitting', 'Finishing'] }));
+    expect(mocks.owned).toHaveBeenCalledWith('owned.myshopify.com', { capability: 'settings' });
+  });
   it('returns rate-limit details without a thrown/redacted server-action error', async () => {
     mocks.limit.mockRejectedValueOnce(new RequestRateLimitError(429, 12));
     expect(await saveTryOnSettingsAction(new FormData())).toMatchObject({ ok: false, code: 'rate_limited', retryAfterSeconds: 12 });

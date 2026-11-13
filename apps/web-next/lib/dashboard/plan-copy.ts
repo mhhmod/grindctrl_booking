@@ -58,10 +58,27 @@ export interface PlanCopy {
   plans: string;
   plansLine: string;
   storeChatIncluded: string;
+  storeChatLimitUnknown: string;
+  /** Store Chat's limit, the same on every plan: AI replies a day. */
+  storeChatLimit: (repliesPerDay: number) => string;
+  /** A store whose AI replies are switched off: its team answers. */
+  storeChatTeamOnly: string;
+  storeChatLimitLine: string;
+  /** A store with no plan: what the usage card and Your plan say, and the next step. */
+  noLooksYet: string;
+  notStarted: string;
+  hiddenNoPlan: string;
+  noPlan: Record<NoPlanReason, { body: string; action: string }>;
   current: string;
   changePlan: string;
   couldNotLoad: string;
 }
+
+/** Why a store has no plan, as far as the page can tell, which decides its
+ *  next step: `connect` (its free plan starts once our code is confirmed on
+ *  the store), `taken` (its address already used a free plan on another
+ *  account) or `ask` (nothing the merchant can do alone). */
+export type NoPlanReason = 'connect' | 'taken' | 'ask';
 
 /** What the chart shows, for the sentence that describes it. */
 export type ChartFacts = {
@@ -139,8 +156,31 @@ const en: PlanCopy = {
   chatKeepsWorkingLine: 'It doesn’t use looks.',
   plans: 'Plans',
   plansLine: 'Every plan has Store Chat.',
-  // AI budgets are per site/environment, not plan entitlements (messenger/ai-budget.ts).
+  /* Store Chat is not sold by plan. What limits it is one daily count of AI
+     replies per store (messenger/ai-budget.ts), the same on every plan, so
+     each card says that number rather than a per-plan one that does not exist. */
   storeChatIncluded: 'Store Chat included',
+  storeChatLimitUnknown: 'Store Chat: daily AI limit unavailable. Refresh to check.',
+  storeChatLimit: (n) => `Store Chat: up to ${n.toLocaleString('en-US')} AI ${n === 1 ? 'reply' : 'replies'} a day`,
+  storeChatTeamOnly: 'Store Chat: your team answers, the assistant is off for this store',
+  storeChatLimitLine: 'The daily maximum per store is the same on every plan. Past it, new questions go to your team in the Inbox until the next day (UTC). Service capacity can send questions to your team sooner.',
+  noLooksYet: 'No looks yet',
+  notStarted: 'Your plan has not started.',
+  hiddenNoPlan: 'The Try it on button stays hidden until your plan starts.',
+  noPlan: {
+    connect: {
+      body: 'Your Free plan starts by itself once we confirm our code on your store. There is nothing to pay or choose.',
+      action: 'Check my store connection',
+    },
+    taken: {
+      body: 'This store already used its free looks on another GRINDCTRL account, so a Free plan cannot start here. Book a call and we’ll set up a plan.',
+      action: 'Talk to us to start a plan',
+    },
+    ask: {
+      body: 'This store has no plan yet. Book a call and we’ll start one.',
+      action: 'Talk to us to start a plan',
+    },
+  },
   current: 'Your plan',
   changePlan: 'To change plans, book a call with us.',
   couldNotLoad: "Your plan couldn't load just now. Refresh in a minute.",
@@ -151,6 +191,9 @@ const arLooks = (n: number) =>
 /** After "من", where two takes the genitive. */
 const arLooksOf = (n: number) =>
   arCount(n, { one: 'إطلالة واحدة', two: 'إطلالتين', few: (k) => `${k} إطلالات`, many: (k) => `${k} إطلالة` });
+/** After "حتى": "حتى 2,000 رد", with Western digits and a thousands comma. */
+const arReplies = (n: number) =>
+  arCount(n, { one: 'رد واحد', two: 'ردّين', few: (k) => `${k} ردود`, many: (k) => `${k.toLocaleString('en-US')} رد` });
 const arDays = (n: number) => arCount(n, { one: 'يوم واحد', two: 'يومين', few: (k) => `${k} أيام`, many: (k) => `${k} يوماً` });
 const arUnit = (unit: 'day' | 'month' | 'year', count: number) => {
   if (count === 1) return unit === 'month' ? 'شهرياً' : unit === 'year' ? 'سنوياً' : 'يومياً';
@@ -216,6 +259,27 @@ const ar: PlanCopy = {
   plans: 'الباقات',
   plansLine: 'كل الباقات تشمل دردشة المتجر.',
   storeChatIncluded: 'دردشة المتجر مشمولة',
+  storeChatLimitUnknown: 'دردشة المتجر: تعذّر قراءة حد المساعد اليومي. حدّث الصفحة للتحقق.',
+  storeChatLimit: (n) => `دردشة المتجر: حتى ${arReplies(n)} من المساعد يومياً`,
+  storeChatTeamOnly: 'دردشة المتجر: فريقك هو من يرد، والمساعد متوقف لهذا المتجر',
+  storeChatLimitLine: 'الحد اليومي لكل متجر واحد في كل الباقات. بعده تصل الأسئلة الجديدة إلى فريقك في صندوق الوارد حتى اليوم التالي (بتوقيت UTC). قد تؤدي حدود سعة الخدمة إلى تحويل الأسئلة إلى فريقك قبل ذلك.',
+  noLooksYet: 'لا إطلالات بعد',
+  notStarted: 'لم تبدأ باقتك بعد.',
+  hiddenNoPlan: 'يبقى زر التجربة مخفياً حتى تبدأ باقتك.',
+  noPlan: {
+    connect: {
+      body: 'تبدأ باقتك المجانية تلقائياً فور تأكدنا من وجود الكود على متجرك. لا شيء تدفعه أو تختاره.',
+      action: 'تحقق من ربط متجري',
+    },
+    taken: {
+      body: 'استخدم هذا المتجر إطلالاته المجانية من قبل في حساب آخر على GRINDCTRL، لذلك لا يمكن بدء باقة مجانية هنا. احجز مكالمة وسنجهّز لك باقة.',
+      action: 'تواصل معنا لبدء باقة',
+    },
+    ask: {
+      body: 'لا توجد باقة لهذا المتجر بعد. احجز مكالمة وسنبدأ لك واحدة.',
+      action: 'تواصل معنا لبدء باقة',
+    },
+  },
   current: 'باقتك',
   changePlan: 'لتغيير الباقة، احجز مكالمة معنا.',
   couldNotLoad: 'تعذّر تحميل باقتك الآن. حدّث الصفحة بعد دقيقة.',

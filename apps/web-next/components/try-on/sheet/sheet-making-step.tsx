@@ -7,7 +7,14 @@ import { SheetLayout } from './sheet-layout';
 
 /* The shopper's photo stays visible while real status drives the steps.
    The sheet owns the polite live region; the continuous scan and the
-   eased bar only convey that work continues, never that it has finished. */
+   eased bar only convey that work continues, never that it has finished.
+
+   The merchant's loading animation (TryOnStudio) decides which of the three
+   leads, as its dashboard preview shows it:
+     steps  the checklist, with a thin bar
+     pulse  the product photo pulsing, no bar and no checklist
+     bar    a tall progress bar, no checklist
+   The bar conveys ongoing work, not a measured completion percentage. */
 export function SheetMakingStep({
   copy,
   photoDataUrl,
@@ -30,32 +37,32 @@ export function SheetMakingStep({
 
   const content = (
     <>
-      <div className="flex flex-col gap-5 short:gap-4" aria-busy="true">
-        <div className={`flex items-end justify-center gap-3 ${loadingStyle === 'pulse' ? 'motion-safe:animate-pulse' : ''}`}>
+      <div className="flex flex-col gap-5 short:gap-4" aria-busy="true" data-loading-style={loadingStyle}>
+        <div className="flex items-end justify-center gap-3">
           {photoDataUrl && (
             <div className="relative w-36 max-w-[50%] overflow-hidden rounded-2xl border sm:w-44 short:w-24">
               {/* A data URL the shopper chose; next/image cannot optimise it. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={photoDataUrl} alt={copy.yourPhotoAlt} className="aspect-[3/4] w-full object-cover" />
-              <div
+              {loadingStyle === 'steps' && <div
                 aria-hidden="true"
                 className="gc-anim-scan absolute start-0 end-0 top-0 h-[36%] bg-gradient-to-b from-transparent to-primary/25 motion-reduce:hidden"
-              />
+              />}
             </div>
           )}
           {piece.imageUrl && (
             // The store's own product image, already on Shopify's CDN.
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={piece.imageUrl} alt={piece.name} className="aspect-[3/4] w-24 rounded-xl border bg-muted/40 object-cover sm:w-28 short:w-16" />
+            <img src={piece.imageUrl} alt={piece.name} className={`aspect-[3/4] w-24 rounded-xl border bg-muted/40 object-cover sm:w-28 short:w-16 ${loadingStyle === 'pulse' ? 'motion-safe:animate-pulse' : ''}`} />
           )}
         </div>
 
-        <div className={`${loadingStyle === 'bar' ? 'h-1.5' : 'h-1'} w-full overflow-hidden rounded-full bg-muted`} aria-hidden="true">
+        {loadingStyle !== 'pulse' && <div data-making-bar className={`${loadingStyle === 'bar' ? 'h-2.5' : 'h-1'} w-full overflow-hidden rounded-full bg-muted`} aria-hidden="true">
           <div
             className={`h-full rounded-full bg-primary transition-[width] duration-500 ease-out motion-reduce:transition-none ${progress.overEstimate ? 'motion-safe:animate-pulse' : ''}`}
             style={{ width: `${Math.round(progress.fraction * 1000) / 10}%` }}
           />
-        </div>
+        </div>}
 
         <div className="space-y-1">
           <h2 className="text-xl font-semibold tracking-tight text-foreground">{copy.makingTitle}</h2>

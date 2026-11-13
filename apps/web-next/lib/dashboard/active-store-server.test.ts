@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ shops: vi.fn(), sites: vi.fn(), woo: vi.fn(), wooContext: vi.fn(), freePlan: vi.fn(), paste: vi.fn(), connection: vi.fn() }));
+const mocks = vi.hoisted(() => ({ shops: vi.fn(), sites: vi.fn(), woo: vi.fn(), wooContext: vi.fn(), freePlan: vi.fn(), paste: vi.fn(), connection: vi.fn(),
+  shopPlan: vi.fn(), storeDomains: vi.fn() }));
 vi.mock('server-only', () => ({}));
 vi.mock('next/headers', () => ({ headers: vi.fn(), cookies: vi.fn() }));
 vi.mock('@clerk/nextjs/server', () => ({ auth: async () => ({ userId: 'user_nour' }) }));
@@ -10,8 +11,9 @@ vi.mock('@/lib/woo/connection', () => ({ listActiveWooSiteIds: mocks.woo, getAct
 vi.mock('@/lib/woo/free-plan', () => ({ ensureWooFreePlan: mocks.freePlan }));
 vi.mock('@/lib/paste/store', async (original) => ({
   pasteTrust: (await original<typeof import('@/lib/paste/store')>()).pasteTrust,
-  listActivePasteSiteIds: mocks.paste, getPasteConnection: mocks.connection,
+  listActivePasteSiteIds: mocks.paste, getPasteConnection: mocks.connection, claimPasteShopPlan: mocks.shopPlan,
 }));
+vi.mock('@/lib/dashboard/store-domains', () => ({ listSiteStoreDomains: mocks.storeDomains }));
 vi.mock('@/lib/messenger/provisioning', () => ({ listMessengerSitesReadOnly: mocks.sites }));
 
 import {
@@ -32,6 +34,7 @@ beforeEach(() => {
   mocks.sites.mockResolvedValue([{ id: SITE, name: 'Kids', domain: 'kids.example', role: 'admin' }]);
   mocks.woo.mockResolvedValue(new Set());
   mocks.paste.mockResolvedValue(new Set());
+  mocks.storeDomains.mockResolvedValue(new Map());
 });
 
 it('opens the last used store on the server and marks that same store in the first shell render', async () => {
@@ -114,14 +117,26 @@ describe('WooCommerce stores', () => {
     expect(await getActiveStoreTimeZone(woo)).toBe('UTC');
   });
 
-  it('claims the free plan only for a WooCommerce store', async () => {
+  it('claims the WooCommerce free plan only for a WooCommerce store', async () => {
     await ensureActiveStorePlan(woo);
     expect(mocks.freePlan).toHaveBeenCalledWith(`site:${SITE}`);
+    expect(mocks.shopPlan).not.toHaveBeenCalled();
     mocks.freePlan.mockClear();
     await ensureActiveStorePlan({ shopDomain: 'mine.myshopify.com', siteId: null, tenantKey: 'mine.myshopify.com', platform: 'shopify' });
     await ensureActiveStorePlan({ shopDomain: null, siteId: SITE });
     await ensureActiveStorePlan({ shopDomain: null, siteId: SITE, tenantKey: `site:${SITE}`, platform: 'paste' });
     expect(mocks.freePlan).not.toHaveBeenCalled();
+  });
+
+  it('claims a pasted-code store\'s free plan when its owner opens the dashboard, and for no other store', async () => {
+    // A shop proven without a plan (the proof and the signed render crossed) heals here.
+    await ensureActiveStorePlan({ shopDomain: null, siteId: SITE, tenantKey: `site:${SITE}`, platform: 'paste' });
+    expect(mocks.shopPlan).toHaveBeenCalledExactlyOnceWith(SITE);
+    mocks.shopPlan.mockClear();
+    await ensureActiveStorePlan({ shopDomain: 'mine.myshopify.com', siteId: SITE, tenantKey: 'mine.myshopify.com', platform: 'shopify' });
+    await ensureActiveStorePlan({ shopDomain: null, siteId: SITE, tenantKey: null, platform: null });
+    await ensureActiveStorePlan(woo);
+    expect(mocks.shopPlan).not.toHaveBeenCalled();
   });
 
   it('marks an opted-in paste tenant without granting a plan during the dashboard read', async () => {

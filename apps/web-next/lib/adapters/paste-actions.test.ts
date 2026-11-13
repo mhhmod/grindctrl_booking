@@ -1,7 +1,9 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const m = vi.hoisted(() => ({ auth: vi.fn(), access: vi.fn(), limit: vi.fn(), enable: vi.fn(), add: vi.fn(), remove: vi.fn(), prove: vi.fn(), proveMeta: vi.fn(), rotate: vi.fn(),
-  connection: vi.fn(), status: vi.fn(), invalidate: vi.fn(), check: vi.fn(), fingerprint: vi.fn(), domainCheck: vi.fn(), grant: vi.fn(), list: vi.fn(), audit: vi.fn(), privacy: vi.fn(), disconnect: vi.fn(), appInstalled: vi.fn(), woo: vi.fn() }));
+  connection: vi.fn(), status: vi.fn(), invalidate: vi.fn(), check: vi.fn(), fingerprint: vi.fn(), domainCheck: vi.fn(), grant: vi.fn(), list: vi.fn(), audit: vi.fn(), privacy: vi.fn(), disconnect: vi.fn(), appInstalled: vi.fn(), woo: vi.fn(),
+  adoptName: vi.fn() }));
+vi.mock('@/lib/dashboard/store-domains', () => ({ adoptStoreNameFromAddress: m.adoptName }));
 vi.mock('@/lib/paste/privacy', () => ({ pasteShopperPrivacy: m.privacy }));
 vi.mock('@/lib/woo/connection', () => ({ listActiveWooSiteIds: m.woo }));
 vi.mock('@/lib/messenger/conversations', () => ({ recordAudit: m.audit }));
@@ -54,6 +56,22 @@ describe('owner-authorized paste plumbing actions', () => {
     expect(m.audit).toHaveBeenCalledWith({ siteId: SITE, actorClerkUserId: 'owner', action: 'trusted_domain_added', detail: { domain_id: 'domain-a', domain: 'merchant.example', state: 'claimed' } });
     expect(m.audit).toHaveBeenCalledWith({ siteId: SITE, actorClerkUserId: 'owner', action: 'trusted_domain_removed', detail: { domain_id: 'domain-a' } });
     expect(m.audit).toHaveBeenCalledWith({ siteId: SITE, actorClerkUserId: 'owner', action: 'site_key_regenerated', detail: { version: 2 } });
+  });
+  it('names a store still called "My store" after the address it connects, and never after a refused or untrusted one', async () => {
+    await enablePasteInstallAction(SITE, 'shopify', 'Harmong-EG.myshopify.com');
+    expect(m.adoptName).toHaveBeenCalledExactlyOnceWith(SITE, 'harmong-eg.myshopify.com');
+    m.adoptName.mockClear();
+    // A website has no address until one is added and held by this site.
+    await enablePasteInstallAction(SITE, 'website');
+    await addPasteDomainAction(SITE, 'merchant.example');
+    expect(m.adoptName).not.toHaveBeenCalled();
+    m.add.mockResolvedValue({ id: 'domain-a', domain: 'merchant.example', state: 'trusted', domainVerified: true });
+    await addPasteDomainAction(SITE, 'merchant.example');
+    expect(m.adoptName).toHaveBeenCalledExactlyOnceWith(SITE, 'merchant.example');
+    m.adoptName.mockClear();
+    m.enable.mockRejectedValue(new PasteError('connection_conflict'));
+    await enablePasteInstallAction(SITE, 'shopify', 'taken.myshopify.com');
+    expect(m.adoptName).not.toHaveBeenCalled();
   });
   it('creates a site tenant without granting credits or changing visible setup', async () => {
     expect(await enablePasteInstallAction(SITE, 'shopify', 'Merchant.MyShopify.com')).toEqual({ ok: true, data: { tenantKey: `site:${SITE}` } });

@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   pending: vi.fn(),
   locale: vi.fn(),
   facts: vi.fn(),
+  ensurePlan: vi.fn(),
   currencyCookie: undefined as string | undefined,
 }));
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }));
@@ -31,6 +32,7 @@ vi.mock('@/lib/dashboard/active-store-server', () => ({
   getActiveStoreTimeZone: mocks.timeZone,
   listDashboardShops: mocks.shops,
   getPendingPasteShop: mocks.pending,
+  ensureActiveStorePlan: mocks.ensurePlan,
 }));
 vi.mock('@/components/dashboard/v16/states', () => ({
   V16FinishConfirming: ({ shop }: { shop: string }) => <div data-testid="finish-confirming">{shop}</div>,
@@ -42,9 +44,10 @@ vi.mock('@/components/dashboard/v16/states', () => ({
 }));
 vi.mock('@/lib/dashboard/plan-data', () => ({ getPlanFacts: mocks.facts }));
 vi.mock('@/components/dashboard/v16/plan/v16-plan', () => ({
-  V16Plan: ({ view, locale }: { view: { headline: { left: string } }; locale: string }) => (
+  V16Plan: ({ view, locale }: { view: { headline: { left: string }; noPlan: { kind: string; body: string } | null }; locale: string }) => (
     <div data-testid="v16-plan">
       {locale}:{view.headline.left}
+      {view.noPlan && <span data-testid="no-plan">{view.noPlan.kind}:{view.noPlan.body}</span>}
     </div>
   ),
   V16PlanError: ({ locale }: { locale: string }) => <div data-testid="v16-plan-error">{locale}</div>,
@@ -65,6 +68,7 @@ beforeEach(() => {
   mocks.shops.mockResolvedValue([]);
   mocks.pending.mockResolvedValue(null);
   mocks.locale.mockResolvedValue('en');
+  mocks.ensurePlan.mockResolvedValue(null);
   mocks.facts.mockResolvedValue({
     now: NOW,
     timeZone: 'Africa/Cairo',
@@ -89,8 +93,48 @@ describe('DashboardPlanPage', () => {
   it('shows the owner the plan of the active store, in the store’s time zone', async () => {
     render(await DashboardPlanPage());
     expect(mocks.user).toHaveBeenCalledWith('/dashboard/plan');
-    expect(mocks.facts).toHaveBeenCalledWith({ shop: SHOP, timeZone: 'Africa/Cairo', currency: 'USD' });
+    expect(mocks.facts).toHaveBeenCalledWith({ shop: SHOP, siteId: 'site_1', timeZone: 'Africa/Cairo', currency: 'USD' });
     expect(screen.getByTestId('v16-plan')).toHaveTextContent('en:150 left');
+    expect(screen.queryByTestId('no-plan')).not.toBeInTheDocument();
+  });
+
+  /* The owner's pasted-code Shopify store: proven, no plan, nothing to do. */
+  describe('a store with no plan', () => {
+    const SITE = '11111111-1111-4111-8111-111111111111';
+    const none = { planKey: null, planName: null, status: 'none', isFree: false, rendersIncluded: 0, topUpCreditsRemaining: 0,
+      totalCreditsRemaining: 0, currentPeriodStart: null, currentPeriodEnd: null, available: false };
+    const noPlanFacts = { now: NOW, timeZone: 'Africa/Cairo', plan: none, plans: [], looks: [] };
+    const paste = { shopDomain: null, siteId: SITE, tenantKey: `site:${SITE}`, platform: 'paste' };
+
+    it('claims the free plan before reading the plan, so the first open already shows it', async () => {
+      mocks.active.mockResolvedValue(paste);
+      render(await DashboardPlanPage());
+      expect(mocks.ensurePlan).toHaveBeenCalledExactlyOnceWith(paste);
+      expect(mocks.ensurePlan.mock.invocationCallOrder[0]).toBeLessThan(mocks.facts.mock.invocationCallOrder[0]);
+      expect(screen.getByTestId('v16-plan')).toHaveTextContent('en:150 left');
+    });
+
+    it('sends a pasted-code or WooCommerce store to its connection, the one thing that starts the Free plan', async () => {
+      mocks.active.mockResolvedValue(paste);
+      mocks.facts.mockResolvedValue(noPlanFacts);
+      render(await DashboardPlanPage());
+      expect(screen.getByTestId('v16-plan')).toHaveTextContent('en:No looks yet');
+      expect(screen.getByTestId('no-plan')).toHaveTextContent('connect:Your Free plan starts by itself once we confirm our code on your store.');
+    });
+
+    it('says so when the address already used its free plan on another account, and offers the call', async () => {
+      mocks.active.mockResolvedValue(paste);
+      mocks.ensurePlan.mockResolvedValue('apex_taken');
+      mocks.facts.mockResolvedValue(noPlanFacts);
+      render(await DashboardPlanPage());
+      expect(screen.getByTestId('no-plan')).toHaveTextContent('call:This store already used its free looks on another GRINDCTRL account');
+    });
+
+    it('offers the call to a Shopify app store, which has nothing to connect', async () => {
+      mocks.facts.mockResolvedValue(noPlanFacts);
+      render(await DashboardPlanPage());
+      expect(screen.getByTestId('no-plan')).toHaveTextContent('call:This store has no plan yet.');
+    });
   });
 
   it('lists plans in the currency chosen on the pricing page, ignoring anything else', async () => {

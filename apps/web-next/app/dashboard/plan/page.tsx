@@ -3,9 +3,10 @@ import { redirect } from 'next/navigation';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { getRequestLocale } from '@/lib/auth/locale';
 import {
-  getActiveStore, getActiveStoreRole, getActiveStoreTimeZone, getPendingPasteShop, listDashboardShops,
+  ensureActiveStorePlan, getActiveStore, getActiveStoreRole, getActiveStoreTimeZone, getPendingPasteShop, listDashboardShops,
 } from '@/lib/dashboard/active-store-server';
 import { activeTenantKey } from '@/lib/dashboard/active-store';
+import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
 import { shopChoices } from '@/lib/dashboard/shell-model';
 import { roleCan } from '@/lib/rbac/dashboard-policy';
 import { CURRENCY_COOKIE, resolveCurrency } from '@/lib/pricing/currency';
@@ -41,7 +42,14 @@ export default async function DashboardPlanPage() {
   const currency = resolveCurrency({ cookie: cookieStore.get(CURRENCY_COOKIE)?.value ?? null, country: null });
   let view: PlanView | null = null;
   try {
-    view = buildPlanView(await getPlanFacts({ shop, timeZone, currency }), getPlanCopy(locale), locale);
+    /* The same claim the layout makes, made here before the plan is read:
+       a layout and its page render together, so without it the first open
+       of a store whose free plan was just claimed could still read "no
+       plan". Its answer also names the next step for a store with none. */
+    const claim = await ensureActiveStorePlan(activeStore);
+    const facts = await getPlanFacts({ shop, siteId: activeStore.siteId, timeZone, currency });
+    const noPlanReason = claim === 'apex_taken' ? 'taken' : isSiteTenantKey(shop) ? 'connect' : 'ask';
+    view = buildPlanView({ ...facts, noPlanReason }, getPlanCopy(locale), locale);
   } catch (error) {
     console.error('[plan] failed:', error instanceof Error ? error.message : error);
   }

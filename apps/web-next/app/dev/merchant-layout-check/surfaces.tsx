@@ -9,6 +9,9 @@ import { V16TryOnApp } from '@/components/dashboard/v16/try-on/v16-tryon-app';
 import { V16YourStore, V16YourStoreTodayCard } from '@/components/dashboard/v16/your-store/v16-your-store';
 import { V16FinishConfirming, V16NeedsStore, V16NoStore } from '@/components/dashboard/v16/states';
 import { V16Plan } from '@/components/dashboard/v16/plan/v16-plan';
+import { V16ChatKnows } from '@/components/dashboard/v16/store-chat/v16-chat-knows';
+import { buildChatHead, buildPagesAndNotes, buildProductsLine } from '@/lib/dashboard/chat-knows-model';
+import { getChatKnowsCopy } from '@/lib/dashboard/chat-knows-copy';
 import { V16Team, type TeamActions } from '@/components/dashboard/v16/settings/v16-team';
 import { StoreFlagsCard } from '@/components/dashboard/store-flags-card';
 import { LaunchCard } from '@/components/dashboard/launch-card';
@@ -55,6 +58,7 @@ export function surfaceTitle(surface: Surface, nav: ReturnType<typeof getShellCo
   if (surface.startsWith('tryon')) return nav.tryOn;
   if (surface.startsWith('store')) return nav.yourStore;
   if (surface.startsWith('plan')) return nav.plan;
+  if (surface === 'chat-products') return nav.storeChat;
   if (surface === 'settings' || surface === 'team') return nav.settings;
   return null;
 }
@@ -125,7 +129,7 @@ const CATALOGUE = [
 ].map((plan, i) => ({ ...plan, id: plan.planKey, currency: 'USD', description: null, modelKey: 'lite',
   periodUnit: 'month' as const, periodCount: 1, graceDays: i ? 3 : 0, isFree: i === 0, active: true, sortOrder: i }));
 const planFacts = (zero: boolean): PlanFacts => ({
-  now: NOW, timeZone: 'Africa/Cairo', currency: 'USD', plans: CATALOGUE,
+  now: NOW, timeZone: 'Africa/Cairo', currency: 'USD', plans: CATALOGUE, chatRepliesPerDay: 2000,
   looks: zero ? Array.from({ length: 750 }, (_, i) => Date.parse('2026-11-01T08:00:00Z') + i * 13 * 60_000) : [],
   plan: zero
     ? { planKey: 'pro-v1', planName: 'Pro', status: 'active', isFree: false, rendersIncluded: 750, topUpCreditsRemaining: 0,
@@ -209,6 +213,18 @@ export function SurfaceBody({ surface, locale }: { surface: Surface; locale: Sit
     case 'plan':
     case 'plan-zero':
       return <V16Plan locale={locale} view={buildPlanView(planFacts(surface === 'plan-zero'), getPlanCopy(locale), locale)} />;
+    case 'plan-none':
+      return <V16Plan locale={locale} view={buildPlanView({ ...planFacts(false), noPlanReason: 'connect',
+        plan: { planKey: null, planName: null, status: 'none', isFree: false, rendersIncluded: 0, topUpCreditsRemaining: 0,
+          totalCreditsRemaining: 0, currentPeriodStart: null, currentPeriodEnd: null, available: false } }, getPlanCopy(locale), locale)} />;
+    case 'chat-products': {
+      const copy = getChatKnowsCopy(locale);
+      return <V16ChatKnows locale={locale} siteId="fixture-only" head={buildChatHead({ active: true, installed: true, domain: LONG_STORE,
+        solved7: 0, handedOff7: 0 }, copy)} pages={buildPagesAndNotes([], copy, NOW)}
+        products={buildProductsLine({ outcome: 'password_page', count: 0, at: new Date(NOW).toISOString() }, copy)}
+        actions={{ addKnowledge: ok, deleteKnowledge: ok, updateKnowledgeStatus: ok, syncKnowledge: ok,
+          syncKnowledgeProducts: async () => ({ ok: true, outcome: 'password_page', count: 0 }) }} />;
+    }
     case 'claim':
       return <ClaimMessage locale={locale === 'ar' ? 'ar' : 'en'}
         title={locale === 'ar' ? 'لم نتمكن من التحقق من أنك مالك المتجر' : "We couldn't verify you're the store owner"}
