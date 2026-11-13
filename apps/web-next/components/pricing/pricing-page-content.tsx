@@ -10,6 +10,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSiteViewer } from '@/components/auth/site-viewer';
 import { useLandingLocale } from '@/components/landing/landing-locale';
 import { CurrencyToggle } from '@/components/pricing/currency-toggle';
 import { SiteChip, SiteBadge } from '@/components/site/chip';
@@ -38,6 +39,7 @@ import { MarketingChrome } from '@/components/site/marketing-chrome';
 import { GrindctrlMark } from '@/components/site/marks';
 import type { SiteNavItem } from '@/components/site/site-header';
 import { trackClick } from '@/lib/analytics';
+import { SIGNED_IN_HOME } from '@/lib/auth/site-viewer';
 import { BOOKING_URL } from '@/lib/booking';
 import { displayCurrencyFor, type Currency } from '@/lib/pricing/currency';
 import {
@@ -260,6 +262,9 @@ function PlanCard({
     ...(copy?.features ?? []).filter(isFeatureVisible),
   ];
   const free = plan.isFree || family === 'free';
+  /* The free plan starts with an account; someone who has one goes to it. */
+  const signedIn = useSiteViewer().viewer.signedIn;
+  const { t: landingT } = useLandingLocale();
   const buttonClass = cn(
     'mt-5 inline-flex h-[46px] w-full items-center justify-center gap-[9px] whitespace-nowrap rounded-full px-5 text-[15px] font-bold hover:brightness-110',
     recommended ? 'bg-foreground text-background' : 'border border-border bg-card text-foreground',
@@ -334,7 +339,12 @@ function PlanCard({
           );
         })}
       </ul>
-      {free ? (
+      {free && signedIn ? (
+        <Link href={SIGNED_IN_HOME} onClick={track} className={buttonClass}>
+          <SparkleIcon size={17} />
+          {landingT.openDashboard}
+        </Link>
+      ) : free ? (
         <Link href="/sign-up" onClick={track} className={buttonClass}>
           <SparkleIcon size={17} />
           {t.choosePlan(name)}

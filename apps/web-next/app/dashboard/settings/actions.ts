@@ -7,6 +7,7 @@ import { getActiveStore, getActiveStoreRole } from '@/lib/dashboard/active-store
 import { teamWorkspaceId } from '@/lib/dashboard/team-data';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { getProfileId, UnauthorizedError } from '@/lib/messenger/provisioning';
+import { SignedOutError } from '@/lib/auth/session-user';
 import { recordAudit } from '@/lib/messenger/conversations';
 import { RequestRateLimitError, requireMerchantRateLimit } from '@/lib/request-rate-limit';
 import { RoleNotAllowedError, roleCan } from '@/lib/rbac/dashboard-policy';
@@ -30,13 +31,17 @@ import {
    admins, item 12). lib/team/invites.ts keeps the rules that hold whoever
    calls it. */
 
-export type TeamActionResult = { ok: true } | { ok: false; error: InviteErrorCode | 'failed' };
+/** `signed_out`: nobody is signed in; the page shows the sign-in-again prompt. */
+export type TeamActionResult =
+  | { ok: true }
+  | { ok: false; error: InviteErrorCode | 'failed' }
+  | { ok: false; error: 'signed_out'; signedOut: true };
 
 class NotAllowed extends Error {}
 
 async function teamContext() {
   const { userId } = await auth();
-  if (!userId) throw new NotAllowed();
+  if (!userId) throw new SignedOutError();
   const active = await getActiveStore();
   const flagStore = active.shopDomain ? { shopDomain: active.shopDomain } : active.siteId ? { widgetSiteId: active.siteId } : null;
   const flags = flagStore ? await storeFlags(flagStore) : [];
@@ -66,6 +71,7 @@ async function run(action: string, work: () => Promise<void>): Promise<TeamActio
     revalidatePath('/dashboard', 'layout');
     return { ok: true };
   } catch (error) {
+    if (error instanceof SignedOutError) return { ok: false, error: 'signed_out', signedOut: true };
     if (error instanceof InviteError) return { ok: false, error: error.code };
     if (error instanceof NotAllowed || error instanceof RoleNotAllowedError || error instanceof UnauthorizedError) return { ok: false, error: 'not_allowed' };
     if (error instanceof RequestRateLimitError) return { ok: false, error: 'failed' };

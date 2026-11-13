@@ -206,6 +206,18 @@ describe('messenger server actions — authorization', () => {
     expect(mocks.update).not.toHaveBeenCalled();
   });
 
+  it('says signed out, not a generic failure, so the Inbox can keep the reply and offer a sign-in', async () => {
+    mocks.auth.mockResolvedValue({ userId: null });
+    expect(await staffReply('site-1', 'conv-1', 'hello')).toEqual({
+      ok: false,
+      error: 'Your session ended. Sign in again to continue.',
+      signedOut: true,
+    });
+    expect(await addInternalNote('site-1', 'conv-1', 'note')).toMatchObject({ ok: false, signedOut: true });
+    expect(await fetchConversationMessages('site-1', 'conv-1')).toEqual({ ok: false, signedOut: true });
+    expect(mocks.requireSiteAccess).not.toHaveBeenCalled();
+  });
+
   it("refuses a site the caller does not own, before any write", async () => {
     mocks.requireSiteAccess.mockRejectedValue(new UnauthorizedError());
 

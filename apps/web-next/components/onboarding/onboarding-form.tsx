@@ -16,9 +16,12 @@ const FIELD = { radius: 'input', size: 'md', styles: { input: { minHeight: 44 } 
 export function OnboardingForm({
   profile,
   copy,
+  next,
 }: {
   profile: OnboardingProfile | null;
   copy: AuthCopy;
+  /** The page this account was on its way to; the action checks it again. */
+  next?: string | null;
 }) {
   const [state, formAction] = useActionState(submitOnboarding, INITIAL_STATE);
   const formRef = useRef<HTMLFormElement>(null);
@@ -38,6 +41,7 @@ export function OnboardingForm({
 
   return (
     <form ref={formRef} action={formAction}>
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <Stack gap="md">
         {state.message ? (
           <Alert color="danger" variant="light" role="alert">
@@ -130,17 +134,17 @@ export function OnboardingForm({
           defaultValue={value('primaryGoal')}
         />
 
-        <SubmitButton copy={copy} />
+        <SubmitButton copy={copy} label={next ? copy.submitContinue : copy.submit} />
       </Stack>
     </form>
   );
 }
 
-function SubmitButton({ copy }: { copy: AuthCopy }) {
+function SubmitButton({ copy, label }: { copy: AuthCopy; label: string }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" radius="pill" h={44} mt={4} loading={pending}>
-      {pending ? copy.submitting : copy.submit}
+      {pending ? copy.submitting : label}
     </Button>
   );
 }

@@ -43,8 +43,9 @@ describe('fetchInboxCustomer', () => {
   });
 
   it('answers not ok when signed out or when the read fails', async () => {
+    // Signed out says so, so the page offers a sign-in instead of an error.
     mocks.auth.mockResolvedValue({ userId: null });
-    expect(await fetchInboxCustomer('s1', 'c1')).toEqual({ ok: false });
+    expect(await fetchInboxCustomer('s1', 'c1')).toEqual({ ok: false, signedOut: true });
     mocks.auth.mockResolvedValue({ userId: 'user_1' });
     mocks.facts.mockRejectedValue(new Error('Unauthorized'));
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});

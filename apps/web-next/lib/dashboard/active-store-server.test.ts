@@ -15,8 +15,11 @@ vi.mock('@/lib/paste/store', async (original) => ({
 vi.mock('@/lib/messenger/provisioning', () => ({ listMessengerSitesReadOnly: mocks.sites }));
 
 import {
-  ensureActiveStorePlan, getActiveStoreRole, getActiveStoreTimeZone, getPendingPasteShop, listDashboardSites, storeLookupFailed,
+  ensureActiveStorePlan, getActiveStore, getActiveStoreRole, getActiveStoreTimeZone, getPendingPasteShop, listDashboardSites, storeLookupFailed,
 } from './active-store-server';
+import { cookies, headers } from 'next/headers';
+import { ACTIVE_STORE_COOKIE } from './active-store';
+import { buildShellStores } from './shell-model';
 
 const SITE = '11111111-1111-4111-8111-111111111111';
 
@@ -29,6 +32,18 @@ beforeEach(() => {
   mocks.sites.mockResolvedValue([{ id: SITE, name: 'Kids', domain: 'kids.example', role: 'admin' }]);
   mocks.woo.mockResolvedValue(new Set());
   mocks.paste.mockResolvedValue(new Set());
+});
+
+it('opens the last used store on the server and marks that same store in the first shell render', async () => {
+  vi.mocked(headers).mockResolvedValue(new Headers() as Awaited<ReturnType<typeof headers>>);
+  vi.mocked(cookies).mockResolvedValue({ get: (key: string) => key === ACTIVE_STORE_COOKIE
+    ? { name: key, value: 'shop:mine.myshopify.com' } : undefined } as Awaited<ReturnType<typeof cookies>>);
+  const shops = await mocks.shops();
+  const sites = await mocks.sites();
+  const active = await getActiveStore({}, { shops, sites });
+  expect(active.shopDomain).toBe('mine.myshopify.com');
+  const switcher = buildShellStores(shops, sites, active);
+  expect(switcher.filter((store) => store.current).map((store) => store.domain)).toEqual(['mine.myshopify.com']);
 });
 
 /* Item 12: the nav follows the person's role on the active store. */

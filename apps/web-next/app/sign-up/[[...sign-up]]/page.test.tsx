@@ -2,8 +2,22 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }) }));
 vi.mock('@clerk/nextjs', () => ({
-  SignUp: () => <div data-testid="clerk-sign-up">Clerk SignUp</div>,
+  /* The props are drawn as attributes so the tests can read where Clerk is
+     told to send the new account. */
+  SignUp: (props: { forceRedirectUrl: string; signInUrl: string; signInForceRedirectUrl: string }) => (
+    <div
+      data-testid="clerk-sign-up"
+      data-force-redirect-url={props.forceRedirectUrl}
+      data-sign-in-url={props.signInUrl}
+      data-sign-in-force-redirect-url={props.signInForceRedirectUrl}
+    >
+      Clerk SignUp
+    </div>
+  ),
+  ClerkFailed: () => null,
+  useAuth: () => ({ isLoaded: true, isSignedIn: false }),
   /* auth-clerk.tsx renders these around SignIn/SignUp so the form doesn't
      flash in from empty space. Real Clerk toggles between them by load
      state; the mock always takes the "loaded" branch so existing assertions
@@ -85,5 +99,44 @@ describe('SignUpPage', () => {
 
     expect(screen.getByRole('heading', { name: 'أنشئ حسابك' })).toBeInTheDocument();
     expect(container.querySelector('[dir="rtl"]')).toBeInTheDocument();
+  });
+
+  it('keeps a claim link through sign-up: onboarding first, then the claim', async () => {
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = 'pk_test_example';
+
+    render(await SignUpPage({ searchParams: Promise.resolve({ redirect_url: '/claim?token=abc123' }) }));
+
+    const signUp = screen.getByTestId('clerk-sign-up');
+    expect(signUp).toHaveAttribute('data-force-redirect-url', '/onboarding?next=%2Fclaim%3Ftoken%3Dabc123');
+    // An existing account that signs in from here goes straight to the claim.
+    expect(signUp).toHaveAttribute('data-sign-in-force-redirect-url', '/claim?token=abc123');
+    expect(signUp).toHaveAttribute('data-sign-in-url', '/sign-in?redirect_url=%2Fclaim%3Ftoken%3Dabc123');
+    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
+      'href',
+      '/sign-in?redirect_url=%2Fclaim%3Ftoken%3Dabc123',
+    );
+  });
+
+  it('drops an off-site or auth-page destination and sends the new account to onboarding', async () => {
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = 'pk_test_example';
+
+    for (const hostile of ['https://evil.example', '//evil.example', '/sign-up']) {
+      const { unmount } = render(await SignUpPage({ searchParams: Promise.resolve({ redirect_url: hostile }) }));
+      expect(screen.getByTestId('clerk-sign-up')).toHaveAttribute('data-force-redirect-url', '/onboarding');
+      expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/sign-in');
+      unmount();
+    }
+  });
+
+  it('says sign-up is unavailable, in plain words, when production has no auth configured', async () => {
+    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    vi.stubEnv('NODE_ENV', 'production');
+    cookieLocale = 'ar';
+
+    render(await SignUpPage());
+
+    expect(screen.getByRole('alert')).toHaveTextContent('تسجيل الدخول غير متاح الآن');
+    expect(screen.queryByText(/NEXT_PUBLIC_CLERK|Clerk environment/)).not.toBeInTheDocument();
+    vi.unstubAllEnvs();
   });
 });

@@ -15,6 +15,8 @@ import type { LooksMeter, ShellStore } from '@/lib/dashboard/shell-model';
 import { storeSwitchHref } from '@/lib/dashboard/shell-model';
 import { getDashboardRouteMeta } from '@/lib/dashboard/route-meta';
 import { persistSiteLocale } from '@/lib/landing/site-locale-store';
+import { beginSignOut, cancelSignOut } from '@/lib/auth/session-ended';
+import { SIGNED_OUT_PATH } from '@/lib/auth/redirect';
 import type { DashboardPermissionKey, DashboardPermissionSet } from '@/lib/rbac/dashboard-policy';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import classes from './v16-shell.module.css';
@@ -186,6 +188,20 @@ export function V16ShellView({
     startLanguage(() => router.refresh());
   }
 
+  /* Sign-out lands on sign-in with a line confirming it. While Clerk ends
+     the session the item is disabled, so a second tap does not start a
+     second sign-out. */
+  const [signingOut, setSigningOut] = React.useState(false);
+  function signOut() {
+    if (signingOut) return;
+    setSigningOut(true);
+    beginSignOut();
+    clerk.signOut({ redirectUrl: SIGNED_OUT_PATH }).catch(() => {
+      cancelSignOut();
+      setSigningOut(false);
+    });
+  }
+
   const navLabel = (item: V16NavItem) => copy.nav[item.key];
   const badge = (item: V16NavItem) =>
     item.href === WAITING_HREF && waiting > 0 ? (
@@ -242,7 +258,7 @@ export function V16ShellView({
       <Menu.Item onClick={() => clerk.openUserProfile()}>{copy.account}</Menu.Item>
       <Menu.Item onClick={() => setTheme(isDark ? 'light' : 'dark')}>{isDark ? copy.toLight : copy.toDark}</Menu.Item>
       <Menu.Divider />
-      <Menu.Item onClick={() => clerk.signOut({ redirectUrl: '/' })}>{copy.signOut}</Menu.Item>
+      <Menu.Item onClick={signOut} disabled={signingOut}>{copy.signOut}</Menu.Item>
     </>
   );
 
@@ -430,7 +446,7 @@ export function V16ShellView({
           <button type="button" className={classes.navLink} onClick={switchLanguage} lang={locale === 'ar' ? 'en' : 'ar'}>
             {copy.otherLanguage}
           </button>
-          <button type="button" className={classes.navLink} onClick={() => clerk.signOut({ redirectUrl: '/' })}>
+          <button type="button" className={classes.navLink} onClick={signOut} disabled={signingOut} aria-busy={signingOut || undefined}>
             {copy.signOut}
           </button>
           <LegalLinks locale={locale} />

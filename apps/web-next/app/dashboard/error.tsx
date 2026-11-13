@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import * as Sentry from '@sentry/nextjs';
 import { Button } from '@mantine/core';
 import { V16Notice, V16NoticeNote } from '@/components/dashboard/v16/notice';
+import { useSessionEnded } from '@/components/auth/session-guard';
+import { signInAgainHref } from '@/lib/auth/session-ended';
 import { getStatesCopy } from '@/lib/dashboard/states-copy';
 import { SITE_LOCALE_COOKIE, isSiteLocale, type SiteLocale } from '@/lib/landing/landing-i18n';
 
@@ -43,9 +45,23 @@ export default function DashboardError({
     setLocale(readLocale());
   }, []);
 
+  /* A page that failed because the session ended is not a bug to report:
+     say what happened and offer the sign-in that comes back here. */
+  const sessionEnded = useSessionEnded();
   useEffect(() => {
-    Sentry.captureException(error);
-  }, [error]);
+    if (!sessionEnded) Sentry.captureException(error);
+  }, [error, sessionEnded]);
+
+  if (sessionEnded) {
+    const s = getStatesCopy(locale).sessionEnded;
+    return (
+      <V16Notice title={s.title} body={s.body}>
+        <Button component="a" href={signInAgainHref(`${window.location.pathname}${window.location.search}`)} radius="pill" h={44}>
+          {s.action}
+        </Button>
+      </V16Notice>
+    );
+  }
 
   const t = getStatesCopy(locale).error;
 

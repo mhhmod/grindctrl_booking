@@ -1,9 +1,57 @@
 import { describe, expect, it } from 'vitest';
 import {
+  authPageHref,
   DEFAULT_SIGNED_IN_PATH,
+  onboardingPath,
+  resolveOnboardingNext,
   resolveSignInDestination,
+  resolveSignUpDestination,
   safeRedirectPath,
 } from './redirect';
+
+describe('auth pages are never a destination', () => {
+  it.each(['/dashboard/../sign-in', '/x/%2e%2e/sign-up', '/%73ign-in', '/%2fsign-in', '/x/../onboarding/../login', '/%5cevil.example'])('rejects normalized or encoded auth loops and unsafe paths: %s', (path) => {
+    expect(safeRedirectPath(path)).toBeNull();
+    expect(resolveSignInDestination(path)).toBe('/dashboard');
+  });
+  it('rejects sign-in, sign-up and login, with or without a query, subpath or trailing slash', () => {
+    for (const loop of ['/sign-in', '/sign-in/', '/sign-in?x=1', '/sign-in/factor-one', '/SIGN-UP', '/sign-up#top', '/login', '/login?redirect_url=/dashboard']) {
+      expect(safeRedirectPath(loop)).toBeNull();
+    }
+    expect(resolveSignInDestination('/sign-in')).toBe(DEFAULT_SIGNED_IN_PATH);
+  });
+
+  it('still accepts pages whose names only start like an auth page', () => {
+    expect(safeRedirectPath('/sign-inside')).toBe('/sign-inside');
+    expect(safeRedirectPath('/dashboard/sign-in')).toBe('/dashboard/sign-in');
+  });
+});
+
+describe('sign-up keeps where the new account was going', () => {
+  it('goes through onboarding, then on to the destination', () => {
+    expect(resolveSignUpDestination('/claim?token=a b')).toBe('/onboarding?next=%2Fclaim%3Ftoken%3Da+b');
+  });
+
+  it('is plain onboarding without a usable destination', () => {
+    for (const none of [undefined, '', 'https://evil.example', '//evil.example', '/sign-in', '/onboarding', '/onboarding?next=/x', DEFAULT_SIGNED_IN_PATH]) {
+      expect(resolveSignUpDestination(none)).toBe('/onboarding');
+    }
+  });
+
+  it('never lets onboarding point back at itself', () => {
+    expect(resolveOnboardingNext('/onboarding/')).toBeNull();
+    expect(resolveOnboardingNext('/dashboard/../onboarding')).toBeNull();
+    expect(resolveOnboardingNext('/%6fnboarding')).toBeNull();
+    expect(resolveOnboardingNext('/dashboard/inbox')).toBe('/dashboard/inbox');
+    expect(onboardingPath('/dashboard/inbox')).toBe('/onboarding?next=%2Fdashboard%2Finbox');
+  });
+
+  it('carries a safe destination between sign-in and sign-up, and drops anything else', () => {
+    expect(authPageHref('/sign-up', '/claim?token=abc')).toBe('/sign-up?redirect_url=%2Fclaim%3Ftoken%3Dabc');
+    expect(authPageHref('/sign-in', '//evil.example')).toBe('/sign-in');
+    expect(authPageHref('/sign-in', undefined)).toBe('/sign-in');
+  });
+});
 
 describe('safeRedirectPath', () => {
   it('accepts a same-site absolute path', () => {

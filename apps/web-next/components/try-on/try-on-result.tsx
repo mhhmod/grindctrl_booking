@@ -6,7 +6,9 @@ import Link from 'next/link';
 import { Download, MessageCircle, ArrowLeft, ArrowRight, ShoppingCart } from 'lucide-react';
 import { ScrollShellAction } from '@/components/embed/scroll-shell';
 import { Button } from '@/components/ui/button';
+import { useSiteViewer } from '@/components/auth/site-viewer';
 import { trackClick } from '@/lib/analytics';
+import { SIGNED_IN_HOME } from '@/lib/auth/site-viewer';
 import type { TryOnJob } from '@/lib/try-on/types';
 import { useTryOnLocale } from './locale-provider';
 import { getSheetCopy } from '@/lib/try-on/sheet-copy';
@@ -40,6 +42,8 @@ export function variantLabel(title: string): string {
 
 export function TryOnResult({ job, productName, onReset, shopMode, controls, onForget, onImageError }: TryOnResultProps) {
   const { t, locale } = useTryOnLocale();
+  // Someone with an account is sent to it, not to sign-up.
+  const signedIn = useSiteViewer().viewer.signedIn;
   const [cartState, setCartState] = useState<'idle' | 'adding' | 'added' | 'failed'>('idle');
   const [cartError, setCartError] = useState('');
   const [addedVariant, setAddedVariant] = useState('');
@@ -153,11 +157,11 @@ export function TryOnResult({ job, productName, onReset, shopMode, controls, onF
         ) : (
           <Button asChild size="lg" className="h-12 w-full gap-2 rounded-xl text-base">
             <Link
-              href="/sign-up"
+              href={signedIn ? SIGNED_IN_HOME : '/sign-up'}
               id="tryon-trial-btn"
-              onClick={() => trackClick('cta_clicked', { cta: 'start_trial', section: 'try_on_result' })}
+              onClick={() => trackClick('cta_clicked', { cta: signedIn ? 'open_dashboard' : 'start_trial', section: 'try_on_result' })}
             >
-              {t.trial}
+              {signedIn ? t.openDashboard : t.trial}
               <ArrowRight className="size-4 rtl:-scale-x-100" />
             </Link>
           </Button>

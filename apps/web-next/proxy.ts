@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { type NextRequest, NextResponse } from 'next/server';
 import { withPathname } from '@/lib/dashboard/forward-request';
+import { shouldRedirectSignedOut, signedInAuthPageRedirect, signInRedirectUrl } from '@/lib/auth/dashboard-gate';
 
 const isDashboardRoute = createRouteMatcher(['/dashboard(.*)', '/onboarding(.*)']);
 
@@ -20,11 +21,18 @@ export default clerkConfigured
   ? clerkMiddleware(async (auth, req) => {
       if (isDashboardRoute(req)) {
         const { userId } = await auth();
-        if (!userId) {
-          const signInUrl = new URL('/sign-in', req.url);
-          signInUrl.searchParams.set('redirect_url', `${req.nextUrl.pathname}${req.nextUrl.search}`);
-          return NextResponse.redirect(signInUrl);
+        if (!userId && shouldRedirectSignedOut(req)) {
+          return NextResponse.redirect(signInRedirectUrl(req));
         }
+      }
+
+      /* Already signed in: sign-in, sign-up and /login go straight to where
+         the visitor was headed, with no auth page, placeholder or Clerk hop
+         in between. Only the entry pages are checked, so auth() runs on
+         nothing else. */
+      const signedInDestination = signedInAuthPageRedirect(req);
+      if (signedInDestination && (await auth()).userId) {
+        return NextResponse.redirect(signedInDestination);
       }
 
       return withPathname(req);

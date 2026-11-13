@@ -81,7 +81,8 @@ describe('owner-authorized paste plumbing actions', () => {
     ['shop proof', () => provePasteShopAction(SITE, 'pw')], ['domain check', () => checkPasteDomainAction(SITE, 'domain-a')],
     ['disconnect', () => disconnectPasteInstallAction(SITE)],
   ] as const)('rejects unauthenticated and foreign site %s before any service mutation/read', async (_name, action) => {
-    m.auth.mockResolvedValue({ userId: null }); expect(await action()).toEqual({ ok: false, code: 'forbidden' });
+    // Signed out is still refused, and says so for the sign-in prompt.
+    m.auth.mockResolvedValue({ userId: null }); expect(await action()).toEqual({ ok: false, code: 'forbidden', signedOut: true });
     expect(m.access).not.toHaveBeenCalled();
     m.auth.mockResolvedValue({ userId: 'other' }); m.access.mockRejectedValue(new UnauthorizedError());
     expect(await action()).toEqual({ ok: false, code: 'forbidden' });

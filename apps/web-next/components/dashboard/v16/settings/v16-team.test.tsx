@@ -186,6 +186,28 @@ describe('V16Team, managing the team', () => {
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Invite sent to reem@maisonnoor.com.'));
   });
 
+  it('keeps an invite typed when the session ended, and raises the sign-in prompt', async () => {
+    const invite = vi.fn<TeamActions['invite']>().mockResolvedValue({ ok: false, error: 'signed_out', signedOut: true });
+    const ended = vi.fn();
+    window.addEventListener('gc:session-ended', ended);
+    const first = renderManaged(actionsWith({ invite }));
+    fireEvent.click(screen.getByRole('button', { name: 'Invite someone' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Invite someone' });
+    fireEvent.change(within(dialog).getByLabelText(/Email/), { target: { value: 'reem@maisonnoor.com' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Send invite' }));
+    expect(await within(dialog).findByText('You were signed out. Sign in again to continue.')).toBeInTheDocument();
+    expect(ended).toHaveBeenCalledTimes(1);
+    window.removeEventListener('gc:session-ended', ended);
+
+    // Back after signing in: the dialog opens with the address still in it.
+    first.unmount();
+    renderManaged(actionsWith());
+    fireEvent.click(screen.getByRole('button', { name: 'Invite someone' }));
+    const again = await screen.findByRole('dialog', { name: 'Invite someone' });
+    expect(within(again).getByLabelText(/Email/)).toHaveValue('reem@maisonnoor.com');
+    window.sessionStorage.clear();
+  });
+
   it('offers Edit on a teammate, not on the owner who is reading, to change the role or remove them', async () => {
     const actions = actionsWith();
     renderManaged(actions);

@@ -1,6 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { BrandLogo } from '@/components/brand-logo';
+import { AUTH_FORM_MIN_HEIGHT_CLASS } from '@/components/auth/auth-form-states';
+import { AuthPreferences } from '@/components/auth/auth-preferences';
 import type { AuthCopy } from '@/lib/auth/auth-i18n';
 import { getDir, type SiteLocale } from '@/lib/landing/landing-i18n';
 
@@ -15,6 +17,7 @@ export function AuthShell({
   footerPrompt,
   footerCtaLabel,
   footerCtaHref,
+  notice,
   children,
 }: {
   locale: SiteLocale;
@@ -24,6 +27,8 @@ export function AuthShell({
   footerPrompt: string;
   footerCtaLabel: string;
   footerCtaHref: string;
+  /** A one-line status above the form, such as "You're signed out." */
+  notice?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -47,24 +52,30 @@ export function AuthShell({
         <p className="relative text-sm leading-snug opacity-70 lg:hidden">{copy.brandTagline}</p>
       </section>
 
-      <section className="gc-auth-form-pane flex min-w-0 flex-col justify-center px-4 py-10 sm:px-8 lg:py-12">
-        <div className="mx-auto flex w-full min-w-0 max-w-md flex-col gap-6">
+      <section className="gc-auth-form-pane flex min-w-0 flex-col gap-6 px-4 pb-10 pt-4 sm:px-8 lg:py-6">
+        {/* Language and theme, at the top inline-end of the form pane, so a
+            visitor can change either without leaving the form. */}
+        <AuthPreferences locale={locale} />
+        <div className="mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col justify-center gap-6">
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
             <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">{subtitle}</p>
           </div>
 
-          {/* min-h reserves the form's approximate footprint before Clerk's
-              JS bundle finishes loading and clerk.js initialises client-side
-              — without it this div collapses to zero height and the visitor
-              sees a hard empty gap for a few seconds instead of a stable
-              loading state. Paired with the skeleton in ClerkLoading
-              (components/auth/auth-clerk.tsx) so that gap has content in it,
-              not just reserved space. */}
+          {notice ? (
+            <p role="status" className="rounded-lg border border-border bg-muted/60 px-4 py-3 text-sm">
+              {notice}
+            </p>
+          ) : null}
+
+          {/* The min-height reserves the form's footprint before Clerk's JS
+              bundle loads, and the placeholder and the slow/failed states in
+              it share that height (components/auth/auth-form-states.tsx), so
+              the footer link below does not move as they swap. */}
           {/* Explicit zero-minimum grid tracks and shrinkable containers let
               Clerk fit narrow screens instead of sizing the page to the
               form's intrinsic width. Do not mask this with overflow-x-hidden. */}
-          <div className="min-h-[420px] min-w-0 max-w-full [&_.cl-rootBox]:mx-auto [&_.cl-rootBox]:w-full [&_.cl-rootBox]:max-w-full [&_.cl-cardBox]:max-w-full [&_.cl-card]:w-full [&_.cl-card]:max-w-full">
+          <div className={`${AUTH_FORM_MIN_HEIGHT_CLASS} min-w-0 max-w-full [&_.cl-rootBox]:mx-auto [&_.cl-rootBox]:w-full [&_.cl-rootBox]:max-w-full [&_.cl-cardBox]:max-w-full [&_.cl-card]:w-full [&_.cl-card]:max-w-full`}>
             {children}
           </div>
 

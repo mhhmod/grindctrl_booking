@@ -6,6 +6,7 @@ import { OnboardingForm } from '@/components/onboarding/onboarding-form';
 import { getAuthCopy } from '@/lib/auth/auth-i18n';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { getRequestLocale } from '@/lib/auth/locale';
+import { onboardingPath, resolveOnboardingNext } from '@/lib/auth/redirect';
 import { getDir } from '@/lib/landing/landing-i18n';
 import { getOnboardingProfile } from '@/lib/onboarding/profile';
 import { acceptInvitesForSignedIn } from '@/lib/team/accept';
@@ -15,11 +16,19 @@ export const metadata: Metadata = {
   description: 'Tell us about your store so we can set up the right AI for it.',
 };
 
-export default async function OnboardingPage() {
-  const clerkUserId = await requireDashboardUser('/onboarding');
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ next?: string }>;
+} = {}) {
+  /* A new account carries the page it was on its way to (sign-up's
+     redirect_url) through here, so a claim link or a deep link survives
+     sign-up, email verification and these questions. */
+  const next = resolveOnboardingNext((await searchParams)?.next);
+  const clerkUserId = await requireDashboardUser(onboardingPath(next));
   // Someone who signed up from a team's invite goes straight to that team (N21).
   if ((await acceptInvitesForSignedIn()).length > 0) {
-    redirect('/dashboard');
+    redirect(next ?? '/dashboard');
   }
   const locale = await getRequestLocale();
   const copy = getAuthCopy(locale);
@@ -27,7 +36,7 @@ export default async function OnboardingPage() {
 
   // Already done: no reason to make them fill it twice.
   if (profile?.onboardedAt) {
-    redirect('/dashboard');
+    redirect(next ?? '/dashboard');
   }
 
   return (
@@ -41,13 +50,40 @@ export default async function OnboardingPage() {
       >
         <div className="flex flex-col gap-3">
           <BrandLogo />
+          {/* On the way to Store setup this is its first step, and says so.
+              Someone headed elsewhere (a claim link) is not set up there. */}
+          {next ? null : (
+            <nav aria-label={copy.onboardingSetupLabel} className="mt-2">
+              <ol className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                {copy.onboardingSteps.map((step, index) => (
+                  <li
+                    key={step}
+                    aria-current={index === 0 ? 'step' : undefined}
+                    className={index === 0 ? 'flex items-center gap-2 font-semibold text-foreground' : 'flex items-center gap-2 text-muted-foreground'}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={
+                        index === 0
+                          ? 'inline-flex size-6 items-center justify-center rounded-full bg-foreground text-xs font-bold text-background'
+                          : 'inline-flex size-6 items-center justify-center rounded-full border border-border text-xs font-bold'
+                      }
+                    >
+                      {index + 1}
+                    </span>
+                    {step}
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )}
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             {copy.onboardingTitle}
           </h1>
           <p className="text-sm text-muted-foreground sm:text-base">{copy.onboardingLead}</p>
         </div>
 
-        <OnboardingForm profile={profile} copy={copy} />
+        <OnboardingForm profile={profile} copy={copy} next={next} />
       </main>
     </>
   );

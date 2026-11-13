@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { GcIcon } from '@/components/icons';
 import { getInboxCustomerCopy } from '@/lib/dashboard/inbox-customer-copy';
+import { announceSessionEnded, isSignedOutResult } from '@/lib/auth/session-ended';
 import type { InboxCustomerView } from '@/lib/dashboard/inbox-customer-model';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import classes from './v16-inbox-customer.module.css';
@@ -12,7 +13,7 @@ import classes from './v16-inbox-customer.module.css';
    in lib/dashboard/inbox-customer-model.ts decides what has a source; each
    part shows only when its data does. */
 
-export type FetchInboxCustomer = (siteId: string, conversationId: string) => Promise<{ ok: true; view: InboxCustomerView } | { ok: false }>;
+export type FetchInboxCustomer = (siteId: string, conversationId: string) => Promise<{ ok: true; view: InboxCustomerView } | { ok: false; signedOut?: true }>;
 
 type State = { status: 'loading' } | { status: 'error' } | { status: 'ready'; view: InboxCustomerView };
 
@@ -56,7 +57,10 @@ export function V16InboxCustomer({
   React.useEffect(() => {
     let live = true;
     fetchCustomer(siteId, conversationId)
-      .then((result) => live && setState(result.ok ? { status: 'ready', view: result.view } : { status: 'error' }))
+      .then((result) => {
+        if (isSignedOutResult(result)) announceSessionEnded();
+        if (live) setState(result.ok ? { status: 'ready', view: result.view } : { status: 'error' });
+      })
       .catch(() => live && setState({ status: 'error' }));
     return () => {
       live = false;

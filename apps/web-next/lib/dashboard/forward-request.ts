@@ -11,6 +11,8 @@ import {
    URL. */
 const ACTIVE_STORE_MAX_AGE_S = 60 * 60 * 24 * 365;
 
+export const RETURN_TO_HEADER = 'x-return-to';
+
 /* A dashboard link that names a store (`?shop=` or `?site=`) switches to it:
    the choice reaches this request's layout through a header, which pages
    and layouts cannot read from the query themselves, and is remembered in
@@ -40,6 +42,10 @@ function isPageLoad(req: NextRequest): boolean {
 export function withPathname(req: NextRequest) {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('x-pathname', req.nextUrl.pathname);
+  /* The full address, so a bounce to sign-in or onboarding from a layout
+     returns to the same filtered or store-specific page, not its bare path.
+     Always overwritten: a client's own copy never reaches the app. */
+  requestHeaders.set(RETURN_TO_HEADER, `${req.nextUrl.pathname}${req.nextUrl.search}`);
   requestHeaders.delete(ACTIVE_STORE_HEADER);
 
   const { pathname, searchParams } = req.nextUrl;

@@ -9,6 +9,8 @@ import type { TeamView } from '@/lib/dashboard/team-model';
 import type { InviteRole } from '@/lib/team/invites';
 import type { TeamActionResult } from '@/app/dashboard/settings/actions';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
+import { announceSessionEnded, isSignedOutResult } from '@/lib/auth/session-ended';
+import { peekDraft, saveDraft } from '@/lib/dashboard/session-draft';
 import { V16PageFrame } from '../page-frame';
 import classes from './v16-team.module.css';
 
@@ -37,9 +39,18 @@ function Address({ value }: { value: string }) {
   );
 }
 
+/* Called from the action handlers only: a signed-out result also raises the
+   dashboard's sign-in-again prompt. */
 function errorText(copy: TeamCopy, result: TeamActionResult): string | null {
-  return result.ok ? null : copy.errors[result.error];
+  if (result.ok) return null;
+  if (isSignedOutResult(result)) announceSessionEnded();
+  return copy.errors[result.error];
 }
+
+/* An invite typed when the session ended comes back after the sign-in. The
+   dialog is closed (and not rendered) on the first paint, so reading it while
+   creating state does not change the server-rendered markup. */
+const INVITE_DRAFT_KEY = 'team-invite';
 
 function RolePicker({ copy, roles, value, onChange }: { copy: TeamCopy; roles: Record<InviteRole, string>; value: InviteRole; onChange: (role: InviteRole) => void }) {
   return (
@@ -66,7 +77,7 @@ function InviteDialog({
   onClose: () => void;
   onSend: (email: string, role: InviteRole) => Promise<string | null>;
 }) {
-  const [email, setEmail] = React.useState('');
+  const [email, setEmail] = React.useState(() => peekDraft(INVITE_DRAFT_KEY) ?? '');
   const [role, setRole] = React.useState<InviteRole>('member');
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -365,6 +376,7 @@ export function V16Team({
             onClose={() => setInviting(false)}
             onSend={async (email, role) => {
               const result = await actions!.invite({ email, role });
+              saveDraft(INVITE_DRAFT_KEY, isSignedOutResult(result) ? email : '');
               if (result.ok) {
                 setInviting(false);
                 setStatus({ tone: 'ok', text: copy.sentTo(email.trim().toLowerCase()) });

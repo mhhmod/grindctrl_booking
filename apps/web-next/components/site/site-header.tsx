@@ -13,12 +13,20 @@
    from an edge, which is not this design): focus moves to its first row and
    stays inside, Escape and the backdrop close it, focus returns to the
    button, the page behind does not scroll, and its rows are only in the DOM
-   while it is open. Sign in is always its first row. */
+   while it is open. Sign in is always its first row.
+
+   Someone already signed in sees the same page with their account in place
+   of Sign in: "Open dashboard" with their avatar on desktop and as the first
+   menu row, and the avatar alone as a 44px link in the phone header. The
+   server decides this (app/layout.tsx), so the first paint is already right
+   and nothing moves when the page hydrates. */
 
 import * as React from 'react';
 import Link from 'next/link';
 import { Dialog } from 'radix-ui';
+import { SiteViewerSync, useSiteViewer } from '@/components/auth/site-viewer';
 import { trackClick } from '@/lib/analytics';
+import { SIGNED_IN_HOME, type SiteViewer } from '@/lib/auth/site-viewer';
 import { BOOKING_URL } from '@/lib/booking';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import { cn } from '@/lib/utils';
@@ -50,6 +58,8 @@ export type SiteHeaderCopy = {
   brandHome: string;
   mainNav: string;
   signIn: string;
+  /** Takes Sign in's place for someone already signed in. */
+  openDashboard: string;
   bookCall: string;
   menu: string;
   openMenu: string;
@@ -142,16 +152,57 @@ function BookCallLink({
   );
 }
 
+/** The signed-in person's photo, else their initials, else a person mark.
+ *  Decorative: the link around it carries the name "Open dashboard". The
+ *  size is fixed, so a photo that loads late or fails moves nothing. */
+export function ViewerAvatar({
+  viewer,
+  className,
+}: {
+  viewer: Extract<SiteViewer, { signedIn: true }>;
+  className?: string;
+}) {
+  const [photoFailed, setPhotoFailed] = React.useState(false);
+  return (
+    <span
+      aria-hidden="true"
+      data-viewer-avatar=""
+      className={cn(
+        'relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-foreground text-[12px] font-bold leading-none text-background',
+        className,
+      )}
+    >
+      {viewer.initials ?? <PersonIcon size={16} />}
+      {viewer.imageUrl && !photoFailed ? (
+        // eslint-disable-next-line @next/next/no-img-element -- the person's own Clerk photo, drawn at 32px
+        <img
+          src={viewer.imageUrl}
+          alt=""
+          width={32}
+          height={32}
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onError={() => setPhotoFailed(true)}
+          className="absolute inset-0 size-full object-cover"
+        />
+      ) : null}
+    </span>
+  );
+}
+
 function Brand({
   copy,
   onBrandClick,
   compact,
   tag,
+  signedIn,
 }: {
   copy: SiteHeaderCopy;
   onBrandClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
   compact?: boolean;
   tag?: SiteHeaderTag;
+  /** The phone header then also holds the avatar link. */
+  signedIn?: boolean;
 }) {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
@@ -171,6 +222,10 @@ function Brand({
                (the label truncated to "Try-..."), so the mark alone carries
                the brand and the label stays whole, in both directions. */
             compact && tag?.onPhone && 'max-[419px]:hidden',
+            /* Same trade for a signed-in visitor: the avatar link takes the
+               wordmark's room below 420px, so Book a call and the menu
+               button keep their full 44px. */
+            compact && signedIn && 'max-[419px]:hidden',
           )}
         >
           GRINDCTRL
@@ -338,7 +393,8 @@ export function SiteHeader({
   onSwitchLocale: () => void;
   bookSection?: string;
   bookIcon?: boolean;
-  /** The try-on header has no Sign in; the sign-in guard is about the landing header. */
+  /** The account entry: Sign in, or Open dashboard when signed in. The
+   *  try-on header has none; the sign-in guard is about the landing header. */
   showSignIn?: boolean;
   /** Replaces the desktop navigation (the try-on page's journey). */
   middle?: React.ReactNode;
@@ -374,13 +430,18 @@ export function SiteHeader({
     [],
   );
 
-  const signInItem: SiteNavItem = { id: 'sign-in', label: copy.signIn, href: '/sign-in', icon: <PersonIcon size={16} /> };
-  const rows = showSignIn ? [signInItem, ...menuItems] : menuItems;
+  const { viewer, clerk } = useSiteViewer();
+  const account = viewer.signedIn ? viewer : null;
+  const accountItem: SiteNavItem = account
+    ? { id: 'dashboard', label: copy.openDashboard, href: SIGNED_IN_HOME, icon: <ViewerAvatar viewer={account} className="size-[34px] rounded-[11px]" /> }
+    : { id: 'sign-in', label: copy.signIn, href: '/sign-in', icon: <PersonIcon size={16} /> };
+  const rows = showSignIn ? [accountItem, ...menuItems] : menuItems;
 
   return (
     /* One banner landmark holding both pills. The pills are fixed, so this
        element takes no space of its own. */
-    <header data-site-header="">
+    <header data-site-header="" data-signed-in={account ? '' : undefined}>
+      {clerk ? <SiteViewerSync signedIn={Boolean(account)} /> : null}
       {/* Desktop */}
       <div
         className="fixed left-1/2 z-50 hidden h-[62px] w-[min(1240px,calc(100%-40px))] -translate-x-1/2 items-center justify-between gap-3 rounded-full border border-border bg-card/[0.96] pe-[9px] ps-5 text-foreground shadow-[var(--gc-shadow-header)] lg:flex"
@@ -394,7 +455,15 @@ export function SiteHeader({
           <LanguageSwitch locale={locale} onSwitch={onSwitchLocale} />
           {desktopEnd ?? (
             <>
-              {showSignIn ? (
+              {showSignIn && account ? (
+                <Link
+                  href={SIGNED_IN_HOME}
+                  className="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-full pe-3 ps-1 text-sm font-semibold text-foreground hover:bg-foreground/[0.07]"
+                >
+                  <ViewerAvatar viewer={account} className="size-8" />
+                  {copy.openDashboard}
+                </Link>
+              ) : showSignIn ? (
                 <Link
                   href="/sign-in"
                   className="inline-flex h-10 items-center rounded-full px-3 text-sm font-semibold text-gc-text-2 hover:bg-foreground/[0.07] hover:text-foreground"
@@ -414,10 +483,19 @@ export function SiteHeader({
           className="fixed inset-x-3 z-50 flex h-[58px] items-center justify-between gap-2 rounded-full border border-border bg-card/[0.96] pe-1.5 ps-4 text-foreground shadow-[var(--gc-shadow-header-phone)] lg:hidden"
           style={{ top: 'calc(12px + env(safe-area-inset-top, 0px))' }}
         >
-          <Brand copy={copy} onBrandClick={onBrandClick} compact tag={tag} />
+          <Brand copy={copy} onBrandClick={onBrandClick} compact tag={tag} signedIn={Boolean(showSignIn && account && !phoneEnd)} />
           <div className="flex shrink-0 items-center gap-1.5">
             {phoneEnd ?? (
               <>
+                {showSignIn && account ? (
+                  <Link
+                    href={SIGNED_IN_HOME}
+                    aria-label={copy.openDashboard}
+                    className="inline-flex size-11 shrink-0 items-center justify-center rounded-full hover:bg-foreground/[0.07]"
+                  >
+                    <ViewerAvatar viewer={account} className="size-8" />
+                  </Link>
+                ) : null}
                 <BookCallLink label={copy.bookCall} section={bookSection} className="h-11 px-4 text-[13.5px]" />
                 <Dialog.Trigger asChild>
                   <button

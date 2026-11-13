@@ -13,10 +13,10 @@ import { requireMerchantRateLimit } from '@/lib/request-rate-limit';
    person may answer the site's chats and that the conversation is the
    site's; the view is built here, in the person's language and the active
    store's time zone. */
-export async function fetchInboxCustomer(siteId: string, conversationId: string): Promise<{ ok: true; view: InboxCustomerView } | { ok: false }> {
+export async function fetchInboxCustomer(siteId: string, conversationId: string): Promise<{ ok: true; view: InboxCustomerView } | { ok: false; signedOut?: true }> {
   try {
     const { userId } = await auth();
-    if (!userId) return { ok: false };
+    if (!userId) return { ok: false, signedOut: true };
     await requireMerchantRateLimit(`account:${userId}`, 'read');
     const [facts, locale, timeZone] = await Promise.all([
       getInboxCustomerFacts({ userId, siteId: String(siteId), conversationId: String(conversationId) }),

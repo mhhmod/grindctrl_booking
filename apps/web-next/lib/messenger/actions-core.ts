@@ -25,7 +25,8 @@ import type { MessengerSiteView } from './provisioning';
    it to a generic message instead, as actions.ts's local `fail()` helper does
    for the dashboard. */
 
-export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
+/** `signedOut`: nobody is signed in (lib/auth/session-ended.ts). */
+export type ActionResult = { ok: true; message?: string } | { ok: false; error: string; signedOut?: true };
 
 function sectionToKey(section: MessengerSection, payload: Record<string, unknown>): Record<string, unknown> {
   return { [CONFIG_SECTIONS[section]]: payload };

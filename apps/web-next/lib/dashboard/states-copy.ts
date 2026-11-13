@@ -22,6 +22,8 @@ export interface StatesCopy {
   /** Pasted code on a Shopify store that is not confirmed yet. */
   finishConfirming: { title: (shop: string) => string; body: string; action: string };
   error: { title: string; body: string; retry: string; reference: string };
+  /** The session ended (expired, or signed out in another tab). */
+  sessionEnded: { title: string; body: string; action: string };
   loading: string;
 }
 
@@ -70,6 +72,11 @@ const en: StatesCopy = {
     retry: 'Try again',
     reference: 'Reference',
   },
+  sessionEnded: {
+    title: 'You were signed out',
+    body: 'Sign in again to continue. You’ll come back to this page, and an unsent reply or invite is kept on this device.',
+    action: 'Sign in again',
+  },
   loading: 'Loading',
 };
 
@@ -116,6 +123,11 @@ const ar: StatesCopy = {
     body: 'حدث خطأ من جانبنا. إعادة المحاولة تنجح عادةً، فالمشكلة غالباً مؤقتة.',
     retry: 'إعادة المحاولة',
     reference: 'الرقم المرجعي',
+  },
+  sessionEnded: {
+    title: 'تم تسجيل خروجك',
+    body: 'سجّل الدخول مرة أخرى للمتابعة. ستعود إلى هذه الصفحة، ويبقى الرد أو الدعوة التي لم تُرسل محفوظًا على هذا الجهاز.',
+    action: 'سجّل الدخول مرة أخرى',
   },
   loading: 'جارٍ التحميل',
 };
