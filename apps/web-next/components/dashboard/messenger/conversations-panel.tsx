@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, useTransition } from 'react';
 import { Bot, Check, ChevronLeft, MessageSquareText, PanelRight, SendHorizontal, X } from 'lucide-react';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
@@ -14,9 +14,13 @@ import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-con
 import type { CannedReply } from '@/lib/messenger/canned-replies';
 import { MessageText } from '@/components/messenger/message-text';
 import { useInboxLive, type InboxLiveActions } from './use-inbox-live';
+import { pageAlerts, type PageAlerts } from '@/lib/dashboard/inbox-live';
 import { normalizeSearch } from '@/lib/messenger/product-context';
 import { announceSessionEnded, isSignedOutResult } from '@/lib/auth/session-ended';
 import { saveDraft, takeDraft } from '@/lib/dashboard/session-draft';
+
+const noAlertUpdates = () => () => {};
+const serverAlerts = (): PageAlerts => 'unsupported';
 
 const inboxDraftKey = (siteId: string) => `inbox:${siteId}`;
 
@@ -347,6 +351,10 @@ export function ConversationsPanel({
      the `conversations` prop — no server round trip, no query param. */
   const [search, setSearch] = useState('');
   type StatusFilter = 'all' | 'needs_reply' | 'in_progress' | 'resolved' | 'needs_you' | 'assistant';
+  // The server render cannot know the browser's answer; a tap's answer wins once given.
+  const browserAlerts = useSyncExternalStore(noAlertUpdates, pageAlerts, serverAlerts);
+  const [answeredAlerts, setAlerts] = useState<PageAlerts | null>(null);
+  const alerts = answeredAlerts ?? browserAlerts;
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(inboxTabs ? 'needs_you' : 'all');
   const live = useInboxLive(initialConversations, siteId, actions, search, statusFilter, mineOnly, selectedId, t.waitingTeam);
   const conversations = live.rows;
@@ -589,11 +597,16 @@ export function ConversationsPanel({
     });
   }
 
-  const notificationControl = actions.listInboxConversations ? (
+  const alertNote = {
+    granted: locale === 'ar' ? 'التنبيهات مفعلة طالما هذه الصفحة مفتوحة. ونرسل لك بريدًا أيضًا عندما تحتاجك محادثة.' : 'Alerts are on while this page is open. We also email you when a chat needs you.',
+    denied: locale === 'ar' ? 'التنبيهات محظورة في هذا المتصفح. ما زلنا نرسل لك بريدًا عندما تحتاجك محادثة.' : 'Alerts are blocked in this browser. We still email you when a chat needs you.',
+    unsupported: locale === 'ar' ? 'نرسل لك بريدًا عندما تحتاجك محادثة.' : 'We email you when a chat needs you.',
+  };
+  const notificationControl = !actions.listInboxConversations ? null : alerts === 'default' ? (
     <Button type="button" variant="outline" size="sm" className="min-h-11 max-w-full whitespace-normal" onClick={() => {
-      if (typeof Notification !== 'undefined' && Notification.permission === 'default') void Notification.requestPermission().catch(() => {});
+      void Notification.requestPermission().then(setAlerts, () => setAlerts(pageAlerts()));
     }}>{locale === 'ar' ? 'تفعيل الإشعارات' : 'Enable notifications'}</Button>
-  ) : null;
+  ) : <p className="text-sm text-muted-foreground" role="status">{alertNote[alerts]}</p>;
 
   if (conversations.length === 0) {
     return (

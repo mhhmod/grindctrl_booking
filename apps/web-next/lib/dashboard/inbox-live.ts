@@ -15,3 +15,13 @@ export function notifyHandoff(title: string, id: string): void {
   if (document.visibilityState !== 'hidden' || typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   try { new Notification(title, { tag: `inbox-${id}` }); } catch { /* Unsupported browser: title still signals. */ }
 }
+
+export type PageAlerts = 'unsupported' | NotificationPermission;
+
+/** Whether this page can show its own alerts. Phone browsers either lack the
+ *  Notification constructor or refuse it without a service worker, so they
+ *  never show one: say so instead of offering a button that does nothing. */
+export function pageAlerts(): PageAlerts {
+  if (typeof Notification === 'undefined' || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) return 'unsupported';
+  return Notification.permission;
+}
