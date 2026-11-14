@@ -146,6 +146,21 @@ describe('ConversationsPanel', () => {
     visibility = 'hidden'; await act(async () => { await vi.advanceTimersByTimeAsync(10_000); }); expect(fetchConversationMessages).toHaveBeenCalledTimes(1);
     unmount(); vi.unstubAllGlobals(); vi.restoreAllMocks();
   });
+  /* The owner's phone: "Enable notifications" did nothing on a tap. A phone
+     browser cannot show page alerts, and a decided permission ignored the tap. */
+  it('says how alerts reach the merchant instead of offering a button that cannot work', async () => {
+    const liveActions = { ...actions, listInboxConversations: vi.fn(async () => ({ ok: true as const, conversations: CONVERSATIONS, cursor: null, checkedAt: new Date().toISOString() })) };
+    const notifications = Object.assign(vi.fn(), { permission: 'default', requestPermission: vi.fn(async () => 'denied') }); vi.stubGlobal('Notification', notifications);
+    const view = render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={liveActions} />);
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Enable notifications' })); });
+    expect(screen.getByText('Alerts are blocked in this browser. We still email you when a chat needs you.')).toBeInTheDocument();
+    view.unmount();
+    const ua = vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14) Mobile Safari');
+    render(<ConversationsPanel locale="ar" siteId="site-1" conversations={CONVERSATIONS} actions={liveActions} />);
+    expect(screen.queryByRole('button', { name: 'تفعيل الإشعارات' })).toBeNull();
+    expect(screen.getByText('نرسل لك بريدًا عندما تحتاجك محادثة.')).toBeInTheDocument();
+    ua.mockRestore(); vi.unstubAllGlobals();
+  });
   it('loads messages through the injected actions prop, not a direct import', async () => {
     render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={actions} />);
 
