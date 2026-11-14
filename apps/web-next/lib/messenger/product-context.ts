@@ -38,7 +38,10 @@ export function parseProductContext(raw: unknown, trustedUrl: (url: URL) => bool
     currency: typeof p.currency === 'string' && /^[A-Z]{3}$/.test(p.currency) ? p.currency : null,
     availability: p.availability === 'in_stock' || p.availability === 'out_of_stock' ? p.availability : 'unknown',
     description: productText(p.description, 600),
-    sizes: Array.isArray(p.sizes) ? [...new Set(p.sizes.slice(0, 30).map((v) => productText(v, 80)).filter(Boolean))] : [],
+    // Shopify names the only variant of a product without options "Default Title": not a size.
+    sizes: Array.isArray(p.sizes)
+      ? [...new Set(p.sizes.slice(0, 30).map((v) => productText(v, 80)).filter((v) => v && v !== 'Default Title'))]
+      : [],
   };
 }
 

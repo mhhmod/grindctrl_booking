@@ -144,6 +144,14 @@ describe('website product discovery', () => {
 });
 
 describe('Shopify paste', () => {
+  it("places the button after the product's own form, not a hidden Shop Pay installments form before it", () => {
+    window.history.replaceState({}, '', '/products/dress');
+    // Horizon-style themes render the installments /cart/add form first, inside a display:none block.
+    document.body.innerHTML = '<div class="installments" style="display:none"><form action="/cart/add" class="payment-terms"><input name="id" value="88"></form></div>' +
+      '<form action="/cart/add" class="shopify-product-form"><input name="id" value="88"><button type="submit">Add to cart</button></form>';
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ width: 120, height: 40 } as DOMRect);
+    expect(adapter('shopify').placementTarget()).toBe(document.querySelector('.shopify-product-form'));
+  });
   it('re-reads the selected variant but keeps the signed claims and variant in context requests', async () => {
     shopifyPage();
     pageFetch.mockResolvedValueOnce(json(shopifyProduct)).mockResolvedValueOnce(json(shopifyContext()));
