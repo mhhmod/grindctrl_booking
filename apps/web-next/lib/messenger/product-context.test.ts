@@ -8,6 +8,9 @@ import { DEFAULT_HANDOFF_RULES } from './handoff-rules';
 const trusted = (url: URL) => url.hostname === 'shop.example';
 const product = { title: 'Linen dress', url: 'https://shop.example/dress', price: '19.50', currency: 'EGP', availability: 'in_stock', description: 'A summer dress', sizes: ['S', 'M'] };
 describe('bounded product reference data', () => {
+  it("drops Shopify's 'Default Title' placeholder, which is not a size", () => {
+    expect(parseProductContext({ ...product, sizes: ['Default Title'] }, trusted)!.sizes).toEqual([]);
+  });
   it('strips markup and caps every field and size list', () => {
     const p = parseProductContext({ ...product, title: '<b>' + 'a'.repeat(400) + '</b>', description: '<script>evil()</script><p>' + 'x'.repeat(1000) + '</p>', sizes: Array.from({ length: 80 }, (_, i) => `${i}${'s'.repeat(100)}`) }, trusted)!;
     expect(p.title).toHaveLength(200); expect(p.description).toHaveLength(600); expect(p.sizes).toHaveLength(30);

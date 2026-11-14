@@ -1,5 +1,5 @@
 /**
- * GRINDCTRL Try-On paste adapters v1.6.1 (website and Shopify paste installs).
+ * GRINDCTRL Try-On paste adapters v1.6.2 (website and Shopify paste installs).
  *
  * Loaded by messenger.js on pages of a `data-gc-install="paste"` snippet
  * that show a product or product cards, then mounted on the hosted engine
@@ -629,7 +629,21 @@
     return host && card.contains(host) ? host : card;
   }
 
-  function shopifyForm() { return document.querySelector('form[action*="/cart/add"]'); }
+  /* The product's own add-to-cart form. Themes also render other /cart/add
+     forms first, such as Shop Pay's hidden installments form, so take the
+     first one that is shown and has a submit button, outside product cards;
+     else the first outside cards, which still carries the variant field. */
+  function shopifyForm() {
+    var forms = document.querySelectorAll('form[action*="/cart/add"]');
+    var fallback = null;
+    for (var i = 0; i < forms.length; i++) {
+      var form = forms[i];
+      if (form.closest(PRODUCT_CARD)) continue;
+      if (!fallback) fallback = form;
+      if (visible(form) && form.querySelector('button[type="submit"], button:not([type]), input[type="submit"]')) return form;
+    }
+    return fallback;
+  }
   function shopifyRoot() {
     var root = window.Shopify && window.Shopify.routes && window.Shopify.routes.root;
     return typeof root === 'string' && /^\/(?!\/)/.test(root) ? root : '/';

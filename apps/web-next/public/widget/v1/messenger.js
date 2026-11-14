@@ -105,7 +105,7 @@
     widgetLoads[name] = new Promise(function (resolve, reject) {
       var script = document.createElement('script');
       script.async = true;
-      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=8604e4d2cd8e';
+      script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=24c96d90f7a0';
       script.onload = resolve;
       script.onerror = function () { delete widgetLoads[name]; reject(new Error('widget_unavailable')); };
       document.head.appendChild(script);
