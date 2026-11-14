@@ -45,7 +45,8 @@ describe('public catalogue sync', () => {
   it('bounds redirects, pages and body size', async () => {
     const transport = vi.fn<StorefrontTransport>(async () => response([], { status: 302, location: '/again' }));
     await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, { transport, lookup })).rejects.toThrow('too_many_redirects');
-    expect(transport).toHaveBeenCalledTimes(5);
+    // Five for the catalogue, five for the one home page check a Shopify loop earns.
+    expect(transport).toHaveBeenCalledTimes(10);
     await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, { transport: async () => response([], { body: Buffer.alloc(2 * 1024 * 1024) }), lookup })).rejects.toThrow('oversized');
   });
   it('names a password-protected store, however its password page is served', async () => {
@@ -87,6 +88,22 @@ describe('public catalogue sync', () => {
       ? response('', { status: 302, location: 'https://foreign.example/password' }) : response('', { status: 503 }));
     await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, { transport: foreign, lookup })).rejects.toMatchObject({ outcome: 'unreachable' });
     expect(foreign.mock.calls.every(([request]) => request.url.hostname === 'shop.example')).toBe(true);
+  });
+  /* harmong-eg, live: with a JSON accept header Shopify redirects /password
+     to itself, so the catalogue ended in a redirect loop and read as
+     "couldn't reach your store". The home page, asked for HTML, is the password page. */
+  it('names a password-protected store whose password page loops for a JSON request', async () => {
+    const page = '<form action="/password" method="post"><input type="password" name="password"></form>';
+    const transport = vi.fn<StorefrontTransport>(async ({ url, headers }) =>
+      url.pathname === '/password' && headers.accept === 'text/html'
+        ? { status: 200, location: null, contentType: 'text/html', setCookie: [], body: Buffer.from(page) }
+        : response('', { status: 302, location: '/password' }));
+    await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, { transport, lookup })).rejects.toMatchObject({ outcome: 'password_page' });
+    // A redirect loop on an open store stays unreachable.
+    const loop = vi.fn<StorefrontTransport>(async ({ url }) => url.pathname === '/'
+      ? { status: 200, location: null, contentType: 'text/html', setCookie: [], body: Buffer.from('<h1>Shop</h1>') }
+      : response('', { status: 302, location: '/products.json' }));
+    await expect(fetchCatalogue('shopify', 'https://shop.example', trusted, { transport: loop, lookup })).rejects.toMatchObject({ outcome: 'unreachable' });
   });
   it('tells a missing, rate limited or unreachable catalogue apart', async () => {
     const status = (code: number) => ({ transport: async () => response('', { status: code }), lookup });

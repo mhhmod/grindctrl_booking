@@ -95,6 +95,10 @@ export async function fetchCatalogue(platform: Platform, base: string, trusted: 
       passStatuses: platform === 'shopify' ? PASSWORD_PAGE_STATUSES : undefined });
     if ('failure' in response) {
       if (response.failure === 'status') throw await refused(response.status, page);
+      // A closed Shopify store redirects a JSON request for /password to itself.
+      if (response.failure === 'too_many_redirects' && (await refused(undefined, page)).outcome === 'password_page') {
+        throw new CatalogueReadError('password_page', 'Catalogue is behind the store password page.');
+      }
       throw new CatalogueReadError('unreachable', `Catalogue fetch failed: ${response.failure}`);
     }
     // A password-protected Shopify store answers /products.json with its password page.
