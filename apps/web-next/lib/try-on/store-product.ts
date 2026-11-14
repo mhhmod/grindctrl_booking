@@ -57,6 +57,11 @@ export function parseStoreProduct(raw: unknown): StoreProduct | null {
     });
   }
   if (!variants.length) return null;
+  // Shopify gives a product without options one option "Title" valued "Default Title": not a choice to show.
+  if (variants.length === 1 && variants[0].options.length === 1 && variants[0].options[0] === 'Default Title') {
+    options.length = 0;
+    variants[0].options = [];
+  }
   const currency = typeof input.currency === 'string' && /^[A-Z]{3}$/.test(input.currency) ? input.currency : null;
   return { options, variants, currency };
 }

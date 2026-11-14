@@ -20,6 +20,16 @@ describe('the store product in the sheet', () => {
     expect(product.variants[2]).toEqual({ id: '102', title: 'Black / L', options: ['Black', 'L'], available: false, price: 325000 });
   });
 
+  it("hides Shopify's placeholder option on a product without options", () => {
+    const product = parseStoreProduct({
+      options: ['Title'],
+      variants: [{ id: 7, title: 'Default Title', options: ['Default Title'], available: true, price: 60000 }],
+    })!;
+    expect(product.options).toEqual([]);
+    expect(product.variants[0].options).toEqual([]);
+    expect(product.variants[0].id).toBe('7');
+  });
+
   it('drops what it cannot trust', () => {
     expect(parseStoreProduct(null)).toBeNull();
     expect(parseStoreProduct({ variants: 'x' })).toBeNull();
